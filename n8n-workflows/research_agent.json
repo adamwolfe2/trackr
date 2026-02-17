@@ -1,0 +1,93 @@
+{
+    "name": "Trackr Research Agent",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "research",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                100,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "={{$json.body.url}}",
+                "responseFormat": "json"
+            },
+            "name": "Firecrawl Scrape",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.1,
+            "position": [
+                300,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "modelId": "gemini-1.5-flash",
+                "prompt": "Analyze this tool data and generate a report..."
+            },
+            "name": "Gemini Analysis",
+            "type": "n8n-nodes-base.googleGemini",
+            "typeVersion": 1,
+            "position": [
+                500,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "table": "reports",
+                "columns": "tool_id, summary, score"
+            },
+            "name": "Save to Supabase/Neon",
+            "type": "n8n-nodes-base.postgres",
+            "typeVersion": 1,
+            "position": [
+                700,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Firecrawl Scrape",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Firecrawl Scrape": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini Analysis",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini Analysis": {
+            "main": [
+                [
+                    {
+                        "node": "Save to Supabase/Neon",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
