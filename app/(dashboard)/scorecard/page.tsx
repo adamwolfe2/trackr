@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { workspaceMembers, workspaces } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { ScorecardClient } from "@/components/scorecard/scorecard-client";
+import { ScorecardClient, type ScorecardRecipe } from "@/components/scorecard/scorecard-client";
 
 export default async function ScorecardPage() {
     const user = await currentUser();
@@ -24,7 +24,7 @@ export default async function ScorecardPage() {
         columns: { scorecardConfig: true },
     });
 
-    const savedConfig = workspace?.scorecardConfig as Record<string, number> | null;
+    const savedRecipe = workspace?.scorecardConfig as ScorecardRecipe | null;
 
-    return <ScorecardClient savedConfig={savedConfig} />;
+    return <ScorecardClient savedRecipe={savedRecipe} />;
 }

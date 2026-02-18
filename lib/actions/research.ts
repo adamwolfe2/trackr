@@ -153,8 +153,27 @@ export async function performDeepResearch(toolId: string) {
         // ── Step 6: GPT-4o synthesis ──────────────────────────────────────
         await logProgress(toolId, `Synthesizing final report with GPT-4o...`);
 
-        const scorecardConfig = (tool.workspace.scorecardConfig as Record<string, unknown>) ?? {};
         const companyContext = tool.workspace.companyContext ?? "A technology company evaluating software tools.";
+        const recipe = tool.workspace.scorecardConfig as {
+            systemContext?: string;
+            businessUnits?: Array<{ name: string; description: string; priorities: string }>;
+            evaluationCriteria?: string;
+            dealBreakers?: string;
+        } | null;
+
+        // Build a rich recipe-based prompt if a recipe exists, otherwise fall back to context only
+        const recipeSection = recipe?.systemContext ? `
+=== COMPANY SCORECARD RECIPE ===
+${recipe.systemContext}
+
+${recipe.businessUnits?.length ? `BUSINESS UNITS:\n${recipe.businessUnits.map(bu =>
+    `• ${bu.name}: ${bu.description}\n  Priorities: ${bu.priorities}`
+).join("\n\n")}` : ""}
+
+${recipe.evaluationCriteria ? `EVALUATION CRITERIA:\n${recipe.evaluationCriteria}` : ""}
+
+${recipe.dealBreakers ? `DEAL BREAKERS (flag these prominently in cons):\n${recipe.dealBreakers}` : ""}
+` : `COMPANY CONTEXT: ${companyContext}`;
 
         const { object: reportData } = await generateObject({
             model: openai("gpt-4o"),
@@ -162,10 +181,16 @@ export async function performDeepResearch(toolId: string) {
             prompt: `
 You are a rigorous software procurement analyst evaluating ${tool.name} (${tool.websiteUrl}).
 
-COMPANY CONTEXT: ${companyContext}
-SCORECARD DIMENSIONS: ${JSON.stringify(scorecardConfig)}
+${recipeSection}
 
-Score each dimension listed in SCORECARD DIMENSIONS from 0-10, using the exact keys provided.
+For the scorecardSnapshot, score these dimensions from 0-10:
+- features: Features & Functionality
+- pricing_value: Pricing Value
+- ease_of_use: Ease of Use
+- integration_depth: Integration Depth
+- support_quality: Support & Documentation
+- security: Security & Compliance
+- ai_capabilities: AI Capabilities
 
 === OFFICIAL WEBSITE ===
 ${rawData.main.slice(0, 5000)}
@@ -183,11 +208,11 @@ ${rawData.reddit?.slice(0, 2000) || "No Reddit data found."}
 ${rawData.competitors?.slice(0, 2000) || "No competitor data."}
 
 INSTRUCTIONS:
-- Be critical. Don't repeat marketing copy — synthesize real user pain points.
+- Be critical and specific. Don't repeat marketing copy — synthesize real user pain points.
 - If pricing is hidden or requires contacting sales, set isPricingHidden=true and note it in cons.
 - Extract ALL integrations mentioned (Slack, Zapier, Salesforce, etc.).
 - For competitors, use their domain name (e.g. notion.so, linear.app).
-- Score based on the company's specific context and scorecard dimensions above.
+- Evaluate through the lens of the company's recipe above: what works for their specific business units, and flag any deal breakers prominently.
             `.trim(),
         });
 

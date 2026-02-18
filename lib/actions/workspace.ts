@@ -86,18 +86,24 @@ export async function inviteMember(formData: FormData) {
     return { success: true, message: `Invitation sent to ${email}` };
 }
 
-export async function saveScorecardConfig(weights: Record<string, number>) {
+interface ScorecardRecipeInput {
+    systemContext: string;
+    businessUnits: Array<{ key: string; name: string; description: string; priorities: string }>;
+    evaluationCriteria: string;
+    dealBreakers: string;
+}
+
+export async function saveScorecardRecipe(recipe: ScorecardRecipeInput) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
 
-    const total = Object.values(weights).reduce((a, b) => a + b, 0);
-    if (Math.round(total) !== 100) throw new Error("Weights must sum to 100%");
+    if (!recipe.systemContext) throw new Error("System context is required");
 
     await db.update(workspaces)
-        .set({ scorecardConfig: weights })
+        .set({ scorecardConfig: recipe as unknown as Record<string, unknown> })
         .where(eq(workspaces.id, workspaceId));
 
     revalidatePath("/scorecard");
