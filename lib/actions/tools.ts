@@ -67,15 +67,22 @@ export async function submitTool(formData: FormData) {
         throw new Error(`Free plan limit reached (${limits.limits.tools} tools). Please upgrade to Pro.`);
     }
 
-    // 2. Generate Embedding
+    // 2. Generate Embedding + Fetch logo preview in parallel
     const { generateEmbedding } = await import("@/lib/ai/embedding");
-    const embedding = await generateEmbedding(`${name}: ${websiteUrl}`);
+    const { previewTool } = await import("@/lib/actions/preview");
+
+    const [embedding, preview] = await Promise.all([
+        generateEmbedding(`${name}: ${websiteUrl}`),
+        previewTool(websiteUrl).catch(() => null),
+    ]);
+    const logoUrl = (preview && "image" in preview && preview.image) ? preview.image : null;
 
     // 3. Insert Tool
     const [newTool] = await db.insert(tools).values({
         workspaceId,
         name,
         websiteUrl,
+        logoUrl,
         status: "queued", // Initial status
         submittedBy: user.id,
         embedding,

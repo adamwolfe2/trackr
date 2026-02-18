@@ -38,6 +38,7 @@ export const tools = pgTable('tools', {
     submittedBy: text('submitted_by'), // Clerk User ID or Member ID
     submittedAt: timestamp('submitted_at').defaultNow().notNull(),
     lastResearchedAt: timestamp('last_researched_at'),
+    logoUrl: text('logo_url'),
     researchLogs: jsonb('research_logs'), // Array of { message: string, timestamp: string }
     embedding: vector('embedding', { dimensions: 1536 }), // pgvector
 }, (table) => [

@@ -95,7 +95,9 @@ export class FirecrawlService {
             }
 
             const data = await response.json();
-            return { success: true, data: data };
+            // Firecrawl map returns { success: true, links: [...] }
+            const links = data.links ?? data.data ?? [];
+            return { success: true, data: links };
         } catch (e: any) {
             console.error("Firecrawl map failed:", e);
             return { success: false, error: e.message };

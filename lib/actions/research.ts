@@ -5,6 +5,7 @@ import { tools, reports, workspaces } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { perplexity } from "@/lib/services/perplexity";
+import { tavily } from "@/lib/services/tavily";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
@@ -20,18 +21,19 @@ const ReportSchema = z.object({
     scorecardSnapshot: z.record(z.string(), z.object({
         score: z.number().min(0).max(10),
         justification: z.string()
-    })).describe("Scores (0-10) for keys like 'start_up_fit', 'pricing_value', 'integration_depth'"),
+    })).describe("Scores (0-10) for each dimension in the scorecard config. Use the exact keys from Scorecard Dimensions."),
     features: z.object({
         list: z.array(z.string()).describe("List of key features")
     }),
     pricing: z.array(z.object({
         tier: z.string(),
         price: z.string()
-    })).describe("Pricing tiers found"),
+    })).describe("Pricing tiers found on the pricing page"),
     isPricingHidden: z.boolean().describe("True if pricing is not publicly listed and requires a demo/contact."),
-    pros: z.array(z.string()).describe("Top 3-5 pros"),
-    cons: z.array(z.string()).describe("Top 3-5 cons"),
-    competitors: z.array(z.string()).describe("List of main competitors mentioned or known"),
+    pros: z.array(z.string()).describe("Top 3-5 pros based on user reviews and official info"),
+    cons: z.array(z.string()).describe("Top 3-5 cons based on user reviews and complaints"),
+    competitors: z.array(z.string()).describe("3-5 main competitors (use their domain names, e.g. notion.so)"),
+    integrations: z.array(z.string()).optional().describe("Tools/platforms this integrates with (e.g. Slack, Zapier, Salesforce, HubSpot)"),
     categories: z.array(z.string()).describe("3-5 relevant categories for this tool (e.g. CRM, Analytics, DevTool)"),
 });
 
@@ -52,6 +54,10 @@ async function logProgress(toolId: string, message: string) {
         .where(eq(tools.id, toolId));
 }
 
+function getDomain(url: string): string {
+    try { return new URL(url).hostname.replace("www.", ""); } catch { return url; }
+}
+
 export async function performDeepResearch(toolId: string) {
     const tool = await db.query.tools.findFirst({
         where: eq(tools.id, toolId),
@@ -62,7 +68,6 @@ export async function performDeepResearch(toolId: string) {
         return { success: false, error: "Tool not found or missing URL" };
     }
 
-    // Reset logs and set status to researching
     await db.update(tools).set({
         status: "researching",
         researchLogs: [] as unknown as ResearchLog[],
@@ -70,59 +75,133 @@ export async function performDeepResearch(toolId: string) {
 
     try {
         const rawData: Record<string, string> = {};
+        const domain = getDomain(tool.websiteUrl);
 
-        await logProgress(toolId, "Initializing Agent: Mapping site structure...");
+        // ── Step 1: Map site ──────────────────────────────────────────────
+        await logProgress(toolId, `Mapping site structure for ${domain}...`);
         const mapResult = await firecrawl.mapSite(tool.websiteUrl);
-        const subPages: string[] = (mapResult.success && Array.isArray(mapResult.data)) ? mapResult.data : [];
+        const subPages: string[] = mapResult.success && Array.isArray(mapResult.data) ? mapResult.data : [];
 
-        const pricingUrl = subPages.find((u) => u.includes("pricing")) ?? tool.websiteUrl;
+        const pricingUrl = subPages.find((u) => /\/pricing/.test(u)) ?? tool.websiteUrl;
 
-        await logProgress(toolId, `Identified key pages. Scraping ${pricingUrl}...`);
+        // ── Step 2: Scrape main + pricing pages ───────────────────────────
+        const pricingLabel = pricingUrl !== tool.websiteUrl ? " + pricing page" : "";
+        await logProgress(toolId, `Crawling ${domain}${pricingLabel}...`);
 
         const [mainScrape, pricingScrape] = await Promise.all([
             firecrawl.scrapeUrl(tool.websiteUrl),
             pricingUrl !== tool.websiteUrl
                 ? firecrawl.scrapeUrl(pricingUrl)
-                : Promise.resolve({ success: true, data: { markdown: "" } }),
+                : Promise.resolve({ success: true, data: { markdown: "", metadata: {} } }),
         ]);
 
         rawData.main = mainScrape.data?.markdown ?? "";
         rawData.pricing = pricingScrape.data?.markdown ?? "";
 
-        await logProgress(toolId, "Running Perplexity search for sentiment and competitors...");
-        const sentimentAnalysis = await perplexity.search(
-            `What are the main pros and cons of ${tool.name}? Are there any major complaints on Reddit or G2? Who are its main competitors?`
-        );
-        rawData.sentiment = sentimentAnalysis;
+        // Extract logo from Firecrawl metadata (favicon preferred, OG image fallback)
+        const logoUrl: string | null =
+            mainScrape.data?.metadata?.favicon ||
+            mainScrape.data?.metadata?.ogImage ||
+            null;
 
-        await logProgress(toolId, "Synthesizing final report with GPT-4o...");
+        if (logoUrl) {
+            await db.update(tools).set({ logoUrl }).where(eq(tools.id, toolId));
+        }
+
+        // ── Step 3: Tavily — review sites ─────────────────────────────────
+        await logProgress(toolId, `Searching: "${tool.name} reviews G2 Capterra user feedback"...`);
+        const reviewSearch = await tavily.search(
+            `${tool.name} software reviews user feedback pros cons`,
+            {
+                includeDomains: ["g2.com", "capterra.com", "trustradius.com", "getapp.com", "producthunt.com"],
+                maxResults: 6,
+                includeAnswer: true,
+            }
+        );
+
+        if (reviewSearch.results.length > 0) {
+            const sourceNames = [...new Set(
+                reviewSearch.results.map((r) => {
+                    try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; }
+                })
+            )];
+            await logProgress(toolId, `Reviewing ${reviewSearch.results.length} sources: ${sourceNames.join(", ")}...`);
+        }
+
+        rawData.reviews = reviewSearch.results
+            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 400)}`)
+            .join("\n\n");
+
+        // ── Step 4: Tavily — Reddit sentiment ─────────────────────────────
+        await logProgress(toolId, `Scanning Reddit + community discussions for ${tool.name}...`);
+        const redditSearch = await tavily.search(
+            `${tool.name} reddit experiences pros cons issues 2024`,
+            { includeDomains: ["reddit.com"], maxResults: 5, includeAnswer: true }
+        );
+
+        rawData.reddit = redditSearch.results
+            .map((r) => `${r.title}:\n${r.content.slice(0, 300)}`)
+            .join("\n\n");
+
+        // ── Step 5: Perplexity — competitors + market analysis ────────────
+        await logProgress(toolId, `Analyzing competitive landscape for ${tool.name}...`);
+        const competitorAnalysis = await perplexity.search(
+            `Who are the main competitors of ${tool.name}? What are the key differentiators? What do users typically choose instead, and why?`
+        );
+        rawData.competitors = competitorAnalysis;
+
+        // ── Step 6: GPT-4o synthesis ──────────────────────────────────────
+        await logProgress(toolId, `Synthesizing final report with GPT-4o...`);
 
         const scorecardConfig = (tool.workspace.scorecardConfig as Record<string, unknown>) ?? {};
-        const companyContext = tool.workspace.companyContext ?? "Generic Company";
+        const companyContext = tool.workspace.companyContext ?? "A technology company evaluating software tools.";
 
         const { object: reportData } = await generateObject({
             model: openai("gpt-4o"),
             schema: ReportSchema,
             prompt: `
-                You are a procurement expert for: ${companyContext}
-                Scorecard Preferences: ${JSON.stringify(scorecardConfig)}
+You are a rigorous software procurement analyst evaluating ${tool.name} (${tool.websiteUrl}).
 
-                Perform a deep analysis of ${tool.name}.
+COMPANY CONTEXT: ${companyContext}
+SCORECARD DIMENSIONS: ${JSON.stringify(scorecardConfig)}
 
-                Sources:
-                1. Official Website Main Page:
-                ${rawData.main.slice(0, 5000)}
+Score each dimension listed in SCORECARD DIMENSIONS from 0-10, using the exact keys provided.
 
-                2. Official Pricing Page:
-                ${rawData.pricing.slice(0, 3000)}
+=== OFFICIAL WEBSITE ===
+${rawData.main.slice(0, 5000)}
 
-                3. External Sentiment (Reviews/Competitors):
-                ${rawData.sentiment}
+=== PRICING PAGE ===
+${rawData.pricing.slice(0, 3000)}
 
-                Generate a strict analysis report. Be critical. If pricing is hidden, say so.
-                Score based on the company's specific needs and context.
-            `,
+=== REVIEW SITES (G2, Capterra, TrustRadius, Product Hunt) ===
+${rawData.reviews?.slice(0, 3000) || "No review data found."}
+
+=== REDDIT / COMMUNITY FEEDBACK ===
+${rawData.reddit?.slice(0, 2000) || "No Reddit data found."}
+
+=== COMPETITIVE LANDSCAPE ===
+${rawData.competitors?.slice(0, 2000) || "No competitor data."}
+
+INSTRUCTIONS:
+- Be critical. Don't repeat marketing copy — synthesize real user pain points.
+- If pricing is hidden or requires contacting sales, set isPricingHidden=true and note it in cons.
+- Extract ALL integrations mentioned (Slack, Zapier, Salesforce, etc.).
+- For competitors, use their domain name (e.g. notion.so, linear.app).
+- Score based on the company's specific context and scorecard dimensions above.
+            `.trim(),
         });
+
+        // ── Step 7: Store report ──────────────────────────────────────────
+        const sentimentData = {
+            reviewSources: reviewSearch.results.map((r) => ({
+                title: r.title,
+                url: r.url,
+                score: r.score,
+            })),
+            reviewAnswer: reviewSearch.answer,
+            redditAnswer: redditSearch.answer,
+            competitorAnalysis: rawData.competitors,
+        };
 
         await db.insert(reports).values({
             toolId: tool.id,
@@ -135,10 +214,12 @@ export async function performDeepResearch(toolId: string) {
             pros: reportData.pros,
             cons: reportData.cons,
             competitors: reportData.competitors,
+            integrations: reportData.integrations ?? [],
             rawScrapedData: rawData,
+            sentimentData: sentimentData,
         });
 
-        await logProgress(toolId, "Research complete. Finalizing report...");
+        await logProgress(toolId, "Research complete. Report generated.");
 
         const scores = Object.values(reportData.scorecardSnapshot).map((s) => s.score);
         const avgScore = scores.length > 0

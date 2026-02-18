@@ -19,6 +19,7 @@ interface Tool {
     id: string;
     name: string;
     websiteUrl: string | null;
+    logoUrl?: string | null;
     description?: string;
     category: string[] | null;
     status: string;
@@ -26,6 +27,25 @@ interface Tool {
     submittedAt: Date;
     lastResearchedAt: Date | null;
     isPromoted?: boolean;
+}
+
+function ToolLogo({ name, logoUrl, websiteUrl }: { name: string; logoUrl?: string | null; websiteUrl?: string | null }) {
+    const [hasError, setHasError] = useState(false);
+    const domain = websiteUrl ? (() => { try { return new URL(websiteUrl).hostname; } catch { return null; } })() : null;
+    const src = (!hasError && logoUrl) ? logoUrl : domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : null;
+
+    if (!src) {
+        return <div className="text-4xl font-serif font-bold text-neutral-400 select-none">{name.charAt(0)}</div>;
+    }
+
+    return (
+        <img
+            src={src}
+            alt={name}
+            className={logoUrl && !hasError ? "w-12 h-12 object-contain" : "w-8 h-8 object-contain"}
+            onError={() => setHasError(true)}
+        />
+    );
 }
 
 export function ToolGrid({ tools }: { tools: Tool[] }) {
@@ -192,9 +212,7 @@ export function ToolGrid({ tools }: { tools: Tool[] }) {
                                             {Number(tool.overallScore).toFixed(1)}
                                         </div>
                                     )}
-                                    <div className="text-4xl font-serif font-bold text-neutral-400 select-none">
-                                        {tool.name.charAt(0)}
-                                    </div>
+                                    <ToolLogo name={tool.name} logoUrl={tool.logoUrl} websiteUrl={tool.websiteUrl} />
                                 </div>
                             }
                             className={i === 3 || i === 6 ? "md:col-span-2" : ""}
