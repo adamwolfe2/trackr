@@ -47,6 +47,13 @@ const ReportSchema = z.object({
 
 type ResearchLog = { message: string; timestamp: string };
 
+async function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+    return Promise.race([
+        promise,
+        new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+    ]);
+}
+
 async function logProgress(toolId: string, message: string) {
     const newLog: ResearchLog = { message, timestamp: new Date().toISOString() };
 
@@ -129,20 +136,25 @@ export async function performDeepResearch(toolId: string) {
         const domain = getDomain(tool.websiteUrl);
 
         // ── Step 1: Map site ──────────────────────────────────────────────
-        await logProgress(toolId, `Mapping site structure for ${domain}...`);
-        const mapResult = await firecrawl.mapSite(tool.websiteUrl);
+        await logProgress(toolId, `Step 1/6: Mapping site structure for ${domain}...`);
+        const mapResult = await withTimeout(
+            firecrawl.mapSite(tool.websiteUrl),
+            30000,
+            { success: false, data: [] }
+        );
         const subPages: string[] = mapResult.success && Array.isArray(mapResult.data) ? mapResult.data : [];
 
         const pricingUrl = subPages.find((u) => /\/pricing/.test(u)) ?? tool.websiteUrl;
 
         // ── Step 2: Scrape main + pricing pages ───────────────────────────
         const pricingLabel = pricingUrl !== tool.websiteUrl ? " + pricing page" : "";
-        await logProgress(toolId, `Crawling ${domain}${pricingLabel}...`);
+        await logProgress(toolId, `Step 2/6: Crawling ${domain}${pricingLabel}...`);
 
+        const scrapeFallback = { success: false, data: { markdown: "", metadata: {} } };
         const [mainScrape, pricingScrape] = await Promise.all([
-            firecrawl.scrapeUrl(tool.websiteUrl),
+            withTimeout(firecrawl.scrapeUrl(tool.websiteUrl), 30000, scrapeFallback),
             pricingUrl !== tool.websiteUrl
-                ? firecrawl.scrapeUrl(pricingUrl)
+                ? withTimeout(firecrawl.scrapeUrl(pricingUrl), 30000, scrapeFallback)
                 : Promise.resolve({ success: true, data: { markdown: "", metadata: {} } }),
         ]);
 
@@ -160,14 +172,19 @@ export async function performDeepResearch(toolId: string) {
         }
 
         // ── Step 3: Tavily — review sites ─────────────────────────────────
-        await logProgress(toolId, `Searching: "${tool.name} reviews G2 Capterra user feedback"...`);
-        const reviewSearch = await tavily.search(
-            `${tool.name} software reviews user feedback pros cons`,
-            {
-                includeDomains: ["g2.com", "capterra.com", "trustradius.com", "getapp.com", "producthunt.com"],
-                maxResults: 6,
-                includeAnswer: true,
-            }
+        await logProgress(toolId, `Step 3/6: Searching reviews (G2, Capterra, TrustRadius)...`);
+        const tavilyFallback = { results: [], answer: "" };
+        const reviewSearch = await withTimeout(
+            tavily.search(
+                `${tool.name} software reviews user feedback pros cons`,
+                {
+                    includeDomains: ["g2.com", "capterra.com", "trustradius.com", "getapp.com", "producthunt.com"],
+                    maxResults: 6,
+                    includeAnswer: true,
+                }
+            ),
+            30000,
+            tavilyFallback
         );
 
         if (reviewSearch.results.length > 0) {
@@ -184,10 +201,14 @@ export async function performDeepResearch(toolId: string) {
             .join("\n\n");
 
         // ── Step 4: Tavily — Reddit sentiment ─────────────────────────────
-        await logProgress(toolId, `Scanning Reddit + community discussions for ${tool.name}...`);
-        const redditSearch = await tavily.search(
-            `${tool.name} reddit experiences pros cons issues 2024`,
-            { includeDomains: ["reddit.com"], maxResults: 5, includeAnswer: true }
+        await logProgress(toolId, `Step 4/6: Scanning Reddit + community discussions...`);
+        const redditSearch = await withTimeout(
+            tavily.search(
+                `${tool.name} reddit experiences pros cons issues 2024`,
+                { includeDomains: ["reddit.com"], maxResults: 5, includeAnswer: true }
+            ),
+            30000,
+            tavilyFallback
         );
 
         rawData.reddit = redditSearch.results
@@ -195,14 +216,18 @@ export async function performDeepResearch(toolId: string) {
             .join("\n\n");
 
         // ── Step 5: Perplexity — competitors + market analysis ────────────
-        await logProgress(toolId, `Analyzing competitive landscape for ${tool.name}...`);
-        const competitorAnalysis = await perplexity.search(
-            `Who are the main competitors of ${tool.name}? What are the key differentiators? What do users typically choose instead, and why?`
+        await logProgress(toolId, `Step 5/6: Analyzing competitive landscape...`);
+        const competitorAnalysis = await withTimeout(
+            perplexity.search(
+                `Who are the main competitors of ${tool.name}? What are the key differentiators? What do users typically choose instead, and why?`
+            ),
+            30000,
+            ""
         );
         rawData.competitors = competitorAnalysis;
 
         // ── Step 6: GPT-4o synthesis ──────────────────────────────────────
-        await logProgress(toolId, `Synthesizing final report with GPT-4o...`);
+        await logProgress(toolId, `Step 6/6: Synthesizing final report with GPT-4o...`);
 
         const companyContext = tool.workspace.companyContext ?? "A technology company evaluating software tools.";
         const recipe = tool.workspace.scorecardConfig as {
