@@ -1,72 +1,56 @@
 import { db } from "@/lib/db";
-import { tools, reports } from "@/lib/db/schema";
+import { tools, reports, researchJobs } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ExternalLink, RefreshCw, ChevronLeft } from "lucide-react";
+import { ExternalLink, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { NotesSection } from "@/components/tools/notes-section";
 import { ExportButton } from "@/components/common/export-button";
 import { ResearchStream } from "@/components/tools/research-stream";
+import { ResearchButton } from "@/components/tools/research-button";
 
 export const dynamic = "force-dynamic";
 
 export default async function ToolDetailPage({ params }: { params: { id: string } }) {
     const { id } = params;
 
-    // Mock data for now if DB fails or is empty
-    let tool = null;
-    let report = null;
-
-    try {
-        // const result = await db.select().from(tools).where(eq(tools.id, id));
-        // tool = result[0];
-        // if (tool) {
-        //    const reportsResult = await db.select().from(reports).where(eq(reports.toolId, id)).orderBy(desc(reports.createdAt));
-        //    report = reportsResult[0];
-        // }
-    } catch (e) {
-        console.error(e);
-    }
-
-    // Fallback mock for demo
-    if (!tool) {
-        tool = {
-            id,
-            name: "Mock Tool (Instantly.ai)",
-            websiteUrl: "https://instantly.ai",
-            status: "researched",
-            overallScore: "8.2",
-            lastResearchedAt: new Date(),
-            category: ["Outreach", "Sales"],
-        };
-        report = {
-            summary: "Best-in-class cold email sequencing platform with strong deliverability infrastructure. Competitive pricing at scale.",
-            scorecardSnapshot: {
-                "feature_fit": { "score": 9, "justification": "Directly addresses cold outreach automation." },
-                "pricing_value": { "score": 9, "justification": "$37/mo for unlimited emails." },
-                "ease_of_use": { "score": 8, "justification": "Clean UI, good onboarding." },
-                "integration_depth": { "score": 6, "justification": "No native GHL or Make connector." },
-            },
-            features: {
-                "list": ["Unlimited sending accounts", "Warmup pool", "Unified inbox"]
-            },
-            pricing: [
-                { tier: "Growth", price: "$37/mo" },
-                { tier: "Hypergrowth", price: "$97/mo" }
-            ],
-            pros: ["Best deliverability", "Unlimited accounts"],
-            cons: ["No native GHL integration"],
-        };
-    }
+    const tool = await db.query.tools.findFirst({
+        where: eq(tools.id, id),
+    });
 
     if (!tool) return notFound();
 
+    const report = await db.query.reports.findFirst({
+        where: eq(reports.toolId, id),
+        orderBy: [desc(reports.createdAt)],
+    });
+
     const isResearching = tool.status === "researching";
+
+    // Format features/pricing safely
+    const featuresList = report?.features && typeof report.features === 'object' && 'list' in report.features
+        // @ts-ignore
+        ? report.features.list as string[]
+        : [];
+
+    // @ts-ignore
+    const pricingTiers = report?.pricing as any[] || [];
+
+    // Fetch history data
+    const jobs = await db.query.researchJobs.findMany({
+        where: eq(researchJobs.toolId, id),
+        orderBy: [desc(researchJobs.triggeredAt)]
+    });
+
+    const allReports = await db.query.reports.findMany({
+        where: eq(reports.toolId, id),
+        orderBy: [desc(reports.createdAt)]
+    });
 
     return (
         <div className="space-y-6 animate-fade-in-up">
@@ -79,24 +63,28 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
                     <div className="space-y-1">
                         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
                             {tool.name}
-                            <Badge variant="outline" className="text-sm font-normal">
+                            <Badge variant={tool.status === 'active' ? 'default' : 'outline'} className="text-sm font-normal capitalize">
                                 {tool.status}
                             </Badge>
                         </h1>
                         <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                            <a href={tool.websiteUrl} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
-                                {tool.websiteUrl} <ExternalLink className="h-3 w-3" />
-                            </a>
+                            {tool.websiteUrl && (
+                                <a href={tool.websiteUrl} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
+                                    {new URL(tool.websiteUrl).hostname} <ExternalLink className="h-3 w-3" />
+                                </a>
+                            )}
                             <span>•</span>
                             <span>Last updated {tool.lastResearchedAt ? formatDistanceToNow(new Date(tool.lastResearchedAt), { addSuffix: true }) : 'Never'}</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        <ExportButton />
-                        <Button variant="outline" size="sm">
-                            <RefreshCw className="h-4 w-4 mr-2" /> Re-Research
-                        </Button>
-                        <div className="flex flex-col items-end">
+                        {/* <ExportButton /> */}
+                        <ResearchButton
+                            toolId={tool.id}
+                            isResearching={isResearching}
+                            hasReport={!!report}
+                        />
+                        <div className="flex flex-col items-end min-w-[100px]">
                             <span className="text-3xl font-bold text-foreground">
                                 {Number(tool.overallScore || 0).toFixed(1)}
                             </span>
@@ -119,7 +107,7 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
                         </CardHeader>
                         <CardContent>
                             <p className="leading-relaxed text-muted-foreground">
-                                {report?.summary || "No summary available."}
+                                {String(report?.summary || "No analysis available yet. Run deep research to generate a report.")}
                             </p>
                         </CardContent>
                     </Card>
@@ -128,80 +116,152 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
                         <TabsList>
                             <TabsTrigger value="report">Analysis</TabsTrigger>
                             <TabsTrigger value="features">Features & Pricing</TabsTrigger>
+                            <TabsTrigger value="history">History</TabsTrigger>
                             <TabsTrigger value="notes">Team Notes</TabsTrigger>
-                            {isResearching && <TabsTrigger value="stream">Live Logs</TabsTrigger>}
                         </TabsList>
 
                         <TabsContent value="report" className="space-y-4 mt-4">
-                            <Card>
-                                <CardHeader><CardTitle>Score Breakdown</CardTitle></CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        {report?.scorecardSnapshot && Object.entries(report.scorecardSnapshot).map(([key, value]: [string, any]) => (
-                                            <div key={key} className="space-y-1">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-medium capitalize">{key.replace('_', ' ')}</span>
-                                                    <span className="font-bold">{value.score}/10</span>
-                                                </div>
-                                                <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                                                    <div className="h-full bg-primary" style={{ width: `${(value.score / 10) * 100}%` }} />
-                                                </div>
-                                                <p className="text-sm text-muted-foreground">{value.justification}</p>
+                            {report ? (
+                                <>
+                                    <Card>
+                                        <CardHeader><CardTitle>Score Breakdown</CardTitle></CardHeader>
+                                        <CardContent>
+                                            <div className="space-y-4">
+                                                {report.scorecardSnapshot && Object.entries(report.scorecardSnapshot).map(([key, value]: [string, any]) => (
+                                                    <div key={key} className="space-y-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <span className="font-medium capitalize">{key.replace(/_/g, ' ')}</span>
+                                                            <span className="font-bold">{value.score}/10</span>
+                                                        </div>
+                                                        <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                                                            <div className="h-full bg-primary" style={{ width: `${(value.score / 10) * 100}%` }} />
+                                                        </div>
+                                                        <p className="text-sm text-muted-foreground">{value.justification}</p>
+                                                    </div>
+                                                ))}
                                             </div>
-                                        ))}
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                        </CardContent>
+                                    </Card>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Card className="bg-green-50/50 border-green-100">
-                                    <CardHeader><CardTitle className="text-green-700">Pros</CardTitle></CardHeader>
-                                    <CardContent>
-                                        <ul className="list-disc pl-4 space-y-1 text-sm text-green-800">
-                                            {report?.pros?.map((pro: string, i: number) => (
-                                                <li key={i}>{pro}</li>
-                                            ))}
-                                        </ul>
-                                    </CardContent>
-                                </Card>
-                                <Card className="bg-red-50/50 border-red-100">
-                                    <CardHeader><CardTitle className="text-red-700">Cons</CardTitle></CardHeader>
-                                    <CardContent>
-                                        <ul className="list-disc pl-4 space-y-1 text-sm text-red-800">
-                                            {report?.cons?.map((con: string, i: number) => (
-                                                <li key={i}>{con}</li>
-                                            ))}
-                                        </ul>
-                                    </CardContent>
-                                </Card>
-                            </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <Card className="bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-800">
+                                            <CardHeader><CardTitle className="text-green-700 dark:text-green-400">Pros</CardTitle></CardHeader>
+                                            <CardContent>
+                                                <ul className="list-disc pl-4 space-y-1 text-sm text-green-800 dark:text-green-300">
+                                                    {report.pros?.map((pro: string, i: number) => (
+                                                        <li key={i}>{pro}</li>
+                                                    ))}
+                                                </ul>
+                                            </CardContent>
+                                        </Card>
+                                        <Card className="bg-red-50/50 border-red-100 dark:bg-red-900/10 dark:border-red-800">
+                                            <CardHeader><CardTitle className="text-red-700 dark:text-red-400">Cons</CardTitle></CardHeader>
+                                            <CardContent>
+                                                <ul className="list-disc pl-4 space-y-1 text-sm text-red-800 dark:text-red-300">
+                                                    {report.cons?.map((con: string, i: number) => (
+                                                        <li key={i}>{con}</li>
+                                                    ))}
+                                                </ul>
+                                            </CardContent>
+                                        </Card>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-12 text-muted-foreground">
+                                    No report generated yet.
+                                </div>
+                            )}
                         </TabsContent>
 
                         <TabsContent value="features" className="space-y-4 mt-4">
+                            {report ? (
+                                <>
+                                    <Card>
+                                        <CardHeader><CardTitle>Extracted Features</CardTitle></CardHeader>
+                                        <CardContent>
+                                            <ul className="list-disc pl-4 space-y-2">
+                                                {featuresList.map((feature, i) => (
+                                                    <li key={i} className="text-sm">{feature}</li>
+                                                ))}
+                                            </ul>
+                                        </CardContent>
+                                    </Card>
+                                    <Card>
+                                        <CardHeader><CardTitle>Pricing Structure</CardTitle></CardHeader>
+                                        <CardContent>
+                                            <div className="grid gap-4 sm:grid-cols-2">
+                                                {pricingTiers.map((tier, i) => (
+                                                    <div key={i} className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
+                                                        <h4 className="font-semibold text-lg">{tier.tier}</h4>
+                                                        <p className="text-2xl font-bold mt-2">{tier.price}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </>
+                            ) : (
+                                <div className="text-center py-12 text-muted-foreground">
+                                    No data available.
+                                </div>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="history" className="space-y-4 mt-4">
                             <Card>
-                                <CardHeader><CardTitle>Extracted Features</CardTitle></CardHeader>
+                                <CardHeader>
+                                    <CardTitle>Research & Update History</CardTitle>
+                                </CardHeader>
                                 <CardContent>
-                                    <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto">
-                                        {JSON.stringify(report?.features, null, 2)}
-                                    </pre>
-                                </CardContent>
-                            </Card>
-                            <Card>
-                                <CardHeader><CardTitle>Pricing Structure</CardTitle></CardHeader>
-                                <CardContent>
-                                    <pre className="text-xs bg-muted p-4 rounded-lg overflow-auto">
-                                        {JSON.stringify(report?.pricing, null, 2)}
-                                    </pre>
+                                    <div className="relative border-l ml-3 pl-6 space-y-6">
+                                        {[
+                                            ...jobs.map(job => ({
+                                                type: 'job' as const,
+                                                date: job.triggeredAt,
+                                                status: job.status,
+                                                id: job.id,
+                                                version: undefined
+                                            })),
+                                            ...allReports.map(rep => ({
+                                                type: 'report' as const,
+                                                date: rep.createdAt,
+                                                version: rep.version,
+                                                id: rep.id,
+                                                status: undefined
+                                            }))
+                                        ]
+                                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                            .map((item) => (
+                                                <div key={`${item.type}-${item.id}`} className="relative">
+                                                    <div className="absolute -left-[31px] bg-background">
+                                                        {item.type === 'job' ? (
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 ring-4 ring-background" />
+                                                        ) : (
+                                                            <div className="w-2.5 h-2.5 rounded-full bg-green-500 ring-4 ring-background" />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-sm font-medium">
+                                                            {item.type === 'job' ? `Research Job: ${item.status}` : `Report Generated (v${item.version})`}
+                                                        </span>
+                                                        <span className="text-xs text-muted-foreground">
+                                                            {formatDistanceToNow(item.date, { addSuffix: true })}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+                                    {jobs.length === 0 && allReports.length === 0 && (
+                                        <div className="text-center py-4 text-muted-foreground text-sm">
+                                            No history recorded yet.
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </TabsContent>
 
                         <TabsContent value="notes" className="space-y-4 mt-4">
                             <NotesSection toolId={tool.id} notes={[]} />
-                        </TabsContent>
-
-                        <TabsContent value="stream" className="space-y-4 mt-4">
-                            <ResearchStream toolId={tool.id} />
                         </TabsContent>
                     </Tabs>
                 </div>
@@ -217,33 +277,33 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
                                     {tool.category?.map((c: string) => (
                                         <Badge key={c} variant="secondary">{c}</Badge>
                                     ))}
+                                    {!tool.category?.length && <span className="text-sm italic text-muted-foreground">None</span>}
                                 </div>
                             </div>
                             <div>
                                 <span className="text-sm text-muted-foreground block">Submitted By</span>
                                 <div className="flex items-center gap-2 mt-1">
                                     <div className="w-6 h-6 rounded-full bg-slate-200" />
-                                    <span className="text-sm">Adam Wolfe</span>
+                                    <span className="text-sm truncate max-w-[150px]">{tool.submittedBy || 'Unknown'}</span>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader><CardTitle>Competitors</CardTitle></CardHeader>
-                        <CardContent>
-                            <div className="space-y-2">
-                                <div className="p-2 rounded hover:bg-muted cursor-pointer transition-colors flex justify-between items-center bg-muted/30">
-                                    <span className="text-sm font-medium">Smartlead.ai</span>
-                                    <Badge variant="outline">7.9</Badge>
+                    {report?.competitors && report.competitors.length > 0 && (
+                        <Card>
+                            <CardHeader><CardTitle>Competitors</CardTitle></CardHeader>
+                            <CardContent>
+                                <div className="space-y-2">
+                                    {report.competitors.map((comp: string, i: number) => (
+                                        <div key={i} className="p-2 rounded hover:bg-muted cursor-pointer transition-colors flex justify-between items-center bg-muted/30">
+                                            <span className="text-sm font-medium">{comp}</span>
+                                        </div>
+                                    ))}
                                 </div>
-                                <div className="p-2 rounded hover:bg-muted cursor-pointer transition-colors flex justify-between items-center bg-muted/30">
-                                    <span className="text-sm font-medium">Apollo.io</span>
-                                    <Badge variant="outline">8.5</Badge>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
             </div>

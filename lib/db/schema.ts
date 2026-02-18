@@ -35,6 +35,7 @@ export const tools = pgTable('tools', {
     submittedBy: text('submitted_by'), // Clerk User ID or Member ID
     submittedAt: timestamp('submitted_at').defaultNow().notNull(),
     lastResearchedAt: timestamp('last_researched_at'),
+    researchLogs: jsonb('research_logs'), // Array of { message: string, timestamp: string }
     embedding: vector('embedding', { dimensions: 1536 }), // pgvector
 });
 
@@ -110,5 +111,59 @@ export const reportsRelations = relations(reports, ({ one }) => ({
     tool: one(tools, {
         fields: [reports.toolId],
         references: [tools.id],
+    }),
+}));
+
+// Ads (Promoted Tools)
+export const ads = pgTable('ads', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    toolId: uuid('tool_id').references(() => tools.id).notNull(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id).notNull(), // The workspace promoting the tool
+    status: text('status').default('draft').notNull(), // draft | active | paused | completed
+    budget: integer('budget').default(0).notNull(), // Total budget in cents
+    spent: integer('spent').default(0).notNull(), // Total spent in cents
+    cpc: integer('cpc').default(0).notNull(), // Cost per click in cents
+    impressions: integer('impressions').default(0).notNull(),
+    clicks: integer('clicks').default(0).notNull(),
+    startDate: timestamp('start_date'),
+    endDate: timestamp('end_date'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const adsRelations = relations(ads, ({ one }) => ({
+    tool: one(tools, {
+        fields: [ads.toolId],
+        references: [tools.id],
+    }),
+    workspace: one(workspaces, {
+        fields: [ads.workspaceId],
+        references: [workspaces.id],
+    }),
+}));
+
+export const workspaceMembersRelations = relations(workspaceMembers, ({ one }) => ({
+    workspace: one(workspaces, {
+        fields: [workspaceMembers.workspaceId],
+        references: [workspaces.id],
+    }),
+}));
+
+// Subscriptions
+export const subscriptions = pgTable('subscriptions', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id).notNull(),
+    stripeCustomerId: text('stripe_customer_id').unique(),
+    stripeSubscriptionId: text('stripe_subscription_id').unique(),
+    status: text('status').notNull(), // active | trialing | past_due | canceled | incomplete
+    planId: text('plan_id').notNull(), // price_...
+    currentPeriodEnd: timestamp('current_period_end'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
+    workspace: one(workspaces, {
+        fields: [subscriptions.workspaceId],
+        references: [workspaces.id],
     }),
 }));

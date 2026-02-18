@@ -13,6 +13,28 @@ export class PerplexityService {
         }
     }
 
+    async search(query: string): Promise<string> {
+        if (!this.client) {
+            console.warn("PERPLEXITY_API_KEY is not set. Returning mock search results.");
+            return "Mock search result: No major red flags found. Users praise the ease of use but complain about pricing.";
+        }
+
+        try {
+            const response = await this.client.chat.completions.create({
+                model: "sonar-reasoning-pro",
+                messages: [
+                    { role: "system", content: "You are a helpful research assistant. Find facts, reviews, and sentiment." },
+                    { role: "user", content: query }
+                ]
+            });
+
+            return response.choices[0].message.content || "";
+        } catch (error) {
+            console.error("Perplexity search failed:", error);
+            return "";
+        }
+    }
+
     async discoverTools(painPoint: string): Promise<string> {
         if (!this.client) {
             console.warn("PERPLEXITY_API_KEY is not set. Returning mock suggestions.");

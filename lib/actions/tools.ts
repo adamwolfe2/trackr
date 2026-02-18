@@ -2,10 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { tools, workspaces, workspaceMembers } from "@/lib/db/schema";
+import { tools, workspaces, workspaceMembers, reports, researchJobs } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+
+async function getWorkspaceId(userId: string) {
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, userId),
+    });
+    return member?.workspaceId;
+}
 
 export async function submitTool(formData: FormData) {
     const user = await currentUser();
@@ -13,14 +20,12 @@ export async function submitTool(formData: FormData) {
 
     const name = formData.get("name") as string;
     const websiteUrl = formData.get("website_url") as string;
-    const description = formData.get("description") as string;
+    // const description = formData.get("description") as string;
 
     // 1. Get user's workspace (or create default)
-    // MVP: fetch the first workspace or create one for the user
     let workspace = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),
         with: {
-            // @ts-ignore
             workspace: true
         }
     });
@@ -54,9 +59,6 @@ export async function submitTool(formData: FormData) {
     }).returning();
 
     // 3. Trigger Research Agent
-    // We don't await this to keep UI snappy, or we use a background job. 
-    // For Vercel server actions, it's better to await or use Inngest/Queue. 
-    // We'll await for simplicity in MVP.
     try {
         const { triggerResearchAgent } = await import("@/lib/agents/trigger");
         await triggerResearchAgent(newTool.id, websiteUrl);
@@ -68,4 +70,46 @@ export async function submitTool(formData: FormData) {
 
     revalidatePath("/tools");
     redirect("/tools");
+}
+
+export async function deleteTool(toolId: string) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    // Verify tool belongs to workspace
+    const tool = await db.query.tools.findFirst({
+        where: and(eq(tools.id, toolId), eq(tools.workspaceId, workspaceId))
+    });
+
+    if (!tool) throw new Error("Tool not found or unauthorized");
+
+    // Delete related records first (cascade should handle this if configured, but let's be safe)
+    await db.delete(reports).where(eq(reports.toolId, toolId));
+    await db.delete(researchJobs).where(eq(researchJobs.toolId, toolId));
+
+    // Delete tool
+    await db.delete(tools).where(eq(tools.id, toolId));
+
+    revalidatePath("/tools");
+    revalidatePath("/dashboard");
+    return { success: true };
+}
+
+export async function updateToolStatus(toolId: string, status: string) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    await db.update(tools)
+        .set({ status })
+        .where(and(eq(tools.id, toolId), eq(tools.workspaceId, workspaceId)));
+
+    revalidatePath("/tools");
+    revalidatePath(`/tools/${toolId}`);
+    return { success: true };
 }
