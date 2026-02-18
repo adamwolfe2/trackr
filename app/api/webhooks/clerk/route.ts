@@ -4,6 +4,7 @@ import { WebhookEvent } from '@clerk/nextjs/server'
 import { db } from '@/lib/db'
 import { workspaces, workspaceMembers } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { sendWelcomeEmail } from '@/lib/email/resend'
 
 export async function POST(req: Request) {
     // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhook
@@ -79,6 +80,12 @@ export async function POST(req: Request) {
             });
 
             console.log(`Created workspace for user ${id}`);
+
+            // Send welcome email (fire and forget)
+            if (primaryEmail) {
+                const firstName = evt.data.first_name || displayName;
+                sendWelcomeEmail(primaryEmail, firstName).catch(() => {});
+            }
         }
     }
 

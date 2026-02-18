@@ -33,7 +33,7 @@ export default async function DashboardLayout({
 
     const workspace = member.workspace;
 
-    if (!workspace.companyContext) {
+    if (!workspace.onboardingCompleted) {
         redirect("/onboarding");
     }
 

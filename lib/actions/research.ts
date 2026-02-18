@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { tools, reports, workspaces } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { tools, reports, workspaces, researchJobs, subscriptions } from "@/lib/db/schema";
+import { eq, sql, and, gte } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { perplexity } from "@/lib/services/perplexity";
 import { tavily } from "@/lib/services/tavily";
@@ -11,6 +11,9 @@ import { generateObject } from "ai";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import type { InferSelectModel } from "drizzle-orm";
+import { getPlanLimits } from "@/lib/config/subscriptions";
+import { sendResearchCompleteEmail, sendResearchFailedEmail } from "@/lib/email/resend";
+import { clerkClient } from "@clerk/nextjs/server";
 
 type ToolWithWorkspace = InferSelectModel<typeof tools> & {
     workspace: InferSelectModel<typeof workspaces>;
@@ -72,6 +75,49 @@ export async function performDeepResearch(toolId: string) {
     if (!tool || !tool.websiteUrl) {
         return { success: false, error: "Tool not found or missing URL" };
     }
+
+    // Check monthly research run limit
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, tool.workspaceId),
+    });
+    const limits = getPlanLimits(subscription ?? undefined);
+
+    if (limits.limits.research !== Infinity) {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        // Count completed research jobs for workspace tools this month
+        const workspaceToolIds = await db.query.tools.findMany({
+            where: eq(tools.workspaceId, tool.workspaceId),
+            columns: { id: true },
+        });
+        const toolIds = workspaceToolIds.map((t) => t.id);
+
+        if (toolIds.length > 0) {
+            const jobsThisMonth = await db.query.researchJobs.findMany({
+                where: and(
+                    gte(researchJobs.triggeredAt, startOfMonth),
+                ),
+                columns: { id: true, toolId: true },
+            }).then((jobs) => jobs.filter((j) => toolIds.includes(j.toolId)));
+
+            if (jobsThisMonth.length >= limits.limits.research) {
+                await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+                return {
+                    success: false,
+                    error: `Monthly research limit reached (${limits.limits.research} runs on ${limits.name} plan). Upgrade to run more research this month.`,
+                };
+            }
+        }
+    }
+
+    // Insert a researchJob row so /queue shows live status
+    const [researchJob] = await db.insert(researchJobs).values({
+        toolId,
+        status: "running",
+        triggeredAt: new Date(),
+    }).returning();
 
     await db.update(tools).set({
         status: "researching",
@@ -263,8 +309,31 @@ INSTRUCTIONS:
             category: reportData.categories,
         }).where(eq(tools.id, toolId));
 
+        // Mark researchJob as complete
+        if (researchJob) {
+            await db.update(researchJobs).set({
+                status: "complete",
+                completedAt: new Date(),
+            }).where(eq(researchJobs.id, researchJob.id));
+        }
+
+        // Send research complete email to submitter (fire and forget)
+        if (tool.submittedBy) {
+            try {
+                const clerk = await clerkClient();
+                const clerkUser = await clerk.users.getUser(tool.submittedBy);
+                const email = clerkUser.emailAddresses[0]?.emailAddress;
+                if (email) {
+                    await sendResearchCompleteEmail(email, tool.name, toolId, avgScore);
+                }
+            } catch {
+                // Non-critical — don't fail research if email errors
+            }
+        }
+
         revalidatePath(`/tools/${toolId}`);
         revalidatePath("/tools");
+        revalidatePath("/queue");
 
         return { success: true };
 
@@ -272,6 +341,30 @@ INSTRUCTIONS:
         const message = error instanceof Error ? error.message : "Unknown error";
         await logProgress(toolId, `Error: ${message}`);
         await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+
+        // Mark researchJob as failed
+        if (researchJob) {
+            await db.update(researchJobs).set({
+                status: "failed",
+                completedAt: new Date(),
+                errorMessage: message,
+            }).where(eq(researchJobs.id, researchJob.id));
+        }
+
+        // Send failure email to submitter (fire and forget)
+        if (tool?.submittedBy) {
+            try {
+                const clerk = await clerkClient();
+                const clerkUser = await clerk.users.getUser(tool.submittedBy);
+                const email = clerkUser.emailAddresses[0]?.emailAddress;
+                if (email) {
+                    await sendResearchFailedEmail(email, tool.name, toolId, message);
+                }
+            } catch {
+                // Non-critical
+            }
+        }
+
         return { success: false, error: message };
     }
 }

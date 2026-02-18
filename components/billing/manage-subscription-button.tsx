@@ -1,23 +1,19 @@
 "use client";
 
-import { createCheckoutSession } from "@/lib/actions/stripe";
+import { createCustomerPortalSession } from "@/lib/actions/stripe";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-type PlanSlug = "team" | "agency";
-
-export function UpgradeButton({ workspaceId, plan = "team" }: { workspaceId: string; plan?: PlanSlug }) {
+export function ManageSubscriptionButton({ workspaceId }: { workspaceId: string }) {
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleUpgrade = async () => {
+    const handleManage = async () => {
         setIsLoading(true);
         try {
-            const { url } = await createCheckoutSession(workspaceId, plan);
+            const { url } = await createCustomerPortalSession(workspaceId);
             if (url) {
                 window.location.href = url;
-            } else {
-                toast.error("Failed to start checkout");
             }
         } catch (error) {
             console.error(error);
@@ -27,13 +23,11 @@ export function UpgradeButton({ workspaceId, plan = "team" }: { workspaceId: str
         }
     };
 
-    const label = plan === "agency" ? "Upgrade to Agency" : "Upgrade to Team";
-
     return (
         <button
-            onClick={handleUpgrade}
+            onClick={handleManage}
             disabled={isLoading}
-            className="w-full border border-black bg-white text-black hover:bg-black hover:text-white transition-colors px-4 py-2 font-mono text-xs uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full border border-neutral-600 text-neutral-300 hover:border-white hover:text-white transition-colors px-4 py-2 font-mono text-xs uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
         >
             {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -41,7 +35,7 @@ export function UpgradeButton({ workspaceId, plan = "team" }: { workspaceId: str
                     Loading...
                 </span>
             ) : (
-                label
+                "Manage Subscription"
             )}
         </button>
     );

@@ -7,13 +7,25 @@ import { workspaceMembers, subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 
-export async function createCheckoutSession(workspaceId: string) {
+type PlanSlug = "team" | "agency";
+
+function getPriceId(plan: PlanSlug): string {
+    if (plan === "agency") {
+        const id = process.env.STRIPE_AGENCY_PRICE_ID;
+        if (!id) throw new Error("STRIPE_AGENCY_PRICE_ID not configured");
+        return id;
+    }
+    const id = process.env.STRIPE_TEAM_PRICE_ID;
+    if (!id) throw new Error("STRIPE_TEAM_PRICE_ID not configured");
+    return id;
+}
+
+export async function createCheckoutSession(workspaceId: string, plan: PlanSlug = "team") {
     const user = await currentUser();
     if (!user) {
         throw new Error("Unauthorized");
     }
 
-    // Verify user is owner of workspace
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id)
     });
@@ -22,27 +34,14 @@ export async function createCheckoutSession(workspaceId: string) {
         throw new Error("Unauthorized: You must be the workspace owner to upgrade.");
     }
 
-    const priceId = process.env.STRIPE_PRO_PRICE_ID;
-    if (!priceId) {
-        throw new Error("Stripe price ID not configured");
-    }
+    const priceId = getPriceId(plan);
 
-    // Check if checksout session already exists or customer exists
-    // For MVP, we'll just create a new session
     const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         payment_method_types: ['card'],
-        line_items: [
-            {
-                price: priceId,
-                quantity: 1,
-            },
-        ],
+        line_items: [{ price: priceId, quantity: 1 }],
         customer_email: user.emailAddresses[0].emailAddress,
-        metadata: {
-            workspaceId: workspaceId,
-            userId: user.id
-        },
+        metadata: { workspaceId, userId: user.id, plan },
         success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?success=true`,
         cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?canceled=true`,
     });
@@ -58,8 +57,6 @@ export async function createCustomerPortalSession(workspaceId: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
-    // Get subscription to find customer ID
-    // We should strictly verify workspace ownership too
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id)
     });
