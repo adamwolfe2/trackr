@@ -14,6 +14,7 @@ import { MarketingUseCases } from "@/components/marketing/marketing-use-cases";
 import { MarketingDiscovery } from "@/components/marketing/marketing-discovery";
 import { MarketingCTA } from "@/components/marketing/marketing-cta";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { MarketingIntegrations } from "@/components/marketing/marketing-integrations";
 
 export const metadata: Metadata = {
   title: "Trackr — AI Tool Research for Ops Teams",
@@ -83,6 +84,7 @@ export default async function Home() {
         <MarketingNavigation isLoggedIn={!!user} />
         <OffsetHero />
         <MarketingSocialProof />
+        <MarketingIntegrations />
         <MarketingProblem />
         <MarketingHowItWorks />
         <OffsetFeatures />

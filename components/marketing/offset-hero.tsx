@@ -259,14 +259,14 @@ export function OffsetHero() {
                     transition={{ duration: 0.5, ease: "easeOut" }}
                 >
                     <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-5 block">
-                        AI-Powered Tool Research for Ops Teams
+                        AI Tool Intelligence for Ops Teams
                     </span>
                     <h1 className="text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] tracking-tight max-w-2xl mb-7 font-serif">
-                        Stop researching tools<br className="hidden sm:block" /> manually.
+                        Your team&apos;s AI tool<br className="hidden sm:block" /> intelligence layer.
                     </h1>
 
                     <p className="text-base md:text-lg leading-relaxed text-neutral-600 font-mono mb-10 max-w-lg">
-                        Submit any software tool. Research agents crawl, score, and report back in under 2 minutes. Your team gets a shared database that actually stays current.
+                        Research any AI tool in under 2 minutes. Track what you pay for. Stay current on launches. One shared workspace — no spreadsheets, no Slack threads, no wasted research.
                     </p>
 
                     <div className="flex flex-col sm:flex-row gap-4 items-start mb-10">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, Sliders, Target, Search, Users, Compass, RefreshCw, FileText } from "lucide-react";
+import { Bot, Sliders, Target, Search, Users, Newspaper, BarChart3, LayoutGrid } from "lucide-react";
 import { motion, useInView, type Variants } from "framer-motion";
 import { useRef } from "react";
 
@@ -9,7 +9,7 @@ const features = [
         icon: Bot,
         title: "Research Agents",
         headline: "Send agents. Not interns.",
-        body: "Trackr's research agents scrape pricing pages, product docs, Reddit threads, and G2 reviews on your behalf. They bring back structured data, not raw links.",
+        body: "Trackr's research agents scrape pricing pages, product docs, Reddit threads, and G2 reviews on your behalf. They bring back structured data — not raw links — in under 2 minutes.",
         colSpan: "md:col-span-2"
     },
     {
@@ -20,9 +20,30 @@ const features = [
         colSpan: "md:col-span-1"
     },
     {
+        icon: LayoutGrid,
+        title: "Portfolio Kanban",
+        headline: "See every tool at a glance.",
+        body: "Your tools live in a Kanban board: Backlog, Researching, Active, Archived. Stats bar shows total spend, avg score, and how many tools your team evaluated this month.",
+        colSpan: "md:col-span-1"
+    },
+    {
+        icon: BarChart3,
+        title: "Spend Tracking",
+        headline: "Know what you actually pay.",
+        body: "Track every SaaS tool your team pays for. Trackr flags tools that score below 6 and cost real money — so you know exactly what to cut before the next renewal.",
+        colSpan: "md:col-span-2"
+    },
+    {
+        icon: Newspaper,
+        title: "AI News Digest",
+        headline: "Stay current without the noise.",
+        body: "Trackr runs a daily search for AI tool launches and funding rounds. The digest surfaces what's relevant so you hear about the next great tool before your competitors do.",
+        colSpan: "md:col-span-1"
+    },
+    {
         icon: Target,
         title: "Pain Points Engine",
-        headline: "Context-aware agents.",
+        headline: "Context-aware research.",
         body: "Add your team's active pain points. Agents use them as context when scoring every tool — a tool for cold email gets evaluated differently than a tool for SEO.",
         colSpan: "md:col-span-1"
     },
@@ -31,7 +52,7 @@ const features = [
         title: "Semantic Search",
         headline: "Search in plain English.",
         body: "Ask 'what tools did we look at for outreach automation'. Trackr searches across tool names, report content, and team notes using semantic understanding.",
-        colSpan: "md:col-span-2"
+        colSpan: "md:col-span-1"
     },
     {
         icon: Users,
@@ -39,27 +60,6 @@ const features = [
         headline: "One database. No duplication.",
         body: "Invite your team. Everyone can add tools, read reports, and leave notes. No more parallel research or spreadsheet chaos.",
         colSpan: "md:col-span-1"
-    },
-    {
-        icon: Compass,
-        title: "Discovery Engine",
-        headline: "Find tools you missed.",
-        body: "Trackr runs background queries on ProductHunt and YC batches based on your pain points. New tools appear in your feed automatically.",
-        colSpan: "md:col-span-1"
-    },
-    {
-        icon: RefreshCw,
-        title: "Auto-Refresh",
-        headline: "Database doesn't go stale.",
-        body: "Trackr automatically re-researches every tool in your database every 30 days and flags what changed. No manual maintenance required.",
-        colSpan: "md:col-span-1"
-    },
-    {
-        icon: FileText,
-        title: "Structured Reports",
-        headline: "Always the same format.",
-        body: "Score breakdown. Pricing table. Features list. Pros and cons. Compare side by side without translation or guesswork.",
-        colSpan: "md:col-span-3"
     }
 ];
 

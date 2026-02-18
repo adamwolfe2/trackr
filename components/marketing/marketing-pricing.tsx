@@ -92,7 +92,7 @@ export function MarketingPricing() {
                     <div className="mb-8">
                         <h3 className="font-mono text-lg mb-2">Team</h3>
                         <div className="text-4xl font-serif mb-4">
-                            $49 <span className="text-sm font-mono text-neutral-400">/ month</span>
+                            $29 <span className="text-sm font-mono text-neutral-400">/ month</span>
                         </div>
                         <p className="text-sm text-neutral-400 font-mono">For teams that evaluate tools regularly and need to stay in sync.</p>
                     </div>
@@ -127,7 +127,7 @@ export function MarketingPricing() {
                     <div className="mb-8">
                         <h3 className="font-mono text-lg mb-2">Agency</h3>
                         <div className="text-4xl font-serif mb-4">
-                            $149 <span className="text-sm font-mono text-neutral-500">/ month</span>
+                            $99 <span className="text-sm font-mono text-neutral-500">/ month</span>
                         </div>
                         <p className="text-sm text-neutral-600 font-mono">For agencies and larger teams managing multiple workspaces.</p>
                     </div>
