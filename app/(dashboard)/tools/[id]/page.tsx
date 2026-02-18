@@ -74,6 +74,10 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                 <div className="flex items-start justify-between">
                     <div className="space-y-1">
                         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+                            {tool.logoUrl && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={tool.logoUrl} alt={tool.name} className="w-8 h-8 object-contain flex-shrink-0" />
+                            )}
                             {tool.name}
                             <Badge variant={tool.status === 'active' ? 'default' : 'outline'} className="text-sm font-normal capitalize">
                                 {tool.status}
@@ -222,48 +226,63 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
 
                         <TabsContent value="sentiment" className="space-y-4 mt-4">
                             {report?.sentimentData ? (() => {
-                                let sentiment: { summary?: string; sentiment?: string; quotes?: Array<{ text: string; source: string }> } = {};
+                                let sd: {
+                                    reviewAnswer?: string;
+                                    redditAnswer?: string;
+                                    competitorAnalysis?: string;
+                                    reviewSources?: Array<{ title: string; url: string; score: number }>;
+                                } = {};
                                 try {
-                                    sentiment = typeof report.sentimentData === "string"
+                                    sd = typeof report.sentimentData === "string"
                                         ? JSON.parse(report.sentimentData)
-                                        : report.sentimentData as any;
+                                        : report.sentimentData as typeof sd;
                                 } catch { /* ignore */ }
-
-                                const sentimentColor = sentiment?.sentiment === "positive"
-                                    ? "text-green-600"
-                                    : sentiment?.sentiment === "negative"
-                                    ? "text-red-600"
-                                    : "text-yellow-600";
 
                                 return (
                                     <div className="space-y-4">
-                                        {sentiment?.summary && (
+                                        {sd.reviewAnswer && (
                                             <Card>
-                                                <CardHeader>
-                                                    <CardTitle className="flex items-center gap-2">
-                                                        Community Sentiment
-                                                        {sentiment?.sentiment && (
-                                                            <span className={`text-sm font-normal capitalize ${sentimentColor}`}>
-                                                                • {sentiment.sentiment}
-                                                            </span>
-                                                        )}
-                                                    </CardTitle>
-                                                </CardHeader>
+                                                <CardHeader><CardTitle>Review Site Summary</CardTitle></CardHeader>
                                                 <CardContent>
-                                                    <p className="text-muted-foreground text-sm leading-relaxed">{sentiment.summary}</p>
+                                                    <p className="text-sm text-muted-foreground leading-relaxed">{sd.reviewAnswer}</p>
                                                 </CardContent>
                                             </Card>
                                         )}
-                                        {sentiment?.quotes && sentiment.quotes.length > 0 && (
+                                        {sd.reviewSources && sd.reviewSources.length > 0 && (
                                             <Card>
-                                                <CardHeader><CardTitle>User Quotes</CardTitle></CardHeader>
-                                                <CardContent className="space-y-4">
-                                                    {sentiment.quotes.map((q, i) => (
-                                                        <blockquote key={i} className="border-l-2 border-muted-foreground/30 pl-4 space-y-1">
-                                                            <p className="text-sm italic">&ldquo;{q.text}&rdquo;</p>
-                                                            <cite className="text-xs text-muted-foreground not-italic">— {q.source}</cite>
-                                                        </blockquote>
+                                                <CardHeader><CardTitle>Sources Reviewed</CardTitle></CardHeader>
+                                                <CardContent className="space-y-2">
+                                                    {sd.reviewSources.map((src, i) => (
+                                                        <a key={i} href={src.url} target="_blank" rel="noopener noreferrer"
+                                                            className="flex items-center justify-between p-2 border border-black hover:bg-neutral-100 transition-colors group">
+                                                            <div className="flex items-center gap-2 min-w-0">
+                                                                <img
+                                                                    src={`https://www.google.com/s2/favicons?domain=${new URL(src.url).hostname}&sz=16`}
+                                                                    alt="" className="w-4 h-4 flex-shrink-0"
+                                                                />
+                                                                <span className="text-sm truncate">{src.title}</span>
+                                                            </div>
+                                                            <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                                                                {new URL(src.url).hostname.replace("www.", "")}
+                                                            </span>
+                                                        </a>
                                                     ))}
+                                                </CardContent>
+                                            </Card>
+                                        )}
+                                        {sd.redditAnswer && (
+                                            <Card>
+                                                <CardHeader><CardTitle>Reddit / Community</CardTitle></CardHeader>
+                                                <CardContent>
+                                                    <p className="text-sm text-muted-foreground leading-relaxed">{sd.redditAnswer}</p>
+                                                </CardContent>
+                                            </Card>
+                                        )}
+                                        {sd.competitorAnalysis && (
+                                            <Card>
+                                                <CardHeader><CardTitle>Competitive Context</CardTitle></CardHeader>
+                                                <CardContent>
+                                                    <p className="text-sm text-muted-foreground leading-relaxed">{sd.competitorAnalysis}</p>
                                                 </CardContent>
                                             </Card>
                                         )}
