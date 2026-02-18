@@ -79,8 +79,8 @@ export function AppSidebar() {
     return (
         <div className="flex flex-col h-full bg-white border-r border-black">
             {/* Logo */}
-            <div className="p-5 border-b border-black/10">
-                <Link href="/" className="flex items-center gap-2 font-serif text-xl font-medium mb-5">
+            <div className="p-5 border-b border-black">
+                <Link href="/tools" className="flex items-center gap-2 font-serif text-xl font-medium mb-5">
                     <div className="w-7 h-7 bg-black flex items-center justify-center text-white text-xs font-mono font-bold">
                         T
                     </div>
@@ -118,7 +118,7 @@ export function AppSidebar() {
             </div>
 
             {/* Bottom Nav */}
-            <div className="px-3 py-3 border-t border-black/10 space-y-0.5">
+            <div className="px-3 py-3 border-t border-black space-y-0.5">
                 {bottomNavItems.map((item) => {
                     const active = isActive(item.href);
                     return (

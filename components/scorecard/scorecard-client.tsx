@@ -90,7 +90,7 @@ export function ScorecardClient({ savedConfig }: ScorecardClientProps) {
                                 </div>
                                 <Slider
                                     value={[value]}
-                                    max={50}
+                                    max={80}
                                     step={5}
                                     onValueChange={(val) => handleSliderChange(key, val)}
                                 />

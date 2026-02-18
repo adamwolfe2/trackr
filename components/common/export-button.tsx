@@ -8,11 +8,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 export function ExportButton() {
     const handleExport = (format: string) => {
-        // Mock export
-        alert(`Exporting report as ${format}... Check your downloads.`);
+        toast.success(`Exporting report as ${format}... Check your downloads.`);
     };
 
     return (

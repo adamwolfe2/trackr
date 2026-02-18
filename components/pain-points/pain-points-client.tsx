@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -25,9 +26,9 @@ type PainPoint = {
 };
 
 export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint[] }) {
-    const [points, setPoints] = useState<PainPoint[]>(initialData);
     const [isPending, startTransition] = useTransition();
     const [isOpen, setIsOpen] = useState(false);
+    const [pointToDelete, setPointToDelete] = useState<string | null>(null);
     const router = useRouter();
 
     // We rely on server revalidation to update the list, but we can optimistically update
@@ -87,7 +88,7 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {initialData.length === 0 ? (
-                    <div className="col-span-full text-center py-12 text-muted-foreground border-2 border-dashed rounded-xl">
+                    <div className="col-span-full text-center py-12 text-muted-foreground border-2 border-dashed border-black font-mono">
                         No pain points recorded. Add one to guide your AI research.
                     </div>
                 ) : (
@@ -120,14 +121,7 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
                                         variant="ghost"
                                         size="icon"
                                         className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                        onClick={() => {
-                                            if (confirm("Delete this pain point?")) {
-                                                startTransition(async () => {
-                                                    await deletePainPoint(point.id);
-                                                    router.refresh();
-                                                });
-                                            }
-                                        }}
+                                        onClick={() => setPointToDelete(point.id)}
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
@@ -137,6 +131,34 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
                     ))
                 )}
             </div>
+
+            <AlertDialog open={!!pointToDelete} onOpenChange={(open) => !open && setPointToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Pain Point?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This pain point will be removed and will no longer influence AI tool discovery.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-red-600 text-white border-red-600 hover:bg-red-700"
+                            onClick={() => {
+                                if (!pointToDelete) return;
+                                const id = pointToDelete;
+                                setPointToDelete(null);
+                                startTransition(async () => {
+                                    await deletePainPoint(id);
+                                    router.refresh();
+                                });
+                            }}
+                        >
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

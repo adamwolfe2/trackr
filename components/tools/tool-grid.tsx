@@ -3,6 +3,7 @@
 import { useState, useMemo, useTransition } from "react";
 import { BentoGrid, BentoCard } from "@/components/ui/bento-grid";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ interface Tool {
 
 export function ToolGrid({ tools }: { tools: Tool[] }) {
     const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
+    const [toolToDelete, setToolToDelete] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<string>("all");
     const [sortBy, setSortBy] = useState<string>("newest");
@@ -64,14 +66,19 @@ export function ToolGrid({ tools }: { tools: Tool[] }) {
     }, [tools, searchQuery, selectedCategory, sortBy]);
 
     const handleDelete = (toolId: string) => {
-        if (!confirm("Are you sure you want to delete this tool? All reports and data will be permanently lost.")) return;
+        setToolToDelete(toolId);
+    };
 
+    const confirmDelete = () => {
+        if (!toolToDelete) return;
+        const id = toolToDelete;
+        setToolToDelete(null);
         startTransition(async () => {
             try {
-                await deleteTool(toolId);
+                await deleteTool(id);
                 toast.success("Tool deleted successfully");
                 setSelectedTool(null);
-            } catch (error) {
+            } catch {
                 toast.error("Failed to delete tool");
             }
         });
@@ -92,7 +99,7 @@ export function ToolGrid({ tools }: { tools: Tool[] }) {
     return (
         <div className="space-y-6">
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-background/50 backdrop-blur-sm p-4 rounded-xl border">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-background p-4 border border-black">
                 <div className="relative w-full sm:w-[300px]">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -131,8 +138,8 @@ export function ToolGrid({ tools }: { tools: Tool[] }) {
             <BentoGrid className="max-w-7xl mx-auto">
                 {filteredTools.length === 0 ? (
                     <div className="col-span-full flex flex-col items-center justify-center py-12 text-center space-y-3">
-                        <div className="p-4 bg-muted rounded-full">
-                            <Search className="h-8 w-8 text-muted-foreground" />
+                        <div className="p-4 bg-neutral-100 border border-black">
+                            <Search className="h-8 w-8 text-black" />
                         </div>
                         <div className="space-y-1">
                             <p className="font-medium text-lg">No tools found</p>
@@ -178,14 +185,14 @@ export function ToolGrid({ tools }: { tools: Tool[] }) {
                                 </div>
                             }
                             header={
-                                <div className="flex flex-1 w-full h-full min-h-[6rem] rounded-xl bg-gradient-to-br from-neutral-200 to-neutral-100 dark:from-neutral-900 dark:to-neutral-800 flex-col items-center justify-center relative overflow-hidden group-hover/bento:scale-105 transition-transform duration-200">
+                                <div className="flex flex-1 w-full h-full min-h-[6rem] bg-neutral-100 border-b border-black flex-col items-center justify-center relative overflow-hidden">
                                     {tool.overallScore && (
-                                        <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-md text-white px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1">
+                                        <div className="absolute top-2 right-2 bg-black text-white px-2 py-0.5 text-xs font-mono font-bold flex items-center gap-1">
                                             <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
                                             {Number(tool.overallScore).toFixed(1)}
                                         </div>
                                     )}
-                                    <div className="text-4xl font-bold text-neutral-300 dark:text-neutral-700 select-none">
+                                    <div className="text-4xl font-serif font-bold text-neutral-400 select-none">
                                         {tool.name.charAt(0)}
                                     </div>
                                 </div>
@@ -197,6 +204,23 @@ export function ToolGrid({ tools }: { tools: Tool[] }) {
                     ))
                 )}
             </BentoGrid>
+
+            <AlertDialog open={!!toolToDelete} onOpenChange={(open) => !open && setToolToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Tool?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            All reports and data for this tool will be permanently lost. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-red-600 text-white border-red-600 hover:bg-red-700">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <Dialog open={!!selectedTool} onOpenChange={(open) => !open && setSelectedTool(null)}>
                 <DialogContent className="sm:max-w-[600px]">
@@ -242,14 +266,14 @@ export function ToolGrid({ tools }: { tools: Tool[] }) {
 
                             <div className="grid gap-4 py-4">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 rounded-lg bg-muted/50">
+                                    <div className="p-4 border border-black bg-neutral-50">
                                         <span className="text-sm text-muted-foreground block mb-1">Overall Score</span>
                                         <div className="text-3xl font-bold flex items-center gap-2">
                                             {selectedTool.overallScore ? Number(selectedTool.overallScore).toFixed(1) : '-'}
                                             <span className="text-sm text-muted-foreground font-normal">/ 10</span>
                                         </div>
                                     </div>
-                                    <div className="p-4 rounded-lg bg-muted/50">
+                                    <div className="p-4 border border-black bg-neutral-50">
                                         <span className="text-sm text-muted-foreground block mb-1">Last Researched</span>
                                         <div className="text-sm font-medium">
                                             {selectedTool.lastResearchedAt

@@ -38,17 +38,17 @@ export const BentoCard = ({
         <div
             onClick={onClick}
             className={cn(
-                "row-span-1 rounded-xl group/bento hover:shadow-xl transition duration-200 shadow-input dark:shadow-none p-4 dark:bg-black dark:border-white/[0.2] bg-white border border-transparent justify-between flex flex-col space-y-4 cursor-pointer",
+                "row-span-1 group/bento transition-[box-shadow,transform] duration-150 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[1px] hover:-translate-y-[1px] p-0 bg-white border border-black justify-between flex flex-col space-y-0 cursor-pointer overflow-hidden",
                 className
             )}
         >
             {header}
-            <div className="group-hover/bento:translate-x-2 transition duration-200">
+            <div className="p-4 flex flex-col gap-2">
                 {icon}
-                <div className="font-sans font-bold text-neutral-600 dark:text-neutral-200 mb-2 mt-2">
+                <div className="font-mono font-bold text-black text-sm">
                     {title}
                 </div>
-                <div className="font-sans font-normal text-neutral-600 text-xs dark:text-neutral-300">
+                <div className="font-mono font-normal text-neutral-600 text-xs">
                     {description}
                 </div>
             </div>
