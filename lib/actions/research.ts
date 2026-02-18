@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { tools, reports } from "@/lib/db/schema";
+import { tools, reports, subscriptions } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { perplexity } from "@/lib/services/perplexity";
@@ -12,7 +12,7 @@ import { revalidatePath } from "next/cache";
 
 const ReportSchema = z.object({
     summary: z.string().describe("Executive summary of the tool analysis, max 2 sentences."),
-    scorecardSnapshot: z.record(z.object({
+    scorecardSnapshot: z.record(z.string(), z.object({
         score: z.number().min(0).max(10),
         justification: z.string()
     })).describe("Scores (0-10) for keys like 'start_up_fit', 'pricing_value', 'integration_depth'"),
@@ -23,9 +23,11 @@ const ReportSchema = z.object({
         tier: z.string(),
         price: z.string()
     })).describe("Pricing tiers found"),
+    isPricingHidden: z.boolean().describe("True if pricing is not publicly listed and requires a demo/contact."),
     pros: z.array(z.string()).describe("Top 3-5 pros"),
     cons: z.array(z.string()).describe("Top 3-5 cons"),
     competitors: z.array(z.string()).describe("List of main competitors mentioned or known"),
+    categories: z.array(z.string()).describe("3-5 relevant categories for this tool (e.g. CRM, Analytics, DevTool)"),
 });
 
 // Helper to log progress to the DB
@@ -64,6 +66,19 @@ export async function performDeepResearch(toolId: string) {
     });
 
     if (!tool || !tool.websiteUrl) throw new Error("Tool not found or missing URL");
+
+    // Check Subscription Limits
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, tool.workspaceId)
+    });
+
+    // @ts-ignore
+    const { getPlanLimits } = await import("@/lib/config/subscriptions");
+    const limits = getPlanLimits(subscription);
+
+    if (!limits.limits.deepResearch) {
+        throw new Error("Deep research is a Pro feature. Please upgrade.");
+    }
 
     // Reset logs and status
     await db.update(tools).set({
@@ -144,6 +159,7 @@ export async function performDeepResearch(toolId: string) {
             summary: reportData.summary,
             features: reportData.features,
             pricing: reportData.pricing,
+            isPricingHidden: reportData.isPricingHidden,
             pros: reportData.pros,
             cons: reportData.cons,
             competitors: reportData.competitors,
@@ -160,6 +176,7 @@ export async function performDeepResearch(toolId: string) {
             status: "active",
             overallScore: avgScore.toFixed(1),
             lastResearchedAt: new Date(),
+            category: reportData.categories, // Auto-tagging
         }).where(eq(tools.id, toolId));
 
         revalidatePath(`/tools/${toolId}`);

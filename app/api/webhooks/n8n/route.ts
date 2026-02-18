@@ -9,7 +9,7 @@ export async function POST(req: Request) {
         const body = await req.json();
         const { tool_id, report_data, n8n_execution_id, status } = body;
 
-        // Verify secret if needed (TODO)
+        // Verify secret if needed
 
         if (!tool_id) {
             return NextResponse.json({ error: "Missing tool_id" }, { status: 400 });

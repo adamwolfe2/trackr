@@ -15,7 +15,6 @@ const Separator = React.forwardRef<
     ) => (
         <SeparatorPrimitive.Root
             ref={ref}
-            decimalScale={1}
             orientation={orientation}
             className={cn(
                 "shrink-0 bg-border",

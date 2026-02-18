@@ -11,6 +11,13 @@ export interface CrawlResult {
     error?: string;
 }
 
+export interface MapOptions {
+    limit?: number;
+    includeSubdomains?: boolean;
+    search?: string;
+    ignoreSitemap?: boolean;
+}
+
 export class FirecrawlService {
     private apiKey: string;
     private baseUrl = "https://api.firecrawl.dev/v1";
@@ -57,9 +64,12 @@ export class FirecrawlService {
 
     /**
      * Crawl a website to find subpages (e.g. documentation, pricing)
+     * Optimized to exclude irrelevant paths and limit depth via search query or limit.
      */
-    async mapSite(url: string): Promise<ScrapeResult> {
+    async mapSite(url: string, options: MapOptions = {}): Promise<ScrapeResult> {
         if (!this.apiKey) return { success: false, error: "No API Key" };
+
+        const { limit = 50, includeSubdomains = false, search, ignoreSitemap = true } = options;
 
         try {
             const response = await fetch(`${this.baseUrl}/map`, {
@@ -68,13 +78,26 @@ export class FirecrawlService {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${this.apiKey}`
                 },
-                body: JSON.stringify({ url, limit: 50 })
+                body: JSON.stringify({
+                    url,
+                    limit,
+                    includeSubdomains,
+                    search,
+                    ignoreSitemap
+                })
             });
 
-            if (!response.ok) throw new Error("Map failed");
+            // Firecrawl map endpoint returns { success: true, links: [] } or { data: [] } depending on version
+            // Adjusted to handle response safely
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Map failed: ${response.status} ${errorText}`);
+            }
+
             const data = await response.json();
             return { success: true, data: data };
         } catch (e: any) {
+            console.error("Firecrawl map failed:", e);
             return { success: false, error: e.message };
         }
     }

@@ -48,6 +48,7 @@ export const reports = pgTable('reports', {
     summary: text('summary'),
     features: jsonb('features'),
     pricing: jsonb('pricing'),
+    isPricingHidden: boolean('is_pricing_hidden').default(false).notNull(),
     pros: text('pros').array(),
     cons: text('cons').array(),
     integrations: text('integrations').array(),
@@ -130,6 +131,14 @@ export const ads = pgTable('ads', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// Relations
+export const researchJobsRelations = relations(researchJobs, ({ one }) => ({
+    tool: one(tools, {
+        fields: [researchJobs.toolId],
+        references: [tools.id],
+    }),
+}));
+
 export const adsRelations = relations(ads, ({ one }) => ({
     tool: one(tools, {
         fields: [ads.toolId],
@@ -167,3 +176,5 @@ export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
         references: [workspaces.id],
     }),
 }));
+
+export * from './referrals-schema';

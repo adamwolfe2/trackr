@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { HeroDemo } from "@/components/marketing/hero-demo";
+import { InfiniteScrollBanner } from "@/components/marketing/infinite-scroll-banner";
 import {
   CheckCircle2,
   ArrowRight,
@@ -9,36 +10,18 @@ import {
   BarChart3,
   Users,
   Layers,
-  Cpu
+  Cpu,
+  Sparkles
 } from "lucide-react";
+import { Header } from "@/components/marketing/header";
+import { InteractiveDemo } from "@/components/marketing/interactive-demo";
+import { Testimonials } from "@/components/marketing/testimonials";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-50 font-sans selection:bg-emerald-500/30">
       {/* Navbar */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-200/50 dark:border-zinc-800/50 bg-white/80 dark:bg-black/80 backdrop-blur-md">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 font-bold text-xl">
-            <div className="w-8 h-8 bg-black dark:bg-white rounded-lg flex items-center justify-center text-white dark:text-black">
-              T
-            </div>
-            Trackr
-          </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            <Link href="#features" className="hover:text-black dark:hover:text-white transition-colors">Features</Link>
-            <Link href="#solutions" className="hover:text-black dark:hover:text-white transition-colors">Solutions</Link>
-            <Link href="#pricing" className="hover:text-black dark:hover:text-white transition-colors">Pricing</Link>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Link href="/sign-in" className="text-sm font-medium hover:text-black dark:hover:text-white text-zinc-600 dark:text-zinc-400">Log in</Link>
-            <Link href="/sign-up">
-              <Button className="rounded-full px-6 bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200">
-                Get started free
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="pt-24 pb-16">
         {/* Hero Section */}
@@ -63,8 +46,14 @@ export default function LandingPage() {
 
           <div className="animate-fade-in-up stagger-3 mb-24">
             <HeroDemo />
+            <div className="mt-12 flex justify-center">
+              <InteractiveDemo />
+            </div>
           </div>
         </section>
+
+        {/* Trusted By Banner */}
+        <InfiniteScrollBanner />
 
         {/* Features Grid */}
         <section id="features" className="container mx-auto px-4 py-24">
@@ -220,6 +209,9 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Testimonials */}
+        <Testimonials />
+
         {/* CTA */}
         <section className="container mx-auto px-4 py-32 text-center">
           <h2 className="text-4xl font-bold mb-6">Ready to organize your AI stack?</h2>
@@ -242,6 +234,6 @@ export default function LandingPage() {
           <p>&copy; 2024 Trackr Inc. All rights reserved.</p>
         </div>
       </footer>
-    </div>
+    </div >
   );
 }

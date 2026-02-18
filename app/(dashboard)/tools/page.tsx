@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Search, ExternalLink, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { tools, workspaceMembers } from "@/lib/db/schema";
+import { tools, workspaceMembers, ads } from "@/lib/db/schema";
 import { eq, desc, like, or, and } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -57,6 +57,22 @@ export default async function ToolsPage({
         orderBy: [desc(tools.submittedAt)],
     });
 
+    // 2.5 Fetch Promoted Tools (Ads)
+    const activeAds = await db.query.ads.findMany({
+        where: eq(ads.status, 'active'),
+        with: {
+            tool: true
+        },
+        limit: 2
+    });
+
+    // Transform ads to tool format and dedup
+    const promotedTools = activeAds
+        .map(ad => ({ ...ad.tool, isPromoted: true }))
+        .filter(adTool => !toolsList.some(t => t.id === adTool.id));
+
+    const finalTools = [...promotedTools, ...toolsList];
+
     return (
         <div className="space-y-6 animate-fade-in-up">
             <div className="flex items-center justify-between">
@@ -100,7 +116,7 @@ export default async function ToolsPage({
             ) : (
                 <div className="mt-6">
                     {/* @ts-ignore */}
-                    <ToolGrid tools={toolsList} />
+                    <ToolGrid tools={finalTools} />
                 </div>
             )}
         </div>

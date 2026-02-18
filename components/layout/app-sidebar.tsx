@@ -11,6 +11,7 @@ import {
     Settings,
     PlusCircle,
     Search,
+    Gift,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -34,6 +35,21 @@ const navItems = [
         title: "Research Queue",
         href: "/queue",
         icon: Zap,
+    },
+    {
+        title: "Billing",
+        href: "/settings/billing",
+        icon: Zap,
+    },
+    {
+        title: "Advertise",
+        href: "/advertise",
+        icon: Sparkles,
+    },
+    {
+        title: "Referrals",
+        href: "/referrals",
+        icon: Gift,
     },
     {
         title: "Workspace Settings",

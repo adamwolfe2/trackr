@@ -30,6 +30,12 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
         orderBy: [desc(reports.createdAt)],
     });
 
+    // Fetch all tools in workspace for cross-reference
+    const workspaceTools = await db.query.tools.findMany({
+        where: eq(tools.workspaceId, tool.workspaceId),
+        columns: { id: true, name: true, status: true }
+    });
+
     const isResearching = tool.status === "researching";
 
     // Format features/pricing safely
@@ -133,7 +139,7 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
                                         <CardHeader><CardTitle>Score Breakdown</CardTitle></CardHeader>
                                         <CardContent>
                                             <div className="space-y-4">
-                                                {report.scorecardSnapshot && Object.entries(report.scorecardSnapshot).map(([key, value]: [string, any]) => (
+                                                {!!report.scorecardSnapshot && Object.entries(report.scorecardSnapshot as Record<string, { score: number; justification: string }>).map(([key, value]) => (
                                                     <div key={key} className="space-y-1">
                                                         <div className="flex items-center justify-between">
                                                             <span className="font-medium capitalize">{key.replace(/_/g, ' ')}</span>
@@ -301,11 +307,23 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
                             <CardHeader><CardTitle>Competitors</CardTitle></CardHeader>
                             <CardContent>
                                 <div className="space-y-2">
-                                    {report.competitors.map((comp: string, i: number) => (
-                                        <div key={i} className="p-2 rounded hover:bg-muted cursor-pointer transition-colors flex justify-between items-center bg-muted/30">
-                                            <span className="text-sm font-medium">{comp}</span>
-                                        </div>
-                                    ))}
+                                    {report.competitors.map((comp: string, i: number) => {
+                                        const match = workspaceTools.find(t => t.name.toLowerCase() === comp.toLowerCase());
+                                        return (
+                                            <div key={i} className="p-2 rounded hover:bg-muted transition-colors flex justify-between items-center bg-muted/30">
+                                                <span className="text-sm font-medium">{comp}</span>
+                                                {match ? (
+                                                    <Link href={`/tools/${match.id}`}>
+                                                        <Badge variant="outline" className="hover:bg-primary hover:text-primary-foreground cursor-pointer gap-1">
+                                                            View <ExternalLink className="h-3 w-3" />
+                                                        </Badge>
+                                                    </Link>
+                                                ) : (
+                                                    <Badge variant="secondary" className="opacity-50 font-normal">External</Badge>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </CardContent>
                         </Card>

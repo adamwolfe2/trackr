@@ -11,7 +11,7 @@ export function ResearchStream({ toolId }: { toolId: string }) {
     const [status, setStatus] = useState("initializing");
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
-    const intervalRef = useRef<NodeJS.Timeout>();
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // Initial fetch
     useEffect(() => {

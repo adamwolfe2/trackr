@@ -24,6 +24,7 @@ interface Tool {
     overallScore: string | null;
     submittedAt: Date;
     lastResearchedAt: Date | null;
+    isPromoted?: boolean;
 }
 
 export function ToolGrid({ tools }: { tools: Tool[] }) {
@@ -151,9 +152,15 @@ export function ToolGrid({ tools }: { tools: Tool[] }) {
                             title={
                                 <div className="flex items-center gap-2">
                                     {tool.name}
-                                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-5">
-                                        {tool.status}
-                                    </Badge>
+                                    {tool.isPromoted ? (
+                                        <Badge variant="default" className="text-[10px] px-1 py-0 h-5 bg-blue-600 hover:bg-blue-700">
+                                            Promoted
+                                        </Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-5">
+                                            {tool.status}
+                                        </Badge>
+                                    )}
                                 </div>
                             }
                             description={

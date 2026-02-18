@@ -2,12 +2,7 @@ import { db } from "@/lib/db";
 import { tools } from "@/lib/db/schema";
 import { cosineDistance, desc, gt, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
-
-import { openai } from "@/lib/services/openai";
-
-async function generateEmbedding(text: string): Promise<number[]> {
-    return await openai.generateEmbedding(text);
-}
+import { generateEmbedding } from "@/lib/ai/embedding";
 
 export async function POST(req: Request) {
     try {
@@ -22,11 +17,11 @@ export async function POST(req: Request) {
             .select({
                 id: tools.id,
                 name: tools.name,
-                description: tools.overallScore, // Using score as proxy for desc for now
-                similarity,
+                status: tools.status, // Return status
+                matchScore: similarity,
             })
             .from(tools)
-            .where(gt(similarity, 0.5))
+            .where(gt(similarity, 0.5)) // Threshold
             .orderBy(desc(similarity))
             .limit(5);
 

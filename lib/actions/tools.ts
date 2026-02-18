@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { tools, workspaces, workspaceMembers, reports, researchJobs } from "@/lib/db/schema";
+import { tools, workspaces, workspaceMembers, reports, researchJobs, subscriptions } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
@@ -49,16 +49,39 @@ export async function submitTool(formData: FormData) {
         workspaceId = workspace.workspaceId;
     }
 
-    // 2. Insert Tool
+    // 1.5 Check Limits
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspaceId)
+    });
+
+    const { getPlanLimits } = await import("@/lib/config/subscriptions");
+    const limits = getPlanLimits(subscription);
+
+    // Count existing tools
+    const toolCount = await db.query.tools.findMany({
+        where: eq(tools.workspaceId, workspaceId),
+        columns: { id: true }
+    });
+
+    if (limits.limits.tools !== Infinity && toolCount.length >= limits.limits.tools) {
+        throw new Error(`Free plan limit reached (${limits.limits.tools} tools). Please upgrade to Pro.`);
+    }
+
+    // 2. Generate Embedding
+    const { generateEmbedding } = await import("@/lib/ai/embedding");
+    const embedding = await generateEmbedding(`${name}: ${websiteUrl}`);
+
+    // 3. Insert Tool
     const [newTool] = await db.insert(tools).values({
         workspaceId,
         name,
         websiteUrl,
         status: "queued", // Initial status
         submittedBy: user.id,
+        embedding,
     }).returning();
 
-    // 3. Trigger Research Agent
+    // 4. Trigger Research Agent
     try {
         const { triggerResearchAgent } = await import("@/lib/agents/trigger");
         await triggerResearchAgent(newTool.id, websiteUrl);
