@@ -26,16 +26,33 @@ export async function processOnboarding(url: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
-    // 1. Get user's workspace
-    const member = await db.query.workspaceMembers.findFirst({
+    // 1. Get or create workspace (webhook may not have fired yet)
+    let existingMember = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),
-        with: {
-            // @ts-ignore
-            workspace: true
-        }
     });
 
-    if (!member) throw new Error("No workspace found");
+    if (!existingMember) {
+        const displayName =
+            user.username ||
+            user.emailAddresses[0]?.emailAddress?.split("@")[0] ||
+            "User";
+
+        const [newWorkspace] = await db.insert(workspaces).values({
+            name: `${displayName}'s Workspace`,
+            slug: `ws-${user.id.replace(/[^a-z0-9]/gi, "").slice(0, 12).toLowerCase()}`,
+            companyContext: null,
+        }).returning();
+
+        const [newMember] = await db.insert(workspaceMembers).values({
+            userId: user.id,
+            workspaceId: newWorkspace.id,
+            role: "owner",
+        }).returning();
+
+        existingMember = newMember;
+    }
+
+    const member = existingMember;
 
     // 2. Scrape the URL
     console.log(`Scraping ${url} for onboarding...`);
