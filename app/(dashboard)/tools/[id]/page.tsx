@@ -2,17 +2,13 @@ import { db } from "@/lib/db";
 import { tools, reports, researchJobs, notes } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ExternalLink, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { NotesSection } from "@/components/tools/notes-section";
-import { ExportButton } from "@/components/common/export-button";
 import { ResearchStream } from "@/components/tools/research-stream";
 import { ResearchButton } from "@/components/tools/research-button";
+import { ExportButton } from "@/components/common/export-button";
+import { ToolDetailTabs } from "@/components/tools/tool-detail-tabs";
 
 export const dynamic = "force-dynamic";
 
@@ -30,82 +26,128 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         orderBy: [desc(reports.createdAt)],
     });
 
-    // Fetch all tools in workspace for cross-reference
     const workspaceTools = await db.query.tools.findMany({
         where: eq(tools.workspaceId, tool.workspaceId),
-        columns: { id: true, name: true, status: true }
+        columns: { id: true, name: true, status: true },
     });
 
-    const isResearching = tool.status === "researching";
-
-    // Format features/pricing safely
-    const featuresList = report?.features && typeof report.features === 'object' && 'list' in report.features
-        // @ts-ignore
-        ? report.features.list as string[]
-        : [];
-
-    // @ts-ignore
-    const pricingTiers = report?.pricing as any[] || [];
-
-    // Fetch history data
     const jobs = await db.query.researchJobs.findMany({
         where: eq(researchJobs.toolId, id),
-        orderBy: [desc(researchJobs.triggeredAt)]
+        orderBy: [desc(researchJobs.triggeredAt)],
     });
 
     const allReports = await db.query.reports.findMany({
         where: eq(reports.toolId, id),
-        orderBy: [desc(reports.createdAt)]
+        orderBy: [desc(reports.createdAt)],
     });
 
-    // Fetch notes
     const toolNotes = await db.query.notes.findMany({
         where: eq(notes.toolId, id),
         orderBy: [desc(notes.createdAt)],
     });
 
+    const isResearching = tool.status === "researching";
+
+    // Extract features + pricing from report for tab component
+    const featuresList = report?.features && typeof report.features === "object" && "list" in report.features
+        // @ts-ignore
+        ? (report.features.list as string[])
+        : [];
+    // @ts-ignore
+    const pricingTiers = (report?.pricing as Array<{ tier: string; price: string }>) ?? [];
+
+    // Serialize history items (merge jobs + reports into timeline)
+    const historyItems = [
+        ...jobs.map(j => ({
+            id: j.id,
+            type: "job" as const,
+            status: j.status,
+            triggeredAt: j.triggeredAt.toISOString(),
+        })),
+        ...allReports.map(r => ({
+            id: r.id,
+            type: "report" as const,
+            status: "saved",
+            triggeredAt: r.createdAt.toISOString(),
+            version: r.version ?? 1,
+        })),
+    ].sort((a, b) => new Date(b.triggeredAt).getTime() - new Date(a.triggeredAt).getTime());
+
+    // Serialize report for client tabs
+    const serializedReport = report ? {
+        id: report.id,
+        summary: report.summary,
+        scorecardSnapshot: report.scorecardSnapshot as Record<string, { score: number; justification: string }> | null,
+        pros: report.pros as string[] | null,
+        cons: report.cons as string[] | null,
+        featuresList,
+        pricingTiers,
+        sentimentData: report.sentimentData as {
+            reviewAnswer?: string;
+            redditAnswer?: string;
+            competitorAnalysis?: string;
+            reviewSources?: Array<{ title: string; url: string; score: number }>;
+        } | null,
+    } : null;
+
+    const serializedNotes = toolNotes.map(n => ({
+        id: n.id,
+        content: n.content,
+        noteType: n.noteType ?? "general",
+        createdAt: n.createdAt.toISOString(),
+        workspaceMemberId: n.workspaceMemberId,
+    }));
+
+    const statusColors: Record<string, string> = {
+        active: "bg-black text-white border-black",
+        researching: "border-blue-600 text-blue-600",
+        failed: "border-red-600 text-red-600",
+    };
+
     return (
-        <div className="space-y-6 animate-fade-in-up">
+        <div className="space-y-6">
+            {/* Back link */}
+            <Link href="/tools" className="font-mono text-sm flex items-center gap-1 text-neutral-500 hover:text-black">
+                <ChevronLeft className="h-3 w-3" /> Back to Tools
+            </Link>
+
             {/* Header */}
-            <div className="flex flex-col gap-4">
-                <Link href="/tools" className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
-                    <ChevronLeft className="h-4 w-4" /> Back to Tools
-                </Link>
-                <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-                            {tool.logoUrl && (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={tool.logoUrl} alt={tool.name} className="w-8 h-8 object-contain flex-shrink-0" />
-                            )}
-                            {tool.name}
-                            <Badge variant={tool.status === 'active' ? 'default' : 'outline'} className="text-sm font-normal capitalize">
-                                {tool.status}
-                            </Badge>
-                        </h1>
-                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                            {tool.websiteUrl && (
-                                <a href={tool.websiteUrl} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
-                                    {new URL(tool.websiteUrl).hostname} <ExternalLink className="h-3 w-3" />
-                                </a>
-                            )}
-                            <span>•</span>
-                            <span>Last updated {tool.lastResearchedAt ? formatDistanceToNow(new Date(tool.lastResearchedAt), { addSuffix: true }) : 'Never'}</span>
-                        </div>
+            <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1 min-w-0">
+                    <h1 className="font-serif text-3xl font-normal flex items-center gap-3 flex-wrap">
+                        {tool.logoUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={tool.logoUrl} alt={tool.name} className="w-8 h-8 object-contain flex-shrink-0" />
+                        )}
+                        {tool.name}
+                        <span className={`font-mono text-xs border px-2 py-0.5 uppercase tracking-widest ${statusColors[tool.status] ?? "border-neutral-300 text-neutral-500"}`}>
+                            {tool.status}
+                        </span>
+                    </h1>
+                    <div className="flex items-center gap-2 font-mono text-xs text-neutral-400">
+                        {tool.websiteUrl && (
+                            <a href={tool.websiteUrl} target="_blank" rel="noopener noreferrer" className="hover:text-black flex items-center gap-1">
+                                {new URL(tool.websiteUrl).hostname} <ExternalLink className="h-2.5 w-2.5" />
+                            </a>
+                        )}
+                        {tool.websiteUrl && <span>·</span>}
+                        <span>Last updated {tool.lastResearchedAt ? formatDistanceToNow(new Date(tool.lastResearchedAt), { addSuffix: true }) : "Never"}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <ExportButton />
-                        <ResearchButton
-                            toolId={tool.id}
-                            isResearching={isResearching}
-                            hasReport={!!report}
-                        />
-                        <div className="flex flex-col items-end min-w-[100px]">
-                            <span className="text-3xl font-bold text-foreground">
-                                {Number(tool.overallScore || 0).toFixed(1)}
-                            </span>
-                            <span className="text-xs text-muted-foreground uppercase tracking-wide">Overall Score</span>
+                </div>
+
+                <div className="flex items-center gap-3 flex-shrink-0">
+                    <ExportButton />
+                    <ResearchButton
+                        toolId={tool.id}
+                        isResearching={isResearching}
+                        hasReport={!!report}
+                        isFailed={tool.status === "failed"}
+                    />
+                    <div className="text-right">
+                        <div className="font-mono text-3xl font-bold">
+                            {Number(tool.overallScore || 0).toFixed(1)}
                         </div>
+                        <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Score</div>
                     </div>
                 </div>
             </div>
@@ -114,299 +156,72 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
                 {/* Left Column (2/3) */}
-                <div className="md:col-span-2 space-y-6">
+                <div className="md:col-span-2 space-y-5">
                     {isResearching && <ResearchStream toolId={tool.id} />}
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Executive Summary</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="leading-relaxed text-muted-foreground">
-                                {String(report?.summary || "No analysis available yet. Run deep research to generate a report.")}
-                            </p>
-                        </CardContent>
-                    </Card>
+                    {/* Executive Summary */}
+                    <div className="border border-black p-5">
+                        <h2 className="font-mono text-xs uppercase tracking-widest mb-3">Executive Summary</h2>
+                        <p className="font-mono text-sm text-neutral-600 leading-relaxed">
+                            {report?.summary ?? "No analysis available yet. Run deep research to generate a report."}
+                        </p>
+                    </div>
 
-                    <Tabs defaultValue="report" className="w-full">
-                        <TabsList>
-                            <TabsTrigger value="report">Analysis</TabsTrigger>
-                            <TabsTrigger value="features">Features & Pricing</TabsTrigger>
-                            <TabsTrigger value="sentiment">Sentiment</TabsTrigger>
-                            <TabsTrigger value="history">History</TabsTrigger>
-                            <TabsTrigger value="notes">Team Notes</TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="report" className="space-y-4 mt-4">
-                            {report ? (
-                                <>
-                                    <Card>
-                                        <CardHeader><CardTitle>Score Breakdown</CardTitle></CardHeader>
-                                        <CardContent>
-                                            <div className="space-y-4">
-                                                {!!report.scorecardSnapshot && Object.entries(report.scorecardSnapshot as Record<string, { score: number; justification: string }>).map(([key, value]) => (
-                                                    <div key={key} className="space-y-1">
-                                                        <div className="flex items-center justify-between">
-                                                            <span className="font-medium capitalize">{key.replace(/_/g, ' ')}</span>
-                                                            <span className="font-bold">{value.score}/10</span>
-                                                        </div>
-                                                        <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                                                            <div className="h-full bg-primary" style={{ width: `${(value.score / 10) * 100}%` }} />
-                                                        </div>
-                                                        <p className="text-sm text-muted-foreground">{value.justification}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <Card className="bg-green-50/50 border-green-100 dark:bg-green-900/10 dark:border-green-800">
-                                            <CardHeader><CardTitle className="text-green-700 dark:text-green-400">Pros</CardTitle></CardHeader>
-                                            <CardContent>
-                                                <ul className="list-disc pl-4 space-y-1 text-sm text-green-800 dark:text-green-300">
-                                                    {report.pros?.map((pro: string, i: number) => (
-                                                        <li key={i}>{pro}</li>
-                                                    ))}
-                                                </ul>
-                                            </CardContent>
-                                        </Card>
-                                        <Card className="bg-red-50/50 border-red-100 dark:bg-red-900/10 dark:border-red-800">
-                                            <CardHeader><CardTitle className="text-red-700 dark:text-red-400">Cons</CardTitle></CardHeader>
-                                            <CardContent>
-                                                <ul className="list-disc pl-4 space-y-1 text-sm text-red-800 dark:text-red-300">
-                                                    {report.cons?.map((con: string, i: number) => (
-                                                        <li key={i}>{con}</li>
-                                                    ))}
-                                                </ul>
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                </>
-                            ) : (
-                                <div className="text-center py-12 text-muted-foreground">
-                                    No report generated yet.
-                                </div>
-                            )}
-                        </TabsContent>
-
-                        <TabsContent value="features" className="space-y-4 mt-4">
-                            {report ? (
-                                <>
-                                    <Card>
-                                        <CardHeader><CardTitle>Extracted Features</CardTitle></CardHeader>
-                                        <CardContent>
-                                            <ul className="list-disc pl-4 space-y-2">
-                                                {featuresList.map((feature, i) => (
-                                                    <li key={i} className="text-sm">{feature}</li>
-                                                ))}
-                                            </ul>
-                                        </CardContent>
-                                    </Card>
-                                    <Card>
-                                        <CardHeader><CardTitle>Pricing Structure</CardTitle></CardHeader>
-                                        <CardContent>
-                                            <div className="grid gap-4 sm:grid-cols-2">
-                                                {pricingTiers.map((tier, i) => (
-                                                    <div key={i} className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm">
-                                                        <h4 className="font-semibold text-lg">{tier.tier}</h4>
-                                                        <p className="text-2xl font-bold mt-2">{tier.price}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                </>
-                            ) : (
-                                <div className="text-center py-12 text-muted-foreground">
-                                    No data available.
-                                </div>
-                            )}
-                        </TabsContent>
-
-                        <TabsContent value="sentiment" className="space-y-4 mt-4">
-                            {report?.sentimentData ? (() => {
-                                let sd: {
-                                    reviewAnswer?: string;
-                                    redditAnswer?: string;
-                                    competitorAnalysis?: string;
-                                    reviewSources?: Array<{ title: string; url: string; score: number }>;
-                                } = {};
-                                try {
-                                    sd = typeof report.sentimentData === "string"
-                                        ? JSON.parse(report.sentimentData)
-                                        : report.sentimentData as typeof sd;
-                                } catch { /* ignore */ }
-
-                                return (
-                                    <div className="space-y-4">
-                                        {sd.reviewAnswer && (
-                                            <Card>
-                                                <CardHeader><CardTitle>Review Site Summary</CardTitle></CardHeader>
-                                                <CardContent>
-                                                    <p className="text-sm text-muted-foreground leading-relaxed">{sd.reviewAnswer}</p>
-                                                </CardContent>
-                                            </Card>
-                                        )}
-                                        {sd.reviewSources && sd.reviewSources.length > 0 && (
-                                            <Card>
-                                                <CardHeader><CardTitle>Sources Reviewed</CardTitle></CardHeader>
-                                                <CardContent className="space-y-2">
-                                                    {sd.reviewSources.map((src, i) => (
-                                                        <a key={i} href={src.url} target="_blank" rel="noopener noreferrer"
-                                                            className="flex items-center justify-between p-2 border border-black hover:bg-neutral-100 transition-colors group">
-                                                            <div className="flex items-center gap-2 min-w-0">
-                                                                <img
-                                                                    src={`https://www.google.com/s2/favicons?domain=${new URL(src.url).hostname}&sz=16`}
-                                                                    alt="" className="w-4 h-4 flex-shrink-0"
-                                                                />
-                                                                <span className="text-sm truncate">{src.title}</span>
-                                                            </div>
-                                                            <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
-                                                                {new URL(src.url).hostname.replace("www.", "")}
-                                                            </span>
-                                                        </a>
-                                                    ))}
-                                                </CardContent>
-                                            </Card>
-                                        )}
-                                        {sd.redditAnswer && (
-                                            <Card>
-                                                <CardHeader><CardTitle>Reddit / Community</CardTitle></CardHeader>
-                                                <CardContent>
-                                                    <p className="text-sm text-muted-foreground leading-relaxed">{sd.redditAnswer}</p>
-                                                </CardContent>
-                                            </Card>
-                                        )}
-                                        {sd.competitorAnalysis && (
-                                            <Card>
-                                                <CardHeader><CardTitle>Competitive Context</CardTitle></CardHeader>
-                                                <CardContent>
-                                                    <p className="text-sm text-muted-foreground leading-relaxed">{sd.competitorAnalysis}</p>
-                                                </CardContent>
-                                            </Card>
-                                        )}
-                                    </div>
-                                );
-                            })() : (
-                                <div className="text-center py-12 text-muted-foreground">
-                                    <p>No sentiment data yet.</p>
-                                    <p className="text-sm mt-1">Run deep research to collect community reviews.</p>
-                                </div>
-                            )}
-                        </TabsContent>
-
-                        <TabsContent value="history" className="space-y-4 mt-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Research & Update History</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="relative border-l ml-3 pl-6 space-y-6">
-                                        {[
-                                            ...jobs.map(job => ({
-                                                type: 'job' as const,
-                                                date: job.triggeredAt,
-                                                status: job.status,
-                                                id: job.id,
-                                                version: undefined
-                                            })),
-                                            ...allReports.map(rep => ({
-                                                type: 'report' as const,
-                                                date: rep.createdAt,
-                                                version: rep.version,
-                                                id: rep.id,
-                                                status: undefined
-                                            }))
-                                        ]
-                                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                                            .map((item) => (
-                                                <div key={`${item.type}-${item.id}`} className="relative">
-                                                    <div className="absolute -left-[31px] bg-background">
-                                                        {item.type === 'job' ? (
-                                                            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 ring-4 ring-background" />
-                                                        ) : (
-                                                            <div className="w-2.5 h-2.5 rounded-full bg-green-500 ring-4 ring-background" />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-medium">
-                                                            {item.type === 'job' ? `Research Job: ${item.status}` : `Report Generated (v${item.version})`}
-                                                        </span>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            {formatDistanceToNow(item.date, { addSuffix: true })}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                    </div>
-                                    {jobs.length === 0 && allReports.length === 0 && (
-                                        <div className="text-center py-4 text-muted-foreground text-sm">
-                                            No history recorded yet.
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </TabsContent>
-
-                        <TabsContent value="notes" className="space-y-4 mt-4">
-                            <NotesSection toolId={tool.id} notes={toolNotes} />
-                        </TabsContent>
-                    </Tabs>
+                    {/* Tabs */}
+                    <ToolDetailTabs
+                        toolId={tool.id}
+                        report={serializedReport}
+                        historyItems={historyItems}
+                        notes={serializedNotes}
+                        workspaceTools={workspaceTools}
+                        competitors={report?.competitors as string[] ?? []}
+                    />
                 </div>
 
-                {/* Right Column (1/3) - Sidebar */}
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader><CardTitle>Information</CardTitle></CardHeader>
-                        <CardContent className="space-y-4">
-                            <div>
-                                <span className="text-sm text-muted-foreground block">Categories</span>
-                                <div className="flex gap-1 flex-wrap mt-1">
-                                    {tool.category?.map((c: string) => (
-                                        <Badge key={c} variant="secondary">{c}</Badge>
-                                    ))}
-                                    {!tool.category?.length && <span className="text-sm italic text-muted-foreground">None</span>}
-                                </div>
+                {/* Right Column (1/3) */}
+                <div className="space-y-5">
+                    {/* Information */}
+                    <div className="border border-black p-4 space-y-4">
+                        <h3 className="font-mono text-xs uppercase tracking-widest">Information</h3>
+                        <div>
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">Categories</span>
+                            <div className="flex gap-1 flex-wrap">
+                                {tool.category?.map((c: string) => (
+                                    <span key={c} className="font-mono text-[10px] border border-black px-1.5 py-0.5">{c}</span>
+                                ))}
+                                {!tool.category?.length && <span className="font-mono text-xs text-neutral-400">None</span>}
                             </div>
-                            <div>
-                                <span className="text-sm text-muted-foreground block">Submitted By</span>
-                                <div className="flex items-center gap-2 mt-1">
-                                    <div className="w-6 h-6 rounded-full bg-slate-200" />
-                                    <span className="text-sm truncate max-w-[150px]">{tool.submittedBy || 'Unknown'}</span>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                        <div>
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">Submitted By</span>
+                            <span className="font-mono text-xs truncate block max-w-[150px]">{tool.submittedBy || "Unknown"}</span>
+                        </div>
+                    </div>
 
-                    {report?.competitors && report.competitors.length > 0 && (
-                        <Card>
-                            <CardHeader><CardTitle>Competitors</CardTitle></CardHeader>
-                            <CardContent>
-                                <div className="space-y-2">
-                                    {report.competitors.map((comp: string, i: number) => {
-                                        const match = workspaceTools.find(t => t.name.toLowerCase() === comp.toLowerCase());
-                                        return (
-                                            <div key={i} className="p-2 rounded hover:bg-muted transition-colors flex justify-between items-center bg-muted/30">
-                                                <span className="text-sm font-medium">{comp}</span>
-                                                {match ? (
-                                                    <Link href={`/tools/${match.id}`}>
-                                                        <Badge variant="outline" className="hover:bg-primary hover:text-primary-foreground cursor-pointer gap-1">
-                                                            View <ExternalLink className="h-3 w-3" />
-                                                        </Badge>
-                                                    </Link>
-                                                ) : (
-                                                    <Badge variant="secondary" className="opacity-50 font-normal">External</Badge>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </CardContent>
-                        </Card>
+                    {/* Competitors */}
+                    {report?.competitors && (report.competitors as string[]).length > 0 && (
+                        <div className="border border-black p-4">
+                            <h3 className="font-mono text-xs uppercase tracking-widest mb-3">Competitors</h3>
+                            <div className="space-y-1.5">
+                                {(report.competitors as string[]).map((comp, i) => {
+                                    const match = workspaceTools.find(t => t.name.toLowerCase() === comp.toLowerCase());
+                                    return (
+                                        <div key={i} className="flex items-center justify-between p-2 border border-neutral-200 hover:border-black transition-colors">
+                                            <span className="font-mono text-xs">{comp}</span>
+                                            {match ? (
+                                                <Link href={`/tools/${match.id}`} className="font-mono text-[10px] border border-black px-1.5 py-0.5 hover:bg-black hover:text-white flex items-center gap-1">
+                                                    View <ExternalLink className="h-2.5 w-2.5" />
+                                                </Link>
+                                            ) : (
+                                                <span className="font-mono text-[10px] text-neutral-400 border border-neutral-200 px-1.5 py-0.5">External</span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     )}
                 </div>
-
             </div>
         </div>
     );

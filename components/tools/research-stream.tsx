@@ -1,19 +1,15 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Terminal, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export function ResearchStream({ toolId }: { toolId: string }) {
     const [logs, setLogs] = useState<{ message: string, timestamp: string }[]>([]);
     const [status, setStatus] = useState("initializing");
-    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Initial fetch
     useEffect(() => {
         const fetchLogs = async () => {
             try {
@@ -27,18 +23,18 @@ export function ResearchStream({ toolId }: { toolId: string }) {
                 if (data.logs) setLogs(data.logs);
                 if (data.status) setStatus(data.status);
 
-                if (data.status === 'active' || data.status === 'failed') {
+                if (data.status === "active" || data.status === "failed") {
                     if (intervalRef.current) clearInterval(intervalRef.current);
-                    if (data.status === 'active') router.refresh();
+                    if (data.status === "active") router.refresh();
                 }
             } catch {
                 // Silent — polling will retry
             }
         };
 
-        // Poll every 1 second
+        // Poll every 2.5s (was 1s — reduced to cut server load)
         fetchLogs();
-        intervalRef.current = setInterval(fetchLogs, 1000);
+        intervalRef.current = setInterval(fetchLogs, 2500);
 
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
@@ -51,59 +47,65 @@ export function ResearchStream({ toolId }: { toolId: string }) {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [logs]);
 
-    if (logs.length === 0 && status !== 'researching') return null;
+    if (logs.length === 0 && status !== "researching") return null;
+
+    const statusLabel =
+        status === "researching" ? "RUNNING" :
+        status === "active" ? "COMPLETE" :
+        status === "failed" ? "FAILED" :
+        status.toUpperCase();
 
     return (
-        <Card className="bg-zinc-950 text-green-400 border-zinc-800 font-mono text-sm shadow-xl">
-            <CardHeader className="border-b border-zinc-800 pb-2 bg-zinc-900/50">
-                <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                        <Terminal className="h-4 w-4" />
-                        Research Agent Logs
-                    </CardTitle>
-                    <Badge variant="outline" className={`${status === 'researching' ? 'animate-pulse text-green-400 border-green-400' : status === 'failed' ? 'text-red-400 border-red-400' : 'text-zinc-500'}`}>
-                        {status === 'researching' ? 'RUNNING' : status.toUpperCase()}
-                    </Badge>
-                </div>
-            </CardHeader>
-            <CardContent className="h-[250px] overflow-y-auto p-4 space-y-2 font-mono text-xs scrollbar-thin scrollbar-thumb-zinc-800">
+        <div className="border border-black">
+            {/* Header */}
+            <div className="border-b border-black px-5 py-3 flex items-center justify-between">
+                <span className="font-mono text-xs uppercase tracking-widest font-bold">Research Agent Logs</span>
+                <span className={`font-mono text-xs uppercase tracking-widest border border-black px-2 py-0.5 ${
+                    status === "researching" ? "animate-pulse" :
+                    status === "failed" ? "border-red-600 text-red-600" :
+                    status === "active" ? "bg-black text-white" :
+                    ""
+                }`}>
+                    {statusLabel}
+                </span>
+            </div>
+
+            {/* Log Area */}
+            <div className="h-48 overflow-y-auto p-4 font-mono text-xs space-y-1.5">
                 {logs.map((log, i) => (
-                    <div key={i} className="flex gap-2 animate-in fade-in slide-in-from-left-2 duration-300">
-                        <span className="text-zinc-600 shrink-0">
-                            [{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}]
+                    <div key={i} className="flex gap-2">
+                        <span className="text-neutral-400 shrink-0">
+                            [{new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" })}]
                         </span>
-                        <div className="flex-1">
-                            {i === logs.length - 1 && status === 'researching' ? (
-                                <span className="text-green-400 font-bold">{log.message}</span>
-                            ) : (
-                                <span className="text-green-400/80">{log.message}</span>
-                            )}
-                        </div>
+                        <span className={i === logs.length - 1 && status === "researching" ? "text-black font-medium" : "text-neutral-700"}>
+                            {log.message}
+                        </span>
                     </div>
                 ))}
 
-                {status === 'researching' && (
-                    <div className="flex items-center gap-2 text-zinc-500 animate-pulse mt-2 pt-2 border-t border-zinc-800/50">
+                {status === "researching" && (
+                    <div className="flex items-center gap-2 text-neutral-400 pt-1">
                         <Loader2 className="h-3 w-3 animate-spin" />
-                        <span>Thinking...</span>
+                        <span>Processing...</span>
                     </div>
                 )}
 
-                {status === 'active' && (
-                    <div className="flex items-center gap-2 text-emerald-500 mt-2 pt-2 border-t border-zinc-800/50 font-bold">
-                        <CheckCircle2 className="h-4 w-4" />
-                        <span>Research gathered and synthesized successfully.</span>
+                {status === "active" && (
+                    <div className="flex items-center gap-2 text-black font-medium pt-1 border-t border-neutral-200 mt-2">
+                        <CheckCircle2 className="h-3 w-3" />
+                        <span>Research complete. Report generated.</span>
                     </div>
                 )}
 
-                {status === 'failed' && (
-                    <div className="flex items-center gap-2 text-red-500 mt-2 pt-2 border-t border-zinc-800/50 font-bold">
-                        <AlertTriangle className="h-4 w-4" />
-                        <span>Research process failed. Please retry.</span>
+                {status === "failed" && (
+                    <div className="flex items-center gap-2 text-red-600 font-medium pt-1 border-t border-neutral-200 mt-2">
+                        <AlertTriangle className="h-3 w-3" />
+                        <span>Research failed. Please retry.</span>
                     </div>
                 )}
+
                 <div ref={bottomRef} />
-            </CardContent>
-        </Card>
+            </div>
+        </div>
     );
 }
