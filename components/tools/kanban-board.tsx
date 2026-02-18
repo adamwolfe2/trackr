@@ -158,7 +158,7 @@ function DroppableColumn({
     );
 }
 
-export function KanbanBoard({ tools: initialTools, stats }: { tools: KanbanTool[]; stats: Stats }) {
+export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { tools: KanbanTool[]; stats: Stats; isEmpty?: boolean }) {
     const [tools, setTools] = useState(initialTools);
     const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -242,11 +242,21 @@ export function KanbanBoard({ tools: initialTools, stats }: { tools: KanbanTool[
                                 {colTools.map((tool) => (
                                     <DraggableCard key={tool.id} tool={tool} />
                                 ))}
-                                {colTools.length === 0 && (
+                                {colTools.length === 0 && col.id === "backlog" && isEmpty ? (
+                                    <div className="border border-dashed border-neutral-300 p-6 text-center space-y-3">
+                                        <p className="font-serif text-xl">Submit your first tool.</p>
+                                        <p className="font-mono text-xs text-neutral-500 leading-relaxed">
+                                            Add an AI tool URL and we&apos;ll auto-research it — reviews, pricing, competitors.
+                                        </p>
+                                        <Link href="/submit" className="inline-block border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
+                                            Submit Tool →
+                                        </Link>
+                                    </div>
+                                ) : colTools.length === 0 ? (
                                     <div className="border border-dashed border-neutral-300 p-4 text-center text-[10px] font-mono text-neutral-400">
                                         Empty
                                     </div>
-                                )}
+                                ) : null}
                             </DroppableColumn>
                         );
                     })}

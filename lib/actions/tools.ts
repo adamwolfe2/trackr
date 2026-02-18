@@ -74,7 +74,7 @@ export async function submitTool(formData: FormData) {
     const { previewTool } = await import("@/lib/actions/preview");
 
     const [embedding, preview] = await Promise.all([
-        generateEmbedding(`${name}: ${websiteUrl}`),
+        generateEmbedding(`${name}: ${websiteUrl}`).catch(() => null),
         previewTool(websiteUrl).catch(() => null),
     ]);
     const logoUrl = (preview && "image" in preview && preview.image) ? preview.image : null;

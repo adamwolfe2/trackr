@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
 import { tools, workspaceMembers, softwareSpend } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -57,31 +56,19 @@ export default async function ToolsPage() {
     const stats = { totalTools: toolsList.length, avgScore, researchedThisMonth, monthlySpend };
 
     return (
-        <div className="space-y-6 animate-fade-in-up">
+        <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">AI Tools Portfolio</h1>
-                    <p className="text-sm text-muted-foreground">Your team&apos;s AI tool intelligence at a glance.</p>
+                    <h1 className="font-serif text-3xl font-normal">AI Tools Portfolio</h1>
+                    <p className="font-mono text-sm text-neutral-500 mt-1">Your team&apos;s AI tool intelligence at a glance.</p>
                 </div>
-                <Link href="/submit">
-                    <Button className="gap-2">
-                        <PlusCircle className="h-4 w-4" />
-                        Add Tool
-                    </Button>
+                <Link href="/submit" className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-sm bg-black text-white hover:bg-neutral-800">
+                    <PlusCircle className="h-4 w-4" />
+                    Add Tool
                 </Link>
             </div>
 
-            {toolsList.length === 0 ? (
-                <div className="flex flex-col items-center justify-center min-h-[40vh] text-center space-y-4 border-2 border-dashed border-neutral-300 p-12">
-                    <h2 className="text-xl font-semibold">No tools yet</h2>
-                    <p className="text-muted-foreground text-sm">Add your first AI tool to start building your portfolio.</p>
-                    <Link href="/submit">
-                        <Button variant="outline">Add First Tool</Button>
-                    </Link>
-                </div>
-            ) : (
-                <KanbanBoard tools={toolsList} stats={stats} />
-            )}
+            <KanbanBoard tools={toolsList} stats={stats} isEmpty={toolsList.length === 0} />
         </div>
     );
 }

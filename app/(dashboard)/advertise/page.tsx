@@ -1,15 +1,11 @@
 export const dynamic = "force-dynamic";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { db } from "@/lib/db";
 import { ads, workspaceMembers } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { PlusCircle, BarChart3, MousePointer2, DollarSign, Eye } from "lucide-react";
+import { PlusCircle, Eye, MousePointer2, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -21,14 +17,12 @@ export default async function AdvertisePage() {
         where: eq(workspaceMembers.userId, user.id),
     });
 
-    if (!member) return <div>No workspace found</div>;
+    if (!member) return <div className="font-mono text-sm">No workspace found</div>;
 
     const myAds = await db.query.ads.findMany({
         where: eq(ads.workspaceId, member.workspaceId),
-        with: {
-            tool: true
-        },
-        orderBy: [desc(ads.createdAt)]
+        with: { tool: true },
+        orderBy: [desc(ads.createdAt)],
     });
 
     const totalImpressions = myAds.reduce((acc, ad) => acc + ad.impressions, 0);
@@ -36,104 +30,91 @@ export default async function AdvertisePage() {
     const totalSpend = myAds.reduce((acc, ad) => acc + ad.spent, 0);
 
     return (
-        <div className="space-y-6 animate-fade-in-up">
+        <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Ad Manager</h1>
-                    <p className="text-muted-foreground">Promote your tools to the entire Trackr network.</p>
+                    <h1 className="font-serif text-3xl font-normal">Ad Manager</h1>
+                    <p className="font-mono text-sm text-neutral-500 mt-1">Promote your tools to the entire Trackr network.</p>
                 </div>
-                <Link href="/advertise/create">
-                    <Button>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        New Campaign
-                    </Button>
+                <Link href="/advertise/create" className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800">
+                    <PlusCircle className="h-3.5 w-3.5" />
+                    New Campaign
                 </Link>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Impressions</CardTitle>
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{totalImpressions.toLocaleString()}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Clicks</CardTitle>
-                        <MousePointer2 className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{totalClicks.toLocaleString()}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Spend</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">${(totalSpend / 100).toFixed(2)}</div>
-                    </CardContent>
-                </Card>
+            {/* Stats Bar */}
+            <div className="grid grid-cols-3 border border-black">
+                <div className="p-5 border-r border-black">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">Impressions</span>
+                        <Eye className="h-3.5 w-3.5 text-neutral-400" />
+                    </div>
+                    <div className="font-mono text-2xl font-bold">{totalImpressions.toLocaleString()}</div>
+                </div>
+                <div className="p-5 border-r border-black">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">Clicks</span>
+                        <MousePointer2 className="h-3.5 w-3.5 text-neutral-400" />
+                    </div>
+                    <div className="font-mono text-2xl font-bold">{totalClicks.toLocaleString()}</div>
+                </div>
+                <div className="p-5">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">Spend</span>
+                        <DollarSign className="h-3.5 w-3.5 text-neutral-400" />
+                    </div>
+                    <div className="font-mono text-2xl font-bold">${(totalSpend / 100).toFixed(2)}</div>
+                </div>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Campaigns</CardTitle>
-                    <CardDescription>Manage your active ad campaigns.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {myAds.length === 0 ? (
-                        <div className="text-center py-6 text-muted-foreground">
-                            No campaigns found. Start promoting your first tool!
-                        </div>
-                    ) : (
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Tool</TableHead>
-                                    <TableHead>Status</TableHead>
-                                    <TableHead>Budget</TableHead>
-                                    <TableHead>Spent</TableHead>
-                                    <TableHead>Impressions</TableHead>
-                                    <TableHead>Clicks</TableHead>
-                                    <TableHead>Created</TableHead>
-                                    <TableHead>Invoice</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+            {/* Campaigns Table */}
+            <div className="border border-black">
+                <div className="border-b border-black px-5 py-3">
+                    <h2 className="font-mono text-xs uppercase tracking-widest">Campaigns</h2>
+                </div>
+                {myAds.length === 0 ? (
+                    <div className="py-12 text-center">
+                        <p className="font-mono text-sm text-neutral-400">No campaigns yet. Start promoting your first tool!</p>
+                    </div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-black">
+                                    {["Tool", "Status", "Budget", "Spent", "Impressions", "Clicks", "Created", ""].map(h => (
+                                        <th key={h} className="px-4 py-3 text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500">{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-neutral-100">
                                 {myAds.map((ad) => (
-                                    <TableRow key={ad.id}>
-                                        <TableCell className="font-medium">{ad.tool.name}</TableCell>
-                                        <TableCell>
-                                            <Badge variant={ad.status === 'active' ? 'default' : 'secondary'}>
+                                    <tr key={ad.id} className="hover:bg-[#F8F8F5] transition-colors">
+                                        <td className="px-4 py-3 font-mono text-sm font-medium">{ad.tool.name}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`font-mono text-[10px] uppercase border px-2 py-0.5 ${ad.status === "active" ? "border-black bg-black text-white" : "border-neutral-300 text-neutral-400"}`}>
                                                 {ad.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>${(ad.budget / 100).toFixed(2)}</TableCell>
-                                        <TableCell>${(ad.spent / 100).toFixed(2)}</TableCell>
-                                        <TableCell>{ad.impressions.toLocaleString()}</TableCell>
-                                        <TableCell>{ad.clicks.toLocaleString()}</TableCell>
-                                        <TableCell className="text-muted-foreground text-sm">
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 font-mono text-sm">${(ad.budget / 100).toFixed(2)}</td>
+                                        <td className="px-4 py-3 font-mono text-sm">${(ad.spent / 100).toFixed(2)}</td>
+                                        <td className="px-4 py-3 font-mono text-sm">{ad.impressions.toLocaleString()}</td>
+                                        <td className="px-4 py-3 font-mono text-sm">{ad.clicks.toLocaleString()}</td>
+                                        <td className="px-4 py-3 font-mono text-xs text-neutral-400">
                                             {formatDistanceToNow(new Date(ad.createdAt), { addSuffix: true })}
-                                        </TableCell>
-                                        <TableCell>
-                                            <a href={`/api/invoices/${ad.id}`} target="_blank" rel="noopener noreferrer">
-                                                <Button variant="ghost" size="sm">
-                                                    Download Invoice
-                                                </Button>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <a href={`/api/invoices/${ad.id}`} target="_blank" rel="noopener noreferrer"
+                                                className="font-mono text-[10px] uppercase tracking-widest border border-black px-2 py-1 hover:bg-black hover:text-white">
+                                                Invoice
                                             </a>
-                                        </TableCell>
-                                    </TableRow>
+                                        </td>
+                                    </tr>
                                 ))}
-                            </TableBody>
-                        </Table>
-                    )}
-                </CardContent>
-            </Card>
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

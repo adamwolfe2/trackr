@@ -9,6 +9,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getWorkspaceId } from "@/lib/actions/tools";
 import Link from "next/link";
+import { QueueAutoRefresh } from "@/components/queue/queue-auto-refresh";
 
 export default async function QueuePage() {
     const user = await currentUser();
@@ -40,7 +41,10 @@ export default async function QueuePage() {
         <div className="space-y-6">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl font-serif font-normal">Research Queue</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-2xl font-serif font-normal">Research Queue</h1>
+                        <QueueAutoRefresh runningCount={runningCount} />
+                    </div>
                     <p className="font-mono text-sm text-neutral-500 mt-1">Track all research runs for your workspace.</p>
                 </div>
                 <div className="flex gap-3">
