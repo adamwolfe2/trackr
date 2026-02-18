@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, jsonb, integer, vector, numeric } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, jsonb, integer, vector, numeric, index } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Workspaces
@@ -18,7 +18,10 @@ export const workspaceMembers = pgTable('workspace_members', {
     role: text('role').notNull().default('member'), // owner | admin | member
     invitedBy: uuid('invited_by'),
     joinedAt: timestamp('joined_at').defaultNow().notNull(),
-});
+}, (table) => [
+    index('workspace_members_user_id_idx').on(table.userId),
+    index('workspace_members_workspace_id_idx').on(table.workspaceId),
+]);
 
 // Tools
 export const tools = pgTable('tools', {
@@ -30,14 +33,18 @@ export const tools = pgTable('tools', {
     demoUrl: text('demo_url'),
     category: text('category').array(),
     tags: text('tags').array(),
-    status: text('status').default('submitted').notNull(), // submitted | researching | active | testing | archived
+    status: text('status').default('submitted').notNull(), // submitted | queued | researching | active | testing | archived | failed
     overallScore: numeric('overall_score', { precision: 4, scale: 2 }),
     submittedBy: text('submitted_by'), // Clerk User ID or Member ID
     submittedAt: timestamp('submitted_at').defaultNow().notNull(),
     lastResearchedAt: timestamp('last_researched_at'),
     researchLogs: jsonb('research_logs'), // Array of { message: string, timestamp: string }
     embedding: vector('embedding', { dimensions: 1536 }), // pgvector
-});
+}, (table) => [
+    index('tools_workspace_id_idx').on(table.workspaceId),
+    index('tools_status_idx').on(table.status),
+    index('tools_submitted_at_idx').on(table.submittedAt),
+]);
 
 // Reports
 export const reports = pgTable('reports', {
@@ -56,7 +63,10 @@ export const reports = pgTable('reports', {
     rawScrapedData: jsonb('raw_scraped_data'),
     sentimentData: jsonb('sentiment_data'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => [
+    index('reports_tool_id_idx').on(table.toolId),
+    index('reports_created_at_idx').on(table.createdAt),
+]);
 
 // Notes
 export const notes = pgTable('notes', {
@@ -90,7 +100,10 @@ export const researchJobs = pgTable('research_jobs', {
     triggeredAt: timestamp('triggered_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
     errorMessage: text('error_message'),
-});
+}, (table) => [
+    index('research_jobs_tool_id_idx').on(table.toolId),
+    index('research_jobs_triggered_at_idx').on(table.triggeredAt),
+]);
 
 // Relations
 export const workspacesRelations = relations(workspaces, ({ many }) => ({
@@ -168,7 +181,10 @@ export const subscriptions = pgTable('subscriptions', {
     currentPeriodEnd: timestamp('current_period_end'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
-});
+}, (table) => [
+    index('subscriptions_workspace_id_idx').on(table.workspaceId),
+    index('subscriptions_status_idx').on(table.status),
+]);
 
 export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
     workspace: one(workspaces, {

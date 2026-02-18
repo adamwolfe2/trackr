@@ -3,94 +3,104 @@ import { db } from "@/lib/db";
 import { tools, reports } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { FirecrawlService } from "@/lib/services/firecrawl";
-import { PerplexityService } from "@/lib/services/perplexity"; // Or OpenAI generic service
-import { OpenAIService } from "@/lib/services/openai"; // Assuming this exists or I'll use direct OpenAI
+import { OpenAIService } from "@/lib/services/openai";
+import { z } from "zod";
 
-// This endpoint triggers a research job
+const ResearchRequestSchema = z.object({
+    toolId: z.string().uuid("toolId must be a valid UUID"),
+    url: z.string().url().optional(),
+});
+
 export async function POST(req: NextRequest) {
+    // Parse body once — req.json() can only be consumed once per request
+    let body: unknown;
     try {
-        const { toolId, url } = await req.json();
+        body = await req.json();
+    } catch {
+        return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
 
-        if (!toolId) {
-            return NextResponse.json({ error: "Missing toolId" }, { status: 400 });
-        }
+    const parsed = ResearchRequestSchema.safeParse(body);
+    if (!parsed.success) {
+        return NextResponse.json(
+            { error: parsed.error.issues[0]?.message ?? "Invalid request" },
+            { status: 400 }
+        );
+    }
 
+    const { toolId, url: providedUrl } = parsed.data;
+
+    try {
         // 1. Fetch tool details if URL not provided
-        let targetUrl = url;
+        let targetUrl = providedUrl;
         if (!targetUrl) {
             const tool = await db.query.tools.findFirst({
-                where: eq(tools.id, toolId)
+                where: eq(tools.id, toolId),
             });
             if (!tool?.websiteUrl) {
-                return NextResponse.json({ error: "Tool has no website URL" }, { status: 400 });
+                return NextResponse.json(
+                    { error: "Tool has no website URL" },
+                    { status: 400 }
+                );
             }
             targetUrl = tool.websiteUrl;
         }
 
         // 2. Update status to 'researching'
-        await db.update(tools)
+        await db
+            .update(tools)
             .set({ status: "researching", lastResearchedAt: new Date() })
             .where(eq(tools.id, toolId));
 
-        // 2. Initialize Services
         const firecrawl = new FirecrawlService();
-        const openai = new OpenAIService();
+        const openaiService = new OpenAIService();
 
-        // 3. Scrape Website
-        // In a real background job, we wouldn't await this entire chain in the HTTP handler,
-        // but for this MVP we will process it and return the result or use a stream.
-        // For better UX with the stream component, we might want to return a stream, 
-        // but the current ResearchStream component pulls logs. 
-        // Let's implement a simple "process and return" for now, or start a background promise (Vercel has limits on this).
-
-        // BETTER APPROACH: Use a persistent log or state in DB that the frontend polls.
-        // But for "Show me it working", let's do a direct await and assume the user waits.
-
-        console.log(`[Research] Scraping ${url}...`);
-        const scrapeResult = await firecrawl.scrapeUrl(url);
-
+        // 3. Scrape website
+        const scrapeResult = await firecrawl.scrapeUrl(targetUrl);
         if (!scrapeResult.success) {
-            throw new Error("Failed to scrape website: " + scrapeResult.error);
+            throw new Error("Failed to scrape website: " + (scrapeResult.error ?? "unknown"));
         }
 
-        const content = scrapeResult.data?.content || "No content found.";
+        const content =
+            scrapeResult.data?.markdown ??
+            scrapeResult.data?.content ??
+            "No content found.";
 
         // 4. Analyze with AI
-        console.log("[Research] Analyzing content...");
-        const analysis = await openai.analyzeTool(content);
+        const analysis = await openaiService.analyzeTool(content);
 
-        // 5. Save Report
+        // 5. Save report
         await db.insert(reports).values({
-            id: crypto.randomUUID(),
-            toolId: toolId,
-            summary: analysis.summary,
-            features: analysis.features || [],
-            pricing: analysis.pricing || [],
-            pros: analysis.pros || [],
-            cons: analysis.cons || [],
-            scorecardSnapshot: analysis.scorecard || {},
-            createdAt: new Date()
+            toolId,
+            summary: analysis.summary ?? null,
+            features: analysis.features ?? [],
+            pricing: analysis.pricing ?? [],
+            pros: analysis.pros ?? [],
+            cons: analysis.cons ?? [],
+            scorecardSnapshot: analysis.scorecard ?? {},
+            createdAt: new Date(),
         });
 
-        // 6. Update Tool Score & Status
-        await db.update(tools)
+        // 6. Update tool status — "active" is the valid post-research status
+        await db
+            .update(tools)
             .set({
-                status: "researched",
-                overallScore: analysis.overallScore?.toString() || "0"
+                status: "active",
+                overallScore: analysis.overallScore?.toString() ?? "0",
+                lastResearchedAt: new Date(),
             })
             .where(eq(tools.id, toolId));
 
-        return NextResponse.json({ success: true, report: analysis });
+        return NextResponse.json({ success: true });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Unknown error";
 
-    } catch (error: any) {
-        console.error("Research Error:", error);
+        // Reset tool status so user can retry
+        await db
+            .update(tools)
+            .set({ status: "failed" })
+            .where(eq(tools.id, toolId));
 
-        // Reset status on error
-        const { toolId } = await req.json().catch(() => ({ toolId: null }));
-        if (toolId) {
-            await db.update(tools).set({ status: "error" }).where(eq(tools.id, toolId));
-        }
-
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: message }, { status: 500 });
     }
 }

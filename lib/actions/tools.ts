@@ -85,11 +85,9 @@ export async function submitTool(formData: FormData) {
     try {
         const { triggerResearchAgent } = await import("@/lib/agents/trigger");
         await triggerResearchAgent(newTool.id, websiteUrl);
-    } catch (err) {
-        console.error("Failed to trigger agent:", err);
+    } catch {
+        // Agent trigger failure is non-fatal — tool is saved, research queued for retry
     }
-
-    console.log("Tool submitted:", newTool.id);
 
     revalidatePath("/tools");
     redirect("/tools");

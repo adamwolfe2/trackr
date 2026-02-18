@@ -19,20 +19,20 @@ export function ResearchStream({ toolId }: { toolId: string }) {
             try {
                 const res = await fetch(`/api/tools/${toolId}/logs`);
                 if (!res.ok) return;
-                const data = await res.json();
+                const data = await res.json() as {
+                    logs?: { message: string; timestamp: string }[];
+                    status?: string;
+                };
 
-                // @ts-ignore
                 if (data.logs) setLogs(data.logs);
-                // @ts-ignore
                 if (data.status) setStatus(data.status);
 
                 if (data.status === 'active' || data.status === 'failed') {
-                    // Stop polling if complete
                     if (intervalRef.current) clearInterval(intervalRef.current);
                     if (data.status === 'active') router.refresh();
                 }
-            } catch (e) {
-                console.error(e);
+            } catch {
+                // Silent — polling will retry
             }
         };
 

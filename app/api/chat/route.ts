@@ -4,20 +4,47 @@ import { cosineDistance, desc, gt, sql } from "drizzle-orm";
 import { generateEmbedding } from "@/lib/ai/embedding";
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
+import { NextRequest } from "next/server";
+import { rateLimit } from "@/lib/middleware/rate-limit";
+import { z } from "zod";
 
 export const maxDuration = 30;
 
-export async function POST(req: Request) {
+const ChatSchema = z.object({
+    messages: z.array(z.object({
+        role: z.enum(["user", "assistant", "system"]),
+        content: z.string().max(4000),
+    })).min(1).max(50),
+});
+
+export async function POST(req: NextRequest) {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const rl = rateLimit(`chat:${ip}`, { limit: 20, windowSeconds: 60 });
+
+    if (!rl.success) {
+        return new Response("Too many requests", { status: 429 });
+    }
+
+    let body: unknown;
     try {
-        const { messages } = await req.json();
-        const lastMessage = messages[messages.length - 1];
-        const query = lastMessage.content;
+        body = await req.json();
+    } catch {
+        return new Response("Invalid JSON", { status: 400 });
+    }
 
-        // 1. Generate Embedding for query
+    const parsed = ChatSchema.safeParse(body);
+    if (!parsed.success) {
+        return new Response("Invalid request", { status: 400 });
+    }
+
+    const { messages } = parsed.data;
+    const lastMessage = messages[messages.length - 1];
+    const query = lastMessage?.content ?? "";
+
+    try {
         const queryEmbedding = await generateEmbedding(query);
-
-        // 2. Search for relevant tools
         const similarity = sql<number>`1 - (${cosineDistance(tools.embedding, queryEmbedding)})`;
+
         const relevantTools = await db
             .select({
                 name: tools.name,
@@ -27,37 +54,32 @@ export async function POST(req: Request) {
                 similarity,
             })
             .from(tools)
-            .where(gt(similarity, 0.4)) // Slightly lower threshold for broader context
+            .where(gt(similarity, 0.4))
             .orderBy(desc(similarity))
             .limit(5);
 
-        // 3. Construct Context
-        const context = relevantTools.map(t =>
-            `Tool: ${t.name}\nScore: ${t.overallScore}\nStatus: ${t.status}\nURL: ${t.websiteUrl}`
-        ).join("\n---\n");
+        const context = relevantTools
+            .map(t => `Tool: ${t.name}\nScore: ${t.overallScore ?? "N/A"}\nStatus: ${t.status}\nURL: ${t.websiteUrl ?? "N/A"}`)
+            .join("\n---\n");
 
-        // 4. Stream Response
         const result = await streamText({
             model: openai("gpt-4o"),
             messages: [
                 {
                     role: "system",
-                    content: `You are 'Trackr AI', an assistant for the user's software procurement workspace.
-                    
-                    Answer the user's question based on the following tools found in their workspace:
-                    ${context}
+                    content: `You are Trackr AI, an intelligent assistant for software procurement decisions.
 
-                    If no relevant tools are found, state that you couldn't find any matching tools in the workspace.
-                    Be concise and helpful.`
+Your workspace tools:
+${context || "No relevant tools found in this workspace yet."}
+
+Be concise, data-driven, and helpful. Reference specific tool names and scores when relevant.`,
                 },
-                ...messages
+                ...messages,
             ],
         });
 
         return result.toTextStreamResponse();
-
-    } catch (error) {
-        console.error("Chat error:", error);
+    } catch {
         return new Response("Internal Server Error", { status: 500 });
     }
 }

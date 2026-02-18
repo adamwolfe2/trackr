@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, RefreshCw } from "lucide-react";
 import { performDeepResearch } from "@/lib/actions/research";
-import { useToast } from "@/lib/hooks/use-toast";
+import { toast } from "sonner";
 
 interface ResearchButtonProps {
     toolId: string;
@@ -14,31 +14,20 @@ interface ResearchButtonProps {
 
 export function ResearchButton({ toolId, isResearching, hasReport }: ResearchButtonProps) {
     const [isLoading, setIsLoading] = useState(false);
-    const { toast } = useToast();
 
     const handleResearch = async () => {
         setIsLoading(true);
-        toast({
-            title: "Starting Deep Research",
-            description: "Firecrawl is scraping the site. AI will analyze it shortly.",
-        });
+        const toastId = toast.loading("Starting deep research — scraping site...");
 
         try {
             const result = await performDeepResearch(toolId);
             if (!result.success) {
-                throw new Error(result.error);
+                throw new Error(result.error ?? "Research failed");
             }
-            toast({
-                title: "Research Complete",
-                description: "The report has been generated.",
-                className: "bg-emerald-50 border-emerald-200 text-emerald-800",
-            });
-        } catch (error: any) {
-            toast({
-                title: "Research Failed",
-                description: error.message,
-                variant: "destructive",
-            });
+            toast.success("Research complete. Report generated.", { id: toastId });
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Research failed";
+            toast.error(message, { id: toastId });
         } finally {
             setIsLoading(false);
         }

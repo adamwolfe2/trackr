@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle } from "lucide-react";
+import Link from "next/link";
 
 export default function Error({
     error,
@@ -12,26 +11,42 @@ export default function Error({
     reset: () => void;
 }) {
     useEffect(() => {
-        console.error(error);
+        // Log to monitoring in production only
+        if (process.env.NODE_ENV === "production") {
+            // Error reporting service would go here
+        }
     }, [error]);
 
     return (
-        <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background text-foreground">
-            <div className="flex flex-col items-center gap-2 text-center">
-                <div className="rounded-full bg-red-100 p-3 dark:bg-red-900/20">
-                    <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+        <div className="flex h-screen w-full flex-col items-center justify-center bg-[#F3F3EF] px-6 text-center">
+            <div className="max-w-lg">
+                <div className="w-12 h-12 border border-black bg-white flex items-center justify-center mb-8 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] mx-auto">
+                    <span className="font-mono font-bold text-lg">!</span>
                 </div>
-                <h2 className="text-2xl font-bold tracking-tight">Something went wrong!</h2>
-                <p className="max-w-[500px] text-muted-foreground">
-                    We apologize for the inconvenience. The error has been logged and our team has been notified.
+                <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">
+                    Error
+                </span>
+                <h2 className="text-4xl font-serif font-normal mb-4">
+                    Something went wrong.
+                </h2>
+                <p className="font-mono text-sm text-neutral-600 mb-10 leading-relaxed">
+                    {error.digest
+                        ? `An unexpected error occurred. Reference: ${error.digest}`
+                        : "An unexpected error occurred. The team has been notified."}
                 </p>
-                <div className="mt-4 flex gap-2">
-                    <Button onClick={() => window.location.href = '/'} variant="outline">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                        onClick={reset}
+                        className="bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-800 transition-colors border border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                    >
+                        Try Again
+                    </button>
+                    <Link
+                        href="/"
+                        className="bg-white text-black px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-50 transition-colors border border-black"
+                    >
                         Go Home
-                    </Button>
-                    <Button onClick={() => reset()}>
-                        Try again
-                    </Button>
+                    </Link>
                 </div>
             </div>
         </div>

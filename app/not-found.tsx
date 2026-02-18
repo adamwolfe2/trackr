@@ -1,26 +1,32 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { MoveLeft, HelpCircle } from "lucide-react";
 
 export default function NotFound() {
     return (
-        <div className="flex h-screen w-full flex-col items-center justify-center bg-background p-4 animate-fade-in-scale">
-            <div className="flex flex-col items-center space-y-4 text-center">
-                <div className="rounded-full bg-slate-100 p-4 dark:bg-slate-800">
-                    <HelpCircle className="h-10 w-10 text-muted-foreground" />
-                </div>
-                <div className="space-y-2">
-                    <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl">404</h1>
-                    <p className="max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                        We searched our entire vector database, but we couldn't find the page you're looking for.
-                    </p>
-                </div>
-                <Button asChild className="gap-2">
-                    <Link href="/">
-                        <MoveLeft className="h-4 w-4" />
-                        Back to Dashboard
+        <div className="flex h-screen w-full flex-col items-center justify-center bg-[#F3F3EF] px-6 text-center">
+            <div className="max-w-lg">
+                <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-6 block">
+                    404 — Page Not Found
+                </span>
+                <h1 className="text-6xl md:text-8xl font-serif font-normal mb-6 leading-none">
+                    Lost.
+                </h1>
+                <p className="font-mono text-sm text-neutral-600 mb-10 leading-relaxed">
+                    We searched our entire vector database and came up empty. This page doesn't exist — or it moved without telling us.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Link
+                        href="/"
+                        className="bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-800 transition-colors border border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                    >
+                        Back to Home
                     </Link>
-                </Button>
+                    <Link
+                        href="/tools"
+                        className="bg-white text-black px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-50 transition-colors border border-black"
+                    >
+                        View Tool Database
+                    </Link>
+                </div>
             </div>
         </div>
     );

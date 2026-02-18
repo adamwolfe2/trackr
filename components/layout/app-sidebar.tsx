@@ -7,13 +7,15 @@ import {
     LayoutDashboard,
     Database,
     Sparkles,
-    Zap,
+    CreditCard,
     Settings,
     PlusCircle,
     Search,
     Gift,
+    Zap,
+    MessageSquare,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { UserButton } from "@clerk/nextjs";
 
 const navItems = [
     {
@@ -37,9 +39,9 @@ const navItems = [
         icon: Zap,
     },
     {
-        title: "Billing",
-        href: "/settings/billing",
-        icon: Zap,
+        title: "Ask Trackr AI",
+        href: "/ask",
+        icon: MessageSquare,
     },
     {
         title: "Advertise",
@@ -51,8 +53,16 @@ const navItems = [
         href: "/referrals",
         icon: Gift,
     },
+];
+
+const bottomNavItems = [
     {
-        title: "Workspace Settings",
+        title: "Billing",
+        href: "/settings/billing",
+        icon: CreditCard,
+    },
+    {
+        title: "Workspace",
         href: "/workspace",
         icon: Settings,
     },
@@ -61,47 +71,76 @@ const navItems = [
 export function AppSidebar() {
     const pathname = usePathname();
 
+    const isActive = (href: string) => {
+        if (href === "/") return pathname === "/";
+        return pathname.startsWith(href);
+    };
+
     return (
-        <div className="flex flex-col h-full bg-card border-r border-border">
-            <div className="p-6">
-                <div className="flex items-center gap-2 font-bold text-xl mb-6">
-                    <div className="w-8 h-8 bg-accent rounded-lg flex items-center justify-center text-accent-foreground">
+        <div className="flex flex-col h-full bg-white border-r border-black">
+            {/* Logo */}
+            <div className="p-5 border-b border-black/10">
+                <Link href="/" className="flex items-center gap-2 font-serif text-xl font-medium mb-5">
+                    <div className="w-7 h-7 bg-black flex items-center justify-center text-white text-xs font-mono font-bold">
                         T
                     </div>
                     Trackr
-                </div>
-                <Button className="w-full justify-start gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
-                    <PlusCircle className="w-4 h-4" />
+                </Link>
+                <Link
+                    href="/submit"
+                    className="flex items-center justify-center gap-2 w-full bg-black text-white px-3 py-2.5 font-mono text-xs uppercase tracking-wide hover:bg-neutral-800 transition-colors border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                >
+                    <PlusCircle className="w-3.5 h-3.5" />
                     Submit Tool
-                </Button>
+                </Link>
             </div>
-            <div className="flex-1 px-4 py-2 space-y-1">
+
+            {/* Main Nav */}
+            <div className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
                 {navItems.map((item) => {
-                    const isActive = pathname === item.href;
+                    const active = isActive(item.href);
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative group",
-                                isActive
-                                    ? "bg-secondary text-foreground nav-item-active"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                "flex items-center gap-3 w-full px-3 py-2.5 text-sm font-mono transition-all",
+                                active
+                                    ? "bg-black text-white"
+                                    : "text-neutral-600 hover:text-black hover:bg-neutral-100"
                             )}
                         >
-                            <item.icon
-                                className={cn(
-                                    "h-[18px] w-[18px]",
-                                    isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
-                                )}
-                            />
+                            <item.icon className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
                             <span>{item.title}</span>
                         </Link>
                     );
                 })}
             </div>
-            <div className="p-4 border-t border-border">
-                {/* User profile or footer could go here */}
+
+            {/* Bottom Nav */}
+            <div className="px-3 py-3 border-t border-black/10 space-y-0.5">
+                {bottomNavItems.map((item) => {
+                    const active = isActive(item.href);
+                    return (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            className={cn(
+                                "flex items-center gap-3 w-full px-3 py-2.5 text-sm font-mono transition-all",
+                                active
+                                    ? "bg-black text-white"
+                                    : "text-neutral-500 hover:text-black hover:bg-neutral-100"
+                            )}
+                        >
+                            <item.icon className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
+                            <span>{item.title}</span>
+                        </Link>
+                    );
+                })}
+                <div className="pt-3 px-3 flex items-center gap-3">
+                    <UserButton afterSignOutUrl="/" />
+                    <span className="text-xs font-mono text-neutral-400">Account</span>
+                </div>
             </div>
         </div>
     );
