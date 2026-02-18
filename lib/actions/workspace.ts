@@ -63,7 +63,7 @@ export async function inviteMember(formData: FormData) {
     try {
         const resendKey = process.env.RESEND_API_KEY;
         if (resendKey) {
-            const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trackr.so";
+            const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
             const { Resend } = await import("resend");
             const resend = new Resend(resendKey);
 
@@ -72,7 +72,7 @@ export async function inviteMember(formData: FormData) {
             });
 
             await resend.emails.send({
-                from: "Trackr <noreply@trackr.so>",
+                from: "Trackr <noreply@trytrackr.com>",
                 to: [email],
                 subject: `You've been invited to ${workspace?.name || "a Trackr workspace"}`,
                 text: `You have been invited to join a Trackr workspace. Sign up at ${appUrl}/sign-up to get started.`,

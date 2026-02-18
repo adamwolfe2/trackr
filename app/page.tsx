@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     title: "Trackr — Stop Researching Tools Manually",
     description: "Research agents evaluate any software tool in under 2 minutes. Scored reports. Shared team database. Always up to date.",
     type: "website",
-    url: "https://trackr.so",
+    url: "https://trytrackr.com",
   },
 };
 
@@ -31,18 +31,18 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "Organization",
-      "@id": "https://trackr.so/#organization",
+      "@id": "https://trytrackr.com/#organization",
       name: "Trackr",
-      url: "https://trackr.so",
+      url: "https://trytrackr.com",
       logo: {
         "@type": "ImageObject",
-        url: "https://trackr.so/logo.png",
+        url: "https://trytrackr.com/logo.png",
       },
       sameAs: [],
     },
     {
       "@type": "SoftwareApplication",
-      "@id": "https://trackr.so/#software",
+      "@id": "https://trytrackr.com/#software",
       name: "Trackr",
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",
@@ -53,18 +53,18 @@ const jsonLd = {
       },
       description:
         "AI-powered software tool research platform. Submit any tool, get a scored research report in under 2 minutes.",
-      url: "https://trackr.so",
+      url: "https://trytrackr.com",
       publisher: {
-        "@id": "https://trackr.so/#organization",
+        "@id": "https://trytrackr.com/#organization",
       },
     },
     {
       "@type": "WebSite",
-      "@id": "https://trackr.so/#website",
-      url: "https://trackr.so",
+      "@id": "https://trytrackr.com/#website",
+      url: "https://trytrackr.com",
       name: "Trackr",
       publisher: {
-        "@id": "https://trackr.so/#organization",
+        "@id": "https://trytrackr.com/#organization",
       },
     },
   ],

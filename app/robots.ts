@@ -26,6 +26,6 @@ export default function robots(): MetadataRoute.Robots {
                 ],
             },
         ],
-        sitemap: 'https://trackr.so/sitemap.xml',
+        sitemap: 'https://trytrackr.com/sitemap.xml',
     };
 }

@@ -38,7 +38,7 @@ export default async function ReferralsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {myReferral ? (
-                            <CopyLinkButton referralUrl={`${process.env.NEXT_PUBLIC_APP_URL || 'https://trackr.so'}/sign-up?ref=${myReferral.code}`} />
+                            <CopyLinkButton referralUrl={`${process.env.NEXT_PUBLIC_APP_URL || 'https://trytrackr.com'}/sign-up?ref=${myReferral.code}`} />
                         ) : (
                             <form action={async () => {
                                 "use server";

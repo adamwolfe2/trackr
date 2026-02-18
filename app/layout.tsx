@@ -28,11 +28,11 @@ export const metadata: Metadata = {
     template: "%s | Trackr",
   },
   description: "Submit any software tool. Get a scored research report in under 2 minutes. Your team's shared tool database, always up to date.",
-  metadataBase: new URL("https://trackr.so"),
+  metadataBase: new URL("https://trytrackr.com"),
   openGraph: {
     title: "Trackr — Stop Researching Tools Manually",
     description: "Research agents evaluate any software tool in under 2 minutes. Scored reports. Shared team database. Always up to date.",
-    url: "https://trackr.so",
+    url: "https://trytrackr.com",
     siteName: "Trackr",
     locale: "en_US",
     type: "website",
