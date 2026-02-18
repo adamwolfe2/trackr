@@ -1,141 +1,325 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle } from "lucide-react";
-import { processOnboarding } from "@/lib/actions/onboarding";
+import { useState, useTransition } from "react";
+import { Check, Loader2, Sparkles, ArrowRight, RefreshCw } from "lucide-react";
+import { generateCompanyContext, completeOnboarding } from "@/lib/actions/onboarding";
+import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS } from "@/lib/constants/integrations";
 import { toast } from "sonner";
+import Image from "next/image";
 
-const PROCESSING_STEPS = [
-    "Deploying Firecrawl agent...",
-    "Scraping website content...",
-    "Analyzing business context with GPT-4o...",
-    "Building your custom scorecard...",
-    "Finalizing workspace setup...",
-];
+type Step = 1 | 2 | 3;
+type Dimension = { key: string; label: string; weight: number };
 
 export default function OnboardingPage() {
-    const router = useRouter();
-    const [step, setStep] = useState<"input" | "processing" | "complete">("input");
-    const [url, setUrl] = useState("");
-    const [loadingIndex, setLoadingIndex] = useState(0);
-    const [error, setError] = useState("");
+    const [step, setStep] = useState<Step>(1);
+    const [isPending, startTransition] = useTransition();
 
-    useEffect(() => {
-        if (step !== "processing") return;
-        const interval = setInterval(() => {
-            setLoadingIndex((i) => Math.min(i + 1, PROCESSING_STEPS.length - 1));
-        }, 2500);
-        return () => clearInterval(interval);
-    }, [step]);
+    // Step 1
+    const [companyName, setCompanyName] = useState("");
+    const [websiteUrl, setWebsiteUrl] = useState("");
+    const [companyContext, setCompanyContext] = useState("");
+    const [isGenerating, setIsGenerating] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError("");
+    // Step 2
+    const [selectedTools, setSelectedTools] = useState<Set<string>>(new Set());
+    const [activeCategory, setActiveCategory] = useState<string>("All");
 
-        const trimmedUrl = url.trim();
-        if (!trimmedUrl) return;
+    // Step 3
+    const [dimensions, setDimensions] = useState<Dimension[]>(DEFAULT_SCORECARD_DIMENSIONS);
 
+    const categories = ["All", ...INTEGRATION_CATEGORIES];
+    const filteredIntegrations = activeCategory === "All"
+        ? INTEGRATIONS
+        : INTEGRATIONS.filter((i) => i.category === activeCategory);
+
+    const toggleTool = (name: string) => {
+        setSelectedTools((prev) => {
+            const next = new Set(prev);
+            next.has(name) ? next.delete(name) : next.add(name);
+            return next;
+        });
+    };
+
+    const handleGenerateContext = async () => {
+        if (!websiteUrl) return;
+        setIsGenerating(true);
         try {
-            new URL(trimmedUrl);
+            const url = websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`;
+            const result = await generateCompanyContext(url);
+            if (result.error) {
+                toast.error("Could not scrape site — enter context manually.");
+            } else {
+                setCompanyContext(result.context);
+                toast.success("Company context generated.");
+            }
         } catch {
-            setError("Please enter a valid URL including https://");
-            return;
-        }
-
-        setStep("processing");
-        setLoadingIndex(0);
-
-        try {
-            await processOnboarding(trimmedUrl);
-            setStep("complete");
-            setTimeout(() => router.push("/tools"), 1500);
-        } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : "Setup failed. Please try again.";
-            toast.error(message);
-            setStep("input");
+            toast.error("Failed to generate context.");
+        } finally {
+            setIsGenerating(false);
         }
     };
 
+    const handleComplete = () => {
+        startTransition(async () => {
+            try {
+                const toolsArray = INTEGRATIONS
+                    .filter((i) => selectedTools.has(i.name))
+                    .map((i) => ({ name: i.name, url: i.url }));
+
+                await completeOnboarding({
+                    companyName,
+                    companyContext,
+                    selectedTools: toolsArray,
+                    scorecardDimensions: dimensions,
+                });
+            } catch {
+                toast.error("Failed to save workspace. Please try again.");
+            }
+        });
+    };
+
+    const updateDimensionWeight = (key: string, weight: number) => {
+        setDimensions((prev) => prev.map((d) => d.key === key ? { ...d, weight } : d));
+    };
+
+    const totalWeight = dimensions.reduce((s, d) => s + d.weight, 0);
+
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-[#F3F3EF] px-6">
-            {/* Logo */}
-            <div className="mb-16">
-                <span className="text-3xl font-serif font-medium">Trackr</span>
+        <div className="min-h-screen bg-[#F3F3EF] flex flex-col">
+            {/* Top bar */}
+            <div className="border-b border-black bg-[#F3F3EF] px-6 py-4 flex items-center justify-between">
+                <span className="text-xl font-serif">Trackr</span>
+                <div className="flex items-center gap-2">
+                    {([1, 2, 3] as Step[]).map((s) => (
+                        <div key={s} className="flex items-center gap-2">
+                            <div className={`w-6 h-6 border border-black flex items-center justify-center text-xs font-mono
+                                ${step === s ? "bg-black text-white" : step > s ? "bg-black text-white" : "bg-white text-black"}`}>
+                                {step > s ? <Check className="w-3 h-3" /> : s}
+                            </div>
+                            {s < 3 && <div className={`w-8 h-px ${step > s ? "bg-black" : "bg-neutral-300"}`} />}
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            <div className="w-full max-w-md">
-                {step === "input" && (
-                    <div>
-                        <span className="text-xs font-mono uppercase tracking-widest text-[#8B9A7F] mb-4 block">
-                            Step 1 of 1
-                        </span>
-                        <h1 className="text-3xl font-serif font-normal mb-3 leading-tight">
-                            Set up your workspace.
-                        </h1>
-                        <p className="font-mono text-sm text-neutral-600 mb-10 leading-relaxed">
-                            Enter your company website URL. Trackr's agents will scrape it, understand your business context, and build a custom AI scorecard tailored to your evaluation needs.
+            <div className="flex-1 flex flex-col items-center justify-start py-12 px-6">
+
+                {/* ── STEP 1: Company Context ── */}
+                {step === 1 && (
+                    <div className="w-full max-w-lg">
+                        <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">Step 1 of 3</span>
+                        <h1 className="text-3xl font-serif font-normal mb-2 leading-tight">Set up your workspace.</h1>
+                        <p className="font-mono text-sm text-neutral-600 mb-8 leading-relaxed">
+                            Tell us about your company so research agents can tailor reports to your specific needs.
                         </p>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="space-y-4">
                             <div>
+                                <label className="text-xs font-mono uppercase tracking-wide text-neutral-500 block mb-1">Company Name</label>
                                 <input
-                                    type="url"
-                                    placeholder="https://yourcompany.com"
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    required
+                                    type="text"
+                                    placeholder="Acme Inc."
+                                    value={companyName}
+                                    onChange={(e) => setCompanyName(e.target.value)}
                                     className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black placeholder:text-neutral-400"
                                 />
-                                {error && (
-                                    <p className="text-xs font-mono text-red-600 mt-2">{error}</p>
-                                )}
                             </div>
-                            <button
-                                type="submit"
-                                className="w-full bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-800 transition-colors border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
-                            >
-                                Generate Workspace
-                            </button>
-                        </form>
 
-                        <p className="font-mono text-xs text-neutral-400 mt-6 text-center">
-                            Takes about 10–15 seconds. No credit card needed.
-                        </p>
+                            <div>
+                                <label className="text-xs font-mono uppercase tracking-wide text-neutral-500 block mb-1">Website URL (optional)</label>
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        placeholder="https://yourcompany.com"
+                                        value={websiteUrl}
+                                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                                        className="flex-1 border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black placeholder:text-neutral-400"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleGenerateContext}
+                                        disabled={!websiteUrl || isGenerating}
+                                        className="flex items-center gap-2 px-4 py-3 border border-black bg-white font-mono text-sm hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all"
+                                    >
+                                        {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                                        Auto-fill
+                                    </button>
+                                </div>
+                                <p className="text-xs font-mono text-neutral-400 mt-1">AI will scrape your site and generate context automatically.</p>
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-mono uppercase tracking-wide text-neutral-500 block mb-1">
+                                    Company Context
+                                    {companyContext && <span className="text-green-600 ml-2">✓ Generated</span>}
+                                </label>
+                                <textarea
+                                    placeholder="Describe your company, industry, and what you're looking for in tools. This context is used by research agents to tailor every report."
+                                    value={companyContext}
+                                    onChange={(e) => setCompanyContext(e.target.value)}
+                                    rows={4}
+                                    className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black placeholder:text-neutral-400 resize-none"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex justify-between items-center mt-6">
+                            <button
+                                onClick={() => setStep(2)}
+                                disabled={!companyName.trim()}
+                                className="flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                            >
+                                Continue <ArrowRight className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => setStep(2)}
+                                className="text-xs font-mono text-neutral-400 hover:text-neutral-600 underline"
+                            >
+                                Skip for now
+                            </button>
+                        </div>
                     </div>
                 )}
 
-                {step === "processing" && (
-                    <div className="text-center">
-                        <div className="w-12 h-12 border border-black bg-white flex items-center justify-center mb-8 mx-auto shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                        </div>
-                        <h2 className="text-2xl font-serif font-normal mb-3">Agent working...</h2>
-                        <p className="font-mono text-sm text-neutral-600 mb-8 animate-pulse">
-                            {PROCESSING_STEPS[loadingIndex]}
+                {/* ── STEP 2: Current Stack ── */}
+                {step === 2 && (
+                    <div className="w-full max-w-4xl">
+                        <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">Step 2 of 3</span>
+                        <h1 className="text-3xl font-serif font-normal mb-2 leading-tight">What tools do you already use?</h1>
+                        <p className="font-mono text-sm text-neutral-600 mb-6 leading-relaxed">
+                            Select your current stack. These will be tracked in your software spend dashboard.
+                            {selectedTools.size > 0 && (
+                                <span className="ml-2 bg-black text-white px-2 py-0.5 text-xs font-mono">{selectedTools.size} selected</span>
+                            )}
                         </p>
 
-                        {/* Progress dots */}
-                        <div className="flex justify-center gap-2">
-                            {PROCESSING_STEPS.map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`h-1.5 transition-all duration-500 ${i <= loadingIndex ? "w-6 bg-black" : "w-1.5 bg-neutral-300"}`}
-                                />
+                        {/* Category filter */}
+                        <div className="flex flex-wrap gap-2 mb-6">
+                            {categories.map((cat) => (
+                                <button
+                                    key={cat}
+                                    onClick={() => setActiveCategory(cat)}
+                                    className={`px-3 py-1 text-xs font-mono border border-black transition-all
+                                        ${activeCategory === cat ? "bg-black text-white" : "bg-white hover:bg-neutral-100"}`}
+                                >
+                                    {cat}
+                                </button>
                             ))}
                         </div>
+
+                        {/* Logo grid */}
+                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 mb-8">
+                            {filteredIntegrations.map((integration) => {
+                                const selected = selectedTools.has(integration.name);
+                                return (
+                                    <button
+                                        key={integration.name}
+                                        onClick={() => toggleTool(integration.name)}
+                                        title={integration.name}
+                                        className={`group relative flex flex-col items-center gap-1.5 p-3 border transition-all
+                                            ${selected
+                                                ? "border-black bg-black/5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                                : "border-black/20 bg-white hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                            }`}
+                                    >
+                                        {selected && (
+                                            <div className="absolute top-1 right-1 w-4 h-4 bg-black flex items-center justify-center">
+                                                <Check className="w-2.5 h-2.5 text-white" />
+                                            </div>
+                                        )}
+                                        <div className="w-8 h-8 flex items-center justify-center">
+                                            <Image
+                                                src={`/integrations/${integration.file}`}
+                                                alt={integration.name}
+                                                width={32}
+                                                height={32}
+                                                className="object-contain w-8 h-8"
+                                                unoptimized
+                                            />
+                                        </div>
+                                        <span className="text-[9px] font-mono text-neutral-600 leading-tight text-center line-clamp-2 max-w-[60px]">
+                                            {integration.name}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                            <button
+                                onClick={() => setStep(1)}
+                                className="text-xs font-mono text-neutral-400 hover:text-neutral-600 underline"
+                            >
+                                ← Back
+                            </button>
+                            <button
+                                onClick={() => setStep(3)}
+                                className="flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+                            >
+                                Continue <ArrowRight className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
                 )}
 
-                {step === "complete" && (
-                    <div className="text-center">
-                        <div className="w-12 h-12 border border-black bg-white flex items-center justify-center mb-8 mx-auto shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-                            <CheckCircle className="w-5 h-5 text-[#8B9A7F]" />
-                        </div>
-                        <h2 className="text-2xl font-serif font-normal mb-3">Workspace ready.</h2>
-                        <p className="font-mono text-sm text-neutral-500">
-                            Redirecting to your dashboard...
+                {/* ── STEP 3: Scorecard Setup ── */}
+                {step === 3 && (
+                    <div className="w-full max-w-lg">
+                        <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">Step 3 of 3</span>
+                        <h1 className="text-3xl font-serif font-normal mb-2 leading-tight">Set up your scorecard.</h1>
+                        <p className="font-mono text-sm text-neutral-600 mb-8 leading-relaxed">
+                            Every tool is scored against these dimensions. Adjust weights to match what matters most to your team.
+                            {totalWeight !== 100 && (
+                                <span className="text-amber-600 ml-1 font-bold">Total: {totalWeight}% (should be 100%)</span>
+                            )}
                         </p>
+
+                        <div className="space-y-4 mb-8">
+                            {dimensions.map((dim) => (
+                                <div key={dim.key} className="border border-black bg-white p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="font-mono text-sm font-medium">{dim.label}</span>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => updateDimensionWeight(dim.key, Math.max(0, dim.weight - 5))}
+                                                className="w-6 h-6 border border-black bg-white font-mono text-sm hover:bg-neutral-100 flex items-center justify-center"
+                                            >−</button>
+                                            <span className="w-10 text-center font-mono text-sm font-bold">{dim.weight}%</span>
+                                            <button
+                                                onClick={() => updateDimensionWeight(dim.key, Math.min(100, dim.weight + 5))}
+                                                className="w-6 h-6 border border-black bg-white font-mono text-sm hover:bg-neutral-100 flex items-center justify-center"
+                                            >+</button>
+                                        </div>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-neutral-200">
+                                        <div
+                                            className="h-full bg-black transition-all"
+                                            style={{ width: `${Math.min(dim.weight, 100)}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                            <button
+                                onClick={() => setStep(2)}
+                                className="text-xs font-mono text-neutral-400 hover:text-neutral-600 underline"
+                            >
+                                ← Back
+                            </button>
+                            <button
+                                onClick={handleComplete}
+                                disabled={isPending}
+                                className="flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                            >
+                                {isPending ? (
+                                    <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                                ) : (
+                                    <><Check className="w-4 h-4" /> Launch Workspace</>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

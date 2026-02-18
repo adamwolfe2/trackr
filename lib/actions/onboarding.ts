@@ -1,97 +1,119 @@
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
-import { workspaces, workspaceMembers } from "@/lib/db/schema";
+import { workspaces, workspaceMembers, softwareSpend } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { openai } from "@ai-sdk/openai";
-import { generateObject } from "ai";
-import { z } from "zod";
-import { revalidatePath } from "next/cache";
+import { generateText } from "ai";
 
-// Define the schema for the AI-generated scorecard configuration
-const ScorecardConfigSchema = z.object({
-    industry: z.string().describe("The primary industry of the company (e.g. B2B SaaS, E-commerce, Healthcare)"),
-    businessModel: z.enum(["B2B", "B2C", "Marketplace", "Agency", "Other"]).describe("The business model"),
-    teamSize: z.string().describe("Estimated team size or stage (e.g. Seed, Series A, Enterprise)"),
-    techStack: z.array(z.string()).describe("Key technologies or platforms identified (e.g. React, Salesforce, AWS)"),
-    primaryGoals: z.array(z.string()).describe("Likely business goals (e.g. Scale sales, Automate support, Improve code quality)"),
-    complianceNeeds: z.array(z.string()).describe("Standard compliance requirements for this industry (e.g. SOC2, HIPAA, GDPR)"),
-    budgetTier: z.enum(["Low", "Medium", "High", "Enterprise"]).describe("Estimated budget tier for tooling"),
-    keyPainPoints: z.array(z.string()).describe("Potential operational pain points based on the business type")
-});
+/** Scrape company website and auto-generate a context description */
+export async function generateCompanyContext(websiteUrl: string): Promise<{ context: string; error?: string }> {
+    try {
+        if (!websiteUrl.startsWith("http")) websiteUrl = `https://${websiteUrl}`;
 
-export async function processOnboarding(url: string) {
+        const scrape = await firecrawl.scrapeUrl(websiteUrl);
+        const content = scrape.data?.markdown?.slice(0, 4000) ?? "";
+
+        if (!content) return { context: "", error: "Could not scrape website" };
+
+        const { text } = await generateText({
+            model: openai("gpt-4o-mini"),
+            prompt: `Based on this website content, write a 2-3 sentence description that captures:
+1. What the company does and their core product/service
+2. Their target market (B2B/B2C, industry, typical company size they sell to)
+3. Their likely priorities when evaluating software tools
+
+Website content:
+${content}
+
+Write only the description, no preamble or label.`,
+        });
+
+        return { context: text };
+    } catch {
+        return { context: "", error: "Failed to generate context" };
+    }
+}
+
+export async function completeOnboarding({
+    companyName,
+    companyContext,
+    selectedTools,
+    scorecardDimensions,
+}: {
+    companyName: string;
+    companyContext: string;
+    selectedTools: Array<{ name: string; url?: string }>;
+    scorecardDimensions: Array<{ key: string; label: string; weight: number }>;
+}) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
-    // 1. Get or create workspace (webhook may not have fired yet)
-    let existingMember = await db.query.workspaceMembers.findFirst({
+    const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),
+        with: { workspace: true },
     });
 
-    if (!existingMember) {
-        const displayName =
-            user.username ||
-            user.emailAddresses[0]?.emailAddress?.split("@")[0] ||
-            "User";
+    if (!member) throw new Error("No workspace found");
 
-        const [newWorkspace] = await db.insert(workspaces).values({
-            name: `${displayName}'s Workspace`,
-            slug: `ws-${user.id.replace(/[^a-z0-9]/gi, "").slice(0, 12).toLowerCase()}`,
-            companyContext: null,
-        }).returning();
+    const workspaceId = member.workspaceId;
 
-        const [newMember] = await db.insert(workspaceMembers).values({
-            userId: user.id,
-            workspaceId: newWorkspace.id,
-            role: "owner",
-        }).returning();
+    // Build scorecard config
+    const scorecardConfig = scorecardDimensions.reduce((acc, d) => {
+        acc[d.key] = { label: d.label, weight: d.weight };
+        return acc;
+    }, {} as Record<string, { label: string; weight: number }>);
 
-        existingMember = newMember;
+    // 1. Update workspace with company info + scorecard + mark onboarding done
+    await db.update(workspaces).set({
+        name: companyName.trim() || member.workspace.name,
+        companyContext: companyContext.trim(),
+        scorecardConfig,
+        onboardingCompleted: true,
+    }).where(eq(workspaces.id, workspaceId));
+
+    // 2. Add selected tools to software_spend (skip duplicates)
+    if (selectedTools.length > 0) {
+        const existing = await db.query.softwareSpend.findMany({
+            where: eq(softwareSpend.workspaceId, workspaceId),
+            columns: { toolName: true },
+        });
+        const existingNames = new Set(existing.map((e) => e.toolName.toLowerCase()));
+
+        const toInsert = selectedTools.filter((t) => !existingNames.has(t.name.toLowerCase()));
+
+        if (toInsert.length > 0) {
+            await db.insert(softwareSpend).values(
+                toInsert.map((t) => ({
+                    workspaceId,
+                    toolName: t.name,
+                    vendorUrl: t.url ? `https://${t.url}` : null,
+                    status: "active" as const,
+                    monthlyCost: "0",
+                }))
+            );
+        }
     }
 
-    const member = existingMember;
+    revalidatePath("/tools");
+    revalidatePath("/workspace");
+    revalidatePath("/stack");
+    redirect("/tools");
+}
 
-    // 2. Scrape the URL
-    console.log(`Scraping ${url} for onboarding...`);
-    const scrapeResult = await firecrawl.scrapeUrl(url);
+export async function checkOnboardingNeeded(): Promise<boolean> {
+    const user = await currentUser();
+    if (!user) return false;
 
-    if (!scrapeResult.success || !scrapeResult.data) {
-        throw new Error(`Failed to scrape URL: ${scrapeResult.error}`);
-    }
-
-    const markdown = scrapeResult.data.markdown || JSON.stringify(scrapeResult.data); // Fallback if markdown missing
-
-    // 3. Analyze with AI
-    console.log("Analyzing content...");
-    const { object: analysis } = await generateObject({
-        model: openai("gpt-4o"),
-        schema: ScorecardConfigSchema,
-        prompt: `
-            Analyze the following company website content to build a software procurement scorecard.
-            We need to understand their business context to recommend the right AI tools.
-
-            Website URL: ${url}
-            Content:
-            ${markdown.slice(0, 15000)} // Truncate to avoid token limits
-        `
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+        with: { workspace: true },
     });
 
-    // 4. Update Workspace
-    await db.update(workspaces)
-        .set({
-            companyContext: `
-                Industry: ${analysis.industry}
-                Model: ${analysis.businessModel}
-                Stage: ${analysis.teamSize}
-                Stack: ${analysis.techStack.join(", ")}
-            `.trim(),
-            scorecardConfig: analysis
-        })
-        .where(eq(workspaces.id, member.workspaceId));
-
-    revalidatePath("/dashboard");
-    return { success: true, analysis };
+    if (!member) return false;
+    return !member.workspace.onboardingCompleted;
 }

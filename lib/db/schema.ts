@@ -8,6 +8,7 @@ export const workspaces = pgTable('workspaces', {
     slug: text('slug').unique().notNull(),
     scorecardConfig: jsonb('scorecard_config'),
     companyContext: text('company_context'),
+    onboardingCompleted: boolean('onboarding_completed').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
