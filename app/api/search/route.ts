@@ -1,9 +1,10 @@
 import { db } from "@/lib/db";
-import { tools } from "@/lib/db/schema";
-import { cosineDistance, desc, gt, sql } from "drizzle-orm";
+import { tools, workspaceMembers } from "@/lib/db/schema";
+import { and, cosineDistance, desc, eq, gt, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateEmbedding } from "@/lib/ai/embedding";
 import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
+import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
 
 const SearchSchema = z.object({
@@ -11,6 +12,14 @@ const SearchSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+    const user = await currentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+    });
+    if (!member) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
+
     // Rate limit: 30 searches per minute per IP
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const rl = rateLimit(`search:${ip}`, { limit: 30, windowSeconds: 60 });
@@ -51,7 +60,7 @@ export async function POST(req: NextRequest) {
                 matchScore: similarity,
             })
             .from(tools)
-            .where(gt(similarity, 0.5))
+            .where(and(eq(tools.workspaceId, member.workspaceId), gt(similarity, 0.5)))
             .orderBy(desc(similarity))
             .limit(5);
 

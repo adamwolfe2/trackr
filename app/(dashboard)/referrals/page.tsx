@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { db } from "@/lib/db";
 import { referrals, workspaceMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { Copy, Gift, Users } from "lucide-react";
+import { Gift } from "lucide-react";
 import { createReferralCode } from "@/lib/actions/referrals";
+import { CopyLinkButton } from "@/components/referrals/copy-link-button";
 
 export default async function ReferralsPage() {
     const user = await currentUser();
@@ -38,12 +38,7 @@ export default async function ReferralsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {myReferral ? (
-                            <div className="flex space-x-2">
-                                <Input readOnly value={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up?ref=${myReferral.code}`} />
-                                <Button variant="outline" size="icon">
-                                    <Copy className="h-4 w-4" />
-                                </Button>
-                            </div>
+                            <CopyLinkButton referralUrl={`${process.env.NEXT_PUBLIC_APP_URL}/sign-up?ref=${myReferral.code}`} />
                         ) : (
                             <form action={async () => {
                                 "use server";

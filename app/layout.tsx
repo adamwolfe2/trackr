@@ -63,7 +63,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "pk_test_placeholder"} dynamic>
       <html lang="en" suppressHydrationWarning>
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />

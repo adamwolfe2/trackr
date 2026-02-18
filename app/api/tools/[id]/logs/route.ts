@@ -1,16 +1,25 @@
 import { db } from "@/lib/db";
-import { tools } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { tools, workspaceMembers } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { currentUser } from "@clerk/nextjs/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+    const user = await currentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+    });
+    if (!member) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
+
     const { id } = await params;
 
     try {
         const tool = await db.query.tools.findFirst({
-            where: eq(tools.id, id),
+            where: and(eq(tools.id, id), eq(tools.workspaceId, member.workspaceId)),
             columns: {
                 // @ts-ignore
                 researchLogs: true,

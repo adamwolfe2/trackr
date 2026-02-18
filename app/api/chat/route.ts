@@ -1,11 +1,12 @@
 import { db } from "@/lib/db";
-import { tools } from "@/lib/db/schema";
-import { cosineDistance, desc, gt, sql } from "drizzle-orm";
+import { tools, workspaceMembers } from "@/lib/db/schema";
+import { and, cosineDistance, desc, eq, gt, sql } from "drizzle-orm";
 import { generateEmbedding } from "@/lib/ai/embedding";
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { NextRequest } from "next/server";
 import { rateLimit } from "@/lib/middleware/rate-limit";
+import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
 
 export const maxDuration = 30;
@@ -18,6 +19,14 @@ const ChatSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+    const user = await currentUser();
+    if (!user) return new Response("Unauthorized", { status: 401 });
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+    });
+    if (!member) return new Response("No workspace found", { status: 403 });
+
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const rl = rateLimit(`chat:${ip}`, { limit: 20, windowSeconds: 60 });
 
@@ -54,7 +63,7 @@ export async function POST(req: NextRequest) {
                 similarity,
             })
             .from(tools)
-            .where(gt(similarity, 0.4))
+            .where(and(eq(tools.workspaceId, member.workspaceId), gt(similarity, 0.4)))
             .orderBy(desc(similarity))
             .limit(5);
 

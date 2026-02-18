@@ -1,14 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { saveScorecardConfig } from "@/lib/actions/workspace";
+import { toast } from "sonner";
 
-// Default weights
-const initialWeights = {
+const DEFAULT_WEIGHTS = {
     featureFit: 25,
     easeOfUse: 15,
     integrationDepth: 20,
@@ -20,17 +21,36 @@ const initialWeights = {
 
 const COLORS = ["#000000", "#333333", "#555555", "#777777", "#999999", "#bbbbbb", "#dddddd"];
 
-export function ScorecardClient() {
-    const [weights, setWeights] = useState(initialWeights);
-    const [total, setTotal] = useState(100);
+interface ScorecardClientProps {
+    savedConfig?: Record<string, number> | null;
+}
 
-    useEffect(() => {
-        const sum = Object.values(weights).reduce((a, b) => a + b, 0);
-        setTotal(sum);
-    }, [weights]);
+export function ScorecardClient({ savedConfig }: ScorecardClientProps) {
+    const [weights, setWeights] = useState<Record<string, number>>(
+        savedConfig && Object.keys(savedConfig).length > 0 ? savedConfig : DEFAULT_WEIGHTS
+    );
+    const [saving, setSaving] = useState(false);
+
+    const total = Object.values(weights).reduce((a, b) => a + b, 0);
 
     const handleSliderChange = (key: string, value: number[]) => {
         setWeights(prev => ({ ...prev, [key]: value[0] }));
+    };
+
+    const handleSave = async () => {
+        if (Math.round(total) !== 100) {
+            toast.error("Weights must sum to exactly 100%");
+            return;
+        }
+        setSaving(true);
+        try {
+            await saveScorecardConfig(weights);
+            toast.success("Scorecard saved! New research will use these weights.");
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Failed to save scorecard");
+        } finally {
+            setSaving(false);
+        }
     };
 
     const chartData = Object.entries(weights).map(([key, value]) => ({
@@ -46,10 +66,12 @@ export function ScorecardClient() {
                     <p className="text-sm text-muted-foreground">Adjust how the AI agent scores tools for your workspace.</p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <span className={`text-sm font-medium ${total !== 100 ? 'text-red-500' : 'text-green-600'}`}>
+                    <span className={`text-sm font-medium ${Math.round(total) !== 100 ? 'text-red-500' : 'text-green-600'}`}>
                         Total Weight: {total}%
                     </span>
-                    <Button disabled={total !== 100}>Save Changes</Button>
+                    <Button onClick={handleSave} disabled={Math.round(total) !== 100 || saving}>
+                        {saving ? "Saving..." : "Save Changes"}
+                    </Button>
                 </div>
             </div>
 
@@ -57,7 +79,7 @@ export function ScorecardClient() {
                 <Card className="md:col-span-2">
                     <CardHeader>
                         <CardTitle>Scoring Dimensions</CardTitle>
-                        <CardDescription>Drag sliders to adjust importance.</CardDescription>
+                        <CardDescription>Drag sliders to adjust importance. Total must equal 100%.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         {Object.entries(weights).map(([key, value]) => (
@@ -67,7 +89,7 @@ export function ScorecardClient() {
                                     <span className="text-sm font-medium">{value}%</span>
                                 </div>
                                 <Slider
-                                    defaultValue={[value]}
+                                    value={[value]}
                                     max={50}
                                     step={5}
                                     onValueChange={(val) => handleSliderChange(key, val)}

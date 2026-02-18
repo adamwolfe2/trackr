@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { UpgradeButton } from "@/components/billing/upgrade-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -61,7 +63,7 @@ export default async function BillingPage() {
                         <CardDescription>For teams that need serious procurement power.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        <div className="text-3xl font-bold">$29<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
+                        <div className="text-3xl font-bold">$49<span className="text-sm font-normal text-muted-foreground">/mo</span></div>
                         <ul className="space-y-2 text-sm">
                             <li className="flex gap-2"><Check className="h-4 w-4 text-green-500" /> Unlimited Tools</li>
                             <li className="flex gap-2"><Check className="h-4 w-4 text-green-500" /> Deep Research (Firecrawl + Perplexity)</li>

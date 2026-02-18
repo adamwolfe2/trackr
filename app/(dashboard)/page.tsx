@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Database, Zap, Clock } from "lucide-react";
 import { db } from "@/lib/db";
-import { tools, painPoints, workspaceMembers, researchJobs } from "@/lib/db/schema";
+import { tools, painPoints, workspaceMembers, researchJobs, reports } from "@/lib/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -84,8 +84,20 @@ export default async function DashboardPage() {
     // Filter for current workspace (MVP safety)
     const workspaceActivity = recentActivity.filter(job => job.tool.workspaceId === workspaceId);
 
-    // Mock total spend for now
-    const totalSpend = 45231;
+    // Count completed research reports for this workspace
+    const reportsCountData = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(reports)
+        .innerJoin(tools, eq(reports.toolId, tools.id))
+        .where(eq(tools.workspaceId, workspaceId));
+    const reportsCount = Number(reportsCountData[0]?.count || 0);
+
+    // Average score across all researched tools
+    const avgScoreData = await db
+        .select({ avg: sql<string>`avg(${tools.overallScore})` })
+        .from(tools)
+        .where(sql`${tools.workspaceId} = ${workspaceId} AND ${tools.overallScore} IS NOT NULL`);
+    const avgScore = avgScoreData[0]?.avg ? parseFloat(avgScoreData[0].avg) : 0;
 
     return (
         <div className="space-y-6 animate-fade-in-up">
@@ -97,9 +109,9 @@ export default async function DashboardPage() {
             </div>
 
             <DashboardStats
-                totalSpend={totalSpend}
+                avgScore={avgScore}
                 activeTools={toolsCount}
-                researchReports={toolsCount} // Proxy for now, or fetch count of reports
+                researchReports={reportsCount}
                 activePainPoints={activePainPoints}
             />
 

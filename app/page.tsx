@@ -1,4 +1,8 @@
+export const dynamic = "force-dynamic";
+
 import type { Metadata } from "next";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { OffsetHero } from "@/components/marketing/offset-hero";
 import { OffsetFeatures } from "@/components/marketing/offset-features";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
@@ -67,7 +71,10 @@ const jsonLd = {
   ],
 };
 
-export default function Home() {
+export default async function Home() {
+  const user = await currentUser();
+  if (user) redirect("/tools");
+
   return (
     <>
       <script

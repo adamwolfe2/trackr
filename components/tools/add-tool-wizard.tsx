@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +14,9 @@ import { toast } from "sonner";
 import Image from "next/image";
 
 export function AddToolWizard() {
+    const searchParams = useSearchParams();
     const [step, setStep] = useState<1 | 2 | 3>(1);
-    const [url, setUrl] = useState("");
+    const [url, setUrl] = useState(searchParams.get("url") ?? "");
     const [isPreviewing, startPreview] = useTransition();
     const [metadata, setMetadata] = useState<{ title: string; description: string; image: string } | null>(null);
     const [description, setDescription] = useState("");

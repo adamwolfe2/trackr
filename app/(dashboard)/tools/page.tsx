@@ -1,21 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Search, ExternalLink, MoreHorizontal } from "lucide-react";
+import { PlusCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { tools, workspaceMembers, ads } from "@/lib/db/schema";
 import { eq, desc, like, or, and } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { ToolGrid } from "@/components/tools/tool-grid";
 
 export const dynamic = "force-dynamic";
 

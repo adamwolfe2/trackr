@@ -16,6 +16,7 @@
     "@copilotkit/react-textarea": "^1.51.4",
     "@copilotkit/react-ui": "^1.51.4",
     "@copilotkit/runtime": "^1.51.4",
+    "@langchain/core": "^1.1.26",
     "@neondatabase/serverless": "^1.0.2",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",

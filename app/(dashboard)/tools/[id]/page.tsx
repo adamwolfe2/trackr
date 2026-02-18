@@ -16,8 +16,8 @@ import { ResearchButton } from "@/components/tools/research-button";
 
 export const dynamic = "force-dynamic";
 
-export default async function ToolDetailPage({ params }: { params: { id: string } }) {
-    const { id } = params;
+export default async function ToolDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
 
     const tool = await db.query.tools.findFirst({
         where: eq(tools.id, id),
@@ -90,7 +90,7 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
                         </div>
                     </div>
                     <div className="flex items-center gap-2">
-                        {/* <ExportButton /> */}
+                        <ExportButton />
                         <ResearchButton
                             toolId={tool.id}
                             isResearching={isResearching}
@@ -128,6 +128,7 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
                         <TabsList>
                             <TabsTrigger value="report">Analysis</TabsTrigger>
                             <TabsTrigger value="features">Features & Pricing</TabsTrigger>
+                            <TabsTrigger value="sentiment">Sentiment</TabsTrigger>
                             <TabsTrigger value="history">History</TabsTrigger>
                             <TabsTrigger value="notes">Team Notes</TabsTrigger>
                         </TabsList>
@@ -215,6 +216,63 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
                             ) : (
                                 <div className="text-center py-12 text-muted-foreground">
                                     No data available.
+                                </div>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="sentiment" className="space-y-4 mt-4">
+                            {report?.sentimentData ? (() => {
+                                let sentiment: { summary?: string; sentiment?: string; quotes?: Array<{ text: string; source: string }> } = {};
+                                try {
+                                    sentiment = typeof report.sentimentData === "string"
+                                        ? JSON.parse(report.sentimentData)
+                                        : report.sentimentData as any;
+                                } catch { /* ignore */ }
+
+                                const sentimentColor = sentiment?.sentiment === "positive"
+                                    ? "text-green-600"
+                                    : sentiment?.sentiment === "negative"
+                                    ? "text-red-600"
+                                    : "text-yellow-600";
+
+                                return (
+                                    <div className="space-y-4">
+                                        {sentiment?.summary && (
+                                            <Card>
+                                                <CardHeader>
+                                                    <CardTitle className="flex items-center gap-2">
+                                                        Community Sentiment
+                                                        {sentiment?.sentiment && (
+                                                            <span className={`text-sm font-normal capitalize ${sentimentColor}`}>
+                                                                • {sentiment.sentiment}
+                                                            </span>
+                                                        )}
+                                                    </CardTitle>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <p className="text-muted-foreground text-sm leading-relaxed">{sentiment.summary}</p>
+                                                </CardContent>
+                                            </Card>
+                                        )}
+                                        {sentiment?.quotes && sentiment.quotes.length > 0 && (
+                                            <Card>
+                                                <CardHeader><CardTitle>User Quotes</CardTitle></CardHeader>
+                                                <CardContent className="space-y-4">
+                                                    {sentiment.quotes.map((q, i) => (
+                                                        <blockquote key={i} className="border-l-2 border-muted-foreground/30 pl-4 space-y-1">
+                                                            <p className="text-sm italic">&ldquo;{q.text}&rdquo;</p>
+                                                            <cite className="text-xs text-muted-foreground not-italic">— {q.source}</cite>
+                                                        </blockquote>
+                                                    ))}
+                                                </CardContent>
+                                            </Card>
+                                        )}
+                                    </div>
+                                );
+                            })() : (
+                                <div className="text-center py-12 text-muted-foreground">
+                                    <p>No sentiment data yet.</p>
+                                    <p className="text-sm mt-1">Run deep research to collect community reviews.</p>
                                 </div>
                             )}
                         </TabsContent>

@@ -90,7 +90,7 @@ export async function submitTool(formData: FormData) {
     }
 
     revalidatePath("/tools");
-    redirect("/tools");
+    redirect(`/tools/${newTool.id}`);
 }
 
 export async function deleteTool(toolId: string) {
