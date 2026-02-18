@@ -74,7 +74,7 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="flex-grow w-full max-w-6xl mx-auto px-6 animate-fade-in-up">
+      <main className="flex-grow w-full max-w-6xl mx-auto px-6">
         <MarketingNavigation />
         <OffsetHero />
         <MarketingSocialProof />
