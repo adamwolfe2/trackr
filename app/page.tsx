@@ -15,6 +15,7 @@ import { MarketingDiscovery } from "@/components/marketing/marketing-discovery";
 import { MarketingCTA } from "@/components/marketing/marketing-cta";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingIntegrations } from "@/components/marketing/marketing-integrations";
+import { MarketingReportShowcase } from "@/components/marketing/marketing-report-showcase";
 
 export const metadata: Metadata = {
   title: "Trackr — AI Tool Research for Ops Teams",
@@ -80,7 +81,7 @@ export default async function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="flex-grow w-full max-w-6xl mx-auto px-6">
+      <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
         <MarketingNavigation isLoggedIn={!!user} />
         <OffsetHero />
         <MarketingSocialProof />
@@ -88,6 +89,7 @@ export default async function Home() {
         <MarketingProblem />
         <MarketingHowItWorks />
         <OffsetFeatures />
+        <MarketingReportShowcase />
         <MarketingComparison />
         <MarketingPricing />
         <MarketingUseCases />

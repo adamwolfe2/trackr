@@ -12,6 +12,7 @@ import {
     useDroppable,
     useDraggable,
     PointerSensor,
+    TouchSensor,
     useSensor,
     useSensors,
 } from "@dnd-kit/core";
@@ -163,7 +164,8 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
     const [activeId, setActiveId] = useState<string | null>(null);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+        useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
     );
 
     const handleDragStart = ({ active }: DragStartEvent) => {
@@ -233,31 +235,33 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                     </div>
                 </div>
 
-                {/* Kanban Columns */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Kanban Columns — horizontal scroll on mobile, grid on lg */}
+                <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
                     {COLUMNS.map((col) => {
                         const colTools = tools.filter(t => (col.statuses as readonly string[]).includes(t.status));
                         return (
-                            <DroppableColumn key={col.id} col={col} toolCount={colTools.length}>
-                                {colTools.map((tool) => (
-                                    <DraggableCard key={tool.id} tool={tool} />
-                                ))}
-                                {colTools.length === 0 && col.id === "backlog" && isEmpty ? (
-                                    <div className="border border-dashed border-neutral-300 p-6 text-center space-y-3">
-                                        <p className="font-serif text-xl">Submit your first tool.</p>
-                                        <p className="font-mono text-xs text-neutral-500 leading-relaxed">
-                                            Add an AI tool URL and we&apos;ll auto-research it — reviews, pricing, competitors.
-                                        </p>
-                                        <Link href="/submit" className="inline-block border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
-                                            Submit Tool →
-                                        </Link>
-                                    </div>
-                                ) : colTools.length === 0 ? (
-                                    <div className="border border-dashed border-neutral-300 p-4 text-center text-[10px] font-mono text-neutral-400">
-                                        Empty
-                                    </div>
-                                ) : null}
-                            </DroppableColumn>
+                            <div key={col.id} className="flex-shrink-0 w-[260px] sm:w-[280px] lg:w-auto min-w-0 flex flex-col">
+                                <DroppableColumn col={col} toolCount={colTools.length}>
+                                    {colTools.map((tool) => (
+                                        <DraggableCard key={tool.id} tool={tool} />
+                                    ))}
+                                    {colTools.length === 0 && col.id === "backlog" && isEmpty ? (
+                                        <div className="border border-dashed border-neutral-300 p-6 text-center space-y-3">
+                                            <p className="font-serif text-xl">Submit your first tool.</p>
+                                            <p className="font-mono text-xs text-neutral-500 leading-relaxed">
+                                                Add an AI tool URL and we&apos;ll auto-research it — reviews, pricing, competitors.
+                                            </p>
+                                            <Link href="/submit" className="inline-block border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
+                                                Submit Tool →
+                                            </Link>
+                                        </div>
+                                    ) : colTools.length === 0 ? (
+                                        <div className="border border-dashed border-neutral-300 p-4 text-center text-[10px] font-mono text-neutral-400">
+                                            Empty
+                                        </div>
+                                    ) : null}
+                                </DroppableColumn>
+                            </div>
                         );
                     })}
                 </div>

@@ -112,7 +112,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
             </Link>
 
             {/* Header */}
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="space-y-1 min-w-0">
                     <h1 className="font-serif text-3xl font-normal flex items-center gap-3 flex-wrap">
                         {tool.logoUrl && (

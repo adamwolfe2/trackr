@@ -1,36 +1,82 @@
 "use client";
 
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Simulated research agent demo
-const DEMO_URL = "notion.so";
+const DEMO_TOOLS = [
+    {
+        url: "notion.so",
+        favicon: "https://www.google.com/s2/favicons?domain=notion.so&sz=32",
+        name: "Notion",
+        tagline: "Collaborative workspace for docs & databases",
+        score: 84,
+        dimensions: [
+            { label: "Features", score: 92 },
+            { label: "Pricing Value", score: 78 },
+            { label: "AI Capabilities", score: 85 },
+            { label: "Integrations", score: 88 },
+            { label: "Ease of Use", score: 80 },
+        ],
+        verdict: "Strong fit for knowledge management workflows.",
+    },
+    {
+        url: "linear.app",
+        favicon: "https://www.google.com/s2/favicons?domain=linear.app&sz=32",
+        name: "Linear",
+        tagline: "Issue tracking built for modern dev teams",
+        score: 91,
+        dimensions: [
+            { label: "Features", score: 93 },
+            { label: "Pricing Value", score: 87 },
+            { label: "AI Capabilities", score: 89 },
+            { label: "Integrations", score: 90 },
+            { label: "Ease of Use", score: 94 },
+        ],
+        verdict: "Exceptional fit. Fastest issue tracker in the market.",
+    },
+    {
+        url: "figma.com",
+        favicon: "https://www.google.com/s2/favicons?domain=figma.com&sz=32",
+        name: "Figma",
+        tagline: "Collaborative interface design platform",
+        score: 88,
+        dimensions: [
+            { label: "Features", score: 91 },
+            { label: "Pricing Value", score: 80 },
+            { label: "AI Capabilities", score: 78 },
+            { label: "Integrations", score: 89 },
+            { label: "Ease of Use", score: 92 },
+        ],
+        verdict: "Industry standard. Consider team pricing tier.",
+    },
+    {
+        url: "slack.com",
+        favicon: "https://www.google.com/s2/favicons?domain=slack.com&sz=32",
+        name: "Slack",
+        tagline: "Business messaging and collaboration hub",
+        score: 82,
+        dimensions: [
+            { label: "Features", score: 88 },
+            { label: "Pricing Value", score: 74 },
+            { label: "AI Capabilities", score: 81 },
+            { label: "Integrations", score: 95 },
+            { label: "Ease of Use", score: 86 },
+        ],
+        verdict: "Good integration depth. Re-evaluate pricing at scale.",
+    },
+];
+
 const AGENT_LOGS = [
-    "Resolving tool: notion.so...",
+    "Mapping site structure...",
     "Crawling pricing page...",
-    "Analyzing feature documentation...",
-    "Scanning G2 + Reddit sentiment...",
-    "Comparing to 4 competitors...",
+    "Scanning G2 + Capterra reviews...",
+    "Analyzing Reddit sentiment...",
+    "Comparing 4 competitors...",
     "Scoring on 7 dimensions...",
     "Generating structured report...",
 ];
-
-const DEMO_REPORT = {
-    name: "Notion",
-    score: 84,
-    tagline: "Collaborative workspace for notes and docs",
-    dimensions: [
-        { label: "Features", score: 92 },
-        { label: "Pricing Value", score: 78 },
-        { label: "AI Capabilities", score: 85 },
-        { label: "Integrations", score: 88 },
-        { label: "Ease of Use", score: 80 },
-    ],
-    verdict: "Strong fit for knowledge management workflows.",
-};
 
 type DemoPhase = "idle" | "typing" | "researching" | "done";
 
@@ -52,60 +98,61 @@ function AnimatedScore({ score, animate }: { score: number; animate: boolean }) 
 
 function HeroDemo() {
     const [phase, setPhase] = useState<DemoPhase>("idle");
+    const [toolIndex, setToolIndex] = useState(0);
     const [typedUrl, setTypedUrl] = useState("");
-    const [logIndex, setLogIndex] = useState(0);
     const [visibleLogs, setVisibleLogs] = useState<string[]>([]);
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const currentTool = DEMO_TOOLS[toolIndex];
+
     useEffect(() => {
-        // Auto-start after mount
-        timerRef.current = setTimeout(() => startDemo(), 1200);
+        timerRef.current = setTimeout(() => startDemo(0), 1200);
         return () => { if (timerRef.current) clearTimeout(timerRef.current); };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const startDemo = () => {
+    const startDemo = (idx: number) => {
+        const tool = DEMO_TOOLS[idx];
+        setToolIndex(idx);
         setPhase("typing");
         setTypedUrl("");
         setVisibleLogs([]);
-        setLogIndex(0);
 
-        // Type URL character by character
         let i = 0;
         const typeChar = () => {
-            if (i <= DEMO_URL.length) {
-                setTypedUrl(DEMO_URL.slice(0, i));
+            if (i <= tool.url.length) {
+                setTypedUrl(tool.url.slice(0, i));
                 i++;
-                timerRef.current = setTimeout(typeChar, 70);
+                timerRef.current = setTimeout(typeChar, 65);
             } else {
                 timerRef.current = setTimeout(() => {
                     setPhase("researching");
-                    runLogs(0);
-                }, 500);
+                    runLogs(0, idx);
+                }, 450);
             }
         };
         typeChar();
     };
 
-    const runLogs = (idx: number) => {
-        if (idx >= AGENT_LOGS.length) {
+    const runLogs = (logIdx: number, toolIdx: number) => {
+        if (logIdx >= AGENT_LOGS.length) {
             timerRef.current = setTimeout(() => {
                 setPhase("done");
-                // Loop after 5 seconds
-                timerRef.current = setTimeout(() => startDemo(), 5000);
-            }, 400);
+                // After 4.5s, cycle to the next tool
+                timerRef.current = setTimeout(() => {
+                    const nextIdx = (toolIdx + 1) % DEMO_TOOLS.length;
+                    startDemo(nextIdx);
+                }, 4500);
+            }, 350);
             return;
         }
-        setVisibleLogs(prev => [...prev, AGENT_LOGS[idx]]);
-        setLogIndex(idx);
-        timerRef.current = setTimeout(() => runLogs(idx + 1), 520);
+        setVisibleLogs(prev => [...prev, AGENT_LOGS[logIdx]]);
+        timerRef.current = setTimeout(() => runLogs(logIdx + 1, toolIdx), 480);
     };
 
     return (
         <div className="relative w-full max-w-md">
-            {/* Offset shadow container */}
             <div className="border border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-
                 {/* Window chrome */}
                 <div className="bg-black px-4 py-2.5 flex items-center gap-2 border-b border-black">
                     <div className="w-2 h-2 bg-white/20" />
@@ -116,22 +163,30 @@ function HeroDemo() {
 
                 {/* URL Input Area */}
                 <div className="bg-white border-b border-black px-4 py-3 flex items-center gap-3">
-                    <Image src="/integrations/notion.svg" alt="Notion" width={16} height={16} className="flex-shrink-0 opacity-80" unoptimized />
+                    {phase !== "idle" ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                            src={currentTool.favicon}
+                            alt=""
+                            width={16}
+                            height={16}
+                            className="flex-shrink-0 opacity-80 w-4 h-4"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                    ) : (
+                        <div className="w-4 h-4 flex-shrink-0" />
+                    )}
                     <span className="font-mono text-sm text-neutral-700 flex-1 min-h-[20px]">
                         {typedUrl}
-                        {(phase === "typing") && (
+                        {phase === "typing" && (
                             <span className="inline-block w-0.5 h-4 bg-black ml-0.5 animate-pulse align-middle" />
                         )}
                         {phase === "idle" && (
                             <span className="text-neutral-400">Paste a URL to research...</span>
                         )}
                     </span>
-                    {phase === "researching" && (
-                        <Loader2 className="w-4 h-4 text-black animate-spin flex-shrink-0" />
-                    )}
-                    {phase === "done" && (
-                        <CheckCircle2 className="w-4 h-4 text-black flex-shrink-0" />
-                    )}
+                    {phase === "researching" && <Loader2 className="w-4 h-4 text-black animate-spin flex-shrink-0" />}
+                    {phase === "done" && <CheckCircle2 className="w-4 h-4 text-black flex-shrink-0" />}
                 </div>
 
                 {/* Agent Logs */}
@@ -145,7 +200,7 @@ function HeroDemo() {
                             <div className="space-y-1">
                                 {visibleLogs.map((log, i) => (
                                     <motion.div
-                                        key={i}
+                                        key={`${toolIndex}-${i}`}
                                         initial={{ opacity: 0, x: -4 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         className="flex items-start gap-2"
@@ -164,7 +219,7 @@ function HeroDemo() {
                                         className="flex gap-1 mt-1 pl-4"
                                     >
                                         {[0, 1, 2].map(i => (
-                                            <span key={i} className="w-1.5 h-1.5 bg-black inline-block" style={{ animationDelay: `${i * 0.15}s` }} />
+                                            <span key={i} className="w-1.5 h-1.5 bg-black inline-block" />
                                         ))}
                                     </motion.div>
                                 )}
@@ -174,33 +229,33 @@ function HeroDemo() {
                 </AnimatePresence>
 
                 {/* Report Card */}
-                <AnimatePresence>
+                <AnimatePresence mode="wait">
                     {phase === "done" && (
                         <motion.div
+                            key={`report-${toolIndex}`}
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, ease: "easeOut" }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.35, ease: "easeOut" }}
                             className="p-5"
                         >
-                            {/* Report Header */}
                             <div className="flex items-start justify-between mb-4">
                                 <div>
-                                    <div className="font-serif text-lg font-medium">{DEMO_REPORT.name}</div>
-                                    <div className="font-mono text-[10px] text-neutral-500 mt-0.5">{DEMO_REPORT.tagline}</div>
+                                    <div className="font-serif text-lg font-medium">{currentTool.name}</div>
+                                    <div className="font-mono text-[10px] text-neutral-500 mt-0.5">{currentTool.tagline}</div>
                                 </div>
                                 <div className="text-right">
                                     <div className="font-mono text-3xl font-bold text-black leading-none">
-                                        <AnimatedScore score={DEMO_REPORT.score} animate={phase === "done"} />
+                                        <AnimatedScore score={currentTool.score} animate={phase === "done"} />
                                     </div>
                                     <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-wider mt-0.5">/100 Score</div>
                                 </div>
                             </div>
 
-                            {/* Dimension Bars */}
                             <div className="space-y-2.5 mb-4">
-                                {DEMO_REPORT.dimensions.map((dim, i) => (
+                                {currentTool.dimensions.map((dim, i) => (
                                     <motion.div
-                                        key={dim.label}
+                                        key={`${toolIndex}-${dim.label}`}
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ delay: i * 0.08 }}
@@ -221,18 +276,16 @@ function HeroDemo() {
                                 ))}
                             </div>
 
-                            {/* Verdict */}
                             <div className="bg-neutral-100 border border-black px-3 py-2">
                                 <div className="flex items-start gap-2">
                                     <CheckCircle2 className="w-3 h-3 text-black flex-shrink-0 mt-0.5" />
-                                    <span className="font-mono text-[10px] text-neutral-700">{DEMO_REPORT.verdict}</span>
+                                    <span className="font-mono text-[10px] text-neutral-700">{currentTool.verdict}</span>
                                 </div>
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* Idle state */}
                 {phase === "idle" && (
                     <div className="px-5 py-8 text-center">
                         <div className="font-mono text-xs text-neutral-400">Initializing agent...</div>
@@ -240,7 +293,16 @@ function HeroDemo() {
                 )}
             </div>
 
-            {/* Decorative offset square */}
+            {/* Tool cycle dots */}
+            <div className="flex items-center justify-center gap-1.5 mt-3">
+                {DEMO_TOOLS.map((t, i) => (
+                    <div
+                        key={t.url}
+                        className={`w-1.5 h-1.5 transition-all duration-300 ${i === toolIndex ? "bg-black w-4" : "bg-neutral-300"}`}
+                    />
+                ))}
+            </div>
+
             <div className="absolute -bottom-3 -right-3 w-full h-full border border-black/20 -z-10" />
         </div>
     );
@@ -249,7 +311,7 @@ function HeroDemo() {
 export function OffsetHero() {
     return (
         <section className="mb-24 md:mb-32 pt-8">
-            <div className="flex flex-col lg:flex-row gap-16 lg:gap-20 items-center lg:items-start">
+            <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center lg:items-start">
 
                 {/* Left: Copy */}
                 <motion.div
@@ -269,7 +331,7 @@ export function OffsetHero() {
                         Research any AI tool in under 2 minutes. Track what you pay for. Stay current on launches. One shared workspace — no spreadsheets, no Slack threads, no wasted research.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 items-start mb-10">
+                    <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-start mb-10">
                         <Link
                             href="/sign-up"
                             className="bg-black text-white px-6 py-3.5 font-mono text-sm uppercase tracking-wide hover:bg-neutral-800 transition-all border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none whitespace-nowrap flex items-center gap-2 justify-center"
@@ -284,18 +346,17 @@ export function OffsetHero() {
                         </Link>
                     </div>
 
-                    {/* Trust signals */}
-                    <div className="flex flex-wrap gap-6 text-xs font-mono text-neutral-500 pt-6 border-t border-black/10">
+                    <div className="flex flex-wrap gap-5 text-xs font-mono text-neutral-500 pt-6 border-t border-black/10">
                         <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-black" />
+                            <span className="w-1.5 h-1.5 bg-black" />
                             <span>Reports in under 2 min</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-black" />
+                            <span className="w-1.5 h-1.5 bg-black" />
                             <span>7-dimension scorecard</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-black" />
+                            <span className="w-1.5 h-1.5 bg-black" />
                             <span>Auto-refreshes every 30 days</span>
                         </div>
                     </div>
@@ -309,8 +370,8 @@ export function OffsetHero() {
                     transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
                 >
                     <div className="mb-3 flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-500">Live Agent Demo</span>
+                        <div className="w-2 h-2 bg-black animate-pulse" />
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-500">Live Agent Demo — Cycling 4 Tools</span>
                     </div>
                     <HeroDemo />
                 </motion.div>

@@ -12,8 +12,8 @@ export function Header() {
             {/* Mobile hamburger */}
             <MobileNav />
 
-            {/* Search */}
-            <div className="flex items-center gap-4 flex-1 max-w-md">
+            {/* Search — hidden on mobile, shown sm+ */}
+            <div className="hidden sm:flex items-center gap-4 flex-1 max-w-md">
                 <div className="relative w-full">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input

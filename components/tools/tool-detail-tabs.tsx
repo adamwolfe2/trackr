@@ -72,8 +72,10 @@ export function ToolDetailTabs({ toolId, report, historyItems, notes, workspaceT
 
     return (
         <div className="border border-black">
-            {/* Tab Navigation */}
-            <div className="flex border-b border-black overflow-x-auto">
+            {/* Tab Navigation — scrollable on mobile */}
+            <div className="flex border-b border-black overflow-x-auto scrollbar-none"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
                 {TABS.map((tab) => (
                     <button
                         key={tab.id}
