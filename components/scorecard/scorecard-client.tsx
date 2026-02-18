@@ -20,35 +20,13 @@ export interface ScorecardRecipe {
 }
 
 const DEFAULT_RECIPE: ScorecardRecipe = {
-    systemContext: "We are a multi-vertical holding company with four operating subsidiaries across vending, property amenities, healthcare staffing, and technology. Tools must work across very different industries with varying levels of technical sophistication — from field operators managing vending routes to compliance-heavy healthcare workflows.",
+    systemContext: "",
     businessUnits: [
-        {
-            key: "vendingpreneurs",
-            name: "Vendingpreneurs",
-            description: "Vending machine operating business managing routes, machines, and operators across multiple locations.",
-            priorities: "Route management, real-time inventory tracking, mobile-friendly for field operators, contactless payment processing, machine telemetry and alerts. Low per-user cost, multi-location support, works offline or with poor connectivity."
-        },
-        {
-            key: "modern_amenities",
-            name: "Modern Amenities",
-            description: "Property amenities and lifestyle services business focused on enhancing resident and customer experiences.",
-            priorities: "Customer experience, booking and scheduling, CRM and communication tools, white-label or branded capabilities. Professional client-facing UX. Integrations with property management systems."
-        },
-        {
-            key: "medpros",
-            name: "MedPros",
-            description: "Healthcare staffing and medical professionals services platform.",
-            priorities: "HIPAA compliance, credentialing and licensing management, shift scheduling, secure messaging, regulatory documentation and audit trails. Enterprise-grade security is non-negotiable. Integration with healthcare EHR systems preferred."
-        },
-        {
-            key: "aims",
-            name: "AIMS",
-            description: "AI-integrated management systems for operations and internal tooling.",
-            priorities: "AI and automation capabilities, strong API access, developer-friendly documentation, deep integration potential. Innovation-forward with technical depth. Evaluate AI features critically — substance over marketing."
-        }
+        { key: "unit_1", name: "", description: "", priorities: "" },
+        { key: "unit_2", name: "", description: "", priorities: "" },
     ],
-    evaluationCriteria: "Prioritize tools that:\n1. Work well for non-technical operators in the field\n2. Have strong mobile apps (iOS and Android)\n3. Offer transparent, scalable pricing — ideally self-serve with no sales calls required\n4. Provide reliable support with real response times, not just a chatbot\n5. Integrate well with common business tools (Slack, Google Workspace, Stripe, etc.)\n\nCross-subsidiary utility matters. A tool that serves two or more of our business units at once is significantly more valuable than a narrow single-purpose tool.",
-    dealBreakers: "- Enterprise-only pricing: requires a demo call with no self-serve option\n- No mobile app for field use\n- Minimum seat requirements above 10 users\n- No API access or poor documentation\n- No multi-account or multi-tenant support\n- Missing HIPAA compliance (required for any tool touching MedPros data)"
+    evaluationCriteria: "",
+    dealBreakers: "",
 };
 
 interface ScorecardClientProps {
