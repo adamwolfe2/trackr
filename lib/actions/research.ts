@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { tools, reports, subscriptions, workspaces } from "@/lib/db/schema";
+import { tools, reports, workspaces } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { perplexity } from "@/lib/services/perplexity";
@@ -58,17 +58,8 @@ export async function performDeepResearch(toolId: string) {
         with: { workspace: true },
     }) as ToolWithWorkspace | undefined;
 
-    if (!tool || !tool.websiteUrl) throw new Error("Tool not found or missing URL");
-
-    const subscription = await db.query.subscriptions.findFirst({
-        where: eq(subscriptions.workspaceId, tool.workspaceId),
-    });
-
-    const { getPlanLimits } = await import("@/lib/config/subscriptions");
-    const limits = getPlanLimits(subscription ?? undefined);
-
-    if (!limits.limits.deepResearch) {
-        throw new Error("Deep research is a Pro feature. Please upgrade.");
+    if (!tool || !tool.websiteUrl) {
+        return { success: false, error: "Tool not found or missing URL" };
     }
 
     // Reset logs and set status to researching

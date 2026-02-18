@@ -14,6 +14,8 @@ import {
     Gift,
     Zap,
     MessageSquare,
+    SlidersHorizontal,
+    Layers,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 
@@ -42,6 +44,16 @@ const navItems = [
         title: "Ask Trackr AI",
         href: "/ask",
         icon: MessageSquare,
+    },
+    {
+        title: "Software Stack",
+        href: "/stack",
+        icon: Layers,
+    },
+    {
+        title: "Scorecard",
+        href: "/scorecard",
+        icon: SlidersHorizontal,
     },
     {
         title: "Advertise",

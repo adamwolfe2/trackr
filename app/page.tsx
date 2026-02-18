@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { OffsetHero } from "@/components/marketing/offset-hero";
 import { OffsetFeatures } from "@/components/marketing/offset-features";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
@@ -73,7 +72,6 @@ const jsonLd = {
 
 export default async function Home() {
   const user = await currentUser();
-  if (user) redirect("/tools");
 
   return (
     <>
@@ -82,7 +80,7 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <main className="flex-grow w-full max-w-6xl mx-auto px-6">
-        <MarketingNavigation />
+        <MarketingNavigation isLoggedIn={!!user} />
         <OffsetHero />
         <MarketingSocialProof />
         <MarketingProblem />

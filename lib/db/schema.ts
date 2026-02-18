@@ -110,6 +110,7 @@ export const workspacesRelations = relations(workspaces, ({ many }) => ({
     members: many(workspaceMembers),
     tools: many(tools),
     painPoints: many(painPoints),
+    softwareSpend: many(softwareSpend),
 }));
 
 export const toolsRelations = relations(tools, ({ one, many }) => ({
@@ -189,6 +190,30 @@ export const subscriptions = pgTable('subscriptions', {
 export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
     workspace: one(workspaces, {
         fields: [subscriptions.workspaceId],
+        references: [workspaces.id],
+    }),
+}));
+
+// Software Stack (existing tools the company currently pays for)
+export const softwareSpend = pgTable('software_spend', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+    toolName: text('tool_name').notNull(),
+    category: text('category'),
+    vendorUrl: text('vendor_url'),
+    monthlyCost: numeric('monthly_cost', { precision: 10, scale: 2 }).default('0'),
+    seatCount: integer('seat_count'),
+    billingCycle: text('billing_cycle').default('monthly'), // monthly | annual | one-time
+    status: text('status').default('active').notNull(), // active | evaluating | canceling | canceled
+    notes: text('notes'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+    index('software_spend_workspace_id_idx').on(table.workspaceId),
+]);
+
+export const softwareSpendRelations = relations(softwareSpend, ({ one }) => ({
+    workspace: one(workspaces, {
+        fields: [softwareSpend.workspaceId],
         references: [workspaces.id],
     }),
 }));

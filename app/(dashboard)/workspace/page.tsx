@@ -10,8 +10,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Mail, Shield, UserX } from "lucide-react";
-import { updateWorkspaceName, inviteMember, removeMember } from "@/lib/actions/workspace";
+import { Mail, Shield, UserX, Building2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext } from "@/lib/actions/workspace";
 
 export default async function WorkspacePage() {
     const user = await currentUser();
@@ -157,6 +158,47 @@ export default async function WorkspacePage() {
                             </div>
                             {isOwnerOrAdmin && (
                                 <Button type="submit" variant="outline">Save Changes</Button>
+                            )}
+                        </form>
+                    </CardContent>
+                </Card>
+
+                {/* Company Profile */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Building2 className="h-5 w-5" />
+                            Company Profile
+                        </CardTitle>
+                        <CardDescription>
+                            This context is used by AI research agents to evaluate tools specifically for your company.
+                            It was captured from your website during onboarding and can be edited manually.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form action={async (fd: FormData) => {
+                            "use server";
+                            await updateCompanyContext(fd);
+                        }} className="space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium" htmlFor="company-context">
+                                    Company Context
+                                </label>
+                                <Textarea
+                                    id="company-context"
+                                    name="companyContext"
+                                    rows={6}
+                                    defaultValue={workspace?.companyContext ?? ""}
+                                    disabled={!isOwnerOrAdmin}
+                                    placeholder="Describe your company: industry, business model, team size, main goals, tech stack, and what kind of tools would be most valuable..."
+                                    className="resize-none"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    The more specific you are, the better the AI can tailor research to your actual needs.
+                                </p>
+                            </div>
+                            {isOwnerOrAdmin && (
+                                <Button type="submit" variant="outline">Save Company Profile</Button>
                             )}
                         </form>
                     </CardContent>

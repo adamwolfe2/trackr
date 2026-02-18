@@ -157,14 +157,14 @@ export function ToolGrid({ tools }: { tools: Tool[] }) {
                         <BentoCard
                             key={tool.id}
                             title={
-                                <div className="flex items-center gap-2">
-                                    {tool.name}
+                                <div className="flex items-start gap-2">
+                                    <span className="line-clamp-2 leading-tight">{tool.name}</span>
                                     {tool.isPromoted ? (
-                                        <Badge variant="default" className="text-[10px] px-1 py-0 h-5 bg-blue-600 hover:bg-blue-700">
+                                        <Badge variant="default" className="text-[10px] px-1 py-0 h-5 flex-shrink-0 bg-blue-600 hover:bg-blue-700">
                                             Promoted
                                         </Badge>
                                     ) : (
-                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-5">
+                                        <Badge variant="outline" className="text-[10px] px-1 py-0 h-5 flex-shrink-0">
                                             {tool.status}
                                         </Badge>
                                     )}

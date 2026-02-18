@@ -104,6 +104,23 @@ export async function saveScorecardConfig(weights: Record<string, number>) {
     return { success: true };
 }
 
+export async function updateCompanyContext(formData: FormData) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const companyContext = (formData.get("companyContext") as string)?.trim() || null;
+
+    await db.update(workspaces)
+        .set({ companyContext })
+        .where(eq(workspaces.id, workspaceId));
+
+    revalidatePath("/workspace");
+    return { success: true };
+}
+
 export async function removeMember(memberId: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
