@@ -7,7 +7,19 @@ import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-const inter = Inter({ subsets: ["latin"] });
+import { Newsreader, Geist_Mono } from "next/font/google";
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-newsreader",
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -58,7 +70,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className={cn(inter.className, "font-sans antialiased min-h-screen bg-background")}>
+        <body className={cn(newsreader.variable, geistMono.variable, "font-serif antialiased min-h-screen bg-background text-foreground selection:bg-black selection:text-white")}>
           <ThemeProvider
             attribute="class"
             defaultTheme="light"
