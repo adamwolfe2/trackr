@@ -66,7 +66,7 @@ export async function submitTool(formData: FormData) {
     });
 
     if (limits.limits.tools !== Infinity && toolCount.length >= limits.limits.tools) {
-        throw new Error(`Free plan limit reached (${limits.limits.tools} tools). Please upgrade to Pro.`);
+        throw new Error(`Tool limit reached (${limits.limits.tools} tools on ${limits.name} plan). Upgrade to Team for unlimited tools.`);
     }
 
     // 2. Generate Embedding + Fetch logo preview in parallel

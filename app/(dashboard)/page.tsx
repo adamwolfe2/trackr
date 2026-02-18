@@ -174,7 +174,7 @@ export default async function DashboardPage() {
                                     <div key={job.id} className="flex items-start gap-3 text-sm">
                                         <div className="mt-1">
                                             {job.status === 'running' && <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />}
-                                            {job.status === 'completed' && <div className="h-2 w-2 rounded-full bg-green-500" />}
+                                            {job.status === 'complete' && <div className="h-2 w-2 rounded-full bg-black" />}
                                             {job.status === 'failed' && <div className="h-2 w-2 rounded-full bg-red-500" />}
                                             {job.status === 'queued' && <div className="h-2 w-2 rounded-full bg-slate-300" />}
                                         </div>

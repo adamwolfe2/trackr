@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Loader2, Sparkles, RefreshCw } from "lucide-react";
 import { performDeepResearch } from "@/lib/actions/research";
 import { toast } from "sonner";
@@ -10,14 +9,15 @@ interface ResearchButtonProps {
     toolId: string;
     isResearching: boolean;
     hasReport: boolean;
+    isFailed?: boolean;
 }
 
-export function ResearchButton({ toolId, isResearching, hasReport }: ResearchButtonProps) {
+export function ResearchButton({ toolId, isResearching, hasReport, isFailed }: ResearchButtonProps) {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleResearch = async () => {
         setIsLoading(true);
-        const toastId = toast.loading("Starting deep research — scraping site...");
+        const toastId = toast.loading("Starting research — scraping site...");
 
         try {
             const result = await performDeepResearch(toolId);
@@ -33,30 +33,20 @@ export function ResearchButton({ toolId, isResearching, hasReport }: ResearchBut
         }
     };
 
+    const label = isFailed ? "Retry Research" : hasReport ? "Re-Analyze" : "Run Research";
+    const Icon = isFailed || hasReport ? RefreshCw : Sparkles;
+
     return (
-        <Button
+        <button
             onClick={handleResearch}
             disabled={isLoading || isResearching}
-            variant={hasReport ? "outline" : "default"}
-            size="sm"
-            className={!hasReport ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
+            className="flex items-center gap-2 border border-black bg-white hover:bg-black hover:text-white px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
             {isLoading || isResearching ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Researching...
-                </>
-            ) : hasReport ? (
-                <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Re-Analyze
-                </>
+                <><Loader2 className="h-3 w-3 animate-spin" /> Researching...</>
             ) : (
-                <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Run Deep Analysis
-                </>
+                <><Icon className="h-3 w-3" /> {label}</>
             )}
-        </Button>
+        </button>
     );
 }
