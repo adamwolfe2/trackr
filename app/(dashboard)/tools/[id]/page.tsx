@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { tools, reports, researchJobs } from "@/lib/db/schema";
+import { tools, reports, researchJobs, notes } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +50,12 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
     const allReports = await db.query.reports.findMany({
         where: eq(reports.toolId, id),
         orderBy: [desc(reports.createdAt)]
+    });
+
+    // Fetch notes
+    const toolNotes = await db.query.notes.findMany({
+        where: eq(notes.toolId, id),
+        orderBy: [desc(notes.createdAt)],
     });
 
     return (
@@ -261,7 +267,7 @@ export default async function ToolDetailPage({ params }: { params: { id: string 
                         </TabsContent>
 
                         <TabsContent value="notes" className="space-y-4 mt-4">
-                            <NotesSection toolId={tool.id} notes={[]} />
+                            <NotesSection toolId={tool.id} notes={toolNotes} />
                         </TabsContent>
                     </Tabs>
                 </div>

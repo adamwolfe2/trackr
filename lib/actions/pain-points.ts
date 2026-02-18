@@ -1,0 +1,68 @@
+"use server";
+
+import { db } from "@/lib/db";
+import { painPoints } from "@/lib/db/schema";
+import { currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
+import { eq, and } from "drizzle-orm";
+import { getWorkspaceId } from "./tools";
+
+const addPainPointSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().optional(),
+    category: z.string().optional(),
+});
+
+export async function addPainPoint(formData: FormData) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const rawData = {
+        title: formData.get("title") as string,
+        description: formData.get("description") as string,
+        category: formData.get("category") as string,
+    };
+
+    const validated = addPainPointSchema.safeParse(rawData);
+    if (!validated.success) throw new Error(validated.error.issues[0].message);
+
+    await db.insert(painPoints).values({
+        workspaceId,
+        title: validated.data.title,
+        description: validated.data.description,
+        category: validated.data.category || "General",
+        createdBy: user.id,
+    });
+
+    revalidatePath("/pain-points");
+    return { success: true };
+}
+
+export async function deletePainPoint(id: string) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    await db.delete(painPoints).where(and(eq(painPoints.id, id), eq(painPoints.workspaceId, workspaceId)));
+    revalidatePath("/pain-points");
+}
+
+export async function togglePainPointActive(id: string, currentState: boolean) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    await db.update(painPoints)
+        .set({ active: !currentState })
+        .where(and(eq(painPoints.id, id), eq(painPoints.workspaceId, workspaceId)));
+
+    revalidatePath("/pain-points");
+}

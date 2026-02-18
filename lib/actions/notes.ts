@@ -1,29 +1,40 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { notes, workspaceMembers } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { eq } from "drizzle-orm";
+
+const addNoteSchema = z.object({
+    toolId: z.string().uuid(),
+    content: z.string().min(1, "Note content cannot be empty"),
+});
 
 export async function addNote(toolId: string, content: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
-    // Find workspace member ID for this user
-    // MVP: Just find the first member record for this user unique to the workspace logic later
+    // Get workspace member
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id)
     });
 
     if (!member) throw new Error("User is not a member of any workspace");
 
+    const validated = addNoteSchema.safeParse({ toolId, content });
+    if (!validated.success) {
+        throw new Error(validated.error.issues[0].message);
+    }
+
     await db.insert(notes).values({
-        toolId,
+        toolId: validated.data.toolId,
+        content: validated.data.content,
         workspaceMemberId: member.id,
-        content,
-        noteType: "general"
+        noteType: 'general'
     });
 
     revalidatePath(`/tools/${toolId}`);
+    return { success: true };
 }

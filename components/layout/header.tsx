@@ -3,6 +3,7 @@
 import { UserButton } from "@clerk/nextjs";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { NotificationsPopover } from "@/components/layout/notifications-popover";
 
 export function Header() {
     return (
@@ -18,6 +19,7 @@ export function Header() {
                 </div>
             </div>
             <div className="flex items-center gap-4">
+                <NotificationsPopover />
                 <UserButton afterSignOutUrl="/sign-in" />
             </div>
         </header>

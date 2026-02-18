@@ -7,7 +7,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
 
-async function getWorkspaceId(userId: string) {
+export async function getWorkspaceId(userId: string) {
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, userId),
     });

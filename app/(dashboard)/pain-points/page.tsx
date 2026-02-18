@@ -1,7 +1,26 @@
 import { PainPointsClient } from "@/components/pain-points/pain-points-client";
+import { db } from "@/lib/db";
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { getWorkspaceId } from "@/lib/actions/tools";
+import { painPoints } from "@/lib/db/schema";
+import { eq, desc } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export default function PainPointsPage() {
-    return <PainPointsClient />;
+export default async function PainPointsPage() {
+    const user = await currentUser();
+    if (!user) redirect("/sign-in");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) {
+        return <div>No workspace found</div>;
+    }
+
+    const points = await db.query.painPoints.findMany({
+        where: eq(painPoints.workspaceId, workspaceId),
+        orderBy: [desc(painPoints.createdAt)],
+    });
+
+    return <PainPointsClient initialData={points} />;
 }
