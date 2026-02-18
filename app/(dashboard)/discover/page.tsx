@@ -1,9 +1,8 @@
 export const dynamic = "force-dynamic";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, PlusCircle, ExternalLink, AlertCircle } from "lucide-react";
+import { Sparkles, PlusCircle, ExternalLink, AlertCircle, Newspaper } from "lucide-react";
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -11,6 +10,8 @@ import { db } from "@/lib/db";
 import { painPoints, workspaceMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { perplexity } from "@/lib/services/perplexity";
+import { tavily } from "@/lib/services/tavily";
+import { unstable_cache } from "next/cache";
 
 interface ToolSuggestion {
     name: string;
@@ -19,6 +20,32 @@ interface ToolSuggestion {
     matchReason?: string;
     source?: string;
 }
+
+interface NewsItem {
+    title: string;
+    url: string;
+    content: string;
+    source: string;
+}
+
+// Cache AI news for 1 hour to avoid hammering Tavily on every page load
+const getAINews = unstable_cache(
+    async (): Promise<NewsItem[]> => {
+        const month = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
+        const result = await tavily.search(
+            `AI tools funding announcements product launches ${month}`,
+            { maxResults: 8, searchDepth: "basic", includeAnswer: false }
+        );
+        return result.results.map(r => ({
+            title: r.title,
+            url: r.url,
+            content: r.content.slice(0, 220),
+            source: (() => { try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; } })(),
+        }));
+    },
+    ["ai-news-feed"],
+    { revalidate: 3600 }
+);
 
 async function getDiscoverySuggestions(workspaceId: string): Promise<{ suggestions: ToolSuggestion[]; painPointTitles: string[] }> {
     const activePainPoints = await db.query.painPoints.findMany({
@@ -41,12 +68,11 @@ async function getDiscoverySuggestions(workspaceId: string): Promise<{ suggestio
 
     try {
         const raw = await perplexity.discoverTools(combinedPainPoint);
-        // Try to parse JSON from the response
         const jsonMatch = raw.match(/\[[\s\S]*\]/);
         if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);
             if (Array.isArray(parsed)) {
-                suggestions = parsed.map((item: any, i: number) => ({
+                suggestions = parsed.map((item: Record<string, string>, i: number) => ({
                     name: item.name || `Tool ${i + 1}`,
                     url: item.url || "#",
                     description: item.description || "",
@@ -74,128 +100,138 @@ export default async function DiscoverPage() {
         return <div className="text-center py-12 text-muted-foreground">No workspace found.</div>;
     }
 
-    const { suggestions, painPointTitles } = await getDiscoverySuggestions(member.workspaceId);
+    const [{ suggestions, painPointTitles }, newsItems] = await Promise.all([
+        getDiscoverySuggestions(member.workspaceId),
+        getAINews(),
+    ]);
 
     return (
-        <div className="space-y-6 animate-fade-in-up">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                        <Sparkles className="h-6 w-6 text-purple-600" />
-                        Discovery
-                    </h1>
-                    <p className="text-sm text-muted-foreground">AI-suggested tools based on your active pain points.</p>
-                </div>
-                <form action="/discover" method="GET">
-                    <Button type="submit" variant="outline">
-                        <RefreshCwIcon className="h-4 w-4 mr-2" />
-                        Refresh Suggestions
-                    </Button>
-                </form>
-            </div>
+        <div className="space-y-10 animate-fade-in-up">
 
-            {painPointTitles.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-xl space-y-4">
-                    <div className="p-4 bg-purple-50 rounded-full">
-                        <AlertCircle className="h-8 w-8 text-purple-400" />
+            {/* ── AI News Feed ────────────────────────────────────────────── */}
+            <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                            <Newspaper className="h-6 w-6" />
+                            AI News Digest
+                        </h1>
+                        <p className="text-sm text-muted-foreground">Latest AI tool launches, funding rounds, and product updates.</p>
                     </div>
-                    <div className="space-y-2">
-                        <h3 className="text-lg font-semibold">No active pain points</h3>
-                        <p className="text-sm text-muted-foreground max-w-sm">
-                            Add pain points your team is facing and Trackr's AI will suggest the best tools to solve them.
-                        </p>
-                    </div>
-                    <Button asChild>
-                        <Link href="/pain-points">Add Pain Points</Link>
-                    </Button>
                 </div>
-            ) : suggestions.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed rounded-xl space-y-4">
-                    <div className="p-4 bg-purple-50 rounded-full">
-                        <Sparkles className="h-8 w-8 text-purple-400" />
+
+                {newsItems.length === 0 ? (
+                    <div className="border border-dashed border-neutral-300 p-8 text-center text-sm font-mono text-neutral-400">
+                        No news available right now. Check back soon.
                     </div>
-                    <div className="space-y-2">
-                        <h3 className="text-lg font-semibold">No suggestions found</h3>
-                        <p className="text-sm text-muted-foreground max-w-sm">
-                            The AI couldn't find matching tools right now. Try refreshing or updating your pain points.
-                        </p>
-                    </div>
-                    <div className="flex gap-2 flex-wrap justify-center">
-                        {painPointTitles.map(title => (
-                            <Badge key={title} variant="secondary">{title}</Badge>
+                ) : (
+                    <div className="grid gap-3 md:grid-cols-2">
+                        {newsItems.map((item, i) => (
+                            <div key={i} className="border border-black bg-white p-4 flex flex-col gap-3">
+                                <div>
+                                    <div className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider mb-1">{item.source}</div>
+                                    <h3 className="font-semibold text-sm leading-snug line-clamp-2">{item.title}</h3>
+                                    <p className="text-xs text-muted-foreground mt-1.5 line-clamp-3">{item.content}</p>
+                                </div>
+                                <div className="flex items-center gap-2 mt-auto">
+                                    <Button asChild size="sm" className="h-7 text-xs gap-1.5 flex-1">
+                                        <Link href={`/submit?url=${encodeURIComponent(item.url)}&name=${encodeURIComponent(item.title.slice(0, 60))}`}>
+                                            <PlusCircle className="h-3 w-3" /> Add to Queue
+                                        </Link>
+                                    </Button>
+                                    <Button asChild size="sm" variant="outline" className="h-7 text-xs gap-1.5">
+                                        <a href={item.url} target="_blank" rel="noopener noreferrer">
+                                            <ExternalLink className="h-3 w-3" /> Read
+                                        </a>
+                                    </Button>
+                                </div>
+                            </div>
                         ))}
                     </div>
-                </div>
-            ) : (
-                <>
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs text-muted-foreground font-mono">Based on:</span>
-                        {painPointTitles.map(title => (
-                            <Badge key={title} variant="outline" className="text-xs">{title}</Badge>
-                        ))}
-                    </div>
+                )}
+            </section>
 
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {suggestions.map((tool, i) => (
-                            <Card key={i} className="hover-lift flex flex-col">
-                                <CardHeader>
-                                    <div className="flex justify-between items-start">
-                                        <CardTitle className="text-lg">{tool.name}</CardTitle>
-                                        {tool.source && (
-                                            <Badge variant="secondary" className="text-xs shrink-0">{tool.source}</Badge>
-                                        )}
+            {/* ── Pain-Point Tool Suggestions ─────────────────────────────── */}
+            <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2">
+                            <Sparkles className="h-5 w-5" />
+                            Suggested for Your Team
+                        </h2>
+                        <p className="text-sm text-muted-foreground">AI-suggested tools based on your active pain points.</p>
+                    </div>
+                    <form action="/discover" method="GET">
+                        <Button type="submit" variant="outline" size="sm">
+                            Refresh
+                        </Button>
+                    </form>
+                </div>
+
+                {painPointTitles.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center border border-dashed border-neutral-300 space-y-3">
+                        <AlertCircle className="h-8 w-8 text-neutral-400" />
+                        <div className="space-y-1">
+                            <h3 className="text-base font-semibold">No active pain points</h3>
+                            <p className="text-sm text-muted-foreground max-w-sm">
+                                Add pain points your team is facing and Trackr&apos;s AI will suggest the best tools to solve them.
+                            </p>
+                        </div>
+                        <Button asChild size="sm" variant="outline">
+                            <Link href="/pain-points">Add Pain Points</Link>
+                        </Button>
+                    </div>
+                ) : suggestions.length === 0 ? (
+                    <div className="text-center py-8 border border-dashed border-neutral-300 text-sm text-muted-foreground">
+                        No suggestions found. Try refreshing or updating your pain points.
+                    </div>
+                ) : (
+                    <>
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs text-muted-foreground font-mono">Based on:</span>
+                            {painPointTitles.map(title => (
+                                <Badge key={title} variant="outline" className="text-xs font-mono">{title}</Badge>
+                            ))}
+                        </div>
+
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {suggestions.map((tool, i) => (
+                                <div key={i} className="border border-black bg-white p-4 flex flex-col gap-3">
+                                    <div>
+                                        <div className="flex items-start justify-between gap-2 mb-1">
+                                            <h3 className="font-semibold text-sm">{tool.name}</h3>
+                                            {tool.source && (
+                                                <span className="text-[9px] font-mono border border-neutral-300 px-1.5 py-0.5 text-neutral-500 shrink-0">{tool.source}</span>
+                                            )}
+                                        </div>
+                                        <p className="text-xs text-muted-foreground line-clamp-2">{tool.description}</p>
                                     </div>
-                                    <CardDescription className="line-clamp-2 min-h-[40px]">{tool.description}</CardDescription>
-                                </CardHeader>
-                                <CardContent className="flex-1 flex flex-col justify-end gap-4">
                                     {tool.matchReason && (
-                                        <div className="text-xs bg-purple-50 text-purple-700 p-2 rounded flex items-center gap-2">
-                                            <Sparkles className="h-3 w-3 shrink-0" />
+                                        <div className="text-[10px] font-mono bg-neutral-100 border border-neutral-200 px-2 py-1.5 flex items-center gap-1.5">
+                                            <Sparkles className="h-2.5 w-2.5 shrink-0" />
                                             {tool.matchReason}
                                         </div>
                                     )}
-                                    <div className="flex gap-2">
-                                        <Button className="w-full gap-2" asChild>
+                                    <div className="flex gap-2 mt-auto">
+                                        <Button className="flex-1 gap-1.5 h-8 text-xs" asChild>
                                             <Link href={`/submit?url=${encodeURIComponent(tool.url)}&name=${encodeURIComponent(tool.name)}`}>
-                                                <PlusCircle className="h-4 w-4" /> Add to Research
+                                                <PlusCircle className="h-3 w-3" /> Add to Research
                                             </Link>
                                         </Button>
                                         {tool.url && tool.url !== "#" && (
-                                            <Button variant="ghost" size="icon" asChild>
+                                            <Button variant="outline" size="icon" className="h-8 w-8" asChild>
                                                 <a href={tool.url} target="_blank" rel="noopener noreferrer">
-                                                    <ExternalLink className="h-4 w-4" />
+                                                    <ExternalLink className="h-3 w-3" />
                                                 </a>
                                             </Button>
                                         )}
                                     </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                </>
-            )}
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </section>
         </div>
-    );
-}
-
-function RefreshCwIcon(props: React.SVGProps<SVGSVGElement>) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-            <path d="M21 3v5h-5" />
-            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-            <path d="M3 21v-5h5" />
-        </svg>
     );
 }

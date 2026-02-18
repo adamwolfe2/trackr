@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { db } from "@/lib/db";
 import { tools, workspaces, workspaceMembers, reports, researchJobs, subscriptions } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
+import { performDeepResearch } from "@/lib/actions/research";
 
 export async function getWorkspaceId(userId: string) {
     const member = await db.query.workspaceMembers.findFirst({
@@ -88,13 +90,8 @@ export async function submitTool(formData: FormData) {
         embedding,
     }).returning();
 
-    // 4. Trigger Research Agent
-    try {
-        const { triggerResearchAgent } = await import("@/lib/agents/trigger");
-        await triggerResearchAgent(newTool.id, websiteUrl);
-    } catch {
-        // Agent trigger failure is non-fatal — tool is saved, research queued for retry
-    }
+    // 4. Kick off research in the background (runs after redirect is sent)
+    after(() => performDeepResearch(newTool.id));
 
     revalidatePath("/tools");
     redirect(`/tools/${newTool.id}`);

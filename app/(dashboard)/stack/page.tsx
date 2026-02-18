@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { softwareSpend, workspaceMembers } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { softwareSpend, workspaceMembers, tools } from "@/lib/db/schema";
+import { eq, desc, and, isNotNull, sql } from "drizzle-orm";
 import { StackClient } from "./client";
 
 export default async function StackPage() {
@@ -17,10 +17,22 @@ export default async function StackPage() {
 
     if (!member) redirect("/onboarding");
 
-    const entries = await db.query.softwareSpend.findMany({
-        where: eq(softwareSpend.workspaceId, member.workspaceId),
-        orderBy: [desc(softwareSpend.createdAt)],
-    });
+    const [entries, scoredTools] = await Promise.all([
+        db.query.softwareSpend.findMany({
+            where: eq(softwareSpend.workspaceId, member.workspaceId),
+            orderBy: [desc(softwareSpend.createdAt)],
+        }),
+        db.query.tools.findMany({
+            where: and(
+                eq(tools.workspaceId, member.workspaceId),
+                isNotNull(tools.overallScore),
+                sql`${tools.overallScore}::numeric < 6`
+            ),
+            columns: { name: true },
+        }),
+    ]);
 
-    return <StackClient initialData={entries} />;
+    const lowScoredNames = scoredTools.map(t => t.name.toLowerCase());
+
+    return <StackClient initialData={entries} lowScoredNames={lowScoredNames} />;
 }

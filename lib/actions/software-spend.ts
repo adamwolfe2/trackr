@@ -68,3 +68,22 @@ export async function updateSoftwareSpendStatus(id: string, status: string) {
     revalidatePath("/stack");
     return { success: true };
 }
+
+export async function updateSoftwareSpendDetails(id: string, monthlyCost: string, seatCount: number | null) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const cost = parseFloat(monthlyCost);
+    await db.update(softwareSpend)
+        .set({
+            monthlyCost: isNaN(cost) ? "0" : cost.toFixed(2),
+            seatCount,
+        })
+        .where(and(eq(softwareSpend.id, id), eq(softwareSpend.workspaceId, workspaceId)));
+
+    revalidatePath("/stack");
+    return { success: true };
+}

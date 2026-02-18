@@ -1,25 +1,19 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { PlusCircle, Search } from "lucide-react";
 import Link from "next/link";
+import { PlusCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { db } from "@/lib/db";
-import { tools, workspaceMembers, ads } from "@/lib/db/schema";
-import { eq, desc, like, or, and } from "drizzle-orm";
+import { tools, workspaceMembers, softwareSpend } from "@/lib/db/schema";
+import { eq, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { ToolGrid } from "@/components/tools/tool-grid";
+import { KanbanBoard } from "@/components/tools/kanban-board";
 
 export const dynamic = "force-dynamic";
 
-export default async function ToolsPage({
-    searchParams,
-}: {
-    searchParams: { q?: string };
-}) {
+export default async function ToolsPage() {
     const user = await currentUser();
     if (!user) redirect("/sign-in");
 
-    // 1. Get user's workspace
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),
     });
@@ -28,51 +22,46 @@ export default async function ToolsPage({
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
                 <h1 className="text-2xl font-bold">No Workspace Found</h1>
-                <p className="text-muted-foreground">Please contact support or create a new account.</p>
+                <p className="text-muted-foreground">Please contact support or complete onboarding.</p>
             </div>
-        )
+        );
     }
 
-    const searchQuery = searchParams.q || "";
+    const [toolsList, spendEntries] = await Promise.all([
+        db.query.tools.findMany({
+            where: eq(tools.workspaceId, member.workspaceId),
+            orderBy: [desc(tools.submittedAt)],
+        }),
+        db.query.softwareSpend.findMany({
+            where: eq(softwareSpend.workspaceId, member.workspaceId),
+        }),
+    ]);
 
-    // 2. Fetch Tools with Search
-    const toolsList = await db.query.tools.findMany({
-        where: and(
-            eq(tools.workspaceId, member.workspaceId),
-            searchQuery
-                ? or(
-                    like(tools.name, `%${searchQuery}%`),
-                    like(tools.category, `%${searchQuery}%`)
-                )
-                : undefined
-        ),
-        orderBy: [desc(tools.submittedAt)],
-    });
+    // Stats
+    const now = new Date();
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // 2.5 Fetch Promoted Tools (Ads)
-    const activeAds = await db.query.ads.findMany({
-        where: eq(ads.status, 'active'),
-        with: {
-            tool: true
-        },
-        limit: 2
-    });
+    const scored = toolsList.filter(t => t.overallScore !== null);
+    const avgScore = scored.length > 0
+        ? (scored.reduce((sum, t) => sum + parseFloat(t.overallScore!), 0) / scored.length).toFixed(1)
+        : null;
 
-    // Transform ads to tool format and dedup
-    const promotedTools = activeAds
-        .map(ad => ({ ...ad.tool, isPromoted: true }))
-        .filter(adTool => !toolsList.some(t => t.id === adTool.id));
+    const researchedThisMonth = toolsList.filter(t =>
+        t.lastResearchedAt && new Date(t.lastResearchedAt) >= firstOfMonth
+    ).length;
 
-    const finalTools = [...promotedTools, ...toolsList];
+    const monthlySpend = spendEntries
+        .filter(e => e.status === "active")
+        .reduce((sum, e) => sum + parseFloat(e.monthlyCost || "0"), 0);
+
+    const stats = { totalTools: toolsList.length, avgScore, researchedThisMonth, monthlySpend };
 
     return (
         <div className="space-y-6 animate-fade-in-up">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">AI Tools Database</h1>
-                    <p className="text-muted-foreground">
-                        Manage and track AI tools for your organization.
-                    </p>
+                    <h1 className="text-2xl font-bold tracking-tight">AI Tools Portfolio</h1>
+                    <p className="text-sm text-muted-foreground">Your team&apos;s AI tool intelligence at a glance.</p>
                 </div>
                 <Link href="/submit">
                     <Button className="gap-2">
@@ -82,34 +71,16 @@ export default async function ToolsPage({
                 </Link>
             </div>
 
-            <div className="flex items-center gap-2">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <form>
-                        <Input
-                            name="q"
-                            type="search"
-                            placeholder="Search tools..."
-                            className="pl-9"
-                            defaultValue={searchQuery}
-                        />
-                    </form>
-                </div>
-            </div>
-
             {toolsList.length === 0 ? (
-                <div className="flex flex-col items-center justify-center min-h-[40vh] text-center space-y-4 border-2 border-dashed rounded-xl">
-                    <h2 className="text-xl font-semibold">No tools found</h2>
-                    <p className="text-muted-foreground">Try adjusting your search or add a new tool.</p>
+                <div className="flex flex-col items-center justify-center min-h-[40vh] text-center space-y-4 border-2 border-dashed border-neutral-300 p-12">
+                    <h2 className="text-xl font-semibold">No tools yet</h2>
+                    <p className="text-muted-foreground text-sm">Add your first AI tool to start building your portfolio.</p>
                     <Link href="/submit">
                         <Button variant="outline">Add First Tool</Button>
                     </Link>
                 </div>
             ) : (
-                <div className="mt-6">
-                    {/* @ts-ignore */}
-                    <ToolGrid tools={finalTools} />
-                </div>
+                <KanbanBoard tools={toolsList} stats={stats} />
             )}
         </div>
     );
