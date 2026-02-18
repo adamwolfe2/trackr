@@ -23,35 +23,22 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Trackr - AI Tool Intelligence",
-    template: "%s | Trackr"
+    default: "Trackr — AI Tool Research for Ops Teams",
+    template: "%s | Trackr",
   },
-  description: "Collaborative AI tool intelligence platform. Discover, manage, and analyze your company's AI stack.",
+  description: "Submit any software tool. Get a scored research report in under 2 minutes. Your team's shared tool database, always up to date.",
   openGraph: {
-    type: "website",
-    locale: "en_US",
+    title: "Trackr — Stop Researching Tools Manually",
+    description: "Research agents evaluate any software tool in under 2 minutes. Scored reports. Shared team database. Always up to date.",
     url: "https://trackr.so",
-    title: "Trackr - AI Tool Intelligence",
-    description: "Collaborative AI tool intelligence platform. Discover, manage, and analyze your company's AI stack.",
     siteName: "Trackr",
-    images: [
-      {
-        url: "https://trackr.so/og-image.jpg", // Placeholder
-        width: 1200,
-        height: 630,
-        alt: "Trackr Platform",
-      },
-    ],
+    locale: "en_US",
+    type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Trackr - AI Tool Intelligence",
-    description: "Collaborative AI tool intelligence platform.",
-    images: ["https://trackr.so/og-image.jpg"],
-  },
-  robots: {
-    index: true,
-    follow: true,
+    title: "Trackr — AI Tool Research for Ops Teams",
+    description: "Stop researching tools manually. Let agents do it for you.",
   },
 };
 
