@@ -9,6 +9,7 @@ import { Toaster } from "sonner";
 import { CopilotKit } from "@copilotkit/react-core";
 import { CopilotSidebar } from "@copilotkit/react-ui";
 import "@copilotkit/react-ui/styles.css";
+import { Analytics } from "@vercel/analytics/next";
 
 const newsreader = Newsreader({
   subsets: ["latin"],
@@ -101,6 +102,7 @@ export default function RootLayout({
                       },
                     }}
                   />
+                  <Analytics />
                 </AnalyticsProvider>
               </CopilotSidebar>
             </CopilotKit>
