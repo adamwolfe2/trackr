@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { CopilotTextarea } from "@copilotkit/react-textarea";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Loader2, ArrowRight, CheckCircle2, Globe, Sparkles } from "lucide-react";
 import { previewTool } from "@/lib/actions/preview";
@@ -17,6 +17,7 @@ export function AddToolWizard() {
     const [url, setUrl] = useState("");
     const [isPreviewing, startPreview] = useTransition();
     const [metadata, setMetadata] = useState<{ title: string; description: string; image: string } | null>(null);
+    const [description, setDescription] = useState("");
 
     const handlePreview = () => {
         if (!url) return;
@@ -30,6 +31,7 @@ export function AddToolWizard() {
                     description: data.description || "",
                     image: data.image || ""
                 });
+                setDescription(data.description || "");
                 setStep(2);
             }
         });
@@ -85,12 +87,22 @@ export function AddToolWizard() {
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="description">Description</Label>
-                                    <Textarea
-                                        id="description"
-                                        name="description"
-                                        defaultValue={metadata.description}
-                                        className="h-32"
-                                    />
+                                    <div className="relative border rounded-md focus-within:ring-2 focus-within:ring-ring">
+                                        <CopilotTextarea
+                                            className="min-h-[120px] p-3 text-sm focus:outline-none bg-transparent"
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            placeholder="Describe what this tool does..."
+                                            autosuggestionsConfig={{
+                                                textareaPurpose: "Provide a detailed description of the AI tool based on its name and known features.",
+                                                chatApiConfigs: {},
+                                            }}
+                                        />
+                                        <input type="hidden" name="description" value={description} />
+                                    </div>
+                                    <p className="text-[10px] text-muted-foreground">
+                                        Tip: Press <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">Cmd K</kbd> to ask AI to improve this.
+                                    </p>
                                 </div>
                             </div>
 

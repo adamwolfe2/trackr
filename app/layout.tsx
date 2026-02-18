@@ -46,6 +46,10 @@ export const metadata: Metadata = {
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { Toaster } from "@/components/ui/toaster";
 
+import { CopilotKit } from "@copilotkit/react-core";
+import { CopilotSidebar } from "@copilotkit/react-ui";
+import "@copilotkit/react-ui/styles.css";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -57,14 +61,27 @@ export default function RootLayout({
         <body className={cn(inter.className, "font-sans antialiased min-h-screen bg-background")}>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
+            defaultTheme="light"
+            enableSystem={false}
             disableTransitionOnChange
+            forcedTheme="light"
           >
-            <AnalyticsProvider>
-              {children}
-              <Toaster />
-            </AnalyticsProvider>
+            <CopilotKit runtimeUrl="/api/copilotkit">
+              <CopilotSidebar
+                instructions="You are Trackr AI, an intelligent assistant for managing AI tools. Help users discover tools, analyze their stack, and optimize costs."
+                labels={{
+                  title: "Trackr AI",
+                  initial: "Hi! I'm Trackr AI. How can I help you manage your tool stack today?",
+                }}
+                defaultOpen={false}
+                clickOutsideToClose={false}
+              >
+                <AnalyticsProvider>
+                  {children}
+                  <Toaster />
+                </AnalyticsProvider>
+              </CopilotSidebar>
+            </CopilotKit>
           </ThemeProvider>
         </body>
       </html>
