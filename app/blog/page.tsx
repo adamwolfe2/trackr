@@ -1,49 +1,56 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { posts } from "@/lib/posts";
-import { formatDistanceToNow } from "date-fns";
+import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
+import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { currentUser } from "@clerk/nextjs/server";
+import type { Metadata } from "next";
 
-import { Header } from "@/components/marketing/header";
+export const metadata: Metadata = {
+    title: "Blog — Trackr",
+    description: "Guides, insights, and tool recommendations from the Trackr team.",
+};
 
-export default function BlogIndex() {
+export default async function BlogIndex() {
+    const user = await currentUser();
+
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-50 font-sans selection:bg-emerald-500/30">
-            <Header />
+        <main className="flex-grow w-full max-w-6xl mx-auto px-6">
+            <MarketingNavigation isLoggedIn={!!user} />
 
-            <main className="pt-32 pb-16 container mx-auto px-4 max-w-4xl">
-                <div className="text-center mb-16">
-                    <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-                        Latest Updates
+            <section className="py-24 border-t border-black/10">
+                <div className="mb-16">
+                    <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-4 block">Blog</span>
+                    <h1 className="text-3xl md:text-5xl font-serif font-normal mb-4">
+                        Guides & insights.
                     </h1>
-                    <p className="text-xl text-zinc-600 dark:text-zinc-400">
-                        News, guides, and insights from the Trackr team.
+                    <p className="font-mono text-sm text-neutral-500 max-w-lg">
+                        How ops teams evaluate tools, track spend, and stay current on AI.
                     </p>
                 </div>
 
-                <div className="grid gap-8">
-                    {posts.map(post => (
+                <div className="border border-black divide-y divide-black">
+                    {posts.map((post) => (
                         <Link key={post.slug} href={`/blog/${post.slug}`} className="block group">
-                            <article className="border border-zinc-200 dark:border-zinc-800 rounded-2xl p-8 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors">
-                                <div className="text-sm text-zinc-500 mb-2">
-                                    {new Date(post.date).toLocaleDateString()}
+                            <div className="p-8 hover:bg-black/[0.02] transition-colors">
+                                <div className="font-mono text-xs text-neutral-400 mb-3">
+                                    {new Date(post.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
                                 </div>
-                                <h2 className="text-2xl font-bold mb-3 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                                <h2 className="text-xl md:text-2xl font-serif font-normal mb-3 group-hover:underline">
                                     {post.title}
                                 </h2>
-                                <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                <p className="font-mono text-sm text-neutral-500 leading-relaxed max-w-2xl">
                                     {post.excerpt}
                                 </p>
-                            </article>
+                                <div className="mt-4 font-mono text-xs uppercase tracking-widest text-neutral-400 group-hover:text-black transition-colors">
+                                    Read article →
+                                </div>
+                            </div>
                         </Link>
                     ))}
                 </div>
-            </main>
+            </section>
 
-            <footer className="border-t border-zinc-200 dark:border-zinc-800 py-12 bg-zinc-50 dark:bg-zinc-900 mt-24">
-                <div className="container mx-auto px-4 text-center text-sm text-zinc-500">
-                    <p>&copy; 2024 Trackr Inc. All rights reserved.</p>
-                </div>
-            </footer>
-        </div>
+            <MarketingFooter />
+        </main>
     );
 }

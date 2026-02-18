@@ -7,8 +7,8 @@ import { Resend } from "resend";
 
 export const dynamic = 'force-dynamic';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "Trackr <noreply@trytrackr.com>";
+function getResend() { return new Resend(process.env.RESEND_API_KEY || "re_placeholder"); }
 
 export async function GET(req: Request) {
     if (req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
                     `<tr><td style="padding:8px;font-size:13px;border-bottom:1px solid #eee;">${t.name}</td><td style="padding:8px;font-size:13px;text-align:right;border-bottom:1px solid #eee;">${t.overallScore ? `${Number(t.overallScore).toFixed(1)}/10` : "—"}</td></tr>`
                 ).join("");
 
-                await resend.emails.send({
+                await getResend().emails.send({
                     from: FROM,
                     to: email,
                     subject: `Your Trackr weekly digest — ${recentTools.length} tool${recentTools.length !== 1 ? "s" : ""} researched`,

@@ -1,11 +1,14 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM = "Trackr <noreply@trytrackr.com>";
+
+function getResend() {
+    return new Resend(process.env.RESEND_API_KEY || "re_placeholder");
+}
 
 export async function sendWelcomeEmail(to: string, firstName: string) {
     if (!process.env.RESEND_API_KEY) return;
-    await resend.emails.send({
+    await getResend().emails.send({
         from: FROM,
         to,
         subject: "Welcome to Trackr",
@@ -38,7 +41,7 @@ export async function sendResearchCompleteEmail(
     score: number
 ) {
     if (!process.env.RESEND_API_KEY) return;
-    await resend.emails.send({
+    await getResend().emails.send({
         from: FROM,
         to,
         subject: `Research complete: ${toolName} (${score.toFixed(1)}/10)`,
@@ -65,7 +68,7 @@ export async function sendResearchFailedEmail(
     errorMessage: string
 ) {
     if (!process.env.RESEND_API_KEY) return;
-    await resend.emails.send({
+    await getResend().emails.send({
         from: FROM,
         to,
         subject: `Research failed: ${toolName}`,
