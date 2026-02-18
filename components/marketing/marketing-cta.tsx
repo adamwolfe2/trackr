@@ -15,9 +15,9 @@ export function MarketingCTA() {
                 initial={{ opacity: 0, y: 24 }}
                 animate={inView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="bg-black text-white p-12 md:p-20 border border-black shadow-[8px_8px_0px_0px_rgba(139,154,127,1)] text-center"
+                className="bg-black text-white p-12 md:p-20 border border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.12)] text-center"
             >
-                <span className="text-sm font-mono uppercase tracking-wider text-[#8B9A7F] mb-6 block">
+                <span className="text-sm font-mono uppercase tracking-wider text-neutral-400 mb-6 block">
                     Ready to stop researching manually?
                 </span>
                 <h2 className="text-4xl md:text-6xl font-serif font-normal mb-8 text-white leading-tight">
@@ -30,7 +30,7 @@ export function MarketingCTA() {
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                     <Link
                         href="/sign-up"
-                        className="bg-white text-black px-8 py-4 font-mono text-sm uppercase tracking-wide hover:bg-neutral-100 transition-all border border-white shadow-[4px_4px_0px_0px_rgba(139,154,127,0.6)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none whitespace-nowrap flex items-center gap-2"
+                        className="bg-white text-black px-8 py-4 font-mono text-sm uppercase tracking-wide hover:bg-neutral-100 transition-all border border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.25)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none whitespace-nowrap flex items-center gap-2"
                     >
                         Get Started Free <ArrowRight className="w-4 h-4" />
                     </Link>

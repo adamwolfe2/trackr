@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowRight, CheckCircle2, Loader2, Globe } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -106,16 +107,16 @@ function HeroDemo() {
             <div className="border border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
 
                 {/* Window chrome */}
-                <div className="bg-neutral-900 px-4 py-2.5 flex items-center gap-2 border-b border-black">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500 opacity-80" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500 opacity-80" />
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500 opacity-80" />
-                    <span className="ml-3 font-mono text-[10px] text-neutral-400 uppercase tracking-wider">trackr — research agent</span>
+                <div className="bg-black px-4 py-2.5 flex items-center gap-2 border-b border-black">
+                    <div className="w-2 h-2 bg-white/20" />
+                    <div className="w-2 h-2 bg-white/20" />
+                    <div className="w-2 h-2 bg-white/20" />
+                    <span className="ml-3 font-mono text-[10px] text-white/60 uppercase tracking-wider">trackr — research agent</span>
                 </div>
 
                 {/* URL Input Area */}
-                <div className="bg-neutral-50 border-b border-black/10 px-4 py-3 flex items-center gap-3">
-                    <Globe className="w-4 h-4 text-neutral-400 flex-shrink-0" />
+                <div className="bg-white border-b border-black px-4 py-3 flex items-center gap-3">
+                    <Image src="/integrations/notion.svg" alt="Notion" width={16} height={16} className="flex-shrink-0 opacity-80" unoptimized />
                     <span className="font-mono text-sm text-neutral-700 flex-1 min-h-[20px]">
                         {typedUrl}
                         {(phase === "typing") && (
@@ -126,10 +127,10 @@ function HeroDemo() {
                         )}
                     </span>
                     {phase === "researching" && (
-                        <Loader2 className="w-4 h-4 text-[#8B9A7F] animate-spin flex-shrink-0" />
+                        <Loader2 className="w-4 h-4 text-black animate-spin flex-shrink-0" />
                     )}
                     {phase === "done" && (
-                        <CheckCircle2 className="w-4 h-4 text-[#8B9A7F] flex-shrink-0" />
+                        <CheckCircle2 className="w-4 h-4 text-black flex-shrink-0" />
                     )}
                 </div>
 
@@ -139,7 +140,7 @@ function HeroDemo() {
                         <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
-                            className="bg-neutral-900 px-4 py-3 border-b border-black/20"
+                            className="bg-[#F3F3EF] px-4 py-3 border-b border-black"
                         >
                             <div className="space-y-1">
                                 {visibleLogs.map((log, i) => (
@@ -149,8 +150,8 @@ function HeroDemo() {
                                         animate={{ opacity: 1, x: 0 }}
                                         className="flex items-start gap-2"
                                     >
-                                        <span className="text-[#8B9A7F] font-mono text-[10px] mt-0.5 flex-shrink-0">›</span>
-                                        <span className={`font-mono text-[10px] ${i === visibleLogs.length - 1 && phase === "researching" ? "text-green-400" : "text-neutral-500"}`}>
+                                        <span className="text-black font-mono text-[10px] mt-0.5 flex-shrink-0">›</span>
+                                        <span className={`font-mono text-[10px] ${i === visibleLogs.length - 1 && phase === "researching" ? "text-black font-semibold" : "text-neutral-500"}`}>
                                             {log}
                                         </span>
                                     </motion.div>
@@ -163,7 +164,7 @@ function HeroDemo() {
                                         className="flex gap-1 mt-1 pl-4"
                                     >
                                         {[0, 1, 2].map(i => (
-                                            <span key={i} className="w-1 h-1 rounded-full bg-green-400 inline-block" style={{ animationDelay: `${i * 0.15}s` }} />
+                                            <span key={i} className="w-1.5 h-1.5 bg-black inline-block" style={{ animationDelay: `${i * 0.15}s` }} />
                                         ))}
                                     </motion.div>
                                 )}
@@ -221,9 +222,9 @@ function HeroDemo() {
                             </div>
 
                             {/* Verdict */}
-                            <div className="bg-[#8B9A7F]/10 border border-[#8B9A7F]/30 px-3 py-2">
+                            <div className="bg-neutral-100 border border-black px-3 py-2">
                                 <div className="flex items-start gap-2">
-                                    <CheckCircle2 className="w-3 h-3 text-[#8B9A7F] flex-shrink-0 mt-0.5" />
+                                    <CheckCircle2 className="w-3 h-3 text-black flex-shrink-0 mt-0.5" />
                                     <span className="font-mono text-[10px] text-neutral-700">{DEMO_REPORT.verdict}</span>
                                 </div>
                             </div>
@@ -257,7 +258,7 @@ export function OffsetHero() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
                 >
-                    <span className="text-sm font-mono uppercase tracking-wider text-[#8B9A7F] mb-5 block">
+                    <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-5 block">
                         AI-Powered Tool Research for Ops Teams
                     </span>
                     <h1 className="text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] tracking-tight max-w-2xl mb-7 font-serif">
@@ -286,15 +287,15 @@ export function OffsetHero() {
                     {/* Trust signals */}
                     <div className="flex flex-wrap gap-6 text-xs font-mono text-neutral-500 pt-6 border-t border-black/10">
                         <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#8B9A7F]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-black" />
                             <span>Reports in under 2 min</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#8B9A7F]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-black" />
                             <span>7-dimension scorecard</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#8B9A7F]" />
+                            <span className="w-1.5 h-1.5 rounded-full bg-black" />
                             <span>Auto-refreshes every 30 days</span>
                         </div>
                     </div>

@@ -50,7 +50,7 @@ export function MarketingUseCases() {
                 transition={{ duration: 0.5 }}
                 className="mb-16"
             >
-                <span className="text-sm font-mono uppercase tracking-wider text-[#8B9A7F] mb-4 block">
+                <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-4 block">
                     Who Uses Trackr
                 </span>
                 <h2 className="text-3xl md:text-5xl font-serif font-normal mb-8">
@@ -71,7 +71,7 @@ export function MarketingUseCases() {
                         variants={cardVariants}
                         className="bg-white border border-black p-8 hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[1px] hover:-translate-y-[1px] transition-all duration-200"
                     >
-                        <span className="inline-block font-mono text-[10px] uppercase tracking-wider text-[#8B9A7F] border border-[#8B9A7F]/30 bg-[#8B9A7F]/10 px-2 py-0.5 mb-5">
+                        <span className="inline-block font-mono text-[10px] uppercase tracking-wider text-black border border-black bg-neutral-100 px-2 py-0.5 mb-5">
                             {c.tag}
                         </span>
                         <h3 className="text-xl font-serif font-medium mb-3">{c.title}</h3>

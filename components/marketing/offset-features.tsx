@@ -91,7 +91,7 @@ export function OffsetFeatures() {
                 transition={{ duration: 0.5 }}
                 className="mb-16"
             >
-                <span className="text-sm font-mono uppercase tracking-wider text-[#8B9A7F] mb-4 block">
+                <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-4 block">
                     What Trackr Does
                 </span>
                 <h2 className="text-3xl md:text-5xl font-serif font-normal mb-6">

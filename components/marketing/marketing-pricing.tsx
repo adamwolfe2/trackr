@@ -31,7 +31,7 @@ export function MarketingPricing() {
                 transition={{ duration: 0.5 }}
                 className="mb-16 text-center max-w-2xl mx-auto"
             >
-                <span className="text-sm font-mono uppercase tracking-wider text-[#8B9A7F] mb-4 block">
+                <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-4 block">
                     Pricing
                 </span>
                 <h2 className="text-3xl md:text-5xl font-serif font-normal mb-6">
@@ -84,9 +84,9 @@ export function MarketingPricing() {
                 {/* Team — featured */}
                 <motion.div
                     variants={cardVariants}
-                    className="bg-black text-white border border-black p-8 flex flex-col h-full relative md:-translate-y-4 shadow-[8px_8px_0px_0px_rgba(139,154,127,0.6)]"
+                    className="bg-black text-white border border-black p-8 flex flex-col h-full relative md:-translate-y-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.15)]"
                 >
-                    <div className="absolute -top-px -right-px bg-[#8B9A7F] text-black text-[10px] font-mono uppercase px-3 py-1.5 tracking-wider">
+                    <div className="absolute -top-px -right-px bg-white text-black text-[10px] font-mono uppercase px-3 py-1.5 tracking-wider border-l border-b border-black">
                         Most Popular
                     </div>
                     <div className="mb-8">
@@ -109,14 +109,14 @@ export function MarketingPricing() {
                             "Priority email support",
                         ].map((feature) => (
                             <li key={feature} className="flex gap-3 text-sm font-mono items-start">
-                                <Check className="w-4 h-4 mt-0.5 text-[#8B9A7F] flex-shrink-0" />
+                                <Check className="w-4 h-4 mt-0.5 text-white flex-shrink-0" />
                                 {feature}
                             </li>
                         ))}
                     </ul>
                     <Link
                         href="/sign-up"
-                        className="block w-full text-center bg-[#8B9A7F] text-black border border-[#8B9A7F] py-3 font-mono text-sm uppercase hover:bg-[#9BAB8F] transition-colors"
+                        className="block w-full text-center bg-white text-black border border-white py-3 font-mono text-sm uppercase hover:bg-neutral-200 transition-colors"
                     >
                         Start 14-day free trial
                     </Link>

@@ -27,7 +27,7 @@ export function MarketingComparison() {
                 transition={{ duration: 0.5 }}
                 className="mb-16"
             >
-                <span className="text-sm font-mono uppercase tracking-wider text-[#8B9A7F] mb-4 block">
+                <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-4 block">
                     Why Not Just Use...
                 </span>
                 <h2 className="text-3xl md:text-5xl font-serif font-normal mb-8">
@@ -62,7 +62,7 @@ export function MarketingComparison() {
                                 <td className="py-5 px-6 font-medium text-neutral-700">{row.feature}</td>
                                 <td className="py-5 px-6 bg-neutral-50 border-l border-black font-medium">
                                     <div className="flex items-center gap-2.5">
-                                        <Check className="w-4 h-4 text-[#8B9A7F] flex-shrink-0" />
+                                        <Check className="w-4 h-4 text-neutral-500 flex-shrink-0" />
                                         {row.trackr}
                                     </div>
                                 </td>

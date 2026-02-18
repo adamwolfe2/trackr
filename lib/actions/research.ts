@@ -18,10 +18,15 @@ type ToolWithWorkspace = InferSelectModel<typeof tools> & {
 
 const ReportSchema = z.object({
     summary: z.string().describe("Executive summary of the tool analysis, max 2 sentences."),
-    scorecardSnapshot: z.record(z.string(), z.object({
-        score: z.number().min(0).max(10),
-        justification: z.string()
-    })).describe("Scores (0-10) for each dimension in the scorecard config. Use the exact keys from Scorecard Dimensions."),
+    scorecardSnapshot: z.object({
+        features: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
+        pricing_value: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
+        ease_of_use: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
+        integration_depth: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
+        support_quality: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
+        security: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
+        ai_capabilities: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
+    }).describe("Scores (0-10) for each of the 7 evaluation dimensions."),
     features: z.object({
         list: z.array(z.string()).describe("List of key features")
     }),

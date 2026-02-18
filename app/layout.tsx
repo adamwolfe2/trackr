@@ -6,9 +6,6 @@ import { cn } from "@/lib/utils";
 import { Newsreader, Geist_Mono } from "next/font/google";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { Toaster } from "sonner";
-import { CopilotKit } from "@copilotkit/react-core";
-import { CopilotSidebar } from "@copilotkit/react-ui";
-import "@copilotkit/react-ui/styles.css";
 
 const newsreader = Newsreader({
   subsets: ["latin"],
@@ -68,6 +65,8 @@ export default function RootLayout({
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://clerk.com" crossOrigin="anonymous" />
+          {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+          <script src="https://cdn.idpixel.app/v1/idp-analytics-699619edfcc4a49a660c15bb.min.js" defer />
         </head>
         <body className={cn(newsreader.variable, geistMono.variable, "font-serif antialiased min-h-screen bg-background text-foreground selection:bg-black selection:text-white")}>
           <ThemeProvider
@@ -77,33 +76,21 @@ export default function RootLayout({
             disableTransitionOnChange
             forcedTheme="light"
           >
-            <CopilotKit runtimeUrl="/api/copilotkit">
-              <CopilotSidebar
-                instructions="You are Trackr AI, an intelligent assistant for managing AI tools. Help users discover tools, analyze their stack, and make procurement decisions."
-                labels={{
-                  title: "Trackr AI",
-                  initial: "Hi! I'm Trackr AI. Ask me anything about your tool stack — pricing, scores, comparisons.",
+            <AnalyticsProvider>
+              {children}
+              <Toaster
+                position="bottom-right"
+                toastOptions={{
+                  duration: 4000,
+                  classNames: {
+                    toast: "font-mono text-sm border border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] rounded-none",
+                    success: "bg-white text-black border-black",
+                    error: "bg-white text-red-600 border-red-600",
+                    info: "bg-white text-black border-black",
+                  },
                 }}
-                defaultOpen={false}
-                clickOutsideToClose={false}
-              >
-                <AnalyticsProvider>
-                  {children}
-                  <Toaster
-                    position="bottom-right"
-                    toastOptions={{
-                      duration: 4000,
-                      classNames: {
-                        toast: "font-mono text-sm border border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] rounded-none",
-                        success: "bg-white text-black border-black",
-                        error: "bg-white text-red-600 border-red-600",
-                        info: "bg-white text-black border-black",
-                      },
-                    }}
-                  />
-                </AnalyticsProvider>
-              </CopilotSidebar>
-            </CopilotKit>
+              />
+            </AnalyticsProvider>
           </ThemeProvider>
         </body>
       </html>
