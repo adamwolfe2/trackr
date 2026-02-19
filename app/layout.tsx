@@ -65,7 +65,6 @@ export default function RootLayout({
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://clerk.com" crossOrigin="anonymous" />
-          {/* eslint-disable-next-line @next/next/no-sync-scripts */}
           <script src="https://cdn.idpixel.app/v1/idp-analytics-699619edfcc4a49a660c15bb.min.js" defer />
         </head>
         <body className={cn(newsreader.variable, geistMono.variable, "font-serif antialiased min-h-screen bg-background text-foreground selection:bg-black selection:text-white")}>

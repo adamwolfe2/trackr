@@ -25,7 +25,7 @@ export async function submitTool(formData: FormData) {
     // const description = formData.get("description") as string;
 
     // 1. Get user's workspace (or create default)
-    let workspace = await db.query.workspaceMembers.findFirst({
+    const workspace = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),
         with: {
             workspace: true

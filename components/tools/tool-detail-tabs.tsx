@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import Link from "next/link";
-import { ExternalLink } from "lucide-react";
 import { NotesSection } from "@/components/tools/notes-section";
 
 type ScorecardEntry = { score: number; justification: string };
@@ -54,12 +52,6 @@ type SerializedJob = {
     type: "job" | "report";
 };
 
-type WorkspaceTool = {
-    id: string;
-    name: string;
-    status: string;
-};
-
 type Note = {
     id: string;
     content: string;
@@ -73,8 +65,6 @@ interface Props {
     report: SerializedReport | null;
     historyItems: SerializedJob[];
     notes: Note[];
-    workspaceTools: WorkspaceTool[];
-    competitors: string[];
 }
 
 const TABS = [
@@ -109,7 +99,7 @@ function SourceLinks({ sources }: { sources: ReviewSource[] }) {
     );
 }
 
-export function ToolDetailTabs({ toolId, report, historyItems, notes, workspaceTools, competitors }: Props) {
+export function ToolDetailTabs({ toolId, report, historyItems, notes }: Props) {
     const [activeTab, setActiveTab] = useState<TabId>("report");
 
     return (

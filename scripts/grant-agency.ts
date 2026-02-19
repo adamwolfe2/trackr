@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
-import { workspaceMembers, subscriptions, workspaces } from "@/lib/db/schema";
+import { subscriptions, workspaces } from "@/lib/db/schema";
 import * as schema from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 

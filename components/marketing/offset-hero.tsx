@@ -161,7 +161,7 @@ type Phase = "idle" | "typing" | "researching" | "done";
 function AnimatedScore({ score, animate }: { score: number; animate: boolean }) {
     const [display, setDisplay] = useState(0);
     useEffect(() => {
-        if (!animate) { setDisplay(0); return; }
+        if (!animate) { setDisplay(0); return; } // eslint-disable-line react-hooks/set-state-in-effect -- reset on animation toggle
         let val = 0;
         const step = score / 22;
         const t = setInterval(() => {
@@ -227,7 +227,6 @@ function HeroDemo() {
         if (intervalRef.current) clearInterval(intervalRef.current);
     };
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const startDemo = (idx: number) => {
         clearAll();
         toolIndexRef.current = idx;

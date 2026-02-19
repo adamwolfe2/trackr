@@ -26,7 +26,7 @@ export class OpenAIService {
         return response.data[0].embedding;
     }
 
-    async analyzeTool(content: string): Promise<any> {
+    async analyzeTool(content: string): Promise<Record<string, unknown>> {
         if (!this.client) {
             throw new Error("OPENAI_API_KEY is not configured");
         }

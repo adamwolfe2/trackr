@@ -13,7 +13,6 @@ import { currentUser } from "@clerk/nextjs/server";
 import { eq, and, gte, inArray, count } from "drizzle-orm";
 import { getPlanLimits, PLANS } from "@/lib/config/subscriptions";
 import type { Plan } from "@/lib/config/subscriptions";
-import { Check } from "lucide-react";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 import { BillingPlanCards } from "@/components/billing/billing-plan-cards";
 
@@ -167,7 +166,6 @@ export default async function BillingPage({
             <BillingPlanCards
                 planCards={planCards}
                 workspaceId={workspaceId}
-                hasActiveSubscription={!!hasActiveSubscription}
                 stripeCustomerId={subscription?.stripeCustomerId ?? null}
             />
 

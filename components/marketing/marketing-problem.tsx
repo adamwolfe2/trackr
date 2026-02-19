@@ -55,7 +55,7 @@ export function MarketingProblem() {
                     Your tool research process is broken.
                 </h2>
                 <p className="text-lg md:text-xl font-mono text-neutral-600 max-w-3xl leading-relaxed">
-                    You're spending hours on research that goes nowhere, gets repeated by someone else on your team, and lives in a Notion doc nobody opens again.
+                    You&apos;re spending hours on research that goes nowhere, gets repeated by someone else on your team, and lives in a Notion doc nobody opens again.
                 </p>
             </motion.div>
 

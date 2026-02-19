@@ -21,7 +21,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         const tool = await db.query.tools.findFirst({
             where: and(eq(tools.id, id), eq(tools.workspaceId, member.workspaceId)),
             columns: {
-                // @ts-ignore
                 researchLogs: true,
                 status: true
             }
@@ -31,8 +30,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: "Tool not found" }, { status: 404 });
         }
 
-        // @ts-ignore
-        const logs = tool.researchLogs || [];
+        const logs = (tool as Record<string, unknown>).researchLogs || [];
 
         return NextResponse.json({ logs, status: tool.status });
     } catch (error) {

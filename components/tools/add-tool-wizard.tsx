@@ -85,7 +85,7 @@ export function AddToolWizard() {
                             </button>
                         </div>
                         <p className="font-mono text-xs text-neutral-400 mt-2">
-                            We'll automatically fetch the tool's name and description.
+                            We&apos;ll automatically fetch the tool&apos;s name and description.
                         </p>
                     </div>
                 </div>

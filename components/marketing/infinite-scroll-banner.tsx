@@ -1,7 +1,5 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-
 const companies = [
     "Acme Corp",
     "Globex",

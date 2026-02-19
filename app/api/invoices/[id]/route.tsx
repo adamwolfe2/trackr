@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { ads, tools, workspaceMembers } from "@/lib/db/schema";
+import { ads, workspaceMembers } from "@/lib/db/schema";
 import { InvoiceDocument } from "@/lib/pdf/invoice-template";
 import { renderToStream } from "@react-pdf/renderer";
 import { eq, and } from "drizzle-orm";

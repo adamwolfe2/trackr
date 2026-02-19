@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/services/stripe";
 import { db } from "@/lib/db";
-import { subscriptions } from "@/lib/db/schema";
+import { subscriptions, ads } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import type Stripe from "stripe";
 
@@ -77,6 +77,15 @@ function getCustomerId(customer: string | Stripe.Customer | Stripe.DeletedCustom
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+    // Handle ad campaign payment
+    if (session.metadata?.type === "ad_campaign" && session.metadata.adId) {
+        await db
+            .update(ads)
+            .set({ status: "active" })
+            .where(eq(ads.id, session.metadata.adId));
+        return;
+    }
+
     const workspaceId = session.metadata?.workspaceId;
     if (!workspaceId) {
         console.error("No workspaceId in checkout session metadata");

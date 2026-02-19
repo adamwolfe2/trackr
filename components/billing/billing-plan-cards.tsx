@@ -17,12 +17,10 @@ type BillingPlanCard = {
 export function BillingPlanCards({
     planCards,
     workspaceId,
-    hasActiveSubscription,
     stripeCustomerId,
 }: {
     planCards: BillingPlanCard[];
     workspaceId: string;
-    hasActiveSubscription: boolean;
     stripeCustomerId: string | null;
 }) {
     const [interval, setInterval] = useState<BillingInterval>("monthly");

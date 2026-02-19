@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { feedChannels, feedItems, workspaceMembers } from "@/lib/db/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { tavily } from "@/lib/services/tavily";

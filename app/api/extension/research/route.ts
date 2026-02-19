@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { tools, researchJobs } from "@/lib/db/schema";
+import { tools } from "@/lib/db/schema";
 import { getWorkspaceFromApiKey, corsHeaders } from "@/lib/middleware/extension-auth";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { after } from "next/server";

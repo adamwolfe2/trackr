@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
-    Bookmark, BookmarkCheck, CheckCheck, ExternalLink, Filter,
+    Bookmark, BookmarkCheck, CheckCheck, ExternalLink,
     PlusCircle, Rss, Search, Settings, Sparkles, Trash2, X, Eye, EyeOff
 } from "lucide-react";
 import { toast } from "sonner";

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, Loader2, Sparkles, ArrowRight, RefreshCw, Search, X, PlusCircle } from "lucide-react";
+import { Check, Loader2, Sparkles, ArrowRight, Search, X, PlusCircle } from "lucide-react";
 import { generateCompanyContext, completeOnboarding } from "@/lib/actions/onboarding";
 import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS, getLogoUrl } from "@/lib/constants/integrations";
 import { classifyTool } from "@/lib/config/ai-tools";
@@ -53,7 +53,7 @@ export default function OnboardingPage() {
     const toggleTool = (name: string) => {
         setSelectedTools((prev) => {
             const next = new Set(prev);
-            next.has(name) ? next.delete(name) : next.add(name);
+            if (next.has(name)) { next.delete(name); } else { next.add(name); }
             return next;
         });
     };

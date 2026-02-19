@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { saveScorecardRecipe } from "@/lib/actions/workspace";
 import { toast } from "sonner";
-import { Loader2, BookOpen, Building2, Target, XCircle, Sparkles, Copy, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, BookOpen, Building2, Target, XCircle, Sparkles, Copy, Check, ChevronUp } from "lucide-react";
 
 interface BusinessUnit {
     key: string;

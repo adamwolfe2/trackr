@@ -11,7 +11,7 @@ export default function NotFound() {
                     Lost.
                 </h1>
                 <p className="font-mono text-sm text-neutral-600 mb-10 leading-relaxed">
-                    We searched our entire vector database and came up empty. This page doesn't exist — or it moved without telling us.
+                    We searched our entire vector database and came up empty. This page doesn&apos;t exist — or it moved without telling us.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Link

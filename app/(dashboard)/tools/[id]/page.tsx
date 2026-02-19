@@ -92,10 +92,8 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
 
     // Extract features + pricing from report for tab component
     const featuresList = report?.features && typeof report.features === "object" && "list" in report.features
-        // @ts-ignore
-        ? (report.features.list as string[])
+        ? ((report.features as Record<string, unknown>).list as string[])
         : [];
-    // @ts-ignore
     const pricingTiers = (report?.pricing as Array<{ tier: string; price: string }>) ?? [];
 
     // Serialize history items (merge jobs + reports into timeline)
@@ -243,8 +241,6 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                         report={serializedReport}
                         historyItems={historyItems}
                         notes={serializedNotes}
-                        workspaceTools={workspaceTools}
-                        competitors={report?.competitors as string[] ?? []}
                     />
                 </div>
 

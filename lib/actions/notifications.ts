@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { researchJobs, workspaceMembers } from "@/lib/db/schema";
-import { eq, desc, and, ne, sql } from "drizzle-orm";
+import { eq, desc, and, ne } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 

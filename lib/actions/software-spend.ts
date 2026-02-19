@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { softwareSpend, workspaceMembers } from "@/lib/db/schema";
+import { softwareSpend } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq, and } from "drizzle-orm";
 import { getWorkspaceId } from "./tools";

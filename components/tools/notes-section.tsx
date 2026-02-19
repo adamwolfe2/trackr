@@ -5,7 +5,7 @@ import { addNote } from "@/lib/actions/notes";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, Send } from "lucide-react";
 
-export function NotesSection({ toolId, notes = [] }: { toolId: string, notes?: any[] }) {
+export function NotesSection({ toolId, notes = [] }: { toolId: string, notes?: { id: string; content: string; noteType: string; createdAt: string; userName?: string }[] }) {
     const [content, setContent] = useState("");
     const [isPending, startTransition] = useTransition();
 

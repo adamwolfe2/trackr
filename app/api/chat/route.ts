@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { tools, workspaceMembers, workspaces, reports, softwareSpend, painPoints } from "@/lib/db/schema";
+import { tools, workspaceMembers, reports, softwareSpend, painPoints } from "@/lib/db/schema";
 import { and, cosineDistance, desc, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
 import { generateEmbedding } from "@/lib/ai/embedding";
 import { openai } from "@ai-sdk/openai";

@@ -8,7 +8,7 @@ import { tools, reports, workspaceMembers, subscriptions } from "@/lib/db/schema
 import { eq, desc } from "drizzle-orm";
 import { CompareClient } from "./client";
 import { PlanGate } from "@/components/billing/plan-gate";
-import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
+import { getPlanLimits } from "@/lib/config/subscriptions";
 
 export const metadata: Metadata = {
     title: "Compare Tools — Trackr",

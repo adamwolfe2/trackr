@@ -75,7 +75,7 @@ function AnimatedCounter({
   const [display, setDisplay] = useState(0);
   useEffect(() => {
     if (!animate) {
-      setDisplay(0);
+      setDisplay(0); // eslint-disable-line react-hooks/set-state-in-effect -- reset on animation toggle
       return;
     }
     let start = 0;
@@ -243,7 +243,7 @@ function StackIntelligenceDemo() {
               </span>
             </div>
             <div className="divide-y divide-black/10">
-              {STACK_TOOLS.slice(0, visibleCount).map((tool, i) => (
+              {STACK_TOOLS.slice(0, visibleCount).map((tool) => (
                 <motion.div
                   key={tool.name}
                   initial={{ opacity: 0, x: -8 }}
@@ -637,7 +637,7 @@ function AskDemo() {
                 </div>
 
                 <div className="space-y-2 mb-3">
-                  {CHAT_RESULTS.slice(0, visibleResults).map((tool, i) => (
+                  {CHAT_RESULTS.slice(0, visibleResults).map((tool) => (
                     <motion.div
                       key={tool.name}
                       initial={{ opacity: 0, y: 8 }}
