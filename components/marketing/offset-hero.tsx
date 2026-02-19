@@ -668,7 +668,7 @@ function HeroDemo() {
 export function OffsetHero() {
     return (
         <section className="mb-24 md:mb-32 pt-8">
-            <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-center lg:items-start">
+            <div className="flex flex-col lg:flex-row gap-12 lg:gap-12 xl:gap-20 items-center lg:items-start">
 
                 {/* Left: Copy */}
                 <motion.div
@@ -693,7 +693,7 @@ export function OffsetHero() {
                             href="/sign-up"
                             className="bg-black text-white px-6 py-3.5 font-mono text-sm uppercase tracking-wide hover:bg-neutral-800 transition-all border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none whitespace-nowrap flex items-center gap-2 justify-center"
                         >
-                            Start Free — No Card Required <ArrowRight className="w-4 h-4" />
+                            Get Started <ArrowRight className="w-4 h-4" />
                         </Link>
                         <Link
                             href="/audit"
@@ -721,7 +721,7 @@ export function OffsetHero() {
 
                 {/* Right: Live Demo */}
                 <motion.div
-                    className="flex-shrink-0 w-full lg:w-[440px]"
+                    className="flex-shrink-0 w-full lg:w-[400px] xl:w-[440px]"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
@@ -732,7 +732,9 @@ export function OffsetHero() {
                             Live Demo — 3 Parallel Research Agents
                         </span>
                     </div>
-                    <HeroDemo />
+                    <div className="pr-2 pb-2">
+                        <HeroDemo />
+                    </div>
                 </motion.div>
             </div>
         </section>
