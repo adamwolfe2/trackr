@@ -14,6 +14,7 @@ import type { InferSelectModel } from "drizzle-orm";
 import { getPlanLimits } from "@/lib/config/subscriptions";
 import { sendResearchCompleteEmail, sendResearchFailedEmail } from "@/lib/email/resend";
 import { clerkClient } from "@clerk/nextjs/server";
+import { postMessage, researchCompleteBlocks, researchFailedBlocks } from "@/lib/services/slack";
 
 type ToolWithWorkspace = InferSelectModel<typeof tools> & {
     workspace: InferSelectModel<typeof workspaces>;
@@ -365,6 +366,19 @@ INSTRUCTIONS:
             }
         }
 
+        // Send Slack notification if workspace has Slack enabled
+        if (tool.workspace.slackEnabled && tool.workspace.slackChannelId) {
+            try {
+                await postMessage(
+                    tool.workspace.slackChannelId,
+                    `Research complete: ${tool.name} scored ${avgScore.toFixed(1)}/10`,
+                    researchCompleteBlocks(tool.name, toolId, avgScore),
+                );
+            } catch {
+                // Non-critical
+            }
+        }
+
         revalidatePath(`/tools/${toolId}`);
         revalidatePath("/tools");
         revalidatePath("/queue");
@@ -394,6 +408,19 @@ INSTRUCTIONS:
                 if (email) {
                     await sendResearchFailedEmail(email, tool.name, toolId, message);
                 }
+            } catch {
+                // Non-critical
+            }
+        }
+
+        // Send Slack failure notification
+        if (tool?.workspace?.slackEnabled && tool.workspace.slackChannelId) {
+            try {
+                await postMessage(
+                    tool.workspace.slackChannelId,
+                    `Research failed: ${tool.name}`,
+                    researchFailedBlocks(tool.name, toolId, message),
+                );
             } catch {
                 // Non-critical
             }

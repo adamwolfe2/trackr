@@ -8,6 +8,7 @@ import { asc, eq } from "drizzle-orm";
 import { Shield, UserX, Building2 } from "lucide-react";
 import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext } from "@/lib/actions/workspace";
 import { ApiKeySection } from "@/components/workspace/api-key-section";
+import { SlackSection } from "@/components/workspace/slack-section";
 
 export default async function WorkspacePage() {
     const user = await currentUser();
@@ -187,6 +188,13 @@ export default async function WorkspacePage() {
                         </form>
                     </div>
                 </div>
+
+                {/* Slack Integration */}
+                <SlackSection
+                    currentChannelId={workspace?.slackChannelId ?? null}
+                    currentEnabled={workspace?.slackEnabled ?? false}
+                    isOwnerOrAdmin={isOwnerOrAdmin}
+                />
 
                 {/* API Key & Integrations */}
                 <ApiKeySection

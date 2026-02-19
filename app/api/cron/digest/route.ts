@@ -1,10 +1,11 @@
 import { db } from "@/lib/db";
-import { tools, workspaceMembers, softwareSpend } from "@/lib/db/schema";
+import { tools, workspaceMembers, workspaces, softwareSpend } from "@/lib/db/schema";
 import { desc, eq, gte, and, lte } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { Resend } from "resend";
 import { sendRenewalAlertEmail } from "@/lib/email/resend";
+import { postMessage, renewalAlertBlocks } from "@/lib/services/slack";
 
 export const dynamic = 'force-dynamic';
 
@@ -107,15 +108,30 @@ export async function GET(req: Request) {
                 });
 
                 if (upcomingRenewals.length > 0) {
-                    await sendRenewalAlertEmail(
-                        email,
-                        upcomingRenewals.map(r => ({
-                            name: r.toolName,
-                            renewalDate: r.renewalDate!,
-                            monthlyCost: r.monthlyCost,
-                        }))
-                    );
+                    const renewalData = upcomingRenewals.map(r => ({
+                        name: r.toolName,
+                        renewalDate: r.renewalDate!,
+                        monthlyCost: r.monthlyCost,
+                    }));
+
+                    await sendRenewalAlertEmail(email, renewalData);
                     renewalsSent++;
+
+                    // Also post to Slack if enabled
+                    const workspace = await db.query.workspaces.findFirst({
+                        where: eq(workspaces.id, owner.workspaceId),
+                    });
+                    if (workspace?.slackEnabled && workspace.slackChannelId) {
+                        try {
+                            await postMessage(
+                                workspace.slackChannelId,
+                                `${renewalData.length} upcoming renewal${renewalData.length !== 1 ? "s" : ""} in the next 30 days`,
+                                renewalAlertBlocks(renewalData),
+                            );
+                        } catch {
+                            // Non-critical
+                        }
+                    }
                 }
             } catch {
                 // Skip users we can't email

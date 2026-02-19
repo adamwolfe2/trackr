@@ -10,6 +10,8 @@ export const workspaces = pgTable('workspaces', {
     companyContext: text('company_context'),
     onboardingCompleted: boolean('onboarding_completed').default(false).notNull(),
     apiKey: text('api_key').unique(), // For Chrome extension + external integrations
+    slackChannelId: text('slack_channel_id'), // Channel to post notifications to
+    slackEnabled: boolean('slack_enabled').default(false).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
