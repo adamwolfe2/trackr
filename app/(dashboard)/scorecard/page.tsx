@@ -16,7 +16,7 @@ export default async function ScorecardPage() {
     });
 
     if (!member) {
-        return <div className="text-center py-12 text-muted-foreground">No workspace found.</div>;
+        return <div className="text-center py-12 font-mono text-sm text-neutral-500">No workspace found.</div>;
     }
 
     const workspace = await db.query.workspaces.findFirst({

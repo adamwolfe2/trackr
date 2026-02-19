@@ -17,7 +17,7 @@ const companies = [
 
 export function InfiniteScrollBanner() {
     return (
-        <div className="w-full overflow-hidden bg-white dark:bg-black py-10 border-y border-zinc-100 dark:border-zinc-900">
+        <div className="w-full overflow-hidden bg-white bg-white py-10 border-y border-zinc-100">
             <div className="container mx-auto px-4 mb-6">
                 <p className="text-center text-sm font-medium text-zinc-500 uppercase tracking-widest">
                     Trusted by forward-thinking teams
@@ -28,7 +28,7 @@ export function InfiniteScrollBanner() {
                     {companies.map((company, i) => (
                         <span
                             key={i}
-                            className="text-xl font-bold text-zinc-300 dark:text-zinc-700 select-none"
+                            className="text-xl font-bold text-zinc-300 select-none"
                         >
                             {company}
                         </span>
@@ -38,7 +38,7 @@ export function InfiniteScrollBanner() {
                     {companies.map((company, i) => (
                         <span
                             key={i}
-                            className="text-xl font-bold text-zinc-300 dark:text-zinc-700 select-none"
+                            className="text-xl font-bold text-zinc-300 select-none"
                         >
                             {company}
                         </span>
