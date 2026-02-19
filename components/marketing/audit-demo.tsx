@@ -39,6 +39,22 @@ function PhaseBar({ phase, duration, onComplete }: { phase: number; duration: nu
 }
 
 /* ─── Phase 0: Discovery ─────────────────────────────────────────────────── */
+const TOOL_DOMAINS: Record<string, string> = {
+    Salesforce: "salesforce.com",
+    HubSpot: "hubspot.com",
+    Pipedrive: "pipedrive.com",
+    Marketo: "marketo.com",
+    ActiveCampaign: "activecampaign.com",
+    Linear: "linear.app",
+    GitHub: "github.com",
+    Vercel: "vercel.com",
+    Tableau: "tableau.com",
+    Mixpanel: "mixpanel.com",
+    Clay: "clay.com",
+    Make: "make.com",
+    Zapier: "zapier.com",
+};
+
 const TOOL_CATEGORIES = [
     { name: "CRM & Sales", tools: ["Salesforce", "HubSpot", "Pipedrive"], count: 3 },
     { name: "Marketing Automation", tools: ["Marketo", "ActiveCampaign"], count: 2 },
@@ -113,7 +129,16 @@ function DiscoveryPhase() {
                                         className="flex items-center gap-1"
                                     >
                                         {cat.tools.slice(0, 2).map(t => (
-                                            <span key={t} className="font-mono text-[9px] bg-neutral-100 border border-neutral-200 px-1.5 py-0.5">
+                                            <span key={t} className="inline-flex items-center gap-1 font-mono text-[9px] bg-neutral-100 border border-neutral-200 px-1.5 py-0.5">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img
+                                                    src={`https://www.google.com/s2/favicons?domain=${TOOL_DOMAINS[t] ?? t}&sz=16`}
+                                                    alt=""
+                                                    width={10}
+                                                    height={10}
+                                                    className="w-2.5 h-2.5 flex-shrink-0"
+                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                                />
                                                 {t}
                                             </span>
                                         ))}
