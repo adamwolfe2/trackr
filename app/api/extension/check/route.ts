@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { softwareSpend } from "@/lib/db/schema";
+import { softwareSpend, tools } from "@/lib/db/schema";
 import { eq, and, ilike, or } from "drizzle-orm";
 import { getWorkspaceFromApiKey, corsHeaders } from "@/lib/middleware/extension-auth";
 
@@ -54,6 +54,22 @@ export async function GET(req: NextRequest) {
             );
         }
 
+        // Try to find matching tool entry for score
+        let score: string | null = null;
+        const toolMatch = await db.query.tools.findFirst({
+            where: and(
+                eq(tools.workspaceId, workspace.id),
+                or(
+                    ilike(tools.name, `%${escapedBase}%`),
+                    ilike(tools.websiteUrl, `%${escapedDomain}%`)
+                )
+            ),
+            columns: { overallScore: true },
+        });
+        if (toolMatch?.overallScore) {
+            score = toolMatch.overallScore;
+        }
+
         return NextResponse.json(
             {
                 inStack: true,
@@ -62,6 +78,7 @@ export async function GET(req: NextRequest) {
                     status: match.status,
                     monthlyCost: match.monthlyCost,
                     seatCount: match.seatCount,
+                    score,
                 },
             },
             { status: 200, headers }

@@ -9,7 +9,11 @@ import { CompareClient } from "./client";
 import { PlanGate } from "@/components/billing/plan-gate";
 import { getPlanLimits } from "@/lib/config/subscriptions";
 
-export default async function ComparePage() {
+interface ComparePageProps {
+    searchParams: Promise<{ tools?: string }>;
+}
+
+export default async function ComparePage({ searchParams }: ComparePageProps) {
     const user = await currentUser();
     if (!user) redirect("/sign-in");
 
@@ -17,9 +21,7 @@ export default async function ComparePage() {
         where: eq(workspaceMembers.userId, user.id),
     });
 
-    if (!member) {
-        return <div className="font-mono text-sm text-neutral-500 py-12 text-center">No workspace found.</div>;
-    }
+    if (!member) redirect("/onboarding");
 
     const subscription = await db.query.subscriptions.findFirst({
         where: eq(subscriptions.workspaceId, member.workspaceId),
@@ -58,9 +60,17 @@ export default async function ComparePage() {
                 pricing: (report?.pricing ?? null) as Array<{ price?: string; tier?: string; [key: string]: unknown }> | string | null,
                 features: (report?.features ?? null) as string[] | { list: string[] } | null,
                 summary: report?.summary ?? null,
+                integrations: report?.integrations ?? [],
+                competitors: report?.competitors ?? [],
             };
         })
     );
 
-    return <CompareClient tools={toolsWithReports} />;
+    // Read pre-selected tool IDs from searchParams
+    const params = await searchParams;
+    const preSelectedIds = params.tools
+        ? params.tools.split(",").filter(Boolean).slice(0, 2)
+        : [];
+
+    return <CompareClient tools={toolsWithReports} preSelectedIds={preSelectedIds} />;
 }

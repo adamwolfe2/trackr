@@ -81,6 +81,7 @@ interface TotalStats {
     totalCost: string;
     avgCost: string;
     callsToday: string;
+    costToday: string;
 }
 
 interface ServiceBreakdown {
@@ -135,9 +136,10 @@ async function fetchDashboardData() {
         .from(apiLogs)
         .where(gte(apiLogs.createdAt, thirtyDaysAgo));
 
-    const callsTodayResult = await db
+    const todayResult = await db
         .select({
             callsToday: sql<string>`count(*)`,
+            costToday: sql<string>`coalesce(sum(${apiLogs.estimatedCost}), 0)`,
         })
         .from(apiLogs)
         .where(gte(apiLogs.createdAt, todayStart));
@@ -146,7 +148,8 @@ async function fetchDashboardData() {
         totalCalls: totalStatsResult[0]?.totalCalls ?? "0",
         totalCost: totalStatsResult[0]?.totalCost ?? "0",
         avgCost: totalStatsResult[0]?.avgCost ?? "0",
-        callsToday: callsTodayResult[0]?.callsToday ?? "0",
+        callsToday: todayResult[0]?.callsToday ?? "0",
+        costToday: todayResult[0]?.costToday ?? "0",
     };
 
     // B) Per-service breakdown (last 30 days)
@@ -281,6 +284,7 @@ async function Dashboard() {
         await fetchDashboardData();
 
     const hasData = Number(totalStats.totalCalls) > 0;
+    const dailyCost = Number(totalStats.costToday);
 
     if (!hasData) {
         return (
@@ -299,18 +303,28 @@ async function Dashboard() {
         <div>
             <Header />
 
+            {/* ── Alert Banner (client-side threshold check) ──── */}
+            <AlertBanner dailyCost={dailyCost} />
+
             {/* ── Total Stats ────────────────────────────────── */}
             <section className="mb-8">
                 <h2 className="font-mono text-xs uppercase tracking-widest mb-4">
                     Last 30 Days
                 </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-0">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-0">
                     <StatCard label="Calls" value={formatNumber(totalStats.totalCalls)} />
                     <StatCard label="Cost" value={formatCost(totalStats.totalCost)} />
                     <StatCard label="Avg / Call" value={formatCostPrecise(totalStats.avgCost)} />
                     <StatCard label="Today" value={formatNumber(totalStats.callsToday)} />
+                    <StatCard label="Today Cost" value={formatCost(totalStats.costToday)} highlight={dailyCost > 0} />
                 </div>
             </section>
+
+            {/* ── Daily Spend Indicator ───────────────────────── */}
+            <DailySpendIndicator dailyCost={dailyCost} />
+
+            {/* ── Alerts Configuration ───────────────────────── */}
+            <AlertsConfig />
 
             {/* ── By Service ─────────────────────────────────── */}
             <section className="mb-8">
@@ -432,7 +446,7 @@ async function Dashboard() {
                                     className="border-b border-black/20 last:border-b-0"
                                 >
                                     <td className="font-mono text-sm px-4 py-3">
-                                        {row.workspaceName ?? row.workspaceId ?? "—"}
+                                        {row.workspaceName ?? row.workspaceId ?? "\u2014"}
                                     </td>
                                     <td className="font-mono text-sm text-right px-4 py-3">
                                         {formatNumber(row.count)}
@@ -494,13 +508,13 @@ async function Dashboard() {
                                         {row.endpoint}
                                     </td>
                                     <td className="font-mono text-xs text-right px-4 py-2">
-                                        {row.durationMs != null ? formatNumber(row.durationMs) : "—"}
+                                        {row.durationMs != null ? formatNumber(row.durationMs) : "\u2014"}
                                     </td>
                                     <td className="font-mono text-xs text-right px-4 py-2">
-                                        {row.estimatedCost != null ? formatCostPrecise(row.estimatedCost) : "—"}
+                                        {row.estimatedCost != null ? formatCostPrecise(row.estimatedCost) : "\u2014"}
                                     </td>
                                     <td className="font-mono text-xs px-4 py-2 max-w-[150px] truncate">
-                                        {row.workspaceName ?? "—"}
+                                        {row.workspaceName ?? "\u2014"}
                                     </td>
                                 </tr>
                             ))}
@@ -518,7 +532,7 @@ function Header() {
     return (
         <div className="flex items-center justify-between mb-8 border-b-2 border-black pb-4">
             <h1 className="font-mono text-xs uppercase tracking-widest">
-                Trackr Admin — API Monitoring
+                Trackr Admin &mdash; API Monitoring
             </h1>
             <form action={logoutAction}>
                 <button
@@ -532,14 +546,234 @@ function Header() {
     );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
     return (
-        <div className="border-2 border-black bg-white p-4 -ml-[2px] first:ml-0 -mt-[2px] first:mt-0 md:mt-0">
+        <div className={`border-2 border-black bg-white p-4 -ml-[2px] first:ml-0 -mt-[2px] first:mt-0 md:mt-0 ${highlight ? "bg-neutral-50" : ""}`}>
             <p className="font-mono text-xs uppercase tracking-widest text-black/50 mb-1">
                 {label}
             </p>
             <p className="font-serif text-3xl md:text-4xl">{value}</p>
         </div>
+    );
+}
+
+// ── Alert Banner (client component) ─────────────────────────────────────────
+
+function AlertBanner({ dailyCost }: { dailyCost: number }) {
+    // This is rendered server-side but reads threshold from the client component
+    // The actual threshold comparison happens in the client-side AlertsConfig component
+    // We pass dailyCost as a data attribute for the client script to read
+    return (
+        <div
+            id="alert-banner"
+            data-daily-cost={dailyCost.toFixed(4)}
+            className="hidden mb-6 border-2 border-[#C0392B] bg-[#C0392B]/5 p-4"
+        >
+            <div className="flex items-center gap-3">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="flex-shrink-0">
+                    <path d="M10 2L18 17H2L10 2Z" stroke="#C0392B" strokeWidth="2" fill="none" />
+                    <path d="M10 8V12" stroke="#C0392B" strokeWidth="2" strokeLinecap="square" />
+                    <circle cx="10" cy="14.5" r="1" fill="#C0392B" />
+                </svg>
+                <div>
+                    <p className="font-mono text-sm font-bold text-[#C0392B]">
+                        Daily Spend Alert
+                    </p>
+                    <p id="alert-message" className="font-mono text-xs text-[#C0392B]/80 mt-0.5">
+                        Daily spend of ${dailyCost.toFixed(2)} has exceeded your threshold.
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ── Daily Spend Indicator ───────────────────────────────────────────────────
+
+function DailySpendIndicator({ dailyCost }: { dailyCost: number }) {
+    return (
+        <section className="mb-8" id="daily-spend-section">
+            <h2 className="font-mono text-xs uppercase tracking-widest mb-4">
+                Daily Spend
+            </h2>
+            <div className="border-2 border-black bg-white p-6">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="font-mono text-xs uppercase tracking-widest text-black/50">
+                        Today&apos;s Total
+                    </span>
+                    <span id="daily-threshold-label" className="font-mono text-xs text-black/50">
+                        {/* Threshold shown via client JS */}
+                    </span>
+                </div>
+                <div className="flex items-baseline gap-3 mb-3">
+                    <span className="font-serif text-4xl">${dailyCost.toFixed(2)}</span>
+                    <span id="threshold-display" className="font-mono text-sm text-black/40">
+                        {/* Filled in via client JS: "/ $X.XX threshold" */}
+                    </span>
+                </div>
+                {/* Progress bar - filled via client JS */}
+                <div className="h-3 border border-black/20 bg-neutral-100 overflow-hidden">
+                    <div
+                        id="daily-spend-bar"
+                        className="h-full bg-black transition-all"
+                        style={{ width: "0%" }}
+                        data-cost={dailyCost.toFixed(4)}
+                    />
+                </div>
+                <div id="spend-pct-label" className="font-mono text-xs text-black/40 mt-1 text-right" />
+            </div>
+        </section>
+    );
+}
+
+// ── Alerts Configuration (uses localStorage for threshold) ──────────────────
+
+function AlertsConfig() {
+    return (
+        <section className="mb-8">
+            <h2 className="font-mono text-xs uppercase tracking-widest mb-4">
+                Alerts
+            </h2>
+            <div className="border-2 border-black bg-white p-6">
+                <p className="font-mono text-xs text-black/50 mb-4">
+                    Set a daily spend threshold. A red alert banner will appear when the threshold is exceeded.
+                </p>
+                <div className="flex items-end gap-3">
+                    <div className="flex-1">
+                        <label
+                            htmlFor="threshold-input"
+                            className="font-mono text-xs uppercase tracking-widest block mb-2"
+                        >
+                            Daily Spend Threshold ($)
+                        </label>
+                        <input
+                            type="number"
+                            id="threshold-input"
+                            min="0"
+                            step="0.01"
+                            placeholder="10.00"
+                            className="w-full border-2 border-black bg-[#F3F3EF] px-3 py-2 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                    </div>
+                    <button
+                        id="save-threshold-btn"
+                        type="button"
+                        className="border-2 border-black bg-black text-white px-6 py-2 font-mono text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors whitespace-nowrap"
+                    >
+                        Save
+                    </button>
+                </div>
+                <div id="threshold-saved-msg" className="font-mono text-xs text-black/50 mt-2 hidden">
+                    Threshold saved.
+                </div>
+            </div>
+
+            {/* Client-side script for threshold management */}
+            <script
+                dangerouslySetInnerHTML={{
+                    __html: `
+                    (function() {
+                        var STORAGE_KEY = "trackr-admin-daily-threshold";
+
+                        // Load saved threshold
+                        var saved = localStorage.getItem(STORAGE_KEY);
+                        var threshold = saved ? parseFloat(saved) : null;
+                        var input = document.getElementById("threshold-input");
+                        var saveBtn = document.getElementById("save-threshold-btn");
+                        var savedMsg = document.getElementById("threshold-saved-msg");
+                        var alertBanner = document.getElementById("alert-banner");
+                        var alertMessage = document.getElementById("alert-message");
+                        var thresholdDisplay = document.getElementById("threshold-display");
+                        var spendBar = document.getElementById("daily-spend-bar");
+                        var spendPctLabel = document.getElementById("spend-pct-label");
+
+                        if (input && saved) {
+                            input.value = saved;
+                        }
+
+                        function updateUI() {
+                            var dailyCost = parseFloat(spendBar ? spendBar.getAttribute("data-cost") : "0");
+
+                            if (threshold !== null && threshold > 0) {
+                                // Update threshold display
+                                if (thresholdDisplay) {
+                                    thresholdDisplay.textContent = "/ $" + threshold.toFixed(2) + " threshold";
+                                }
+
+                                // Update progress bar
+                                var pct = Math.min(100, (dailyCost / threshold) * 100);
+                                if (spendBar) {
+                                    spendBar.style.width = pct.toFixed(1) + "%";
+                                    if (pct >= 100) {
+                                        spendBar.style.backgroundColor = "#C0392B";
+                                    } else if (pct >= 80) {
+                                        spendBar.style.backgroundColor = "#666";
+                                    } else {
+                                        spendBar.style.backgroundColor = "#000";
+                                    }
+                                }
+                                if (spendPctLabel) {
+                                    spendPctLabel.textContent = pct.toFixed(0) + "% of daily threshold";
+                                }
+
+                                // Show/hide alert banner
+                                if (dailyCost > threshold && alertBanner) {
+                                    alertBanner.classList.remove("hidden");
+                                    if (alertMessage) {
+                                        alertMessage.textContent = "Daily spend of $" + dailyCost.toFixed(2) + " has exceeded your $" + threshold.toFixed(2) + " threshold.";
+                                    }
+                                } else if (alertBanner) {
+                                    alertBanner.classList.add("hidden");
+                                }
+                            } else {
+                                if (thresholdDisplay) thresholdDisplay.textContent = "";
+                                if (spendBar) spendBar.style.width = "0%";
+                                if (spendPctLabel) spendPctLabel.textContent = "No threshold set";
+                                if (alertBanner) alertBanner.classList.add("hidden");
+                            }
+                        }
+
+                        // Save threshold
+                        if (saveBtn) {
+                            saveBtn.addEventListener("click", function() {
+                                var val = input ? input.value.trim() : "";
+                                if (val && !isNaN(parseFloat(val)) && parseFloat(val) > 0) {
+                                    threshold = parseFloat(val);
+                                    localStorage.setItem(STORAGE_KEY, String(threshold));
+                                    if (savedMsg) {
+                                        savedMsg.classList.remove("hidden");
+                                        setTimeout(function() { savedMsg.classList.add("hidden"); }, 2000);
+                                    }
+                                } else {
+                                    threshold = null;
+                                    localStorage.removeItem(STORAGE_KEY);
+                                    if (savedMsg) {
+                                        savedMsg.textContent = "Threshold cleared.";
+                                        savedMsg.classList.remove("hidden");
+                                        setTimeout(function() {
+                                            savedMsg.textContent = "Threshold saved.";
+                                            savedMsg.classList.add("hidden");
+                                        }, 2000);
+                                    }
+                                }
+                                updateUI();
+                            });
+                        }
+
+                        // Allow Enter key to save
+                        if (input) {
+                            input.addEventListener("keydown", function(e) {
+                                if (e.key === "Enter" && saveBtn) saveBtn.click();
+                            });
+                        }
+
+                        // Initial UI update
+                        updateUI();
+                    })();
+                    `,
+                }}
+            />
+        </section>
     );
 }
 

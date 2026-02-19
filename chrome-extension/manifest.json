@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Trackr Lens",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "AI-powered software intelligence — research tools, track your stack, get recommendations.",
-  "permissions": ["activeTab", "storage", "contextMenus"],
+  "permissions": ["activeTab", "storage", "contextMenus", "tabs"],
   "host_permissions": ["https://trytrackr.com/*", "https://*.trytrackr.com/*"],
   "action": {
     "default_popup": "popup.html",

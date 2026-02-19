@@ -95,28 +95,33 @@
       <section class="section">
         <h3 class="section-title">Stack Check</h3>
         <div id="stack-check-loading" class="stack-status">
-          <span class="status-dot status-loading"></span>
+          <div class="spinner"></div>
           <span>Checking...</span>
         </div>
         <div id="stack-in" class="stack-card hidden">
           <div class="stack-card-header">
             <span class="status-dot status-active"></span>
-            <span class="stack-tool-name" id="stack-tool-name">—</span>
+            <span class="stack-tool-name" id="stack-tool-name">&mdash;</span>
           </div>
           <div class="stack-card-details">
             <div class="detail-row">
               <span class="detail-label">Status</span>
-              <span class="detail-value" id="stack-tool-status">—</span>
+              <span class="detail-value" id="stack-tool-status">&mdash;</span>
             </div>
             <div class="detail-row">
               <span class="detail-label">Monthly Cost</span>
-              <span class="detail-value" id="stack-tool-cost">—</span>
+              <span class="detail-value" id="stack-tool-cost">&mdash;</span>
             </div>
           </div>
         </div>
-        <div id="stack-out" class="stack-card stack-card-empty hidden">
+        <div id="stack-out" class="stack-card stack-card-unknown hidden">
           <span>Not in your stack</span>
           <button id="research-btn" class="btn btn-small">Research this tool</button>
+        </div>
+        <div id="add-to-trackr-wrapper" class="hidden">
+          <a id="add-to-trackr-btn" href="https://trytrackr.com/submit" target="_blank" class="btn btn-secondary btn-full">
+            Add to Trackr
+          </a>
         </div>
       </section>
 
@@ -124,15 +129,23 @@
       <section class="section" id="ai-score-section">
         <h3 class="section-title">AI Nativeness</h3>
         <div class="ai-score-widget">
-          <div class="ai-score-number" id="ai-score-number">—</div>
+          <div class="ai-score-number" id="ai-score-number">&mdash;</div>
           <div class="ai-score-label" id="ai-score-label">Loading...</div>
+        </div>
+      </section>
+
+      <!-- Recently Checked History -->
+      <section class="section" id="history-section">
+        <h3 class="section-title">Recently Checked</h3>
+        <div id="history-list" class="history-list">
+          <div class="history-empty">No recent checks</div>
         </div>
       </section>
     </main>
 
     <footer class="popup-footer">
       <div class="footer-stats">
-        <span id="stack-count">—</span> tools in your stack
+        <span id="stack-count">&mdash;</span> tools in your stack
       </div>
       <a href="https://trytrackr.com" target="_blank" class="footer-link">Open Trackr</a>
     </footer>

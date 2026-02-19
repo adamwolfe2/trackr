@@ -4,6 +4,11 @@
 
 const DEFAULT_API_URL = "https://trytrackr.com";
 
+// --- Local cache for known domains ---
+// Maps domain -> { inStack: boolean, toolName?: string, checkedAt: number }
+const domainCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 // --- Context Menu ---
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -74,6 +79,107 @@ function clearBadge() {
   chrome.action.setBadgeText({ text: "" });
 }
 
+// --- Tab URL change detection for badge ---
+
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  // Only act on URL changes for the active tab
+  if (!changeInfo.url) return;
+
+  const url = changeInfo.url;
+  if (!url.startsWith("http")) {
+    chrome.action.setBadgeText({ text: "", tabId });
+    return;
+  }
+
+  const domain = getDomainFromUrl(url);
+  if (!domain) return;
+
+  // Skip known non-SaaS domains
+  const skipDomains = [
+    "google.com", "google.", "youtube.com", "facebook.com",
+    "twitter.com", "x.com", "reddit.com", "wikipedia.org",
+    "amazon.com", "ebay.com", "netflix.com", "instagram.com",
+    "tiktok.com", "linkedin.com", "github.com", "stackoverflow.com",
+    "medium.com", "substack.com", "localhost",
+  ];
+  if (skipDomains.some((d) => domain.includes(d))) {
+    chrome.action.setBadgeText({ text: "", tabId });
+    return;
+  }
+
+  // Check cache first
+  const cached = domainCache.get(domain);
+  if (cached && Date.now() - cached.checkedAt < CACHE_TTL) {
+    if (cached.inStack) {
+      chrome.action.setBadgeText({ text: "IN", tabId });
+      chrome.action.setBadgeBackgroundColor({ color: "#000000", tabId });
+    } else {
+      chrome.action.setBadgeText({ text: "", tabId });
+    }
+    return;
+  }
+
+  // API check
+  try {
+    const { apiKey, apiUrl } = await chrome.storage.sync.get(["apiKey", "apiUrl"]);
+    if (!apiKey) return;
+
+    const base = apiUrl || DEFAULT_API_URL;
+    const res = await fetch(
+      `${base}/api/extension/check?domain=${encodeURIComponent(domain)}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+
+    // Update cache
+    domainCache.set(domain, {
+      inStack: !!data.inStack,
+      toolName: data.tool?.name || null,
+      checkedAt: Date.now(),
+    });
+
+    if (data.inStack) {
+      chrome.action.setBadgeText({ text: "IN", tabId });
+      chrome.action.setBadgeBackgroundColor({ color: "#000000", tabId });
+    } else {
+      chrome.action.setBadgeText({ text: "", tabId });
+    }
+  } catch {
+    // Silently fail — don't disrupt browsing
+  }
+});
+
+// When active tab changes, update badge
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  try {
+    const tab = await chrome.tabs.get(activeInfo.tabId);
+    if (!tab.url || !tab.url.startsWith("http")) {
+      chrome.action.setBadgeText({ text: "", tabId: activeInfo.tabId });
+      return;
+    }
+
+    const domain = getDomainFromUrl(tab.url);
+    const cached = domainCache.get(domain);
+    if (cached && cached.inStack && Date.now() - cached.checkedAt < CACHE_TTL) {
+      chrome.action.setBadgeText({ text: "IN", tabId: activeInfo.tabId });
+      chrome.action.setBadgeBackgroundColor({ color: "#000000", tabId: activeInfo.tabId });
+    } else {
+      chrome.action.setBadgeText({ text: "", tabId: activeInfo.tabId });
+    }
+  } catch {
+    // Tab may not exist
+  }
+});
+
 // --- Listen for messages from content script ---
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -111,4 +217,14 @@ async function handleAddToQueue(url, title) {
   setTimeout(() => clearBadge(), 3000);
 
   return { success: true };
+}
+
+// --- Helpers ---
+
+function getDomainFromUrl(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
 }

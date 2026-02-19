@@ -19,6 +19,7 @@ import {
     BarChart3,
     AlertCircle,
     Rss,
+    GitCompareArrows,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { TrackrLogo } from "@/components/common/trackr-logo";
@@ -68,6 +69,11 @@ const navItems = [
         title: "Pain Points",
         href: "/pain-points",
         icon: AlertCircle,
+    },
+    {
+        title: "Compare",
+        href: "/compare",
+        icon: GitCompareArrows,
     },
     {
         title: "Scorecard",

@@ -77,6 +77,20 @@ html, body {
   50% { opacity: 0.3; }
 }
 
+/* ---- Spinner ---- */
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #D0D0CC;
+  border-top-color: var(--fg);
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ---- Toast ---- */
 .toast {
   position: fixed;
@@ -174,6 +188,8 @@ html, body {
 /* ---- Body ---- */
 .popup-body {
   padding: 16px;
+  max-height: 480px;
+  overflow-y: auto;
 }
 
 /* ---- Connect State ---- */
@@ -304,6 +320,17 @@ html, body {
   color: var(--fg);
 }
 
+.btn-secondary {
+  background: var(--bg);
+  color: var(--fg);
+  margin-top: 8px;
+}
+
+.btn-secondary:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+
 .btn-full {
   width: 100%;
 }
@@ -400,9 +427,20 @@ html, body {
   50% { opacity: 0.3; }
 }
 
+/* Known tool = solid border */
 .stack-card {
   border: 2px solid var(--border);
   padding: 12px 14px;
+}
+
+/* Unknown tool = dashed border */
+.stack-card-unknown {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  border-style: dashed;
 }
 
 .stack-card-header {
@@ -442,13 +480,27 @@ html, body {
   font-weight: 600;
 }
 
-.stack-card-empty {
+/* ---- Tool Score Display ---- */
+.tool-score-row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  font-size: 12px;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #D0D0CC;
+}
+
+.tool-score-label {
+  font-size: 11px;
   color: var(--muted);
-  border-style: dashed;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tool-score-value {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
 }
 
 /* ---- AI Score ---- */
@@ -472,6 +524,81 @@ html, body {
   font-size: 12px;
   color: var(--muted);
   font-weight: 500;
+}
+
+/* ---- Recently Checked History ---- */
+.history-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.history-empty {
+  font-size: 11px;
+  color: #AAAAAA;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1.5px solid #D0D0CC;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: #FFFFFF;
+}
+
+.history-item:hover {
+  border-color: var(--border);
+  background: #EDEDEA;
+}
+
+.history-item.known {
+  border-color: var(--border);
+  border-style: solid;
+}
+
+.history-item.unknown {
+  border-style: dashed;
+}
+
+.history-dot {
+  width: 6px;
+  height: 6px;
+  border: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+
+.history-dot.known {
+  background: var(--fg);
+}
+
+.history-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-domain {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-meta {
+  font-size: 10px;
+  color: #AAAAAA;
+  display: flex;
+  gap: 8px;
+}
+
+.history-result {
+  font-weight: 600;
+  color: var(--muted);
 }
 
 /* ---- Footer ---- */

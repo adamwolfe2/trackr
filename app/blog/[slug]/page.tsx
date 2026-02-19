@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { getPost, posts } from "@/lib/posts";
+import { getPostBySlug, getAllSlugs, markdownToHtml } from "@/lib/blog";
 import { notFound } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { currentUser } from "@clerk/nextjs/server";
@@ -9,96 +9,154 @@ import type { Metadata } from "next";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
     const { slug } = await params;
-    const post = getPost(slug);
+    const post = getPostBySlug(slug);
     if (!post) return {};
+
     return {
         title: `${post.title} — Trackr Blog`,
-        description: post.excerpt,
+        description: post.description,
+        openGraph: {
+            title: post.title,
+            description: post.description,
+            type: "article",
+            publishedTime: post.date,
+            authors: [post.author],
+            url: `https://trytrackr.com/blog/${slug}`,
+            images: [
+                {
+                    url: post.image,
+                    width: 1456,
+                    height: 816,
+                    alt: post.title,
+                },
+            ],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: post.title,
+            description: post.description,
+            images: [post.image],
+        },
     };
 }
 
 export function generateStaticParams() {
-    return posts.map((p) => ({ slug: p.slug }));
+    return getAllSlugs().map((slug) => ({ slug }));
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
     const { slug } = await params;
-    const post = getPost(slug);
+    const post = getPostBySlug(slug);
 
     if (!post) notFound();
 
     const user = await currentUser();
+    const htmlContent = markdownToHtml(post.content);
 
-    // Convert simple markdown headings and bold to basic HTML
-    const renderContent = (content: string) => {
-        return content
-            .split("\n")
-            .map((line, i) => {
-                const trimmed = line.trim();
-                if (trimmed.startsWith("## ")) {
-                    return <h2 key={i} className="text-2xl font-serif font-normal mt-10 mb-4">{trimmed.slice(3)}</h2>;
-                }
-                if (trimmed.startsWith("### ")) {
-                    return <h3 key={i} className="text-lg font-serif font-normal mt-6 mb-2">{trimmed.slice(4)}</h3>;
-                }
-                if (trimmed.startsWith("**") && trimmed.endsWith("**")) {
-                    return <p key={i} className="font-mono text-sm font-semibold text-black mt-4 mb-1">{trimmed.slice(2, -2)}</p>;
-                }
-                if (trimmed === "") {
-                    return <div key={i} className="h-2" />;
-                }
-                // Handle inline bold
-                const parts = trimmed.split(/\*\*(.*?)\*\*/g);
-                return (
-                    <p key={i} className="font-mono text-sm text-neutral-700 leading-relaxed mb-0">
-                        {parts.map((part, j) =>
-                            j % 2 === 1 ? <strong key={j} className="text-black">{part}</strong> : part
-                        )}
-                    </p>
-                );
-            });
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        headline: post.title,
+        description: post.description,
+        datePublished: post.date,
+        author: {
+            "@type": "Organization",
+            name: post.author,
+        },
+        publisher: {
+            "@type": "Organization",
+            name: "Trackr",
+            url: "https://trytrackr.com",
+        },
+        mainEntityOfPage: {
+            "@type": "WebPage",
+            "@id": `https://trytrackr.com/blog/${slug}`,
+        },
     };
 
     return (
-        <main className="flex-grow w-full max-w-6xl mx-auto px-6">
-            <MarketingNavigation isLoggedIn={!!user} />
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
+                <MarketingNavigation isLoggedIn={!!user} />
 
-            <section className="py-24 border-t border-black/10">
-                <div className="max-w-2xl">
-                    <Link href="/blog" className="inline-flex items-center gap-2 font-mono text-xs text-neutral-400 hover:text-black transition-colors mb-8">
-                        <ArrowLeft className="w-3 h-3" /> Back to Blog
-                    </Link>
+                <section className="py-24 border-t border-black/10">
+                    <div className="max-w-2xl">
+                        <Link
+                            href="/blog"
+                            className="inline-flex items-center gap-2 font-mono text-xs text-neutral-400 hover:text-black transition-colors mb-8"
+                        >
+                            <ArrowLeft className="w-3 h-3" /> Back to Blog
+                        </Link>
 
-                    <div className="font-mono text-xs text-neutral-400 mb-4">
-                        {new Date(post.date).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}
-                    </div>
-                    <h1 className="text-3xl md:text-4xl font-serif font-normal mb-6 leading-tight">
-                        {post.title}
-                    </h1>
-                    <p className="font-mono text-sm text-neutral-500 leading-relaxed mb-12 border-b border-black/10 pb-8">
-                        {post.excerpt}
-                    </p>
+                        <div className="flex items-center gap-3 font-mono text-xs text-neutral-400 mb-4">
+                            <time dateTime={post.date}>
+                                {new Date(post.date).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                })}
+                            </time>
+                            <span className="text-neutral-300">|</span>
+                            <span>{post.readingTime} min read</span>
+                            <span className="text-neutral-300">|</span>
+                            <span>{post.author}</span>
+                        </div>
 
-                    <article className="space-y-1">
-                        {renderContent(post.content)}
-                    </article>
+                        <h1 className="text-3xl md:text-4xl font-serif font-normal mb-6 leading-tight">
+                            {post.title}
+                        </h1>
 
-                    <div className="mt-16 pt-8 border-t border-black/10">
-                        <div className="border border-black p-6">
-                            <p className="font-mono text-xs text-neutral-500 mb-3">Want to evaluate AI tools faster?</p>
-                            <h3 className="text-xl font-serif font-normal mb-3">Try Trackr free — no credit card required.</h3>
-                            <Link
-                                href="/sign-up"
-                                className="inline-block border border-black bg-black text-white px-6 py-3 font-mono text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
-                            >
-                                Get started →
-                            </Link>
+                        <p className="font-mono text-sm text-neutral-500 leading-relaxed mb-12 border-b border-black/10 pb-8">
+                            {post.description}
+                        </p>
+
+                        {post.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-8">
+                                {post.tags.map((tag) => (
+                                    <span
+                                        key={tag}
+                                        className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 border border-neutral-300 px-2 py-0.5"
+                                    >
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                        )}
+
+                        <article
+                            className="blog-content"
+                            dangerouslySetInnerHTML={{ __html: htmlContent }}
+                        />
+
+                        {/* CTA Banner */}
+                        <div className="mt-16 pt-8 border-t border-black/10">
+                            <div className="border border-black bg-black text-white p-8 md:p-10">
+                                <p className="font-mono text-xs uppercase tracking-wider text-neutral-400 mb-3">
+                                    Stop researching manually
+                                </p>
+                                <h3 className="text-xl md:text-2xl font-serif font-normal mb-4 text-white">
+                                    Research any AI tool in under 2 minutes.
+                                </h3>
+                                <p className="font-mono text-sm text-neutral-400 mb-6 max-w-md">
+                                    Submit a tool URL. Get a scored report with features, pricing, reviews, and competitive analysis.
+                                </p>
+                                <Link
+                                    href="/sign-up"
+                                    className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 font-mono text-xs uppercase tracking-widest hover:bg-neutral-100 transition-colors border border-white shadow-[3px_3px_0px_0px_rgba(255,255,255,0.25)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                                >
+                                    Get Started Free <ArrowRight className="w-3 h-3" />
+                                </Link>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <MarketingFooter />
-        </main>
+                <MarketingFooter />
+            </main>
+        </>
     );
 }

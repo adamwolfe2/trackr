@@ -16,6 +16,7 @@ import { MarketingCTA } from "@/components/marketing/marketing-cta";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingIntegrations } from "@/components/marketing/marketing-integrations";
 import { MarketingReportShowcase } from "@/components/marketing/marketing-report-showcase";
+import { MarketingInteractiveDemos } from "@/components/marketing/marketing-interactive-demos";
 import { MarketingEnterprise } from "@/components/marketing/marketing-enterprise";
 
 export const metadata: Metadata = {
@@ -91,6 +92,7 @@ export default async function Home() {
         <MarketingHowItWorks />
         <OffsetFeatures />
         <MarketingReportShowcase />
+        <MarketingInteractiveDemos />
         <MarketingComparison />
         <MarketingPricing />
         <MarketingUseCases />

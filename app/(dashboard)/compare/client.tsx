@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Check, X, ArrowRightLeft, Plus, ExternalLink } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Check, X, ArrowRightLeft, Plus, ExternalLink, Search, ChevronDown } from "lucide-react";
 import Link from "next/link";
 
 type PricingEntry = { price?: string; tier?: string; [key: string]: unknown };
@@ -18,16 +19,156 @@ interface CompareTool {
     pricing: PricingEntry[] | string | null;
     features: FeaturesValue;
     summary: string | null;
+    integrations: string[];
+    competitors: string[];
 }
 
 interface CompareClientProps {
     tools: CompareTool[];
+    preSelectedIds: string[];
 }
 
-export function CompareClient({ tools }: CompareClientProps) {
-    const [selectedToolIds, setSelectedToolIds] = useState<(string | null)[]>([null, null]);
+// Searchable dropdown component
+function ToolSelector({
+    tools,
+    selectedId,
+    disabledIds,
+    onSelect,
+    label,
+}: {
+    tools: CompareTool[];
+    selectedId: string | null;
+    disabledIds: string[];
+    onSelect: (id: string | null) => void;
+    label: string;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [search, setSearch] = useState("");
+    const ref = useRef<HTMLDivElement>(null);
 
-    const handleToolSelect = (index: number, toolId: string) => {
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (ref.current && !ref.current.contains(e.target as Node)) {
+                setIsOpen(false);
+                setSearch("");
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const filtered = tools.filter(t =>
+        t.name.toLowerCase().includes(search.toLowerCase())
+    );
+
+    const selectedTool = tools.find(t => t.id === selectedId);
+
+    return (
+        <div ref={ref} className="relative">
+            <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-2">
+                {label}
+            </label>
+            <button
+                type="button"
+                onClick={() => { setIsOpen(!isOpen); setSearch(""); }}
+                className="w-full flex items-center justify-between border border-black px-3 py-2 font-mono text-xs bg-white text-left hover:bg-neutral-50 transition-colors"
+            >
+                <span className={selectedTool ? "text-black" : "text-neutral-400"}>
+                    {selectedTool
+                        ? `${selectedTool.name}${selectedTool.score !== null ? ` (${selectedTool.score.toFixed(1)})` : ""}`
+                        : "Select tool..."}
+                </span>
+                <ChevronDown className="h-3 w-3 text-neutral-400 flex-shrink-0" />
+            </button>
+            {isOpen && (
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 border border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] max-h-64 flex flex-col">
+                    <div className="flex items-center gap-2 px-3 py-2 border-b border-black">
+                        <Search className="h-3 w-3 text-neutral-400 flex-shrink-0" />
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Search tools..."
+                            className="w-full font-mono text-xs bg-transparent outline-none placeholder:text-neutral-300"
+                            autoFocus
+                        />
+                    </div>
+                    <div className="overflow-y-auto flex-1">
+                        {selectedId && (
+                            <button
+                                type="button"
+                                onClick={() => { onSelect(null); setIsOpen(false); setSearch(""); }}
+                                className="w-full text-left px-3 py-2 font-mono text-xs text-neutral-400 hover:bg-neutral-100 border-b border-neutral-100"
+                            >
+                                Clear selection
+                            </button>
+                        )}
+                        {filtered.length === 0 && (
+                            <div className="px-3 py-4 font-mono text-xs text-neutral-400 text-center">
+                                No tools found
+                            </div>
+                        )}
+                        {filtered.map(t => {
+                            const isDisabled = disabledIds.includes(t.id) && t.id !== selectedId;
+                            return (
+                                <button
+                                    key={t.id}
+                                    type="button"
+                                    disabled={isDisabled}
+                                    onClick={() => {
+                                        onSelect(t.id);
+                                        setIsOpen(false);
+                                        setSearch("");
+                                    }}
+                                    className={`w-full text-left px-3 py-2 font-mono text-xs flex items-center justify-between transition-colors ${
+                                        isDisabled
+                                            ? "text-neutral-300 cursor-not-allowed"
+                                            : t.id === selectedId
+                                              ? "bg-black text-white"
+                                              : "hover:bg-neutral-100 text-black"
+                                    }`}
+                                >
+                                    <span>{t.name}</span>
+                                    {t.score !== null && (
+                                        <span className={`${t.id === selectedId ? "text-neutral-400" : "text-neutral-400"}`}>
+                                            {t.score.toFixed(1)}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
+    const router = useRouter();
+    const [selectedToolIds, setSelectedToolIds] = useState<(string | null)[]>(() => {
+        const initial: (string | null)[] = [null, null];
+        if (preSelectedIds[0] && tools.some(t => t.id === preSelectedIds[0])) {
+            initial[0] = preSelectedIds[0];
+        }
+        if (preSelectedIds[1] && tools.some(t => t.id === preSelectedIds[1])) {
+            initial[1] = preSelectedIds[1];
+        }
+        return initial;
+    });
+
+    // Update URL when selections change
+    useEffect(() => {
+        const selected = selectedToolIds.filter(Boolean);
+        if (selected.length > 0) {
+            router.push(`/compare?tools=${selected.join(",")}`, { scroll: false });
+        } else {
+            router.push("/compare", { scroll: false });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [selectedToolIds]);
+
+    const handleToolSelect = (index: number, toolId: string | null) => {
         const newSelection = [...selectedToolIds];
         newSelection[index] = toolId;
         setSelectedToolIds(newSelection);
@@ -35,23 +176,45 @@ export function CompareClient({ tools }: CompareClientProps) {
 
     const selectedTools = selectedToolIds.map(id => id ? tools.find(t => t.id === id) ?? null : null);
 
-    const getPricingText = (pricing: PricingEntry[] | string | null): string => {
-        if (!pricing) return "Unknown";
+    const getPricingDisplay = (pricing: PricingEntry[] | string | null): React.ReactNode => {
+        if (!pricing) return <span className="italic text-neutral-400">Unknown</span>;
         if (typeof pricing === "string") return pricing;
         if (Array.isArray(pricing) && pricing.length > 0) {
-            return pricing[0]?.price ?? pricing[0]?.tier ?? "See website";
+            return (
+                <div className="space-y-1.5">
+                    {pricing.map((p, i) => (
+                        <div key={i} className="flex items-baseline gap-2">
+                            {p.tier && <span className="font-mono text-xs font-medium">{p.tier}</span>}
+                            {p.price && <span className="font-mono text-xs text-neutral-500">{p.price}</span>}
+                        </div>
+                    ))}
+                </div>
+            );
         }
-        return "See website";
+        return <span className="italic text-neutral-400">See website</span>;
     };
 
     const getFeaturesList = (features: FeaturesValue): string[] => {
         if (!features) return [];
-        if (Array.isArray(features)) return features.slice(0, 5);
+        if (Array.isArray(features)) return features;
         if (typeof features === "object" && "list" in features && Array.isArray(features.list)) {
-            return features.list.slice(0, 5);
+            return features.list;
         }
         return [];
     };
+
+    // Determine winner for score row
+    const getScoreWinner = (): number | null => {
+        const s0 = selectedTools[0]?.score ?? null;
+        const s1 = selectedTools[1]?.score ?? null;
+        if (s0 !== null && s1 !== null) {
+            if (s0 > s1) return 0;
+            if (s1 > s0) return 1;
+        }
+        return null;
+    };
+
+    const scoreWinner = getScoreWinner();
 
     if (tools.length === 0) {
         return (
@@ -78,235 +241,318 @@ export function CompareClient({ tools }: CompareClientProps) {
     }
 
     const noneSelected = selectedTools.every(t => !t);
-
-    const ROW_LABELS = ["Overall Score", "Starting Price", "Summary", "Pros", "Cons", "Key Features"];
+    const oneSelected = selectedTools.filter(t => t).length === 1;
+    const bothSelected = selectedTools.filter(t => t).length === 2;
+    const disabledIds = selectedToolIds.filter(Boolean) as string[];
 
     return (
         <div className="space-y-6">
+            {/* Header */}
             <div className="flex items-center gap-3">
                 <ArrowRightLeft className="h-5 w-5" strokeWidth={1.5} />
                 <h1 className="font-serif text-2xl font-normal">Compare Tools</h1>
             </div>
 
+            {/* Empty state */}
             {noneSelected && (
-                <div className="border border-black/20 p-4 font-mono text-xs text-neutral-500">
-                    Select 2 tools below to compare them side by side.
+                <div className="border border-black/20 p-6 text-center">
+                    <ArrowRightLeft className="h-6 w-6 mx-auto mb-3 text-neutral-300" strokeWidth={1.5} />
+                    <p className="font-mono text-xs text-neutral-500">
+                        Select two tools to compare side-by-side
+                    </p>
                 </div>
             )}
 
-            <div className="overflow-x-auto pb-4">
-                <div className="min-w-[700px] border border-black">
-                    {/* Tool Selectors Row */}
-                    <div className="grid grid-cols-3 border-b border-black">
-                        <div className="p-4 border-r border-black bg-neutral-50">
-                            <span className="font-mono text-xs uppercase tracking-widest text-neutral-400">Criteria</span>
-                        </div>
-                        {[0, 1].map((index) => {
-                            const tool = selectedTools[index];
-                            return (
-                                <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
-                                    <label className="block font-mono text-xs uppercase tracking-widest text-neutral-400 mb-2">
-                                        Tool {index + 1}
-                                    </label>
-                                    <select
-                                        value={selectedToolIds[index] ?? ""}
-                                        onChange={(e) => handleToolSelect(index, e.target.value)}
-                                        className="w-full border border-black px-3 py-2 font-mono text-xs bg-white focus:outline-none"
-                                    >
-                                        <option value="">Select tool...</option>
-                                        {tools.map(t => (
-                                            <option
-                                                key={t.id}
-                                                value={t.id}
-                                                disabled={selectedToolIds.includes(t.id) && selectedToolIds[index] !== t.id}
-                                            >
-                                                {t.name}{t.score !== null ? ` (${t.score.toFixed(1)})` : ""}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {tool?.websiteUrl && (
-                                        <a
-                                            href={tool.websiteUrl}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="mt-2 flex items-center gap-1 font-mono text-xs text-neutral-400 hover:text-black"
-                                        >
-                                            {(() => { try { return new URL(tool.websiteUrl).hostname; } catch { return tool.websiteUrl; } })()}
-                                            <ExternalLink className="h-3 w-3" />
-                                        </a>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
+            {/* One selected hint */}
+            {oneSelected && (
+                <div className="border border-black/20 p-4 font-mono text-xs text-neutral-500">
+                    Select a second tool to compare
+                </div>
+            )}
 
-                    {/* Score Row */}
-                    <div className="grid grid-cols-3 border-b border-black">
-                        <div className="p-4 border-r border-black bg-neutral-50">
-                            <span className="font-mono text-xs text-neutral-500">Overall Score</span>
+            {/* Tool Selectors */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[0, 1].map((index) => {
+                    const tool = selectedTools[index];
+                    return (
+                        <div key={index} className="border border-black p-4 bg-white">
+                            <ToolSelector
+                                tools={tools}
+                                selectedId={selectedToolIds[index]}
+                                disabledIds={disabledIds}
+                                onSelect={(id) => handleToolSelect(index, id)}
+                                label={`Tool ${index + 1}`}
+                            />
+                            {tool?.websiteUrl && (
+                                <a
+                                    href={tool.websiteUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-2 flex items-center gap-1 font-mono text-xs text-neutral-400 hover:text-black transition-colors"
+                                >
+                                    {(() => { try { return new URL(tool.websiteUrl).hostname; } catch { return tool.websiteUrl; } })()}
+                                    <ExternalLink className="h-3 w-3" />
+                                </a>
+                            )}
                         </div>
-                        {[0, 1].map((index) => {
-                            const tool = selectedTools[index];
-                            return (
-                                <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
-                                    {tool ? (
-                                        tool.score !== null ? (
-                                            <div className="flex items-center gap-3">
-                                                <span className="font-serif text-2xl">{tool.score.toFixed(1)}</span>
-                                                <div className="flex-1 h-2 border border-black bg-white">
-                                                    <div
-                                                        className="h-full bg-black"
-                                                        style={{ width: `${(tool.score / 10) * 100}%` }}
-                                                    />
+                    );
+                })}
+            </div>
+
+            {/* Comparison Table */}
+            {(oneSelected || bothSelected) && (
+                <div className="overflow-x-auto pb-4">
+                    <div className="min-w-[700px] border border-black">
+                        {/* Overall Score Row */}
+                        <div className="grid grid-cols-3 border-b border-black">
+                            <div className="p-4 border-r border-black bg-neutral-50">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Overall Score</span>
+                            </div>
+                            {[0, 1].map((index) => {
+                                const tool = selectedTools[index];
+                                const isWinner = bothSelected && scoreWinner === index;
+                                return (
+                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                        {tool ? (
+                                            tool.score !== null ? (
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="font-serif text-3xl">{tool.score.toFixed(1)}</span>
+                                                        <span className="font-mono text-xs text-neutral-400">/10</span>
+                                                        {isWinner && (
+                                                            <span className="bg-black text-white font-mono text-[10px] uppercase tracking-widest px-2 py-0.5">
+                                                                Winner
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="h-2 border border-black bg-white">
+                                                        <div
+                                                            className="h-full bg-black transition-all duration-500"
+                                                            style={{ width: `${(tool.score / 10) * 100}%` }}
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <span className="font-mono text-xs text-neutral-400">/10</span>
+                                            ) : (
+                                                <span className="font-mono text-xs text-neutral-400 italic">No score yet</span>
+                                            )
+                                        ) : (
+                                            <span className="font-mono text-xs text-neutral-200">—</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Summary Row */}
+                        <div className="grid grid-cols-3 border-b border-black">
+                            <div className="p-4 border-r border-black bg-neutral-50">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Summary</span>
+                            </div>
+                            {[0, 1].map((index) => {
+                                const tool = selectedTools[index];
+                                return (
+                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                        {tool ? (
+                                            <p className="font-mono text-xs text-neutral-600 leading-relaxed">
+                                                {tool.summary || <span className="italic text-neutral-400">No summary yet</span>}
+                                            </p>
+                                        ) : (
+                                            <span className="font-mono text-xs text-neutral-200">—</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Features Row */}
+                        <div className="grid grid-cols-3 border-b border-black">
+                            <div className="p-4 border-r border-black bg-neutral-50">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Features</span>
+                            </div>
+                            {[0, 1].map((index) => {
+                                const tool = selectedTools[index];
+                                const featuresList = tool ? getFeaturesList(tool.features) : [];
+                                return (
+                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                        {tool ? (
+                                            featuresList.length > 0 ? (
+                                                <ul className="space-y-1.5">
+                                                    {featuresList.map((feat, i) => (
+                                                        <li key={i} className="flex items-start gap-2 font-mono text-xs">
+                                                            <span className="text-neutral-300 mt-0.5 flex-shrink-0">&#8250;</span>
+                                                            <span>{feat}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <span className="font-mono text-xs text-neutral-400 italic">No features extracted</span>
+                                            )
+                                        ) : (
+                                            <span className="font-mono text-xs text-neutral-200">—</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Pricing Row */}
+                        <div className="grid grid-cols-3 border-b border-black">
+                            <div className="p-4 border-r border-black bg-neutral-50">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Pricing</span>
+                            </div>
+                            {[0, 1].map((index) => {
+                                const tool = selectedTools[index];
+                                return (
+                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                        {tool ? (
+                                            <div className="font-mono text-xs">
+                                                {getPricingDisplay(tool.pricing)}
                                             </div>
                                         ) : (
-                                            <span className="font-mono text-xs text-neutral-400 italic">No score yet</span>
-                                        )
-                                    ) : (
-                                        <span className="font-mono text-xs text-neutral-200">—</span>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Pricing Row */}
-                    <div className="grid grid-cols-3 border-b border-black">
-                        <div className="p-4 border-r border-black bg-neutral-50">
-                            <span className="font-mono text-xs text-neutral-500">Starting Price</span>
+                                            <span className="font-mono text-xs text-neutral-200">—</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
-                        {[0, 1].map((index) => {
-                            const tool = selectedTools[index];
-                            return (
-                                <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
-                                    {tool ? (
-                                        <span className="font-mono text-sm">{getPricingText(tool.pricing)}</span>
-                                    ) : (
-                                        <span className="font-mono text-xs text-neutral-200">—</span>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
 
-                    {/* Summary Row */}
-                    <div className="grid grid-cols-3 border-b border-black">
-                        <div className="p-4 border-r border-black bg-neutral-50">
-                            <span className="font-mono text-xs text-neutral-500">Summary</span>
-                        </div>
-                        {[0, 1].map((index) => {
-                            const tool = selectedTools[index];
-                            return (
-                                <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
-                                    {tool ? (
-                                        <p className="font-mono text-xs text-neutral-600 leading-relaxed">
-                                            {tool.summary || <span className="italic text-neutral-400">No summary yet</span>}
-                                        </p>
-                                    ) : (
-                                        <span className="font-mono text-xs text-neutral-200">—</span>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Pros Row */}
-                    <div className="grid grid-cols-3 border-b border-black">
-                        <div className="p-4 border-r border-black bg-neutral-50">
-                            <span className="font-mono text-xs text-neutral-500">Pros</span>
-                        </div>
-                        {[0, 1].map((index) => {
-                            const tool = selectedTools[index];
-                            return (
-                                <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
-                                    {tool ? (
-                                        tool.pros.length > 0 ? (
-                                            <ul className="space-y-1.5">
-                                                {tool.pros.map((p, i) => (
-                                                    <li key={i} className="flex items-start gap-2 font-mono text-xs">
-                                                        <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" strokeWidth={2.5} />
-                                                        <span>{p}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
+                        {/* Pros Row */}
+                        <div className="grid grid-cols-3 border-b border-black">
+                            <div className="p-4 border-r border-black bg-neutral-50">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Pros</span>
+                            </div>
+                            {[0, 1].map((index) => {
+                                const tool = selectedTools[index];
+                                return (
+                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                        {tool ? (
+                                            tool.pros.length > 0 ? (
+                                                <ul className="space-y-1.5">
+                                                    {tool.pros.map((p, i) => (
+                                                        <li key={i} className="flex items-start gap-2 font-mono text-xs">
+                                                            <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" strokeWidth={2.5} />
+                                                            <span>{p}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <span className="font-mono text-xs text-neutral-400 italic">No pros listed</span>
+                                            )
                                         ) : (
-                                            <span className="font-mono text-xs text-neutral-400 italic">No pros listed</span>
-                                        )
-                                    ) : (
-                                        <span className="font-mono text-xs text-neutral-200">—</span>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-
-                    {/* Cons Row */}
-                    <div className="grid grid-cols-3 border-b border-black">
-                        <div className="p-4 border-r border-black bg-neutral-50">
-                            <span className="font-mono text-xs text-neutral-500">Cons</span>
+                                            <span className="font-mono text-xs text-neutral-200">—</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
-                        {[0, 1].map((index) => {
-                            const tool = selectedTools[index];
-                            return (
-                                <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
-                                    {tool ? (
-                                        tool.cons.length > 0 ? (
-                                            <ul className="space-y-1.5">
-                                                {tool.cons.map((c, i) => (
-                                                    <li key={i} className="flex items-start gap-2 font-mono text-xs">
-                                                        <X className="h-3.5 w-3.5 mt-0.5 shrink-0 text-neutral-400" strokeWidth={2.5} />
-                                                        <span>{c}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        ) : (
-                                            <span className="font-mono text-xs text-neutral-400 italic">No cons listed</span>
-                                        )
-                                    ) : (
-                                        <span className="font-mono text-xs text-neutral-200">—</span>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
 
-                    {/* Features Row */}
-                    <div className="grid grid-cols-3">
-                        <div className="p-4 border-r border-black bg-neutral-50">
-                            <span className="font-mono text-xs text-neutral-500">Key Features</span>
-                        </div>
-                        {[0, 1].map((index) => {
-                            const tool = selectedTools[index];
-                            const featuresList = tool ? getFeaturesList(tool.features) : [];
-                            return (
-                                <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
-                                    {tool ? (
-                                        featuresList.length > 0 ? (
-                                            <ul className="space-y-1.5">
-                                                {featuresList.map((feat, i) => (
-                                                    <li key={i} className="flex items-start gap-2 font-mono text-xs">
-                                                        <span className="text-neutral-300 mt-0.5">›</span>
-                                                        <span>{feat}</span>
-                                                    </li>
-                                                ))}
-                                            </ul>
+                        {/* Cons Row */}
+                        <div className="grid grid-cols-3 border-b border-black">
+                            <div className="p-4 border-r border-black bg-neutral-50">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Cons</span>
+                            </div>
+                            {[0, 1].map((index) => {
+                                const tool = selectedTools[index];
+                                return (
+                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                        {tool ? (
+                                            tool.cons.length > 0 ? (
+                                                <ul className="space-y-1.5">
+                                                    {tool.cons.map((c, i) => (
+                                                        <li key={i} className="flex items-start gap-2 font-mono text-xs">
+                                                            <X className="h-3.5 w-3.5 mt-0.5 shrink-0 text-neutral-400" strokeWidth={2.5} />
+                                                            <span>{c}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <span className="font-mono text-xs text-neutral-400 italic">No cons listed</span>
+                                            )
                                         ) : (
-                                            <span className="font-mono text-xs text-neutral-400 italic">No features extracted</span>
-                                        )
-                                    ) : (
-                                        <div className="flex flex-col items-center justify-center py-8 text-neutral-300">
-                                            <Plus className="h-6 w-6 mb-2" strokeWidth={1.5} />
-                                            <span className="font-mono text-xs">Select a tool above</span>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
+                                            <span className="font-mono text-xs text-neutral-200">—</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Integrations Row */}
+                        <div className="grid grid-cols-3 border-b border-black">
+                            <div className="p-4 border-r border-black bg-neutral-50">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Integrations</span>
+                            </div>
+                            {[0, 1].map((index) => {
+                                const tool = selectedTools[index];
+                                return (
+                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                        {tool ? (
+                                            tool.integrations.length > 0 ? (
+                                                <div className="space-y-2">
+                                                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
+                                                        {tool.integrations.length} total
+                                                    </span>
+                                                    <ul className="space-y-1">
+                                                        {tool.integrations.slice(0, 5).map((intg, i) => (
+                                                            <li key={i} className="flex items-start gap-2 font-mono text-xs">
+                                                                <span className="text-neutral-300 mt-0.5 flex-shrink-0">&#8250;</span>
+                                                                <span>{intg}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                    {tool.integrations.length > 5 && (
+                                                        <span className="font-mono text-[10px] text-neutral-400">
+                                                            +{tool.integrations.length - 5} more
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="font-mono text-xs text-neutral-400 italic">No integrations listed</span>
+                                            )
+                                        ) : (
+                                            <span className="font-mono text-xs text-neutral-200">—</span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Competitors Row */}
+                        <div className="grid grid-cols-3">
+                            <div className="p-4 border-r border-black bg-neutral-50">
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Competitors</span>
+                            </div>
+                            {[0, 1].map((index) => {
+                                const tool = selectedTools[index];
+                                return (
+                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                        {tool ? (
+                                            tool.competitors.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1.5">
+                                                    {tool.competitors.map((comp, i) => (
+                                                        <span
+                                                            key={i}
+                                                            className="inline-block border border-black px-2 py-0.5 font-mono text-[10px]"
+                                                        >
+                                                            {comp}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="font-mono text-xs text-neutral-400 italic">No competitors listed</span>
+                                            )
+                                        ) : (
+                                            <div className="flex flex-col items-center justify-center py-8 text-neutral-300">
+                                                <Plus className="h-6 w-6 mb-2" strokeWidth={1.5} />
+                                                <span className="font-mono text-xs">Select a tool above</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
