@@ -81,12 +81,12 @@ function CardContent({ tool }: { tool: KanbanTool }) {
             </div>
             <div className="text-[10px] font-mono text-neutral-400">
                 {tool.status === "researching" ? (
-                    <span className="flex items-center gap-1 text-blue-600">
+                    <span className="flex items-center gap-1 text-neutral-500">
                         <Loader2 className="w-2.5 h-2.5 animate-spin" />
                         Researching...
                     </span>
                 ) : tool.status === "failed" ? (
-                    <span className="text-red-500">Research failed</span>
+                    <span className="text-neutral-500">Research failed — retry</span>
                 ) : tool.lastResearchedAt ? (
                     formatDistanceToNow(new Date(tool.lastResearchedAt), { addSuffix: true })
                 ) : (

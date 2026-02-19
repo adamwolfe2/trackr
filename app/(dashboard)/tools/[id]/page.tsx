@@ -100,8 +100,8 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
 
     const statusColors: Record<string, string> = {
         active: "bg-black text-white border-black",
-        researching: "border-blue-600 text-blue-600",
-        failed: "border-red-600 text-red-600",
+        researching: "border-black text-black animate-pulse",
+        failed: "border-neutral-400 text-neutral-500",
     };
 
     return (
@@ -136,7 +136,16 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                 </div>
 
                 <div className="flex items-center gap-3 flex-shrink-0">
-                    <ExportButton />
+                    <ExportButton
+                        toolName={tool.name}
+                        report={serializedReport ? {
+                            summary: serializedReport.summary,
+                            scorecardSnapshot: serializedReport.scorecardSnapshot ?? undefined,
+                            pros: serializedReport.pros ?? undefined,
+                            cons: serializedReport.cons ?? undefined,
+                            pricingTiers: serializedReport.pricingTiers,
+                        } : null}
+                    />
                     <ResearchButton
                         toolId={tool.id}
                         isResearching={isResearching}
