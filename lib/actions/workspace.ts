@@ -139,6 +139,32 @@ export async function updateCompanyContext(formData: FormData) {
     return { success: true };
 }
 
+export async function regenerateApiKey() {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    // Only owner/admin can regenerate API key
+    const member = await db.query.workspaceMembers.findFirst({
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId)
+        ),
+    });
+
+    if (!member || (member.role !== "owner" && member.role !== "admin")) {
+        throw new Error("Only workspace owners or admins can manage API keys");
+    }
+
+    const apiKey = `trk_${crypto.randomUUID().replace(/-/g, "")}`;
+    await db.update(workspaces).set({ apiKey }).where(eq(workspaces.id, workspaceId));
+
+    revalidatePath("/workspace");
+    return apiKey;
+}
+
 export async function removeMember(memberId: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");

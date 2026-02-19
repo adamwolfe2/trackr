@@ -23,6 +23,9 @@ export async function addSoftwareSpend(formData: FormData) {
     const seatCountRaw = formData.get("seatCount") as string;
     const seatCount = seatCountRaw ? parseInt(seatCountRaw, 10) : null;
 
+    const renewalDateRaw = formData.get("renewalDate") as string;
+    const renewalDate = renewalDateRaw ? new Date(renewalDateRaw) : null;
+
     await db.insert(softwareSpend).values({
         workspaceId,
         toolName,
@@ -33,6 +36,7 @@ export async function addSoftwareSpend(formData: FormData) {
         billingCycle: (formData.get("billingCycle") as string) || "monthly",
         status: (formData.get("status") as string) || "active",
         notes: (formData.get("notes") as string)?.trim() || null,
+        renewalDate,
     });
 
     revalidatePath("/stack");
@@ -108,7 +112,13 @@ export async function batchAddSoftwareSpend(items: Array<{
     return { success: true, count: valid.length };
 }
 
-export async function updateSoftwareSpendDetails(id: string, monthlyCost: string, seatCount: number | null) {
+export async function updateSoftwareSpendDetails(
+    id: string,
+    monthlyCost: string,
+    seatCount: number | null,
+    renewalDate?: string | null,
+    contractLengthMonths?: number | null
+) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
@@ -116,11 +126,20 @@ export async function updateSoftwareSpendDetails(id: string, monthlyCost: string
     if (!workspaceId) throw new Error("No workspace found");
 
     const cost = parseFloat(monthlyCost);
+    const updates: Record<string, unknown> = {
+        monthlyCost: isNaN(cost) ? "0" : cost.toFixed(2),
+        seatCount,
+    };
+
+    if (renewalDate !== undefined) {
+        updates.renewalDate = renewalDate ? new Date(renewalDate) : null;
+    }
+    if (contractLengthMonths !== undefined) {
+        updates.contractLength = contractLengthMonths;
+    }
+
     await db.update(softwareSpend)
-        .set({
-            monthlyCost: isNaN(cost) ? "0" : cost.toFixed(2),
-            seatCount,
-        })
+        .set(updates)
         .where(and(eq(softwareSpend.id, id), eq(softwareSpend.workspaceId, workspaceId)));
 
     revalidatePath("/stack");

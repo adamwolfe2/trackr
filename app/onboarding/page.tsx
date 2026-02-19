@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Check, Loader2, Sparkles, ArrowRight, RefreshCw, Search, X, PlusCircle } from "lucide-react";
 import { generateCompanyContext, completeOnboarding } from "@/lib/actions/onboarding";
 import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS, getLogoUrl } from "@/lib/constants/integrations";
+import { classifyTool } from "@/lib/config/ai-tools";
 import { toast } from "sonner";
 
 type Step = 1 | 2 | 3;
@@ -349,12 +350,55 @@ export default function OnboardingPage() {
                         )}
                         {!showAddManually && <div className="mb-6" />}
 
+                        {/* AI Nativeness Preview */}
+                        {selectedTools.size > 0 && (() => {
+                            const allSelected = [...selectedTools];
+                            let aiNative = 0, aiEnabled = 0, traditional = 0, unknown = 0;
+                            for (const name of allSelected) {
+                                const c = classifyTool(name);
+                                if (!c) { unknown++; continue; }
+                                if (c.classification === "ai-native") aiNative++;
+                                else if (c.classification === "ai-enabled") aiEnabled++;
+                                else traditional++;
+                            }
+                            const total = allSelected.length;
+                            const score = Math.min(100, Math.round(((aiNative * 2 + aiEnabled * 1) / (total * 2)) * 100));
+                            const label = score >= 40 ? "AI Leader" : score >= 20 ? "Early Adopter" : score >= 8 ? "Developing" : "Just Starting";
+                            return (
+                                <div className="border border-black p-4 mb-6 bg-white">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">AI Nativeness Preview</span>
+                                        <span className="font-mono text-[10px] uppercase tracking-widest border border-black px-2 py-0.5">{label}</span>
+                                    </div>
+                                    <div className="flex items-end gap-4">
+                                        <div>
+                                            <div className="font-mono text-4xl font-bold">{score}</div>
+                                            <div className="font-mono text-[10px] text-neutral-400">/100</div>
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="h-2 w-full bg-neutral-100 border border-neutral-200">
+                                                <div className="h-full bg-black transition-all" style={{ width: `${score}%` }} />
+                                            </div>
+                                            <div className="flex justify-between mt-1.5">
+                                                <span className="font-mono text-[10px] text-neutral-500">{aiNative} AI-native</span>
+                                                <span className="font-mono text-[10px] text-neutral-500">{aiEnabled} AI-enabled</span>
+                                                <span className="font-mono text-[10px] text-neutral-500">{traditional + unknown} Traditional</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="font-mono text-[10px] text-neutral-400 mt-3">
+                                        Complete setup to unlock full AI Intelligence with time saved estimates, cost insights, and personalized recommendations.
+                                    </p>
+                                </div>
+                            );
+                        })()}
+
                         <div className="flex justify-between items-center">
                             <button
                                 onClick={() => setStep(1)}
                                 className="text-xs font-mono text-neutral-400 hover:text-neutral-600 underline"
                             >
-                                ← Back
+                                &larr; Back
                             </button>
                             <button
                                 onClick={() => setStep(3)}

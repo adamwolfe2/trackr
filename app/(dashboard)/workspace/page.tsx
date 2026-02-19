@@ -7,6 +7,7 @@ import { workspaceMembers, workspaces } from "@/lib/db/schema";
 import { asc, eq } from "drizzle-orm";
 import { Shield, UserX, Building2 } from "lucide-react";
 import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext } from "@/lib/actions/workspace";
+import { ApiKeySection } from "@/components/workspace/api-key-section";
 
 export default async function WorkspacePage() {
     const user = await currentUser();
@@ -186,6 +187,12 @@ export default async function WorkspacePage() {
                         </form>
                     </div>
                 </div>
+
+                {/* API Key & Integrations */}
+                <ApiKeySection
+                    currentApiKey={workspace?.apiKey ?? null}
+                    isOwnerOrAdmin={isOwnerOrAdmin}
+                />
             </div>
         </div>
     );

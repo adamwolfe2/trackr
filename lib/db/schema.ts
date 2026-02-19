@@ -9,6 +9,7 @@ export const workspaces = pgTable('workspaces', {
     scorecardConfig: jsonb('scorecard_config'),
     companyContext: text('company_context'),
     onboardingCompleted: boolean('onboarding_completed').default(false).notNull(),
+    apiKey: text('api_key').unique(), // For Chrome extension + external integrations
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -65,6 +66,7 @@ export const reports = pgTable('reports', {
     competitors: text('competitors').array(),
     rawScrapedData: jsonb('raw_scraped_data'),
     sentimentData: jsonb('sentiment_data'),
+    shareToken: text('share_token').unique(), // Public sharing URL token
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
     index('reports_tool_id_idx').on(table.toolId),
@@ -209,6 +211,8 @@ export const softwareSpend = pgTable('software_spend', {
     billingCycle: text('billing_cycle').default('monthly'), // monthly | annual | one-time
     status: text('status').default('active').notNull(), // active | evaluating | canceling | canceled
     notes: text('notes'),
+    renewalDate: timestamp('renewal_date'),
+    contractLength: integer('contract_length_months'), // in months (12, 24, 36, etc.)
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
     index('software_spend_workspace_id_idx').on(table.workspaceId),

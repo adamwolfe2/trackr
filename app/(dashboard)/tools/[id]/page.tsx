@@ -8,6 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ResearchStream } from "@/components/tools/research-stream";
 import { ResearchButton } from "@/components/tools/research-button";
 import { ExportButton } from "@/components/common/export-button";
+import { ShareReportButton } from "@/components/tools/share-report-button";
 import { ToolDetailTabs } from "@/components/tools/tool-detail-tabs";
 import { clerkClient } from "@clerk/nextjs/server";
 
@@ -164,6 +165,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                 </div>
 
                 <div className="flex items-center gap-3 flex-shrink-0">
+                    {report && <ShareReportButton reportId={report.id} />}
                     <ExportButton
                         toolName={tool.name}
                         report={serializedReport ? {

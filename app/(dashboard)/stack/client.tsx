@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addSoftwareSpend, deleteSoftwareSpend, updateSoftwareSpendStatus, updateSoftwareSpendDetails, batchAddSoftwareSpend } from "@/lib/actions/software-spend";
-import { PlusCircle, Trash2, ExternalLink, DollarSign, Users, Pencil, Check, X, AlertTriangle, Sparkles, Clipboard, ChevronDown } from "lucide-react";
+import { PlusCircle, Trash2, ExternalLink, DollarSign, Users, Pencil, Check, X, AlertTriangle, Sparkles, Clipboard, ChevronDown, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { StackInsights } from "@/lib/utils/stack-insights";
@@ -64,6 +64,8 @@ type SpendEntry = {
     billingCycle: string | null;
     status: string;
     notes: string | null;
+    renewalDate: Date | null;
+    contractLength: number | null;
     createdAt: Date;
 };
 
@@ -84,6 +86,8 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editCost, setEditCost] = useState("");
     const [editSeats, setEditSeats] = useState("");
+    const [editRenewalDate, setEditRenewalDate] = useState("");
+    const [editContractLength, setEditContractLength] = useState("");
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
 
@@ -171,12 +175,20 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
         setEditingId(entry.id);
         setEditCost(entry.monthlyCost ? parseFloat(entry.monthlyCost).toString() : "");
         setEditSeats(entry.seatCount?.toString() ?? "");
+        setEditRenewalDate(entry.renewalDate ? new Date(entry.renewalDate).toISOString().slice(0, 10) : "");
+        setEditContractLength(entry.contractLength?.toString() ?? "");
     };
 
     const saveEdit = (id: string) => {
         startTransition(async () => {
             try {
-                await updateSoftwareSpendDetails(id, editCost || "0", editSeats ? parseInt(editSeats, 10) : null);
+                await updateSoftwareSpendDetails(
+                    id,
+                    editCost || "0",
+                    editSeats ? parseInt(editSeats, 10) : null,
+                    editRenewalDate || null,
+                    editContractLength ? parseInt(editContractLength, 10) : null
+                );
                 setEditingId(null);
                 toast.success("Updated");
                 router.refresh();
@@ -377,19 +389,29 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                 </select>
                             </div>
                         </div>
-                        <div>
-                            <label className="block font-mono text-xs uppercase tracking-widest mb-2">Vendor URL</label>
-                            <input
-                                name="vendorUrl"
-                                placeholder="https://example.com"
-                                className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
-                            />
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block font-mono text-xs uppercase tracking-widest mb-2">Vendor URL</label>
+                                <input
+                                    name="vendorUrl"
+                                    placeholder="https://example.com"
+                                    className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block font-mono text-xs uppercase tracking-widest mb-2">Renewal Date</label>
+                                <input
+                                    name="renewalDate"
+                                    type="date"
+                                    className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
+                                />
+                            </div>
                         </div>
                         <div>
                             <label className="block font-mono text-xs uppercase tracking-widest mb-2">Notes</label>
                             <input
                                 name="notes"
-                                placeholder="Contract renewal date, notes..."
+                                placeholder="Contract details, notes..."
                                 className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
                             />
                         </div>
@@ -543,6 +565,59 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                 </div>
             )}
 
+            {/* Upcoming Renewals */}
+            {(() => {
+                const now = new Date();
+                const thirtyDays = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+                const upcoming = initialData.filter(e =>
+                    e.renewalDate && e.status === "active" && new Date(e.renewalDate) <= thirtyDays && new Date(e.renewalDate) >= now
+                ).sort((a, b) => new Date(a.renewalDate!).getTime() - new Date(b.renewalDate!).getTime());
+                if (upcoming.length === 0) return null;
+                return (
+                    <div className="border border-black bg-white">
+                        <div className="border-b border-black px-4 py-3 flex items-center gap-2 bg-[#F3F3EF]">
+                            <CalendarClock className="h-3.5 w-3.5" />
+                            <span className="font-mono text-[10px] uppercase tracking-widest">
+                                Upcoming Renewals ({upcoming.length})
+                            </span>
+                        </div>
+                        <div className="divide-y divide-neutral-100">
+                            {upcoming.map(e => {
+                                const daysUntil = Math.ceil((new Date(e.renewalDate!).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                                const cost = parseFloat(e.monthlyCost || "0");
+                                const annualCost = e.billingCycle === "annual" ? cost * 12 : cost;
+                                return (
+                                    <div key={e.id} className="px-4 py-3 flex items-center justify-between gap-4">
+                                        <div>
+                                            <span className="font-mono text-sm font-semibold">{e.toolName}</span>
+                                            {e.contractLength && (
+                                                <span className="font-mono text-[10px] text-neutral-400 ml-2">{e.contractLength}mo contract</span>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-4 shrink-0">
+                                            {annualCost > 0 && (
+                                                <span className="font-mono text-xs text-neutral-500">
+                                                    ${annualCost.toLocaleString("en-US", { minimumFractionDigits: 0 })}/yr
+                                                </span>
+                                            )}
+                                            <span className={`font-mono text-xs border px-2 py-0.5 ${
+                                                daysUntil <= 7
+                                                    ? "border-black bg-black text-white"
+                                                    : daysUntil <= 14
+                                                    ? "border-black text-black"
+                                                    : "border-neutral-300 text-neutral-500"
+                                            }`}>
+                                                {daysUntil === 0 ? "Today" : daysUntil === 1 ? "Tomorrow" : `${daysUntil} days`}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                );
+            })()}
+
             {/* Table */}
             {initialData.length === 0 ? (
                 <div className="border border-dashed border-black/30 py-16 text-center">
@@ -558,6 +633,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                 <th className="text-left px-4 py-3 font-mono text-xs uppercase tracking-widest">Category</th>
                                 <th className="text-right px-4 py-3 font-mono text-xs uppercase tracking-widest">Monthly</th>
                                 <th className="text-right px-4 py-3 font-mono text-xs uppercase tracking-widest">Seats</th>
+                                <th className="text-left px-4 py-3 font-mono text-xs uppercase tracking-widest hidden md:table-cell">Renewal</th>
                                 <th className="text-left px-4 py-3 font-mono text-xs uppercase tracking-widest">Status</th>
                                 <th className="px-4 py-3"></th>
                             </tr>
@@ -628,6 +704,36 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                 />
                                             ) : (
                                                 entry.seatCount || "—"
+                                            )}
+                                        </td>
+                                        <td className="px-4 py-3 hidden md:table-cell">
+                                            {isEditing ? (
+                                                <div className="flex flex-col gap-1">
+                                                    <input
+                                                        type="date"
+                                                        value={editRenewalDate}
+                                                        onChange={e => setEditRenewalDate(e.target.value)}
+                                                        className="w-36 border border-black px-2 py-1 text-xs font-mono focus:outline-none"
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        value={editContractLength}
+                                                        onChange={e => setEditContractLength(e.target.value)}
+                                                        placeholder="months"
+                                                        className="w-36 border border-black px-2 py-1 text-xs font-mono focus:outline-none"
+                                                    />
+                                                </div>
+                                            ) : entry.renewalDate ? (
+                                                <div>
+                                                    <span className="font-mono text-xs">
+                                                        {new Date(entry.renewalDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                                    </span>
+                                                    {entry.contractLength && (
+                                                        <span className="font-mono text-[10px] text-neutral-400 block">{entry.contractLength}mo</span>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span className="font-mono text-xs text-neutral-300">—</span>
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
