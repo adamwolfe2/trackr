@@ -70,6 +70,11 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
 
     const isResearching = tool.status === "researching";
 
+    const toolHostname = (() => {
+        if (!tool.websiteUrl) return null;
+        try { return new URL(tool.websiteUrl).hostname; } catch { return tool.websiteUrl; }
+    })();
+
     // Extract features + pricing from report for tab component
     const featuresList = report?.features && typeof report.features === "object" && "list" in report.features
         // @ts-ignore
@@ -148,9 +153,9 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                         </span>
                     </h1>
                     <div className="flex items-center gap-2 font-mono text-xs text-neutral-400">
-                        {tool.websiteUrl && (
-                            <a href={tool.websiteUrl} target="_blank" rel="noopener noreferrer" className="hover:text-black flex items-center gap-1">
-                                {new URL(tool.websiteUrl).hostname} <ExternalLink className="h-2.5 w-2.5" />
+                        {toolHostname && (
+                            <a href={tool.websiteUrl!} target="_blank" rel="noopener noreferrer" className="hover:text-black flex items-center gap-1">
+                                {toolHostname} <ExternalLink className="h-2.5 w-2.5" />
                             </a>
                         )}
                         {tool.websiteUrl && <span>·</span>}

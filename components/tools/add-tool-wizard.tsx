@@ -20,7 +20,11 @@ export function AddToolWizard() {
         startPreview(async () => {
             const data = await previewTool(url);
             if (data.error) {
-                toast.error(data.error);
+                // Preview failed — still advance so the user can fill in details manually
+                setMetadata({ title: "", description: "", image: "" });
+                setDescription("");
+                setStep(2);
+                toast("Couldn't auto-fetch details — please fill in the name and description manually.");
             } else {
                 setMetadata({
                     title: data.title || "",
