@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
             cons: analysis.cons ?? [],
             scorecardSnapshot: analysis.scorecard ?? {},
             createdAt: new Date(),
-        });
+        } as typeof reports.$inferInsert);
 
         // Update tool status — "active" is the valid post-research status
         await db
