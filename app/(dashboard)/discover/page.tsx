@@ -45,7 +45,35 @@ const getAINews = unstable_cache(
     { revalidate: 3600 }
 );
 
-// Cache suggestions per workspace for 6 hours (M1)
+// Cache Perplexity suggestions at module level — keyed by workspaceId + pain point content.
+// Must be module-level so Next.js reuses the same stable function reference across requests.
+const fetchSuggestionsFromAI = unstable_cache(
+    async (_workspaceId: string, combinedPainPoint: string): Promise<ToolSuggestion[]> => {
+        let suggestions: ToolSuggestion[] = [];
+        try {
+            const raw = await perplexity.discoverTools(combinedPainPoint);
+            const jsonMatch = raw.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                if (Array.isArray(parsed)) {
+                    suggestions = parsed.map((item: Record<string, string>, i: number) => ({
+                        name: item.name || `Tool ${i + 1}`,
+                        url: item.url || "#",
+                        description: item.description || "",
+                        matchReason: item.matchReason || "Matches your team's pain points",
+                        source: item.source || "AI Discovery",
+                    }));
+                }
+            }
+        } catch {
+            // Fall through with empty suggestions
+        }
+        return suggestions;
+    },
+    ["discover-suggestions"],
+    { revalidate: 21600 } // 6 hours
+);
+
 async function getDiscoverySuggestions(workspaceId: string): Promise<{ suggestions: ToolSuggestion[]; painPointTitles: string[] }> {
     const activePainPoints = await db.query.painPoints.findMany({
         where: eq(painPoints.workspaceId, workspaceId),
@@ -63,34 +91,7 @@ async function getDiscoverySuggestions(workspaceId: string): Promise<{ suggestio
         .map(p => p.title + (p.description ? `: ${p.description}` : ""))
         .join(". ");
 
-    const cached = unstable_cache(
-        async () => {
-            let suggestions: ToolSuggestion[] = [];
-            try {
-                const raw = await perplexity.discoverTools(combinedPainPoint);
-                const jsonMatch = raw.match(/\[[\s\S]*\]/);
-                if (jsonMatch) {
-                    const parsed = JSON.parse(jsonMatch[0]);
-                    if (Array.isArray(parsed)) {
-                        suggestions = parsed.map((item: Record<string, string>, i: number) => ({
-                            name: item.name || `Tool ${i + 1}`,
-                            url: item.url || "#",
-                            description: item.description || "",
-                            matchReason: item.matchReason || "Matches your team's pain points",
-                            source: item.source || "AI Discovery",
-                        }));
-                    }
-                }
-            } catch {
-                // Fall through with empty suggestions
-            }
-            return suggestions;
-        },
-        [`discover-suggestions-${workspaceId}`],
-        { revalidate: 21600 } // 6 hours
-    );
-
-    const suggestions = await cached();
+    const suggestions = await fetchSuggestionsFromAI(workspaceId, combinedPainPoint);
     return { suggestions, painPointTitles };
 }
 

@@ -32,7 +32,7 @@ export function StackClient({ initialData = [], lowScoredNames = [] }: { initial
 
     const totalMonthly = initialData
         .filter(e => e.status === "active")
-        .reduce((sum, e) => sum + parseFloat(e.monthlyCost || "0"), 0);
+        .reduce((sum, e) => sum + (parseFloat(e.monthlyCost || "0") || 0), 0);
 
     const totalSeats = initialData
         .filter(e => e.status === "active")
@@ -40,7 +40,7 @@ export function StackClient({ initialData = [], lowScoredNames = [] }: { initial
 
     const lowScoredSet = new Set(lowScoredNames);
     const isLowScored = (entry: SpendEntry) =>
-        lowScoredSet.has(entry.toolName.toLowerCase()) && parseFloat(entry.monthlyCost || "0") > 0;
+        lowScoredSet.has(entry.toolName.toLowerCase()) && (parseFloat(entry.monthlyCost || "0") || 0) > 0;
 
     const startEdit = (entry: SpendEntry) => {
         setEditingId(entry.id);
