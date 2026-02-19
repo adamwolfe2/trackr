@@ -5,6 +5,7 @@ import { addSoftwareSpend, deleteSoftwareSpend, updateSoftwareSpendStatus, updat
 import { PlusCircle, Trash2, ExternalLink, DollarSign, Users, Pencil, Check, X, AlertTriangle, Sparkles, Clipboard, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import type { StackInsights } from "@/lib/utils/stack-insights";
 
 const STACK_PROMPT = `You are a software asset inventory specialist. I need you to help me document my company's complete software and SaaS stack.
 
@@ -77,7 +78,7 @@ type ParsedStackItem = {
     notes?: string | null;
 };
 
-export function StackClient({ initialData = [], lowScoredNames = [] }: { initialData?: SpendEntry[]; lowScoredNames?: string[] }) {
+export function StackClient({ initialData = [], lowScoredNames = [], insights }: { initialData?: SpendEntry[]; lowScoredNames?: string[]; insights?: StackInsights }) {
     const [showForm, setShowForm] = useState(false);
     const [toDelete, setToDelete] = useState<string | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
@@ -160,6 +161,11 @@ export function StackClient({ initialData = [], lowScoredNames = [] }: { initial
     const lowScoredSet = new Set(lowScoredNames);
     const isLowScored = (entry: SpendEntry) =>
         lowScoredSet.has(entry.toolName.toLowerCase()) && (parseFloat(entry.monthlyCost || "0") || 0) > 0;
+
+    // Build a lookup map from insights enrichedTools: id → classification
+    const classificationMap = new Map<string, string>(
+        (insights?.enrichedTools ?? []).map(t => [t.id, t.aiClassification])
+    );
 
     const startEdit = (entry: SpendEntry) => {
         setEditingId(entry.id);
@@ -399,6 +405,97 @@ export function StackClient({ initialData = [], lowScoredNames = [] }: { initial
                 </form>
             )}
 
+            {/* AI Intelligence Panel */}
+            {initialData.length === 0 ? (
+                <div className="border border-black p-5 flex items-center justify-between gap-4 bg-[#F3F3EF]">
+                    <div>
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">AI Nativeness Intelligence</p>
+                        <p className="font-mono text-sm text-neutral-600">Add your software stack to see your AI nativeness score →</p>
+                    </div>
+                </div>
+            ) : insights && (
+                <div className="border border-black bg-white">
+                    <div className="border-b border-black px-5 py-3 bg-[#F3F3EF]">
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">AI Nativeness Intelligence</p>
+                    </div>
+                    {/* Score grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 border-b border-black">
+                        {/* Score */}
+                        <div className="p-4 border-r border-black">
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">Score</p>
+                            <div className="flex items-end gap-1">
+                                <span className="font-serif text-4xl font-normal leading-none">{insights.score}</span>
+                                <span className="font-mono text-sm text-neutral-400 mb-0.5">/100</span>
+                            </div>
+                            <p className="font-mono text-xs font-semibold mt-1 uppercase tracking-wide">{insights.label}</p>
+                        </div>
+                        {/* Time Saved */}
+                        <div className="p-4 border-r border-black">
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">Time Saved</p>
+                            <div className="font-serif text-2xl font-normal leading-snug">
+                                ~{insights.timeSavedPerMonth < 1000
+                                    ? Math.round(insights.timeSavedPerMonth)
+                                    : `${(insights.timeSavedPerMonth / 1000).toFixed(1)}k`} hrs/mo
+                            </div>
+                            <p className="font-mono text-xs text-neutral-400 mt-0.5">
+                                ~${insights.dollarValueSaved >= 1000
+                                    ? `${Math.round(insights.dollarValueSaved / 1000)}k`
+                                    : Math.round(insights.dollarValueSaved)}/yr value
+                            </p>
+                        </div>
+                        {/* Stack Breakdown */}
+                        <div className="p-4 border-r border-black">
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">Stack Breakdown</p>
+                            <div className="space-y-1 mt-1">
+                                <div className="flex items-center gap-2 font-mono text-xs">
+                                    <span className="inline-block w-2.5 h-2.5 bg-black shrink-0" />
+                                    <span>{insights.aiNativeCount} AI-native</span>
+                                </div>
+                                <div className="flex items-center gap-2 font-mono text-xs">
+                                    <span className="inline-block w-2.5 h-2.5 bg-neutral-300 shrink-0" />
+                                    <span>{insights.aiEnabledCount} AI-enabled</span>
+                                </div>
+                                <div className="flex items-center gap-2 font-mono text-xs text-neutral-500">
+                                    <span className="inline-block w-2.5 h-2.5 bg-neutral-200 border border-neutral-300 shrink-0" />
+                                    <span>{insights.traditionalCount} traditional</span>
+                                </div>
+                                {insights.unknownCount > 0 && (
+                                    <div className="flex items-center gap-2 font-mono text-xs text-neutral-400">
+                                        <span className="inline-block w-2.5 h-2.5 bg-neutral-100 border border-neutral-200 shrink-0" />
+                                        <span>{insights.unknownCount} unknown</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        {/* Benchmark */}
+                        <div className="p-4">
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">Benchmark</p>
+                            <p className="font-mono text-sm font-semibold leading-snug">{insights.benchmarkText}</p>
+                        </div>
+                    </div>
+                    {/* Opportunities */}
+                    {insights.opportunities.length > 0 && (
+                        <div className="p-4 space-y-2">
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-2">Opportunities</p>
+                            {insights.opportunities.map((opp, i) => (
+                                <div key={i} className="flex items-start gap-3">
+                                    <span className={`font-mono text-[10px] border px-1.5 py-0.5 shrink-0 mt-0.5 ${
+                                        opp.priority === "HIGH"
+                                            ? "border-black text-black bg-black text-white"
+                                            : opp.priority === "MED"
+                                            ? "border-black text-black"
+                                            : "border-neutral-300 text-neutral-500"
+                                    }`}>
+                                        {opp.priority}
+                                    </span>
+                                    <p className="font-mono text-xs text-neutral-700">{opp.message}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
             {/* Summary Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 border border-black">
                 <div className="p-4 border-r border-b md:border-b-0 border-black">
@@ -476,6 +573,14 @@ export function StackClient({ initialData = [], lowScoredNames = [] }: { initial
                                     >
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2 flex-wrap">
+                                                {/* AI classification dot */}
+                                                {(() => {
+                                                    const cls = classificationMap.get(entry.id);
+                                                    if (cls === "ai-native") return <span title="AI-native" className="inline-block w-2 h-2 bg-black shrink-0" />;
+                                                    if (cls === "ai-enabled") return <span title="AI-enabled" className="inline-block w-2 h-2 bg-neutral-300 shrink-0" />;
+                                                    if (cls === "traditional") return <span title="Traditional" className="inline-block w-2 h-2 bg-neutral-200 border border-neutral-300 shrink-0" />;
+                                                    return <span title="Unknown" className="inline-block w-2 h-2 bg-neutral-100 border border-neutral-200 shrink-0" />;
+                                                })()}
                                                 <span className="font-mono text-sm">{entry.toolName}</span>
                                                 {flagged && (
                                                     <span className="font-mono text-[9px] border border-black px-1.5 py-0.5 uppercase tracking-wide">

@@ -221,4 +221,92 @@ export const softwareSpendRelations = relations(softwareSpend, ({ one }) => ({
     }),
 }));
 
+// Feed Channels (user-configured news sources)
+export const feedChannels = pgTable('feed_channels', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+    name: text('name').notNull(),
+    type: text('type').notNull(), // 'topic' | 'rss'
+    config: jsonb('config').notNull().default({}), // type-specific config
+    enabled: boolean('enabled').default(true).notNull(),
+    lastFetchedAt: timestamp('last_fetched_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+}, (table) => [
+    index('feed_channels_workspace_id_idx').on(table.workspaceId),
+]);
+
+// Feed Items (aggregated articles)
+export const feedItems = pgTable('feed_items', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+    channelId: uuid('channel_id').references(() => feedChannels.id, { onDelete: 'set null' }),
+    title: text('title').notNull(),
+    url: text('url').notNull(),
+    source: text('source'),
+    publishedAt: timestamp('published_at'),
+    summary: text('summary'),
+    relevanceScore: numeric('relevance_score', { precision: 3, scale: 2 }),
+    categories: text('categories').array().default([]),
+    isRead: boolean('is_read').default(false).notNull(),
+    isSaved: boolean('is_saved').default(false).notNull(),
+    extractedTools: jsonb('extracted_tools').default([]), // Array of { name, url, description, confidence }
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+    index('feed_items_workspace_id_idx').on(table.workspaceId),
+    index('feed_items_channel_id_idx').on(table.channelId),
+    index('feed_items_relevance_idx').on(table.relevanceScore),
+    index('feed_items_created_at_idx').on(table.createdAt),
+]);
+
+// Tool Suggestions (Phase 3 — proactive agent recommendations)
+export const toolSuggestions = pgTable('tool_suggestions', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+    toolName: text('tool_name').notNull(),
+    websiteUrl: text('website_url'),
+    reason: text('reason').notNull(),
+    sourceFeedItemId: uuid('source_feed_item_id').references(() => feedItems.id, { onDelete: 'set null' }),
+    matchedPainPointId: uuid('matched_pain_point_id').references(() => painPoints.id, { onDelete: 'set null' }),
+    confidence: numeric('confidence', { precision: 3, scale: 2 }).notNull(),
+    status: text('status').default('new').notNull(), // 'new' | 'queued' | 'dismissed'
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+    index('tool_suggestions_workspace_id_idx').on(table.workspaceId),
+]);
+
+export const feedChannelsRelations = relations(feedChannels, ({ one, many }) => ({
+    workspace: one(workspaces, {
+        fields: [feedChannels.workspaceId],
+        references: [workspaces.id],
+    }),
+    items: many(feedItems),
+}));
+
+export const feedItemsRelations = relations(feedItems, ({ one }) => ({
+    workspace: one(workspaces, {
+        fields: [feedItems.workspaceId],
+        references: [workspaces.id],
+    }),
+    channel: one(feedChannels, {
+        fields: [feedItems.channelId],
+        references: [feedChannels.id],
+    }),
+}));
+
+export const toolSuggestionsRelations = relations(toolSuggestions, ({ one }) => ({
+    workspace: one(workspaces, {
+        fields: [toolSuggestions.workspaceId],
+        references: [workspaces.id],
+    }),
+    sourceFeedItem: one(feedItems, {
+        fields: [toolSuggestions.sourceFeedItemId],
+        references: [feedItems.id],
+    }),
+    matchedPainPoint: one(painPoints, {
+        fields: [toolSuggestions.matchedPainPointId],
+        references: [painPoints.id],
+    }),
+}));
+
 export * from './referrals-schema';

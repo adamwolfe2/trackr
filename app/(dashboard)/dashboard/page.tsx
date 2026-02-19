@@ -1,6 +1,6 @@
 import { Clock } from "lucide-react";
 import { db } from "@/lib/db";
-import { tools, painPoints, workspaceMembers, workspaces, researchJobs, reports } from "@/lib/db/schema";
+import { tools, painPoints, workspaceMembers, workspaces, researchJobs, reports, softwareSpend } from "@/lib/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { computeStackInsights } from "@/lib/utils/stack-insights";
 
 type MemberWithWorkspace = InferSelectModel<typeof workspaceMembers> & {
     workspace: InferSelectModel<typeof workspaces>;
@@ -34,6 +35,11 @@ export default async function DashboardPage() {
     }
 
     const workspaceId = member.workspaceId;
+
+    const stackEntries = await db.query.softwareSpend.findMany({
+        where: eq(softwareSpend.workspaceId, workspaceId),
+    });
+    const stackInsights = computeStackInsights(stackEntries);
 
     const toolsCountData = await db
         .select({ count: sql<number>`count(*)` })
@@ -98,6 +104,56 @@ export default async function DashboardPage() {
                 researchReports={reportsCount}
                 activePainPoints={activePainPoints}
             />
+
+            {/* AI Nativeness Score Card */}
+            {stackEntries.length === 0 ? (
+                <div className="border border-black p-5 flex items-center justify-between gap-4">
+                    <div>
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">AI Nativeness Score</p>
+                        <p className="font-mono text-sm text-neutral-600">
+                            Import your stack to see your AI Intelligence score →{" "}
+                            <Link href="/stack" className="underline hover:text-black">Add Stack</Link>
+                        </p>
+                    </div>
+                </div>
+            ) : (
+                <div className="border border-black p-5">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-3">AI Nativeness Score</p>
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                        <div className="flex items-end gap-1">
+                            <span className="font-serif text-4xl font-normal leading-none">{stackInsights.score}</span>
+                            <span className="font-mono text-sm text-neutral-400 mb-0.5">/100</span>
+                        </div>
+                        <div>
+                            <span className="font-mono text-sm font-semibold uppercase tracking-wide">{stackInsights.label}</span>
+                            <span className="font-mono text-xs text-neutral-400 ml-2">·</span>
+                            <span className="font-mono text-xs text-neutral-500 ml-2">{stackInsights.benchmarkText}</span>
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-2">
+                        {stackInsights.timeSavedPerMonth > 0 && (
+                            <span className="font-mono text-xs text-neutral-500">
+                                ~{Math.round(stackInsights.timeSavedPerMonth)} hrs/mo saved
+                            </span>
+                        )}
+                        {stackInsights.dollarValueSaved > 0 && (
+                            <span className="font-mono text-xs text-neutral-500">
+                                ${stackInsights.dollarValueSaved >= 1000
+                                    ? `${Math.round(stackInsights.dollarValueSaved / 1000)}k`
+                                    : Math.round(stackInsights.dollarValueSaved)} annual value
+                            </span>
+                        )}
+                        {stackInsights.opportunities.length > 0 && (
+                            <span className="font-mono text-xs text-neutral-500">
+                                {stackInsights.opportunities.length} opportunit{stackInsights.opportunities.length === 1 ? "y" : "ies"} to improve your AI stack
+                            </span>
+                        )}
+                        <Link href="/stack" className="font-mono text-xs underline hover:text-neutral-600">
+                            View Stack →
+                        </Link>
+                    </div>
+                </div>
+            )}
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 {/* Recent Tools */}

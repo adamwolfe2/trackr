@@ -18,6 +18,7 @@ import {
     Layers,
     BarChart3,
     AlertCircle,
+    Rss,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 
@@ -36,6 +37,11 @@ const navItems = [
         title: "Discover",
         href: "/discover",
         icon: Search,
+    },
+    {
+        title: "Your Feed",
+        href: "/feed",
+        icon: Rss,
     },
     {
         title: "Research Queue",

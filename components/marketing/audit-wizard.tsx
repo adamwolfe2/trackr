@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowRight, ArrowLeft, CheckCircle2, Check } from "lucide-react";
-import { INTEGRATIONS } from "@/lib/constants/integrations";
+import { ArrowRight, ArrowLeft, CheckCircle2, Check, Search, X, PlusCircle } from "lucide-react";
+import { INTEGRATIONS, getLogoUrl } from "@/lib/constants/integrations";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type Step1Data = {
@@ -230,6 +230,9 @@ function Step2({ data, onChange }: { data: Step2Data; onChange: (d: Partial<Step
 
 // ── Step 3 ──────────────────────────────────────────────────────────────────
 function Step3({ data, onChange }: { data: Step3Data; onChange: (d: Partial<Step3Data>) => void }) {
+    const [toolSearch, setToolSearch] = useState("");
+    const [customTools, setCustomTools] = useState<string[]>([]);
+
     const toggleTool = (name: string) => {
         const current = data.currentTools;
         onChange({
@@ -237,7 +240,53 @@ function Step3({ data, onChange }: { data: Step3Data; onChange: (d: Partial<Step
         });
     };
 
+    const addCustomTool = (name: string) => {
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        if (!customTools.includes(trimmed)) setCustomTools((prev) => [...prev, trimmed]);
+        if (!data.currentTools.includes(trimmed)) onChange({ currentTools: [...data.currentTools, trimmed] });
+        setToolSearch("");
+    };
+
+    const query = toolSearch.trim().toLowerCase();
+    const searchResults = query.length > 0
+        ? INTEGRATIONS.filter((i) => i.name.toLowerCase().includes(query))
+        : null;
+
+    const exactMatchExists = query.length > 0 &&
+        (INTEGRATIONS.some((i) => i.name.toLowerCase() === query) ||
+         customTools.some((t) => t.toLowerCase() === query));
+    const showAddManually = query.length >= 2 && !exactMatchExists;
+
     const categories = [...new Set(INTEGRATIONS.map((i) => i.category))];
+
+    const ToolChip = ({ name, logoSrc }: { name: string; logoSrc?: string }) => {
+        const selected = data.currentTools.includes(name);
+        return (
+            <button
+                key={name}
+                type="button"
+                onClick={() => toggleTool(name)}
+                className={`flex items-center gap-2 px-3 py-2 border font-mono text-xs transition-all ${selected ? "bg-black text-white border-black" : "bg-white text-neutral-700 border-neutral-200 hover:border-black"}`}
+            >
+                {logoSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                        src={logoSrc}
+                        alt={name}
+                        className={`w-4 h-4 object-contain ${selected ? "brightness-0 invert" : ""}`}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                    />
+                ) : (
+                    <span className={`w-4 h-4 flex items-center justify-center text-[10px] font-bold border ${selected ? "border-white/40 text-white" : "border-neutral-200 text-neutral-400"}`}>
+                        {name.charAt(0).toUpperCase()}
+                    </span>
+                )}
+                {name}
+                {selected && <Check className="w-3 h-3 flex-shrink-0" />}
+            </button>
+        );
+    };
 
     return (
         <div className="space-y-7">
@@ -247,39 +296,80 @@ function Step3({ data, onChange }: { data: Step3Data; onChange: (d: Partial<Step
                     <span className="ml-2 text-neutral-400">({data.currentTools.length} selected)</span>
                 </label>
 
-                <div className="space-y-4">
-                    {categories.map((cat) => {
-                        const catTools = INTEGRATIONS.filter((i) => i.category === cat);
-                        return (
-                            <div key={cat}>
-                                <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-2">{cat}</div>
+                {/* Search */}
+                <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
+                    <input
+                        type="text"
+                        value={toolSearch}
+                        onChange={(e) => setToolSearch(e.target.value)}
+                        placeholder="Search tools… e.g. Figma, Datadog, Zapier"
+                        className="w-full border border-black pl-9 pr-9 py-2.5 font-mono text-sm bg-white focus:outline-none"
+                    />
+                    {toolSearch && (
+                        <button
+                            type="button"
+                            onClick={() => setToolSearch("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black"
+                        >
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Search results — flat list */}
+                {searchResults !== null ? (
+                    <div>
+                        {searchResults.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {searchResults.map((tool) => (
+                                    <ToolChip key={tool.name} name={tool.name} logoSrc={getLogoUrl(tool)} />
+                                ))}
+                            </div>
+                        )}
+                        {searchResults.length === 0 && (
+                            <p className="font-mono text-xs text-neutral-400 mb-2">No tools matched &ldquo;{toolSearch}&rdquo;.</p>
+                        )}
+                        {showAddManually && (
+                            <button
+                                type="button"
+                                onClick={() => addCustomTool(toolSearch)}
+                                className="flex items-center gap-2 font-mono text-xs border border-dashed border-black px-4 py-2.5 hover:bg-neutral-50"
+                            >
+                                <PlusCircle className="w-3.5 h-3.5" />
+                                Add &ldquo;{toolSearch.trim()}&rdquo; to my stack
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    /* Grouped categories — shown when not searching */
+                    <div className="space-y-4">
+                        {categories.map((cat) => {
+                            const catTools = INTEGRATIONS.filter((i) => i.category === cat);
+                            return (
+                                <div key={cat}>
+                                    <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-2">{cat}</div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {catTools.map((tool) => (
+                                            <ToolChip key={tool.name} name={tool.name} logoSrc={getLogoUrl(tool)} />
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {/* Custom tools section */}
+                        {customTools.length > 0 && (
+                            <div>
+                                <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-2">Custom</div>
                                 <div className="flex flex-wrap gap-2">
-                                    {catTools.map((tool) => {
-                                        const selected = data.currentTools.includes(tool.name);
-                                        return (
-                                            <button
-                                                key={tool.name}
-                                                type="button"
-                                                onClick={() => toggleTool(tool.name)}
-                                                className={`flex items-center gap-2 px-3 py-2 border font-mono text-xs transition-all ${selected ? "bg-black text-white border-black" : "bg-white text-neutral-700 border-neutral-200 hover:border-black"}`}
-                                            >
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img
-                                                    src={`/integrations/${tool.file}`}
-                                                    alt={tool.name}
-                                                    className={`w-4 h-4 object-contain ${selected ? "brightness-0 invert" : ""}`}
-                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                                                />
-                                                {tool.name}
-                                                {selected && <Check className="w-3 h-3 flex-shrink-0" />}
-                                            </button>
-                                        );
-                                    })}
+                                    {customTools.map((name) => (
+                                        <ToolChip key={`custom-${name}`} name={name} />
+                                    ))}
                                 </div>
                             </div>
-                        );
-                    })}
-                </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             <div>

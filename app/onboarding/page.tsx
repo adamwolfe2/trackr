@@ -2,11 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
-import { Check, Loader2, Sparkles, ArrowRight, RefreshCw } from "lucide-react";
+import { Check, Loader2, Sparkles, ArrowRight, RefreshCw, Search, X, PlusCircle } from "lucide-react";
 import { generateCompanyContext, completeOnboarding } from "@/lib/actions/onboarding";
-import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS } from "@/lib/constants/integrations";
+import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS, getLogoUrl } from "@/lib/constants/integrations";
 import { toast } from "sonner";
-import Image from "next/image";
 
 type Step = 1 | 2 | 3;
 type Dimension = { key: string; label: string; weight: number };
@@ -26,14 +25,28 @@ export default function OnboardingPage() {
     // Step 2
     const [selectedTools, setSelectedTools] = useState<Set<string>>(new Set());
     const [activeCategory, setActiveCategory] = useState<string>("All");
+    const [toolSearch, setToolSearch] = useState("");
+    const [customTools, setCustomTools] = useState<string[]>([]);
 
     // Step 3
     const [dimensions, setDimensions] = useState<Dimension[]>(DEFAULT_SCORECARD_DIMENSIONS);
 
     const categories = ["All", ...INTEGRATION_CATEGORIES];
-    const filteredIntegrations = activeCategory === "All"
+    const categoryFiltered = activeCategory === "All"
         ? INTEGRATIONS
         : INTEGRATIONS.filter((i) => i.category === activeCategory);
+
+    const query = toolSearch.trim().toLowerCase();
+    const searchResults = query.length > 0
+        ? INTEGRATIONS.filter((i) => i.name.toLowerCase().includes(query))
+        : null; // null = use category filter
+
+    const visibleIntegrations = searchResults ?? categoryFiltered;
+
+    const exactMatchExists = query.length > 0 &&
+        (INTEGRATIONS.some((i) => i.name.toLowerCase() === query) ||
+         customTools.some((t) => t.toLowerCase() === query));
+    const showAddManually = query.length >= 2 && !exactMatchExists;
 
     const toggleTool = (name: string) => {
         setSelectedTools((prev) => {
@@ -41,6 +54,14 @@ export default function OnboardingPage() {
             next.has(name) ? next.delete(name) : next.add(name);
             return next;
         });
+    };
+
+    const addCustomTool = (name: string) => {
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        if (!customTools.includes(trimmed)) setCustomTools((prev) => [...prev, trimmed]);
+        setSelectedTools((prev) => { const next = new Set(prev); next.add(trimmed); return next; });
+        setToolSearch("");
     };
 
     const handleGenerateContext = async () => {
@@ -204,23 +225,45 @@ export default function OnboardingPage() {
                             )}
                         </p>
 
-                        {/* Category filter */}
-                        <div className="flex flex-wrap gap-2 mb-6">
-                            {categories.map((cat) => (
+                        {/* Search */}
+                        <div className="relative mb-4">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
+                            <input
+                                type="text"
+                                value={toolSearch}
+                                onChange={(e) => setToolSearch(e.target.value)}
+                                placeholder="Search tools… e.g. Figma, Datadog, Zapier"
+                                className="w-full border border-black pl-9 pr-9 py-2.5 font-mono text-sm bg-white focus:outline-none"
+                            />
+                            {toolSearch && (
                                 <button
-                                    key={cat}
-                                    onClick={() => setActiveCategory(cat)}
-                                    className={`px-3 py-1 text-xs font-mono border border-black transition-all
-                                        ${activeCategory === cat ? "bg-black text-white" : "bg-white hover:bg-neutral-100"}`}
+                                    onClick={() => setToolSearch("")}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black"
                                 >
-                                    {cat}
+                                    <X className="w-3.5 h-3.5" />
                                 </button>
-                            ))}
+                            )}
                         </div>
 
+                        {/* Category filter — hidden while searching */}
+                        {!toolSearch && (
+                            <div className="flex flex-wrap gap-2 mb-6">
+                                {categories.map((cat) => (
+                                    <button
+                                        key={cat}
+                                        onClick={() => setActiveCategory(cat)}
+                                        className={`px-3 py-1 text-xs font-mono border border-black transition-all
+                                            ${activeCategory === cat ? "bg-black text-white" : "bg-white hover:bg-neutral-100"}`}
+                                    >
+                                        {cat}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
                         {/* Logo grid */}
-                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 mb-8">
-                            {filteredIntegrations.map((integration) => {
+                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 mb-3">
+                            {visibleIntegrations.map((integration) => {
                                 const selected = selectedTools.has(integration.name);
                                 return (
                                     <button
@@ -239,13 +282,14 @@ export default function OnboardingPage() {
                                             </div>
                                         )}
                                         <div className="w-8 h-8 flex items-center justify-center">
-                                            <Image
-                                                src={`/integrations/${integration.file}`}
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={getLogoUrl(integration)}
                                                 alt={integration.name}
                                                 width={32}
                                                 height={32}
                                                 className="object-contain w-8 h-8"
-                                                unoptimized
+                                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                                             />
                                         </div>
                                         <span className="text-[9px] font-mono text-neutral-600 leading-tight text-center line-clamp-2 max-w-[60px]">
@@ -254,7 +298,51 @@ export default function OnboardingPage() {
                                     </button>
                                 );
                             })}
+
+                            {/* Custom (manually added) tool tiles */}
+                            {customTools.map((name) => {
+                                const selected = selectedTools.has(name);
+                                return (
+                                    <button
+                                        key={`custom-${name}`}
+                                        onClick={() => toggleTool(name)}
+                                        title={name}
+                                        className={`group relative flex flex-col items-center gap-1.5 p-3 border transition-all
+                                            ${selected
+                                                ? "border-black bg-black/5 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                                : "border-black/20 bg-white hover:border-black hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+                                            }`}
+                                    >
+                                        {selected && (
+                                            <div className="absolute top-1 right-1 w-4 h-4 bg-black flex items-center justify-center">
+                                                <Check className="w-2.5 h-2.5 text-white" />
+                                            </div>
+                                        )}
+                                        <div className="w-8 h-8 flex items-center justify-center font-mono text-sm font-bold text-neutral-400 border border-neutral-200">
+                                            {name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <span className="text-[9px] font-mono text-neutral-600 leading-tight text-center line-clamp-2 max-w-[60px]">
+                                            {name}
+                                        </span>
+                                    </button>
+                                );
+                            })}
                         </div>
+
+                        {/* No results + add manually */}
+                        {searchResults?.length === 0 && (
+                            <p className="font-mono text-xs text-neutral-400 mb-2">No tools matched &ldquo;{toolSearch}&rdquo;.</p>
+                        )}
+                        {showAddManually && (
+                            <button
+                                onClick={() => addCustomTool(toolSearch)}
+                                className="flex items-center gap-2 font-mono text-xs border border-dashed border-black px-4 py-2.5 hover:bg-neutral-50 mb-6"
+                            >
+                                <PlusCircle className="w-3.5 h-3.5" />
+                                Add &ldquo;{toolSearch.trim()}&rdquo; to my stack
+                            </button>
+                        )}
+                        {!showAddManually && <div className="mb-6" />}
 
                         <div className="flex justify-between items-center">
                             <button

@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { softwareSpend, workspaceMembers, tools } from "@/lib/db/schema";
 import { eq, desc, and, isNotNull, sql } from "drizzle-orm";
 import { StackClient } from "./client";
+import { computeStackInsights } from "@/lib/utils/stack-insights";
 
 export default async function StackPage() {
     const user = await currentUser();
@@ -33,6 +34,7 @@ export default async function StackPage() {
     ]);
 
     const lowScoredNames = scoredTools.map(t => t.name.toLowerCase());
+    const insights = computeStackInsights(entries);
 
-    return <StackClient initialData={entries} lowScoredNames={lowScoredNames} />;
+    return <StackClient initialData={entries} lowScoredNames={lowScoredNames} insights={insights} />;
 }
