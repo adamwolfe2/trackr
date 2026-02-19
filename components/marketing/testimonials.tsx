@@ -1,5 +1,3 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
 const testimonials = [
     {
         name: "Sarah Chen",
@@ -41,29 +39,36 @@ const testimonials = [
 
 export function Testimonials() {
     return (
-        <section className="py-24 bg-zinc-50 dark:bg-zinc-900/50 border-y border-zinc-200 dark:border-zinc-800">
+        <section className="py-24 border-y border-black bg-[#F3F3EF]">
             <div className="container mx-auto px-4">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl font-bold mb-4">Trusted by modern teams</h2>
-                    <p className="text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
+                <div className="mb-16">
+                    <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-2">Social Proof</p>
+                    <h2 className="font-serif text-4xl font-normal mb-3">Trusted by modern teams</h2>
+                    <p className="font-mono text-sm text-neutral-500 max-w-lg">
                         Join hundreds of high-growth companies using Trackr to optimize their operations.
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-0 border border-black">
                     {testimonials.map((testimonial, i) => (
-                        <div key={i} className="bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-zinc-200 dark:border-zinc-800 hover:shadow-lg transition-shadow">
-                            <p className="text-zinc-600 dark:text-zinc-300 mb-6 leading-relaxed">
-                                "{testimonial.content}"
+                        <div
+                            key={i}
+                            className={`bg-white p-8 flex flex-col gap-4 ${
+                                i % 3 !== 2 ? "lg:border-r border-black" : ""
+                            } ${i % 2 === 0 ? "md:border-r border-black lg:border-r-0" : ""} ${
+                                i < testimonials.length - 3 ? "border-b border-black" : ""
+                            }`}
+                        >
+                            <p className="font-mono text-sm text-neutral-600 leading-relaxed flex-1">
+                                &ldquo;{testimonial.content}&rdquo;
                             </p>
-                            <div className="flex items-center gap-4">
-                                <Avatar>
-                                    <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${testimonial.name}`} />
-                                    <AvatarFallback>{testimonial.initials}</AvatarFallback>
-                                </Avatar>
+                            <div className="flex items-center gap-3 pt-4 border-t border-neutral-100">
+                                <div className="w-8 h-8 border border-black bg-black text-white flex items-center justify-center font-mono text-xs font-bold shrink-0">
+                                    {testimonial.initials}
+                                </div>
                                 <div>
-                                    <div className="font-bold text-sm">{testimonial.name}</div>
-                                    <div className="text-xs text-zinc-500 dark:text-zinc-400">{testimonial.role}</div>
+                                    <div className="font-mono text-xs font-semibold">{testimonial.name}</div>
+                                    <div className="font-mono text-[10px] text-neutral-500">{testimonial.role}</div>
                                 </div>
                             </div>
                         </div>
