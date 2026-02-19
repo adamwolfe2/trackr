@@ -16,6 +16,7 @@ import { MarketingCTA } from "@/components/marketing/marketing-cta";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingIntegrations } from "@/components/marketing/marketing-integrations";
 import { MarketingReportShowcase } from "@/components/marketing/marketing-report-showcase";
+import { MarketingEnterprise } from "@/components/marketing/marketing-enterprise";
 
 export const metadata: Metadata = {
   title: "Trackr — AI Tool Research for Ops Teams",
@@ -94,6 +95,7 @@ export default async function Home() {
         <MarketingPricing />
         <MarketingUseCases />
         <MarketingDiscovery />
+        <MarketingEnterprise />
         <MarketingCTA />
         <MarketingFooter />
       </main>
