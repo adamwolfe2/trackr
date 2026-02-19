@@ -35,10 +35,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Trackr — AI Tool Research for Ops Teams",
+        url: "/og.png",
+        width: 1456,
+        height: 816,
+        alt: "Trackr — Your team's AI tool intelligence layer",
       },
     ],
   },
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Trackr — AI Tool Research for Ops Teams",
     description: "Stop researching tools manually. Let agents do it for you.",
-    images: ["/og-image.png"],
+    images: ["/og.png"],
   },
   robots: {
     index: true,
