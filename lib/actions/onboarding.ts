@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { workspaces, workspaceMembers, softwareSpend } from "@/lib/db/schema";
+import { workspaces, softwareSpend } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
+import { ensureWorkspace } from "@/lib/actions/workspace";
 
 /** Scrape company website and auto-generate a context description */
 export async function generateCompanyContext(websiteUrl: string): Promise<{ context: string; error?: string }> {
@@ -55,14 +56,14 @@ export async function completeOnboarding({
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
-    const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
-        with: { workspace: true },
+    // Ensure workspace exists — creates one if Clerk webhook was delayed/failed
+    const { workspaceId, workspace: existingWorkspace } = await ensureWorkspace(user.id, {
+        displayName: user.firstName || user.username || undefined,
+        email: user.primaryEmailAddress?.emailAddress,
     });
 
-    if (!member) throw new Error("No workspace found");
-
-    const workspaceId = member.workspaceId;
+    // If already completed, still allow re-run (idempotent)
+    const currentName = existingWorkspace.name;
 
     // Build scorecard config
     const scorecardConfig = scorecardDimensions.reduce((acc, d) => {
@@ -72,7 +73,7 @@ export async function completeOnboarding({
 
     // 1. Update workspace with company info + scorecard + mark onboarding done
     await db.update(workspaces).set({
-        name: companyName.trim() || member.workspace.name,
+        name: companyName.trim() || currentName,
         companyContext: companyContext.trim(),
         scorecardConfig,
         onboardingCompleted: true,
@@ -111,15 +112,3 @@ export async function completeOnboarding({
     redirect("/tools");
 }
 
-export async function checkOnboardingNeeded(): Promise<boolean> {
-    const user = await currentUser();
-    if (!user) return false;
-
-    const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
-        with: { workspace: true },
-    });
-
-    if (!member) return false;
-    return !member.workspace.onboardingCompleted;
-}

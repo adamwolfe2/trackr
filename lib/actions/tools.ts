@@ -3,11 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { db } from "@/lib/db";
-import { tools, workspaces, workspaceMembers, reports, researchJobs, subscriptions } from "@/lib/db/schema";
+import { tools, workspaceMembers, reports, researchJobs, subscriptions } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
 import { performDeepResearch } from "@/lib/actions/research";
+import { ensureWorkspace } from "@/lib/actions/workspace";
 
 export async function getWorkspaceId(userId: string) {
     const member = await db.query.workspaceMembers.findFirst({
@@ -22,34 +23,12 @@ export async function submitTool(formData: FormData) {
 
     const name = formData.get("name") as string;
     const websiteUrl = formData.get("website_url") as string;
-    // const description = formData.get("description") as string;
 
-    // 1. Get user's workspace (or create default)
-    const workspace = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
-        with: {
-            workspace: true
-        }
+    // 1. Get user's workspace (or create one if webhook/onboarding hasn't yet)
+    const { workspaceId } = await ensureWorkspace(user.id, {
+        displayName: user.firstName || user.username || undefined,
+        email: user.primaryEmailAddress?.emailAddress,
     });
-
-    let workspaceId;
-
-    if (!workspace) {
-        // Create default workspace for user
-        const [newWorkspace] = await db.insert(workspaces).values({
-            name: "My Workspace",
-            slug: `workspace-${user.id.slice(0, 8)}`,
-        }).returning();
-        workspaceId = newWorkspace.id;
-
-        await db.insert(workspaceMembers).values({
-            workspaceId: workspaceId,
-            userId: user.id,
-            role: "owner"
-        });
-    } else {
-        workspaceId = workspace.workspaceId;
-    }
 
     // 1.5 Check Limits
     const subscription = await db.query.subscriptions.findFirst({

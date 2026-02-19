@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Check, Loader2, Sparkles, ArrowRight, Search, X, PlusCircle } from "lucide-react";
 import { generateCompanyContext, completeOnboarding } from "@/lib/actions/onboarding";
@@ -32,6 +32,42 @@ export default function OnboardingPage() {
 
     // Step 3
     const [dimensions, setDimensions] = useState<Dimension[]>(DEFAULT_SCORECARD_DIMENSIONS);
+
+    // Restore form state from localStorage on mount
+    const [restored, setRestored] = useState(false);
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem("trackr_onboarding_draft");
+            if (saved) {
+                const draft = JSON.parse(saved);
+                if (draft.companyName) setCompanyName(draft.companyName);
+                if (draft.websiteUrl) setWebsiteUrl(draft.websiteUrl);
+                if (draft.companyContext) setCompanyContext(draft.companyContext);
+                if (Array.isArray(draft.selectedTools) && draft.selectedTools.length > 0) {
+                    setSelectedTools(new Set(draft.selectedTools));
+                }
+                if (Array.isArray(draft.customTools)) setCustomTools(draft.customTools);
+                if (Array.isArray(draft.dimensions)) setDimensions(draft.dimensions);
+                if (draft.step && [1, 2, 3].includes(draft.step)) setStep(draft.step);
+            }
+        } catch { /* ignore corrupt localStorage */ }
+        setRestored(true);
+    }, []);
+
+    // Persist form state to localStorage on change
+    const saveDraft = useCallback(() => {
+        try {
+            localStorage.setItem("trackr_onboarding_draft", JSON.stringify({
+                step, companyName, websiteUrl, companyContext,
+                selectedTools: [...selectedTools],
+                customTools, dimensions,
+            }));
+        } catch { /* quota exceeded — non-fatal */ }
+    }, [step, companyName, websiteUrl, companyContext, selectedTools, customTools, dimensions]);
+
+    useEffect(() => {
+        if (restored) saveDraft();
+    }, [restored, saveDraft]);
 
     const categories = ["All", ...INTEGRATION_CATEGORIES];
     const categoryFiltered = activeCategory === "All"
@@ -104,6 +140,8 @@ export default function OnboardingPage() {
                     scorecardDimensions: dimensions,
                     plan: plan || undefined,
                 });
+                // Clear draft on success (redirect happens server-side)
+                localStorage.removeItem("trackr_onboarding_draft");
             } catch {
                 toast.error("Failed to save workspace. Please try again.");
             }

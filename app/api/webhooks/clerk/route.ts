@@ -1,9 +1,7 @@
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
-import { db } from '@/lib/db'
-import { workspaces, workspaceMembers } from '@/lib/db/schema'
-import { eq } from 'drizzle-orm'
+import { ensureWorkspace } from '@/lib/actions/workspace'
 import { sendWelcomeEmail } from '@/lib/email/resend'
 
 export async function POST(req: Request) {
@@ -59,31 +57,13 @@ export async function POST(req: Request) {
         const primaryEmail = email_addresses[0]?.email_address;
         const displayName = username || primaryEmail?.split('@')[0] || "User";
 
-        // Check if user already has a workspace (idempotency)
-        const existingMember = await db.query.workspaceMembers.findFirst({
-            where: eq(workspaceMembers.userId, id)
-        });
+        // Create workspace (idempotent — safe if onboarding already created one)
+        const { created } = await ensureWorkspace(id, { displayName, email: primaryEmail });
 
-        if (!existingMember) {
-            // Create Personal Workspace
-            const [newWorkspace] = await db.insert(workspaces).values({
-                name: `${displayName}'s Workspace`,
-                slug: `ws-${id.slice(0, 8).toLowerCase()}`,
-                companyContext: `Personal workspace for ${primaryEmail}`
-            }).returning();
-
-            // Add user as admin
-            await db.insert(workspaceMembers).values({
-                userId: id,
-                workspaceId: newWorkspace.id,
-                role: 'owner'
-            });
-
-            // Send welcome email (fire and forget)
-            if (primaryEmail) {
-                const firstName = evt.data.first_name || displayName;
-                sendWelcomeEmail(primaryEmail, firstName).catch(() => {});
-            }
+        // Send welcome email only on first workspace creation
+        if (created && primaryEmail) {
+            const firstName = evt.data.first_name || displayName;
+            sendWelcomeEmail(primaryEmail, firstName).catch(() => {});
         }
     }
 
