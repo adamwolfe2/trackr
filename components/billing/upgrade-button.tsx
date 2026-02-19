@@ -5,9 +5,15 @@ import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-type PlanSlug = "team" | "agency";
+type PaidPlanSlug = "team" | "startup" | "enterprise";
 
-export function UpgradeButton({ workspaceId, plan = "team" }: { workspaceId: string; plan?: PlanSlug }) {
+const LABELS: Record<PaidPlanSlug, string> = {
+    team: "Upgrade to Team",
+    startup: "Upgrade to Startup",
+    enterprise: "Upgrade to Enterprise",
+};
+
+export function UpgradeButton({ workspaceId, plan = "team" }: { workspaceId: string; plan?: PaidPlanSlug }) {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleUpgrade = async () => {
@@ -27,8 +33,6 @@ export function UpgradeButton({ workspaceId, plan = "team" }: { workspaceId: str
         }
     };
 
-    const label = plan === "agency" ? "Upgrade to Agency" : "Upgrade to Team";
-
     return (
         <button
             onClick={handleUpgrade}
@@ -41,7 +45,7 @@ export function UpgradeButton({ workspaceId, plan = "team" }: { workspaceId: str
                     Loading...
                 </span>
             ) : (
-                label
+                LABELS[plan]
             )}
         </button>
     );

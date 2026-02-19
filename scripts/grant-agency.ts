@@ -19,10 +19,10 @@ async function main() {
     const existing = await db.query.subscriptions.findFirst({ where: eq(subscriptions.workspaceId, workspaceId) });
 
     if (existing) {
-        await db.update(subscriptions).set({ planId: "agency", status: "active" }).where(eq(subscriptions.workspaceId, workspaceId));
+        await db.update(subscriptions).set({ planId: "enterprise", status: "active" }).where(eq(subscriptions.workspaceId, workspaceId));
         console.log("✓ Updated to Agency:", workspaceId);
     } else {
-        await db.insert(subscriptions).values({ workspaceId, planId: "agency", status: "active" });
+        await db.insert(subscriptions).values({ workspaceId, planId: "enterprise", status: "active" });
         console.log("✓ Inserted Agency:", workspaceId);
     }
 }

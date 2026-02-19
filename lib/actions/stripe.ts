@@ -5,14 +5,19 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { workspaceMembers, subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { redirect } from "next/navigation";
+import type { PlanSlug } from "@/lib/config/subscriptions";
 
-type PlanSlug = "team" | "agency";
+type PaidPlanSlug = Exclude<PlanSlug, "free">;
 
-function getPriceId(plan: PlanSlug): string {
-    if (plan === "agency") {
-        const id = process.env.STRIPE_AGENCY_PRICE_ID;
-        if (!id) throw new Error("STRIPE_AGENCY_PRICE_ID not configured");
+function getPriceId(plan: PaidPlanSlug): string {
+    if (plan === "enterprise") {
+        const id = process.env.STRIPE_ENTERPRISE_PRICE_ID;
+        if (!id) throw new Error("STRIPE_ENTERPRISE_PRICE_ID not configured");
+        return id;
+    }
+    if (plan === "startup") {
+        const id = process.env.STRIPE_STARTUP_PRICE_ID;
+        if (!id) throw new Error("STRIPE_STARTUP_PRICE_ID not configured");
         return id;
     }
     const id = process.env.STRIPE_TEAM_PRICE_ID;
@@ -20,7 +25,7 @@ function getPriceId(plan: PlanSlug): string {
     return id;
 }
 
-export async function createCheckoutSession(workspaceId: string, plan: PlanSlug = "team") {
+export async function createCheckoutSession(workspaceId: string, plan: PaidPlanSlug = "team") {
     const user = await currentUser();
     if (!user) {
         throw new Error("Unauthorized");

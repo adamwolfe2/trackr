@@ -1,19 +1,113 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, X } from "lucide-react";
 import Link from "next/link";
 import { motion, useInView, type Variants } from "framer-motion";
 import { useRef } from "react";
 
 const containerVariants: Variants = {
     hidden: {},
-    show: { transition: { staggerChildren: 0.1 } },
+    show: { transition: { staggerChildren: 0.08 } },
 };
 
 const cardVariants: Variants = {
     hidden: { opacity: 0, y: 28 },
     show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
+
+type PlanCard = {
+    name: string;
+    price: string;
+    period: string;
+    subtitle: string;
+    credits: string;
+    extraCredits: string | null;
+    features: Array<{ text: string; included: boolean }>;
+    cta: { label: string; href: string };
+    featured?: boolean;
+    badge?: string;
+};
+
+const plans: PlanCard[] = [
+    {
+        name: "Free",
+        price: "$0",
+        period: "/month",
+        subtitle: "Evaluate on your own",
+        credits: "3 research credits/month",
+        extraCredits: null,
+        features: [
+            { text: "15 tools in database", included: true },
+            { text: "1 workspace member", included: true },
+            { text: "Full 7-step research reports", included: true },
+            { text: "Compare tools (2 max)", included: true },
+            { text: "Slack integration", included: false },
+            { text: "Chrome extension", included: false },
+            { text: "Ask Trackr AI", included: false },
+            { text: "Analytics dashboard", included: false },
+        ],
+        cta: { label: "Start for free", href: "/sign-up" },
+    },
+    {
+        name: "Team",
+        price: "$50",
+        period: "/month",
+        subtitle: "Share with your team",
+        credits: "25 research credits/month",
+        extraCredits: "$1.50 per extra credit",
+        badge: "Most Popular",
+        featured: true,
+        features: [
+            { text: "Unlimited tools", included: true },
+            { text: "5 workspace members", included: true },
+            { text: "Full 7-step research reports", included: true },
+            { text: "Compare tools (unlimited)", included: true },
+            { text: "Slack integration", included: true },
+            { text: "Chrome extension", included: true },
+            { text: "Software spend tracking", included: true },
+            { text: "Report export (PDF)", included: true },
+        ],
+        cta: { label: "Start 14-day free trial", href: "/sign-up" },
+    },
+    {
+        name: "Startup",
+        price: "$149",
+        period: "/month",
+        subtitle: "Run your stack on autopilot",
+        credits: "75 research credits/month",
+        extraCredits: "$1.00 per extra credit",
+        features: [
+            { text: "Everything in Team", included: true },
+            { text: "15 workspace members", included: true },
+            { text: "Ask Trackr AI (unlimited)", included: true },
+            { text: "Analytics dashboard", included: true },
+            { text: "Custom scorecard recipe", included: true },
+            { text: "Renewal alerts + digest emails", included: true },
+            { text: "Company context scoring", included: true },
+            { text: "Priority email support", included: true },
+        ],
+        cta: { label: "Start 14-day free trial", href: "/sign-up" },
+    },
+    {
+        name: "Enterprise",
+        price: "$349",
+        period: "/month",
+        subtitle: "Enterprise-grade intelligence",
+        credits: "200 research credits/month",
+        extraCredits: "$0.75 per extra credit",
+        features: [
+            { text: "Everything in Startup", included: true },
+            { text: "Unlimited workspace members", included: true },
+            { text: "API access (read + write)", included: true },
+            { text: "Dedicated success manager", included: true },
+            { text: "Custom integrations", included: true },
+            { text: "SSO / SAML (roadmap)", included: true },
+            { text: "SLA guarantee", included: true },
+            { text: "Onboarding call", included: true },
+        ],
+        cta: { label: "Talk to us", href: "/contact" },
+    },
+];
 
 export function MarketingPricing() {
     const headingRef = useRef(null);
@@ -38,7 +132,7 @@ export function MarketingPricing() {
                     Start free. Upgrade when your team grows.
                 </h2>
                 <p className="font-mono text-neutral-500">
-                    No credit card required to start. Cancel anytime.
+                    Per workspace, not per user. No credit card required. Cancel anytime.
                 </p>
             </motion.div>
 
@@ -47,114 +141,82 @@ export function MarketingPricing() {
                 variants={containerVariants}
                 initial="hidden"
                 animate={gridInView ? "show" : "hidden"}
-                className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-start"
             >
-                {/* Free */}
-                <motion.div variants={cardVariants} className="bg-white border border-black p-8 flex flex-col h-full shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)]">
-                    <div className="mb-8">
-                        <h3 className="font-mono text-lg mb-2">Free</h3>
-                        <div className="text-4xl font-serif mb-4">
-                            $0 <span className="text-sm font-mono text-neutral-500">/ month</span>
-                        </div>
-                        <p className="text-sm text-neutral-600 font-mono">For individuals and small teams getting started.</p>
-                    </div>
-                    <ul className="space-y-3.5 mb-8 flex-grow">
-                        {[
-                            "Up to 25 tools in database",
-                            "5 research agent runs per month",
-                            "1 workspace member",
-                            "Default scorecard (7 dimensions)",
-                            "Full report access",
-                            "Email notifications",
-                        ].map((feature) => (
-                            <li key={feature} className="flex gap-3 text-sm font-mono items-start">
-                                <Check className="w-4 h-4 mt-0.5 text-neutral-400 flex-shrink-0" />
-                                {feature}
-                            </li>
-                        ))}
-                    </ul>
-                    <Link
-                        href="/sign-up"
-                        className="block w-full text-center bg-white border border-black py-3 font-mono text-sm uppercase hover:bg-neutral-50 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                {plans.map((plan) => (
+                    <motion.div
+                        key={plan.name}
+                        variants={cardVariants}
+                        className={`flex flex-col h-full relative ${
+                            plan.featured
+                                ? "bg-black text-white border border-black p-7 md:-translate-y-3 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.15)]"
+                                : "bg-white border border-black p-7 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)]"
+                        }`}
                     >
-                        Start for free
-                    </Link>
-                </motion.div>
+                        {plan.badge && (
+                            <div className="absolute -top-px -right-px bg-white text-black text-[10px] font-mono uppercase px-3 py-1.5 tracking-wider border-l border-b border-black">
+                                {plan.badge}
+                            </div>
+                        )}
 
-                {/* Team — featured */}
-                <motion.div
-                    variants={cardVariants}
-                    className="bg-black text-white border border-black p-8 flex flex-col h-full relative md:-translate-y-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.15)]"
-                >
-                    <div className="absolute -top-px -right-px bg-white text-black text-[10px] font-mono uppercase px-3 py-1.5 tracking-wider border-l border-b border-black">
-                        Most Popular
-                    </div>
-                    <div className="mb-8">
-                        <h3 className="font-mono text-lg mb-2">Team</h3>
-                        <div className="text-4xl font-serif mb-4">
-                            $29 <span className="text-sm font-mono text-neutral-400">/ month</span>
+                        <div className="mb-6">
+                            <h3 className="font-mono text-base mb-2">{plan.name}</h3>
+                            <div className="text-4xl font-serif mb-1">
+                                {plan.price}{" "}
+                                <span className={`text-sm font-mono ${plan.featured ? "text-neutral-400" : "text-neutral-500"}`}>
+                                    {plan.period}
+                                </span>
+                            </div>
+                            <p className={`text-xs font-mono mt-2 ${plan.featured ? "text-neutral-400" : "text-neutral-500"}`}>
+                                {plan.subtitle}
+                            </p>
                         </div>
-                        <p className="text-sm text-neutral-400 font-mono">For teams that evaluate tools regularly and need to stay in sync.</p>
-                    </div>
-                    <ul className="space-y-3.5 mb-8 flex-grow">
-                        {[
-                            "Unlimited tools in database",
-                            "50 research agent runs per month",
-                            "Up to 10 workspace members",
-                            "Custom scorecard + templates",
-                            "Pain points engine",
-                            "Discovery feed",
-                            "Semantic search",
-                            "Auto-refresh (30-day cycle)",
-                            "Priority email support",
-                        ].map((feature) => (
-                            <li key={feature} className="flex gap-3 text-sm font-mono items-start">
-                                <Check className="w-4 h-4 mt-0.5 text-white flex-shrink-0" />
-                                {feature}
-                            </li>
-                        ))}
-                    </ul>
-                    <Link
-                        href="/sign-up"
-                        className="block w-full text-center bg-white text-black border border-white py-3 font-mono text-sm uppercase hover:bg-neutral-200 transition-colors"
-                    >
-                        Start 14-day free trial
-                    </Link>
-                </motion.div>
 
-                {/* Agency */}
-                <motion.div variants={cardVariants} className="bg-white border border-black p-8 flex flex-col h-full shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)]">
-                    <div className="mb-8">
-                        <h3 className="font-mono text-lg mb-2">Agency</h3>
-                        <div className="text-4xl font-serif mb-4">
-                            $99 <span className="text-sm font-mono text-neutral-500">/ month</span>
+                        {/* Credits highlight */}
+                        <div className={`border px-3 py-2 mb-5 ${plan.featured ? "border-neutral-600" : "border-black"}`}>
+                            <span className={`font-mono text-xs font-bold block ${plan.featured ? "text-white" : "text-black"}`}>
+                                {plan.credits}
+                            </span>
+                            {plan.extraCredits && (
+                                <span className={`font-mono text-[10px] ${plan.featured ? "text-neutral-400" : "text-neutral-500"}`}>
+                                    {plan.extraCredits}
+                                </span>
+                            )}
                         </div>
-                        <p className="text-sm text-neutral-600 font-mono">For agencies and larger teams managing multiple workspaces.</p>
-                    </div>
-                    <ul className="space-y-3.5 mb-8 flex-grow">
-                        {[
-                            "Everything in Team",
-                            "Unlimited research agent runs",
-                            "Unlimited workspace members",
-                            "Multiple workspaces",
-                            "Shareable read-only report links",
-                            "White-label options (coming soon)",
-                            "Dedicated Slack support",
-                        ].map((feature) => (
-                            <li key={feature} className="flex gap-3 text-sm font-mono items-start">
-                                <Check className="w-4 h-4 mt-0.5 text-neutral-400 flex-shrink-0" />
-                                {feature}
-                            </li>
-                        ))}
-                    </ul>
-                    <Link
-                        href="/contact"
-                        className="block w-full text-center bg-white border border-black py-3 font-mono text-sm uppercase hover:bg-neutral-50 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
-                    >
-                        Talk to us
-                    </Link>
-                </motion.div>
+
+                        <ul className="space-y-2.5 mb-7 flex-grow">
+                            {plan.features.map((feature) => (
+                                <li key={feature.text} className={`flex gap-2.5 text-xs font-mono items-start ${
+                                    !feature.included ? (plan.featured ? "text-neutral-600" : "text-neutral-400") : ""
+                                }`}>
+                                    {feature.included ? (
+                                        <Check className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${plan.featured ? "text-white" : "text-black"}`} strokeWidth={2.5} />
+                                    ) : (
+                                        <X className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" strokeWidth={2} />
+                                    )}
+                                    {feature.text}
+                                </li>
+                            ))}
+                        </ul>
+
+                        <Link
+                            href={plan.cta.href}
+                            className={`block w-full text-center py-3 font-mono text-xs uppercase tracking-widest transition-colors ${
+                                plan.featured
+                                    ? "bg-white text-black border border-white hover:bg-neutral-200"
+                                    : "bg-white border border-black hover:bg-neutral-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                            }`}
+                        >
+                            {plan.cta.label}
+                        </Link>
+                    </motion.div>
+                ))}
             </motion.div>
+
+            <p className="text-center font-mono text-xs text-neutral-400 mt-8">
+                All plans are per workspace, not per member. Need custom volume pricing?{" "}
+                <Link href="/contact" className="underline hover:text-black">Contact us</Link>.
+            </p>
         </section>
     );
 }

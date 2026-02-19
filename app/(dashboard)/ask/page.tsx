@@ -13,7 +13,7 @@ import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import AskTrackrClient from "./client";
 import { PlanGate } from "@/components/billing/plan-gate";
-import { getPlanLimits } from "@/lib/config/subscriptions";
+import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 
 export default async function AskPage() {
     const user = await currentUser();
@@ -33,13 +33,14 @@ export default async function AskPage() {
         where: eq(subscriptions.workspaceId, member.workspaceId)
     });
 
-    const limits = getPlanLimits(subscription);
+    const plan = getPlanLimits(subscription);
 
-    if (!limits.limits.deepResearch) {
+    if (!hasFeature(plan, "askAI")) {
         return (
             <PlanGate
                 featureName="Ask Trackr AI"
-                description="Chat with your workspace data, compare tools, and get instant answers powered by GPT-4o."
+                description="Chat with your workspace data, compare tools, and get instant answers. Available on Startup and Enterprise plans."
+                requiredPlan="Startup"
             />
         );
     }

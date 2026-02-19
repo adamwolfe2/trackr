@@ -8,7 +8,7 @@ import { tools, reports, workspaceMembers, subscriptions } from "@/lib/db/schema
 import { eq, desc } from "drizzle-orm";
 import { CompareClient } from "./client";
 import { PlanGate } from "@/components/billing/plan-gate";
-import { getPlanLimits } from "@/lib/config/subscriptions";
+import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 
 export const metadata: Metadata = {
     title: "Compare Tools — Trackr",
@@ -33,12 +33,13 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         where: eq(subscriptions.workspaceId, member.workspaceId),
     });
 
-    const limits = getPlanLimits(subscription ?? undefined);
-    if (!limits.limits.deepResearch) {
+    const plan = getPlanLimits(subscription ?? undefined);
+    if (plan.features.compareTools !== true) {
         return (
             <PlanGate
-                featureName="Tool Comparison"
-                description="Compare tools side-by-side on score, pros, cons, pricing, and features. Available on Team and Agency plans."
+                featureName="Unlimited Tool Comparison"
+                description="Compare unlimited tools side-by-side on score, pros, cons, pricing, and features. Upgrade to Team to unlock."
+                requiredPlan="Team"
             />
         );
     }

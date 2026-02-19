@@ -12,9 +12,18 @@ import { getWorkspaceId } from "@/lib/actions/tools";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq, and, gte, inArray, count } from "drizzle-orm";
 import { getPlanLimits, PLANS } from "@/lib/config/subscriptions";
+import type { Plan } from "@/lib/config/subscriptions";
 import { Check } from "lucide-react";
 import { UpgradeButton } from "@/components/billing/upgrade-button";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
+
+type BillingPlanCard = {
+    key: string;
+    plan: Plan;
+    description: string;
+    highlights: string[];
+    isCurrent: boolean;
+};
 
 export default async function BillingPage({
     searchParams,
@@ -31,10 +40,7 @@ export default async function BillingPage({
         where: eq(subscriptions.workspaceId, workspaceId),
     });
 
-    const limits = getPlanLimits(subscription ?? undefined);
-    const isTeam = limits.slug === "team";
-    const isAgency = limits.slug === "agency";
-    const isFree = limits.slug === "free";
+    const currentPlan = getPlanLimits(subscription ?? undefined);
 
     const params = await searchParams;
     const success = params.success === "true";
@@ -67,57 +73,66 @@ export default async function BillingPage({
         );
     const researchCount = researchCountResult[0]?.count ?? 0;
 
-    const plans = [
+    const memberCountResult = await db
+        .select({ count: count() })
+        .from(workspaceMembers)
+        .where(eq(workspaceMembers.workspaceId, workspaceId));
+    const memberCount = memberCountResult[0]?.count ?? 0;
+
+    const planCards: BillingPlanCard[] = [
         {
-            key: "free" as const,
-            name: "Free",
-            price: `$${PLANS.FREE.price}`,
-            period: "/mo",
-            description: "Perfect for exploring Trackr and evaluating a handful of tools.",
-            features: [
-                "25 tools",
-                "5 research runs/month",
-                "1 workspace member",
-                "AI News Digest",
-                "Kanban board",
+            key: "free",
+            plan: PLANS.FREE,
+            description: "For individuals evaluating tools on their own.",
+            highlights: [
+                `${PLANS.FREE.limits.tools} tools`,
+                `${PLANS.FREE.limits.research} research credits/mo`,
+                `${PLANS.FREE.limits.members} member`,
+                "Basic reports",
             ],
-            isCurrent: isFree,
-            planSlug: null as null,
+            isCurrent: currentPlan.slug === "free",
         },
         {
-            key: "team" as const,
-            name: "Team",
-            price: `$${PLANS.TEAM.price}`,
-            period: "/mo",
-            description: "For ops teams that evaluate tools regularly and track spend.",
-            features: [
+            key: "team",
+            plan: PLANS.TEAM,
+            description: "For teams that evaluate tools and track spend together.",
+            highlights: [
                 "Unlimited tools",
-                "50 research runs/month",
-                "10 workspace members",
+                `${PLANS.TEAM.limits.research} research credits/mo`,
+                `${PLANS.TEAM.limits.members} members`,
+                "Slack + Chrome extension",
+                "Spend tracking + exports",
+                `Extra credits: $${PLANS.TEAM.extraCreditPrice}/each`,
+            ],
+            isCurrent: currentPlan.slug === "team",
+        },
+        {
+            key: "startup",
+            plan: PLANS.STARTUP,
+            description: "For growing teams that want AI intelligence and custom scoring.",
+            highlights: [
+                "Everything in Team",
+                `${PLANS.STARTUP.limits.research} research credits/mo`,
+                `${PLANS.STARTUP.limits.members} members`,
                 "Ask Trackr AI",
-                "Tool comparison",
-                "Priority support",
+                "Analytics + scorecard recipe",
+                `Extra credits: $${PLANS.STARTUP.extraCreditPrice}/each`,
             ],
-            isCurrent: isTeam,
-            planSlug: "team" as const,
+            isCurrent: currentPlan.slug === "startup",
         },
         {
-            key: "agency" as const,
-            name: "Agency",
-            price: `$${PLANS.AGENCY.price}`,
-            period: "/mo",
-            description: "For agencies managing tools across multiple clients.",
-            features: [
-                "Unlimited tools",
-                "Unlimited research runs",
+            key: "enterprise",
+            plan: PLANS.ENTERPRISE,
+            description: "For large teams with unlimited needs and API access.",
+            highlights: [
+                "Everything in Startup",
+                `${PLANS.ENTERPRISE.limits.research} research credits/mo`,
                 "Unlimited members",
-                "Ask Trackr AI",
-                "Tool comparison",
-                "Advertise system access",
-                "Priority support",
+                "API access",
+                "Dedicated success manager",
+                `Extra credits: $${PLANS.ENTERPRISE.extraCreditPrice}/each`,
             ],
-            isCurrent: isAgency,
-            planSlug: "agency" as const,
+            isCurrent: currentPlan.slug === "enterprise",
         },
     ];
 
@@ -128,16 +143,17 @@ export default async function BillingPage({
             <div>
                 <h1 className="text-2xl font-serif font-normal">Billing & Plans</h1>
                 <p className="font-mono text-sm text-neutral-500 mt-1">
-                    Currently on <span className="font-semibold text-black">{limits.name}</span> plan.
-                    {limits.limits.research !== Infinity && (
-                        <> {limits.limits.research} research runs/month.</>
+                    Currently on <span className="font-semibold text-black">{currentPlan.name}</span> plan
+                    {" · "}{currentPlan.limits.research} research credits/month
+                    {currentPlan.extraCreditPrice && (
+                        <> · Extra credits at ${currentPlan.extraCreditPrice}/each</>
                     )}
                 </p>
             </div>
 
             {success && (
                 <div className="border border-black bg-white p-4 font-mono text-sm">
-                    Subscription activated. Welcome to {limits.name}!
+                    Subscription activated. Welcome to {currentPlan.name}!
                 </div>
             )}
 
@@ -147,44 +163,43 @@ export default async function BillingPage({
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-black">
-                {plans.map((plan, i) => (
+            {/* Plan Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-0 border border-black">
+                {planCards.map((card, i) => (
                     <div
-                        key={plan.key}
-                        className={`p-6 ${i < plans.length - 1 ? "border-b md:border-b-0 md:border-r border-black" : ""} ${plan.isCurrent ? "bg-black text-white" : "bg-white"}`}
+                        key={card.key}
+                        className={`p-5 ${i < planCards.length - 1 ? "border-b lg:border-b-0 lg:border-r border-black" : ""} ${card.isCurrent ? "bg-black text-white" : "bg-white"}`}
                     >
                         <div className="mb-1">
-                            <span className={`font-mono text-xs uppercase tracking-widest ${plan.isCurrent ? "text-neutral-400" : "text-neutral-500"}`}>
-                                {plan.isCurrent ? "Current Plan" : plan.name}
+                            <span className={`font-mono text-[10px] uppercase tracking-widest ${card.isCurrent ? "text-neutral-400" : "text-neutral-500"}`}>
+                                {card.isCurrent ? "Current Plan" : card.plan.name}
                             </span>
                         </div>
                         <div className="flex items-baseline gap-1 mb-1">
-                            <span className="text-4xl font-serif">{plan.price}</span>
-                            <span className={`font-mono text-sm ${plan.isCurrent ? "text-neutral-400" : "text-neutral-500"}`}>{plan.period}</span>
+                            <span className="text-3xl font-serif">${card.plan.price}</span>
+                            <span className={`font-mono text-xs ${card.isCurrent ? "text-neutral-400" : "text-neutral-500"}`}>/mo</span>
                         </div>
-                        <p className={`font-mono text-xs mb-6 leading-relaxed ${plan.isCurrent ? "text-neutral-300" : "text-neutral-500"}`}>
-                            {plan.description}
+                        <p className={`font-mono text-[10px] mb-5 leading-relaxed ${card.isCurrent ? "text-neutral-300" : "text-neutral-500"}`}>
+                            {card.description}
                         </p>
-                        <ul className="space-y-2 mb-8">
-                            {plan.features.map((feature) => (
-                                <li key={feature} className={`flex items-center gap-2 font-mono text-xs ${plan.isCurrent ? "text-neutral-200" : "text-neutral-700"}`}>
-                                    <Check className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.5} />
+                        <ul className="space-y-1.5 mb-6">
+                            {card.highlights.map((feature) => (
+                                <li key={feature} className={`flex items-center gap-2 font-mono text-[11px] ${card.isCurrent ? "text-neutral-200" : "text-neutral-700"}`}>
+                                    <Check className="w-3 h-3 flex-shrink-0" strokeWidth={2.5} />
                                     {feature}
                                 </li>
                             ))}
                         </ul>
                         <div>
-                            {plan.isCurrent && subscription?.stripeCustomerId ? (
+                            {card.isCurrent && subscription?.stripeCustomerId ? (
                                 <ManageSubscriptionButton workspaceId={workspaceId} />
-                            ) : plan.isCurrent ? (
-                                <div className={`border px-4 py-2 text-center font-mono text-xs uppercase tracking-widest ${plan.isCurrent ? "border-neutral-600 text-neutral-400" : "border-black text-black"}`}>
+                            ) : card.isCurrent ? (
+                                <div className={`border px-4 py-2 text-center font-mono text-xs uppercase tracking-widest ${card.isCurrent ? "border-neutral-600 text-neutral-400" : "border-black text-black"}`}>
                                     Active
                                 </div>
-                            ) : (
-                                plan.planSlug && (
-                                    <UpgradeButton workspaceId={workspaceId} plan={plan.planSlug} />
-                                )
-                            )}
+                            ) : card.plan.slug !== "free" ? (
+                                <UpgradeButton workspaceId={workspaceId} plan={card.plan.slug} />
+                            ) : null}
                         </div>
                     </div>
                 ))}
@@ -239,20 +254,25 @@ export default async function BillingPage({
                 <h2 className="font-serif text-lg">Usage This Period</h2>
                 <div className="space-y-4">
                     <UsageBar
-                        label="Tools"
-                        current={Number(toolCount)}
-                        limit={limits.limits.tools}
+                        label="Research Credits"
+                        current={Number(researchCount)}
+                        limit={currentPlan.limits.research}
                     />
                     <UsageBar
-                        label="Research Runs"
-                        current={Number(researchCount)}
-                        limit={limits.limits.research}
+                        label="Tools"
+                        current={Number(toolCount)}
+                        limit={currentPlan.limits.tools}
+                    />
+                    <UsageBar
+                        label="Members"
+                        current={Number(memberCount)}
+                        limit={currentPlan.limits.members}
                     />
                 </div>
             </div>
 
             <div className="border border-black/20 p-4 font-mono text-xs text-neutral-500">
-                Subscriptions are billed monthly. Cancel any time from the billing portal. Upgrades take effect immediately.
+                All plans are per workspace, not per member. Subscriptions are billed monthly. Cancel any time from the billing portal. Upgrades take effect immediately.
             </div>
         </div>
     );
