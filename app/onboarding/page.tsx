@@ -86,9 +86,14 @@ export default function OnboardingPage() {
     const handleComplete = () => {
         startTransition(async () => {
             try {
-                const toolsArray = INTEGRATIONS
+                // Include both catalog tools AND custom-added tools
+                const catalogTools = INTEGRATIONS
                     .filter((i) => selectedTools.has(i.name))
                     .map((i) => ({ name: i.name, url: i.url }));
+                const customSelected = customTools
+                    .filter((name) => selectedTools.has(name))
+                    .map((name) => ({ name, url: "" }));
+                const toolsArray = [...catalogTools, ...customSelected];
 
                 await completeOnboarding({
                     companyName,

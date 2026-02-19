@@ -114,7 +114,7 @@ export function computeStackInsights(entries: SpendEntryInput[]): StackInsights 
         categoryCount[cat].totalCost += parseFloat(t.monthlyCost ?? "0") || 0;
     }
     for (const [cat, { tools: catTools, totalCost }] of Object.entries(categoryCount)) {
-        if (catTools.length >= 3) {
+        if (catTools.length >= 3 && totalCost > 0) {
             const savings = Math.round(totalCost * 0.3);
             opportunities.push({
                 priority: "HIGH",
@@ -141,10 +141,11 @@ export function computeStackInsights(entries: SpendEntryInput[]): StackInsights 
         const cat = (t.normalizedCategory ?? t.category ?? "").toLowerCase();
         return cat.includes("dev") || cat === "development" || cat === "engineering";
     });
-    const hasAiDevTool = enrichedTools.some(t =>
-        t.aiClassification === "ai-native" &&
-        (t.normalizedCategory ?? "").toLowerCase().includes("dev")
-    );
+    const hasAiDevTool = enrichedTools.some(t => {
+        const cat = (t.normalizedCategory ?? t.category ?? "").toLowerCase();
+        return t.aiClassification === "ai-native" &&
+            (cat.includes("dev") || cat === "development" || cat === "engineering");
+    });
     if (hasDevTools && !hasAiDevTool) {
         opportunities.push({
             priority: "MED",

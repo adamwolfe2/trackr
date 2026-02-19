@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, boolean, jsonb, integer, vector, numeric, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, boolean, jsonb, integer, vector, numeric, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
 // Workspaces
@@ -257,6 +257,7 @@ export const feedItems = pgTable('feed_items', {
     index('feed_items_channel_id_idx').on(table.channelId),
     index('feed_items_relevance_idx').on(table.relevanceScore),
     index('feed_items_created_at_idx').on(table.createdAt),
+    uniqueIndex('feed_items_ws_url_idx').on(table.workspaceId, table.url),
 ]);
 
 // Tool Suggestions (Phase 3 — proactive agent recommendations)

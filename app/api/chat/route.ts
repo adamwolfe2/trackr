@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     const lastMessage = messages[messages.length - 1];
     const query = lastMessage?.content ?? "";
     const wsId = member.workspaceId;
-    const workspace = (member as unknown as { workspace: { name: string; companyContext: string | null } }).workspace;
+    const workspace = (member as { workspace?: { name: string; companyContext: string | null } }).workspace ?? { name: "", companyContext: null };
 
     try {
         // Fetch all context in parallel
@@ -189,7 +189,8 @@ ${toolContext ? `## Researched Tool Reports\n${toolContext}\n` : ""}
         });
 
         return result.toUIMessageStreamResponse();
-    } catch {
+    } catch (error) {
+        console.error("Chat API error:", error);
         return new Response("Internal Server Error", { status: 500 });
     }
 }

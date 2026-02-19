@@ -10,17 +10,21 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 const ToolExtractionSchema = z.object({
-    tools: z.array(z.object({
-        name: z.string().describe("Name of the software tool or SaaS product"),
-        url: z.string().describe("Best guess at the tool's website URL"),
-        description: z.string().describe("One-sentence description of what it does"),
-        confidence: z.number().min(0).max(1).describe("How confident you are this is a real, distinct tool: 0-1"),
+    articles: z.array(z.object({
+        articleIndex: z.number().describe("1-based index of the article this tool was found in"),
+        tools: z.array(z.object({
+            name: z.string().describe("Name of the software tool or SaaS product"),
+            url: z.string().describe("Best guess at the tool's website URL"),
+            description: z.string().describe("One-sentence description of what it does"),
+            confidence: z.number().min(0).max(1).describe("How confident you are this is a real, distinct tool: 0-1"),
+        })),
     })),
 });
 
 /**
  * Extract tool mentions from high-relevance feed items.
  * Runs as part of the cron enrichment pipeline.
+ * Returns per-article tool mappings to avoid assigning all tools to every item.
  */
 export async function extractToolsFromFeedItems(workspaceId: string): Promise<number> {
     const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
@@ -50,7 +54,7 @@ export async function extractToolsFromFeedItems(workspaceId: string): Promise<nu
             schema: ToolExtractionSchema,
             prompt: `You are an expert at identifying software tools and SaaS products mentioned in tech articles.
 
-From these articles, extract any specific software tools, SaaS products, or AI tools that are mentioned as notable products (not just passing references). Only include tools that someone could actually sign up for and use.
+For EACH article below, extract any specific software tools, SaaS products, or AI tools mentioned as notable products (not just passing references). Only include tools that someone could actually sign up for and use.
 
 Do NOT include:
 - General concepts (e.g., "AI", "machine learning")
@@ -60,21 +64,28 @@ Do NOT include:
 Articles:
 ${itemTexts}
 
-Return all distinct tools found across all articles, with confidence scores.`,
+Return results grouped by articleIndex (1-based). Include an entry for every article, even if no tools were found (empty tools array).`,
         });
 
-        // Update each feed item with extracted tools based on which article mentioned them
-        // For simplicity, assign all tools to each item and let dedup handle the rest
+        // Build a per-article tools map
+        const articleToolsMap = new Map<number, typeof result.object.articles[0]["tools"]>();
+        for (const article of result.object.articles) {
+            articleToolsMap.set(article.articleIndex, article.tools.filter(t => t.confidence >= 0.5));
+        }
+
         let totalExtracted = 0;
-        for (const item of items) {
-            // Mark as processed even if no tools found (use empty array vs the default)
-            const itemTools = result.object.tools.filter(t => t.confidence >= 0.5);
+        for (let i = 0; i < items.length; i++) {
+            const item = items[i];
+            const itemTools = articleToolsMap.get(i + 1) ?? [];
+            totalExtracted += itemTools.length;
+
             await db.update(feedItems).set({
-                extractedTools: itemTools.length > 0 ? itemTools : [{ name: "__processed", url: "", description: "", confidence: 0 }],
+                extractedTools: itemTools.length > 0
+                    ? itemTools
+                    : [{ name: "__processed", url: "", description: "", confidence: 0 }],
             }).where(eq(feedItems.id, item.id));
         }
 
-        totalExtracted = result.object.tools.filter(t => t.confidence >= 0.5).length;
         return totalExtracted;
     } catch (error) {
         console.error("Tool extraction failed:", error);

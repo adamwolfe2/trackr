@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "feed_items_ws_url_idx" ON "feed_items" USING btree ("workspace_id","url");

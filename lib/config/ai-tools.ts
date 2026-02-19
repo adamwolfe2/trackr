@@ -47,6 +47,25 @@ export const AI_TOOLS_MAP: Record<string, ToolClassification> = {
     "glean": { classification: "ai-native", hoursPerUserPerMonth: 6, category: "AI Search" },
     "notion ai": { classification: "ai-native", hoursPerUserPerMonth: 10, category: "AI Productivity" },
     "grammarly": { classification: "ai-native", hoursPerUserPerMonth: 4, category: "AI Content" },
+    "grok": { classification: "ai-native", hoursPerUserPerMonth: 8, category: "AI Assistant" },
+    "deepseek": { classification: "ai-native", hoursPerUserPerMonth: 10, category: "AI Assistant" },
+    "copilot pro": { classification: "ai-native", hoursPerUserPerMonth: 30, category: "AI Dev Tools" },
+    "windsurf": { classification: "ai-native", hoursPerUserPerMonth: 30, category: "AI Dev Tools" },
+    "huggingface": { classification: "ai-native", hoursPerUserPerMonth: 6, category: "AI Dev Tools" },
+    "hugging face": { classification: "ai-native", hoursPerUserPerMonth: 6, category: "AI Dev Tools" },
+    "together ai": { classification: "ai-native", hoursPerUserPerMonth: 5, category: "AI Dev Tools" },
+    "replicate": { classification: "ai-native", hoursPerUserPerMonth: 5, category: "AI Dev Tools" },
+    "langchain": { classification: "ai-native", hoursPerUserPerMonth: 5, category: "AI Dev Tools" },
+    "cohere": { classification: "ai-native", hoursPerUserPerMonth: 5, category: "AI Dev Tools" },
+    "suno": { classification: "ai-native", hoursPerUserPerMonth: 4, category: "AI Audio" },
+    "udio": { classification: "ai-native", hoursPerUserPerMonth: 4, category: "AI Audio" },
+    "pika": { classification: "ai-native", hoursPerUserPerMonth: 5, category: "AI Video" },
+    "sora": { classification: "ai-native", hoursPerUserPerMonth: 5, category: "AI Video" },
+    "ideogram": { classification: "ai-native", hoursPerUserPerMonth: 4, category: "AI Image" },
+    "leonardo.ai": { classification: "ai-native", hoursPerUserPerMonth: 4, category: "AI Image" },
+    "leonardo": { classification: "ai-native", hoursPerUserPerMonth: 4, category: "AI Image" },
+    "anthropic": { classification: "ai-native", hoursPerUserPerMonth: 12, category: "AI Assistant" },
+    "google ai studio": { classification: "ai-native", hoursPerUserPerMonth: 8, category: "AI Assistant" },
 
     // ── AI-enabled (traditional + meaningful AI features) ─────────────
     "notion": { classification: "ai-enabled", hoursPerUserPerMonth: 5, category: "Productivity" },
@@ -100,17 +119,44 @@ export const AI_TOOLS_MAP: Record<string, ToolClassification> = {
 
 /**
  * Fuzzy-lookup a tool by name. Returns the classification or null if not found.
- * Matching: tool name contains key OR key contains tool name (case-insensitive).
+ * Matching priority: exact match → longest key contained in name → longest key containing name.
+ * Longer matches win to avoid "copilot" matching before "github copilot".
  */
 export function classifyTool(toolName: string): ToolClassification | null {
     const lower = toolName.toLowerCase().trim();
-    // Exact match first
+    if (!lower) return null;
+
+    // 1. Exact match
     if (AI_TOOLS_MAP[lower]) return AI_TOOLS_MAP[lower];
-    // Fuzzy: map key is substring of tool name, or tool name is substring of map key
+
+    // 2. Collect all substring matches, pick the longest key (most specific)
+    let bestMatch: { key: string; classification: ToolClassification } | null = null;
+
     for (const [key, classification] of Object.entries(AI_TOOLS_MAP)) {
-        if (lower.includes(key) || key.includes(lower)) {
-            return classification;
+        // Skip very short keys (<=2 chars) for fuzzy to prevent false positives like "v0" matching "devops"
+        if (key.length <= 2) continue;
+
+        if (lower.includes(key)) {
+            // Tool name contains this map key — prefer longest key
+            if (!bestMatch || key.length > bestMatch.key.length) {
+                bestMatch = { key, classification };
+            }
         }
     }
-    return null;
+
+    if (bestMatch) return bestMatch.classification;
+
+    // 3. Fallback: check if any key contains the tool name (for abbreviated inputs)
+    //    Only if tool name is 4+ chars to prevent "ai" matching everything
+    if (lower.length >= 4) {
+        for (const [key, classification] of Object.entries(AI_TOOLS_MAP)) {
+            if (key.includes(lower)) {
+                if (!bestMatch || key.length < bestMatch.key.length) {
+                    bestMatch = { key, classification };
+                }
+            }
+        }
+    }
+
+    return bestMatch?.classification ?? null;
 }

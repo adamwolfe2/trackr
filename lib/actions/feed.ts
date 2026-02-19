@@ -33,10 +33,24 @@ export async function createFeedChannel(data: {
     type: "topic" | "rss";
     config: ChannelConfig;
 }) {
+    // Validate inputs
+    const name = data.name.trim();
+    if (!name || name.length > 100) throw new Error("Channel name must be 1-100 characters");
+
+    if (data.type === "topic") {
+        const keywords = data.config.keywords?.filter(k => k.trim());
+        if (!keywords || keywords.length === 0) throw new Error("At least one keyword is required");
+        if (keywords.length > 10) throw new Error("Maximum 10 keywords per channel");
+    } else if (data.type === "rss") {
+        const feedUrl = data.config.feedUrl?.trim();
+        if (!feedUrl) throw new Error("Feed URL is required");
+        try { new URL(feedUrl); } catch { throw new Error("Invalid feed URL"); }
+    }
+
     const workspaceId = await getWorkspaceId();
     const [channel] = await db.insert(feedChannels).values({
         workspaceId,
-        name: data.name,
+        name,
         type: data.type,
         config: data.config,
     }).returning();

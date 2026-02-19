@@ -13,10 +13,14 @@ export interface Integration {
 export function getLogoUrl(integration: Integration): string {
     if (integration.file) return `/integrations/${integration.file}`;
     if (integration.url) {
-        // Strip protocol + path, keep just the domain
-        const domain = integration.url.replace(/^https?:\/\//, "").split("/")[0];
+        // Strip protocol + path, extract root domain (last 2 parts) for Clearbit
+        const full = integration.url.replace(/^https?:\/\//, "").split("/")[0];
+        const parts = full.split(".");
+        // Use root domain (e.g., google.com from meet.google.com) for better Clearbit results
+        const domain = parts.length > 2 ? parts.slice(-2).join(".") : full;
         return `https://logo.clearbit.com/${domain}`;
     }
+    // Fallback: use first letter of name (handled by UI onError)
     return "";
 }
 
@@ -192,7 +196,7 @@ export const INTEGRATIONS: Integration[] = [
     { name: "Gemini", category: "AI", url: "gemini.google.com" },
     { name: "Mistral", category: "AI", url: "mistral.ai" },
     { name: "Cursor", category: "AI", url: "cursor.com" },
-    { name: "GitHub Copilot", category: "AI", url: "github.com" },
+    { name: "GitHub Copilot", category: "AI", url: "copilot.github.com" },
     { name: "Codeium", category: "AI", url: "codeium.com" },
     { name: "Tabnine", category: "AI", url: "tabnine.com" },
     { name: "Jasper", category: "AI", url: "jasper.ai" },
@@ -228,7 +232,7 @@ export const INTEGRATIONS: Integration[] = [
 
     // ── Platform ──────────────────────────────────────────────────────────────
     { name: "Apple", file: "apple-logo.png", category: "Platform", url: "apple.com" },
-    { name: "Notion Calendar", category: "Platform", url: "notion.so" },
+    { name: "Notion Calendar", category: "Platform", url: "calendar.notion.so" },
 ];
 
 export const INTEGRATION_CATEGORIES = [...new Set(INTEGRATIONS.map((i) => i.category))];
