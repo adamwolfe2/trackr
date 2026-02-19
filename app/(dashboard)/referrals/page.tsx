@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { referrals, workspaceMembers } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { createReferralCode } from "@/lib/actions/referrals";
@@ -18,6 +18,7 @@ export default async function ReferralsPage() {
 
     const myReferral = await db.query.referrals.findFirst({
         where: eq(referrals.referrerWorkspaceId, member.workspaceId),
+        orderBy: [desc(referrals.createdAt)],
     });
 
     return (

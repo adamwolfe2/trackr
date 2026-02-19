@@ -35,7 +35,7 @@ interface ScorecardClientProps {
 
 export function ScorecardClient({ savedRecipe }: ScorecardClientProps) {
     const [recipe, setRecipe] = useState<ScorecardRecipe>(
-        savedRecipe && savedRecipe.systemContext ? savedRecipe : DEFAULT_RECIPE
+        savedRecipe && savedRecipe.systemContext?.trim().length > 0 ? savedRecipe : DEFAULT_RECIPE
     );
     const [isPending, startTransition] = useTransition();
 

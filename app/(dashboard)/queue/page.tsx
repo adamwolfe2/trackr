@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { db } from "@/lib/db";
 import { researchJobs, tools } from "@/lib/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, inArray } from "drizzle-orm";
 import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { currentUser } from "@clerk/nextjs/server";
@@ -27,10 +27,11 @@ export default async function QueuePage() {
 
     const jobs = toolIds.length > 0
         ? await db.query.researchJobs.findMany({
+            where: inArray(researchJobs.toolId, toolIds),
             with: { tool: { columns: { id: true, name: true, websiteUrl: true } } },
             orderBy: [desc(researchJobs.triggeredAt)],
             limit: 50,
-        }).then((all) => all.filter((j) => toolIds.includes(j.toolId)))
+        })
         : [];
 
     const runningCount = jobs.filter((j) => j.status === "running").length;

@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { db } from "@/lib/db";
 import { tools, reports, researchJobs, softwareSpend, subscriptions } from "@/lib/db/schema";
-import { eq, sql, desc, gte, and } from "drizzle-orm";
+import { eq, sql, desc, gte, inArray, and } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getWorkspaceId } from "@/lib/actions/tools";
@@ -67,10 +67,10 @@ export default async function AnalyticsPage() {
     let runsThisMonth = 0;
     if (toolIds.length > 0) {
         const jobs = await db.query.researchJobs.findMany({
-            where: gte(researchJobs.triggeredAt, startOfMonth),
+            where: and(gte(researchJobs.triggeredAt, startOfMonth), inArray(researchJobs.toolId, toolIds)),
             columns: { id: true, toolId: true },
         });
-        runsThisMonth = jobs.filter((j) => toolIds.includes(j.toolId)).length;
+        runsThisMonth = jobs.length;
     }
 
     // Top and bottom scored tools
