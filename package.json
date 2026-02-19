@@ -9,8 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^3.0.29",
-    "@ai-sdk/react": "^3.0.92",
+    "@ai-sdk/openai": "3.0.29",
+    "@ai-sdk/react": "3.0.92",
     "@clerk/nextjs": "^6.37.5",
     "@copilotkit/react-core": "^1.51.4",
     "@copilotkit/react-textarea": "^1.51.4",
@@ -34,7 +34,7 @@
     "@stripe/stripe-js": "^8.7.0",
     "@t3-oss/env-nextjs": "^0.13.10",
     "@types/pg": "^8.16.0",
-    "ai": "^6.0.90",
+    "ai": "6.0.90",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
