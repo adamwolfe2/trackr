@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Star, Loader2 } from "lucide-react";
+import { Star, Loader2, X } from "lucide-react";
 import {
     DndContext,
     DragEndEvent,
@@ -17,7 +17,7 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { updateToolStatus } from "@/lib/actions/tools";
+import { updateToolStatus, deleteTool } from "@/lib/actions/tools";
 import { toast } from "sonner";
 
 interface KanbanTool {
@@ -104,7 +104,8 @@ function CardContent({ tool }: { tool: KanbanTool }) {
     );
 }
 
-function DraggableCard({ tool }: { tool: KanbanTool }) {
+function DraggableCard({ tool, onDelete }: { tool: KanbanTool; onDelete: (id: string) => void }) {
+    const [deleting, setDeleting] = useState(false);
     const isLocked = tool.status === "researching";
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: tool.id,
@@ -113,17 +114,38 @@ function DraggableCard({ tool }: { tool: KanbanTool }) {
 
     const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined;
 
+    const handleDelete = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDeleting(true);
+        onDelete(tool.id); // optimistic
+        try {
+            await deleteTool(tool.id);
+        } catch {
+            toast.error("Failed to delete tool");
+        }
+    };
+
     return (
         <div
             ref={setNodeRef}
             style={style}
             {...attributes}
             {...listeners}
-            className={`${isDragging ? "opacity-30" : ""} ${!isLocked ? "cursor-grab active:cursor-grabbing" : ""}`}
+            className={`relative group ${isDragging ? "opacity-30" : ""} ${!isLocked ? "cursor-grab active:cursor-grabbing" : ""}`}
         >
             <Link href={`/tools/${tool.id}`} onClick={(e) => isDragging && e.preventDefault()}>
                 <CardContent tool={tool} />
             </Link>
+            <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={handleDelete}
+                disabled={deleting}
+                className="absolute top-1.5 right-1.5 w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-black hover:bg-black hover:text-white disabled:opacity-40 z-10"
+                aria-label="Delete tool"
+            >
+                <X className="w-2.5 h-2.5" />
+            </button>
         </div>
     );
 }
@@ -201,6 +223,10 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
         }
     };
 
+    const handleDelete = (id: string) => {
+        setTools(prev => prev.filter(t => t.id !== id));
+    };
+
     const activeTool = activeId ? tools.find(t => t.id === activeId) : null;
 
     return (
@@ -243,7 +269,7 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                             <div key={col.id} className="flex-shrink-0 w-[260px] sm:w-[280px] lg:w-auto min-w-0 flex flex-col">
                                 <DroppableColumn col={col} toolCount={colTools.length}>
                                     {colTools.map((tool) => (
-                                        <DraggableCard key={tool.id} tool={tool} />
+                                        <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} />
                                     ))}
                                     {colTools.length === 0 && col.id === "backlog" && isEmpty ? (
                                         <div className="border border-dashed border-neutral-300 p-6 text-center space-y-3">
