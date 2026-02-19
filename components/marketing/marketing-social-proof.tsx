@@ -73,6 +73,54 @@ export function MarketingSocialProof() {
                 </p>
             </motion.div>
 
+            {/* Outcome stats bar */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-black mb-10">
+                {[
+                    {
+                        stat: "$1M+",
+                        label: "Revenue per employee",
+                        sub: "at Klarna, AI-native",
+                        href: "https://observer.com/2025/08/klarna-ai-revenue-per-employee-growth/",
+                    },
+                    {
+                        stat: "5.7×",
+                        label: "Revenue efficiency",
+                        sub: "AI-native vs. top SaaS",
+                        href: "https://www.web-strategist.com/blog/2025/05/ai-startup-revenue-efficiency-benchmarks/",
+                    },
+                    {
+                        stat: "10,000+",
+                        label: "New AI companies",
+                        sub: "launched in 2025",
+                        href: "https://flowlyn.com/blog/ai-startup-growth-statistics-2025/",
+                    },
+                    {
+                        stat: "12 hrs",
+                        label: "Reclaimed weekly",
+                        sub: "by top 20% of founders",
+                        href: "https://section.school/ai-productivity-report-2025/",
+                    },
+                ].map((item, i) => (
+                    <a
+                        key={item.stat}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`group flex flex-col p-5 bg-white hover:bg-[#F3F3EF] transition-colors ${i < 3 ? "border-b md:border-b-0 md:border-r border-black" : ""}`}
+                    >
+                        <div className="text-3xl font-mono font-bold leading-none mb-1.5">
+                            {item.stat}
+                        </div>
+                        <div className="font-mono text-[11px] text-black font-semibold border-b border-dotted border-black/40 group-hover:border-black pb-0.5 inline-block w-fit mb-1">
+                            {item.label}
+                        </div>
+                        <div className="font-mono text-[10px] text-neutral-500 uppercase tracking-wider">
+                            {item.sub}
+                        </div>
+                    </a>
+                ))}
+            </div>
+
             {/* Benchmark cards */}
             <motion.div
                 ref={cardsRef}
