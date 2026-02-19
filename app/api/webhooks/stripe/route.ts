@@ -97,6 +97,19 @@ export async function POST(req: Request) {
             }
         }
 
+        if (event.type === "customer.subscription.updated") {
+            const subscription = event.data.object as Stripe.Subscription;
+            await db
+                .update(subscriptions)
+                .set({
+                    planId: getPriceId(subscription),
+                    status: subscription.status,
+                    currentPeriodEnd: getPeriodEnd(subscription),
+                    updatedAt: new Date(),
+                })
+                .where(eq(subscriptions.stripeSubscriptionId, subscription.id));
+        }
+
         if (event.type === "customer.subscription.deleted") {
             const subscription = event.data.object as Stripe.Subscription;
             await db

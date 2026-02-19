@@ -5,27 +5,24 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { workspaceMembers, subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import type { PlanSlug } from "@/lib/config/subscriptions";
+import type { PlanSlug, BillingInterval } from "@/lib/config/subscriptions";
 
 type PaidPlanSlug = Exclude<PlanSlug, "free">;
 
-function getPriceId(plan: PaidPlanSlug): string {
-    if (plan === "enterprise") {
-        const id = process.env.STRIPE_ENTERPRISE_PRICE_ID;
-        if (!id) throw new Error("STRIPE_ENTERPRISE_PRICE_ID not configured");
-        return id;
-    }
-    if (plan === "startup") {
-        const id = process.env.STRIPE_STARTUP_PRICE_ID;
-        if (!id) throw new Error("STRIPE_STARTUP_PRICE_ID not configured");
-        return id;
-    }
-    const id = process.env.STRIPE_TEAM_PRICE_ID;
-    if (!id) throw new Error("STRIPE_TEAM_PRICE_ID not configured");
+function getPriceId(plan: PaidPlanSlug, interval: BillingInterval = "monthly"): string {
+    const prefix = `STRIPE_${plan.toUpperCase()}`;
+    const suffix = interval === "annual" ? "ANNUAL" : "MONTHLY";
+    const envKey = `${prefix}_${suffix}_PRICE_ID`;
+    const id = process.env[envKey];
+    if (!id) throw new Error(`${envKey} not configured`);
     return id;
 }
 
-export async function createCheckoutSession(workspaceId: string, plan: PaidPlanSlug = "team") {
+export async function createCheckoutSession(
+    workspaceId: string,
+    plan: PaidPlanSlug = "team",
+    interval: BillingInterval = "monthly"
+) {
     const user = await currentUser();
     if (!user) {
         throw new Error("Unauthorized");
@@ -39,14 +36,15 @@ export async function createCheckoutSession(workspaceId: string, plan: PaidPlanS
         throw new Error("Unauthorized: You must be the workspace owner to upgrade.");
     }
 
-    const priceId = getPriceId(plan);
+    const priceId = getPriceId(plan, interval);
 
     const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         payment_method_types: ['card'],
         line_items: [{ price: priceId, quantity: 1 }],
         customer_email: user.emailAddresses[0].emailAddress,
-        metadata: { workspaceId, userId: user.id, plan },
+        metadata: { workspaceId, userId: user.id, plan, interval },
+        subscription_data: { trial_period_days: 14 },
         success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?success=true`,
         cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?canceled=true`,
     });

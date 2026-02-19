@@ -17,6 +17,7 @@ export type Plan = {
     name: string;
     slug: PlanSlug;
     price: number;
+    annualPrice: number; // annual price (total per year)
     limits: {
         tools: number;
         research: number;
@@ -31,6 +32,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
         name: "Free",
         slug: "free",
         price: 0,
+        annualPrice: 0,
         limits: {
             tools: 15,
             research: 3,
@@ -54,6 +56,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
         name: "Team",
         slug: "team",
         price: 50,
+        annualPrice: 480,
         limits: {
             tools: Infinity,
             research: 25,
@@ -77,6 +80,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
         name: "Startup",
         slug: "startup",
         price: 149,
+        annualPrice: 1430,
         limits: {
             tools: Infinity,
             research: 75,
@@ -100,6 +104,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
         name: "Enterprise",
         slug: "enterprise",
         price: 349,
+        annualPrice: 3350,
         limits: {
             tools: Infinity,
             research: 200,
@@ -121,6 +126,33 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
     },
 };
 
+export type BillingInterval = "monthly" | "annual";
+
+export const PAYMENT_LINKS: Record<Exclude<PlanSlug, "free">, Record<BillingInterval, string>> = {
+    team: {
+        monthly: "https://buy.stripe.com/5kQ7sLc081zoabHe99bjW00",
+        annual: "https://buy.stripe.com/5kQ4gzggo0vkOB7e99bjW01",
+    },
+    startup: {
+        monthly: "https://buy.stripe.com/bJe4gz2pydi6abHfddbjW02",
+        annual: "https://buy.stripe.com/28EcN51lufqeabH6GHbjW03",
+    },
+    enterprise: {
+        monthly: "https://buy.stripe.com/5kQ8wP5BKlzo4Rn0ijbjW04",
+        annual: "https://buy.stripe.com/28E3cve8g2Ds5Vr4yzbjW05",
+    },
+};
+
+function getEnvPriceIds(plan: Exclude<PlanSlug, "free">): string[] {
+    const ids: string[] = [];
+    const prefix = `STRIPE_${plan.toUpperCase()}`;
+    const monthly = process.env[`${prefix}_MONTHLY_PRICE_ID`];
+    const annual = process.env[`${prefix}_ANNUAL_PRICE_ID`];
+    if (monthly) ids.push(monthly);
+    if (annual) ids.push(annual);
+    return ids;
+}
+
 export function getPlanLimits(subscription?: { status: string; planId?: string | null }): Plan {
     if (subscription?.status === 'active' || subscription?.status === 'trialing') {
         // Slug-based overrides (for manually-granted or internal accounts)
@@ -128,19 +160,12 @@ export function getPlanLimits(subscription?: { status: string; planId?: string |
         if (subscription.planId === 'startup') return PLANS.STARTUP;
         if (subscription.planId === 'team') return PLANS.TEAM;
 
-        const enterprisePriceId = process.env.STRIPE_ENTERPRISE_PRICE_ID;
-        const startupPriceId = process.env.STRIPE_STARTUP_PRICE_ID;
-        const teamPriceId = process.env.STRIPE_TEAM_PRICE_ID;
+        if (subscription.planId) {
+            if (getEnvPriceIds('enterprise').includes(subscription.planId)) return PLANS.ENTERPRISE;
+            if (getEnvPriceIds('startup').includes(subscription.planId)) return PLANS.STARTUP;
+            if (getEnvPriceIds('team').includes(subscription.planId)) return PLANS.TEAM;
+        }
 
-        if (subscription.planId && enterprisePriceId && subscription.planId === enterprisePriceId) {
-            return PLANS.ENTERPRISE;
-        }
-        if (subscription.planId && startupPriceId && subscription.planId === startupPriceId) {
-            return PLANS.STARTUP;
-        }
-        if (subscription.planId && teamPriceId && subscription.planId === teamPriceId) {
-            return PLANS.TEAM;
-        }
         // Active subscription but planId doesn't match known IDs — default to TEAM
         return PLANS.TEAM;
     }

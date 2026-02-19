@@ -1,6 +1,7 @@
 "use client";
 
 import { createCheckoutSession } from "@/lib/actions/stripe";
+import type { BillingInterval } from "@/lib/config/subscriptions";
 import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -8,18 +9,26 @@ import { toast } from "sonner";
 type PaidPlanSlug = "team" | "startup" | "enterprise";
 
 const LABELS: Record<PaidPlanSlug, string> = {
-    team: "Upgrade to Team",
-    startup: "Upgrade to Startup",
-    enterprise: "Upgrade to Enterprise",
+    team: "Start 14-day free trial",
+    startup: "Start 14-day free trial",
+    enterprise: "Start 14-day free trial",
 };
 
-export function UpgradeButton({ workspaceId, plan = "team" }: { workspaceId: string; plan?: PaidPlanSlug }) {
+export function UpgradeButton({
+    workspaceId,
+    plan = "team",
+    interval = "monthly",
+}: {
+    workspaceId: string;
+    plan?: PaidPlanSlug;
+    interval?: BillingInterval;
+}) {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleUpgrade = async () => {
         setIsLoading(true);
         try {
-            const { url } = await createCheckoutSession(workspaceId, plan);
+            const { url } = await createCheckoutSession(workspaceId, plan, interval);
             if (url) {
                 window.location.href = url;
             } else {
