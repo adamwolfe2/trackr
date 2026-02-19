@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, ArrowLeft, CheckCircle2, Check } from "lucide-react";
 import { INTEGRATIONS } from "@/lib/constants/integrations";
-
-const CALENDLY_URL = "https://calendly.com/trackr-ai/audit"; // Replace with your actual Calendly link
 
 // ── Types ──────────────────────────────────────────────────────────────────
 type Step1Data = {
@@ -309,6 +307,67 @@ function Step3({ data, onChange }: { data: Step3Data; onChange: (d: Partial<Step
     );
 }
 
+// ── Cal.com Embed ────────────────────────────────────────────────────────────
+function CalEmbed() {
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        // Prevent double-init across React re-renders
+        // @ts-ignore
+        if (window.__calTrackrInitialized) return;
+        // @ts-ignore
+        window.__calTrackrInitialized = true;
+
+        // Set up Cal queue if not already present
+        // @ts-ignore
+        if (!window.Cal) {
+            /* eslint-disable */
+            (function (C: any, A: string, L: string) {
+                let p = function (a: any, ar: any) { a.q.push(ar); };
+                let d = (C as any).document;
+                (C as any).Cal = (C as any).Cal || function () {
+                    let cal = (C as any).Cal;
+                    let ar = arguments;
+                    if (!cal.loaded) {
+                        cal.ns = {}; cal.q = cal.q || [];
+                        d.head.appendChild(d.createElement("script")).src = A;
+                        cal.loaded = true;
+                    }
+                    if (ar[0] === L) {
+                        const api: any = function () { p(api, arguments); };
+                        const namespace = ar[1];
+                        api.q = api.q || [];
+                        if (typeof namespace === "string") {
+                            cal.ns[namespace] = cal.ns[namespace] || api;
+                            p(cal.ns[namespace], ar);
+                            p(cal, ["initNamespace", namespace]);
+                        } else p(cal, ar);
+                        return;
+                    }
+                    p(cal, ar);
+                };
+            })(window, "https://app.cal.com/embed/embed.js", "init");
+            /* eslint-enable */
+        }
+
+        // @ts-ignore
+        const Cal = window.Cal;
+        Cal("init", "trackr", { origin: "https://app.cal.com" });
+        Cal.ns.trackr("inline", {
+            elementOrSelector: "#my-cal-inline-trackr",
+            config: { layout: "month_view", useSlotsViewOnSmallScreen: "true", theme: "light" },
+            calLink: "adamwolfe/trackr",
+        });
+        Cal.ns.trackr("ui", { theme: "light", hideEventTypeDetails: true, layout: "month_view" });
+    }, []);
+
+    return (
+        <div
+            id="my-cal-inline-trackr"
+            style={{ width: "100%", minHeight: "660px", overflow: "scroll" }}
+        />
+    );
+}
+
 // ── Step 4: Booking ─────────────────────────────────────────────────────────
 function Step4({ step1, step2 }: { step1: Step1Data; step2: Step2Data }) {
     return (
@@ -351,17 +410,11 @@ function Step4({ step1, step2 }: { step1: Step1Data; step2: Step2Data }) {
                 </div>
             </div>
 
-            {/* Calendly embed */}
+            {/* Cal.com embed */}
             <div>
                 <div className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-4">Select a time to speak with an AI architect</div>
                 <div className="border border-black bg-white overflow-hidden">
-                    <iframe
-                        src={CALENDLY_URL}
-                        width="100%"
-                        height="660"
-                        frameBorder="0"
-                        title="Book AI Audit Call"
-                    />
+                    <CalEmbed />
                 </div>
             </div>
         </div>
