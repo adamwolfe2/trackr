@@ -1,11 +1,12 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { useState, useEffect, useRef } from "react";
 import { Send, Bot, User } from "lucide-react";
-import { useEffect, useRef } from "react";
 
 export default function AskTrackrPage() {
-    const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    const [input, setInput] = useState("");
+    const { messages, append, isLoading } = useChat({
         api: "/api/chat",
     });
 
@@ -13,6 +14,14 @@ export default function AskTrackrPage() {
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages]);
+
+    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const trimmed = input.trim();
+        if (!trimmed || isLoading) return;
+        setInput("");
+        append({ role: "user", content: trimmed });
+    };
 
     return (
         <div className="flex flex-col h-[calc(100vh-8rem)]">
@@ -43,10 +52,10 @@ export default function AskTrackrPage() {
                                 Ask anything about your tools.
                             </p>
                             <p className="font-mono text-xs text-neutral-400">
-                                Example: "What is the cheapest CRM in our stack?"
+                                Example: &ldquo;What is the cheapest CRM in our stack?&rdquo;
                             </p>
                             <p className="font-mono text-xs text-neutral-400 mt-1">
-                                Example: "Which tools have the best integration support?"
+                                Example: &ldquo;Which tools have the best integration support?&rdquo;
                             </p>
                         </div>
                     )}
@@ -99,7 +108,7 @@ export default function AskTrackrPage() {
                     <form onSubmit={handleSubmit} className="flex">
                         <input
                             value={input}
-                            onChange={handleInputChange}
+                            onChange={(e) => setInput(e.target.value)}
                             placeholder="Ask about your tools..."
                             className="flex-1 px-5 py-4 font-mono text-sm bg-transparent focus:outline-none border-0"
                         />
