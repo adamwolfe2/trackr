@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,11 +19,19 @@ export function CopyLinkButton({ referralUrl }: { referralUrl: string }) {
     };
 
     return (
-        <div className="flex space-x-2">
-            <Input readOnly value={referralUrl} className="font-mono text-sm" />
-            <Button variant="outline" size="icon" onClick={handleCopy}>
-                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-            </Button>
+        <div className="flex gap-0">
+            <input
+                readOnly
+                value={referralUrl}
+                className="flex-1 border border-black px-4 py-2.5 font-mono text-sm bg-neutral-50 focus:outline-none min-w-0"
+            />
+            <button
+                onClick={handleCopy}
+                className="border border-l-0 border-black px-4 py-2.5 bg-white hover:bg-black hover:text-white transition-colors flex items-center gap-2 font-mono text-xs"
+            >
+                {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                {copied ? "Copied" : "Copy"}
+            </button>
         </div>
     );
 }

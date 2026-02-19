@@ -150,7 +150,7 @@ export default async function AnalyticsPage() {
                             <>
                                 <div className="h-3 bg-neutral-100 border border-black/10 mb-1">
                                     <div
-                                        className={`h-full ${runPct >= 80 ? "bg-red-500" : "bg-black"}`}
+                                        className="h-full bg-black"
                                         style={{ width: `${runPct}%` }}
                                     />
                                 </div>
@@ -198,7 +198,7 @@ export default async function AnalyticsPage() {
                                 <span className={`font-mono text-xs px-2 py-0.5 border ${
                                     tool.score >= 7 ? "border-black text-black" :
                                     tool.score >= 5 ? "border-neutral-400 text-neutral-500" :
-                                    "border-red-300 text-red-600"
+                                    "border-neutral-400 text-neutral-500"
                                 }`}>
                                     {tool.score >= 7 ? "Strong" : tool.score >= 5 ? "Average" : "Consider replacing"}
                                 </span>

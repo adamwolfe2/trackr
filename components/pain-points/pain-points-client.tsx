@@ -2,16 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addPainPoint, deletePainPoint, togglePainPointActive } from "@/lib/actions/pain-points";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { PlusCircle, Trash2 } from "lucide-react";
+import { PlusCircle, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -27,138 +18,223 @@ type PainPoint = {
 
 export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint[] }) {
     const [isPending, startTransition] = useTransition();
-    const [isOpen, setIsOpen] = useState(false);
-    const [pointToDelete, setPointToDelete] = useState<string | null>(null);
+    const [showForm, setShowForm] = useState(false);
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
     const router = useRouter();
 
-    // We rely on server revalidation to update the list, but we can optimistically update
-    // For now, let's keep it simple with router.refresh() after action
+    const handleAddSubmit = async (formData: FormData) => {
+        setShowForm(false);
+        toast.promise(addPainPoint(formData), {
+            loading: "Adding pain point...",
+            success: () => {
+                router.refresh();
+                return "Pain point added";
+            },
+            error: "Failed to add pain point",
+        });
+    };
+
+    const handleToggle = (id: string, currentActive: boolean) => {
+        startTransition(async () => {
+            await togglePainPointActive(id, currentActive);
+            router.refresh();
+        });
+    };
+
+    const handleDelete = (id: string) => {
+        setConfirmDeleteId(null);
+        startTransition(async () => {
+            await deletePainPoint(id);
+            router.refresh();
+        });
+    };
 
     return (
-        <div className="space-y-6 animate-fade-in-up">
-            <div className="flex items-center justify-between">
+        <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Discovery & Pain Points</h1>
-                    <p className="text-muted-foreground">
+                    <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Discovery Engine</p>
+                    <h1 className="font-serif text-2xl font-normal">Pain Points</h1>
+                    <p className="font-mono text-xs text-neutral-500 mt-1">
                         Document internal problems to trigger AI tool discovery.
                     </p>
                 </div>
-                <Dialog open={isOpen} onOpenChange={setIsOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="gap-2">
-                            <PlusCircle className="h-4 w-4" />
-                            Add Pain Point
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Add New Pain Point</DialogTitle>
-                        </DialogHeader>
-                        <form
-                            action={async (formData) => {
-                                setIsOpen(false);
-                                toast.promise(addPainPoint(formData), {
-                                    loading: "Adding pain point...",
-                                    success: () => {
-                                        router.refresh();
-                                        return "Pain point added";
-                                    },
-                                    error: "Failed to add pain point",
-                                });
-                            }}
-                            className="space-y-4"
-                        >
-                            <div className="space-y-2">
-                                <Label htmlFor="title">Problem Statement</Label>
-                                <Input id="title" name="title" placeholder="e.g. Video editing takes too long" required />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="category">Category</Label>
-                                <Input id="category" name="category" placeholder="e.g. Marketing" />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Context (Optional)</Label>
-                                <Textarea id="description" name="description" placeholder="Describe the impact..." />
-                            </div>
-                            <Button type="submit" className="w-full">Save Pain Point</Button>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                <button
+                    onClick={() => setShowForm(prev => !prev)}
+                    className="flex items-center gap-2 border border-black px-4 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 whitespace-nowrap"
+                >
+                    {showForm ? <X className="h-3.5 w-3.5" /> : <PlusCircle className="h-3.5 w-3.5" />}
+                    {showForm ? "Cancel" : "Add Pain Point"}
+                </button>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {initialData.length === 0 ? (
-                    <div className="col-span-full text-center py-12 text-muted-foreground border-2 border-dashed border-black font-mono">
-                        No pain points recorded. Add one to guide your AI research.
+            {/* Add Form (inline) */}
+            {showForm && (
+                <form action={handleAddSubmit} className="border border-black bg-white">
+                    <div className="border-b border-black px-5 py-3">
+                        <span className="font-mono text-xs uppercase tracking-widest">New Pain Point</span>
                     </div>
-                ) : (
-                    initialData.map((point) => (
-                        <Card key={point.id} className={point.active ? "" : "opacity-60 grayscale"}>
-                            <CardHeader className="pb-3">
-                                <div className="flex justify-between items-start gap-2">
-                                    <Badge variant="outline" className="mb-2">{point.category || "General"}</Badge>
-                                    <Switch
-                                        checked={point.active}
-                                        onCheckedChange={(checked) => {
-                                            startTransition(async () => {
-                                                await togglePainPointActive(point.id, point.active);
-                                                router.refresh();
-                                            });
-                                        }}
-                                    />
-                                </div>
-                                <CardTitle className="text-lg leading-tight">{point.title}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <p className="text-sm text-muted-foreground mb-4 line-clamp-3">
-                                    {point.description || "No specific context provided."}
-                                </p>
-                                <div className="flex items-center justify-between pt-4 border-t">
-                                    <span className="text-xs text-muted-foreground">
-                                        {formatDistanceToNow(new Date(point.createdAt), { addSuffix: true })}
-                                    </span>
-                                    <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                        onClick={() => setPointToDelete(point.id)}
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))
-                )}
-            </div>
+                    <div className="p-5 space-y-4">
+                        <div>
+                            <label htmlFor="title" className="block font-mono text-xs uppercase tracking-widest mb-2">
+                                Problem Statement <span className="text-neutral-400">(required)</span>
+                            </label>
+                            <input
+                                id="title"
+                                name="title"
+                                required
+                                autoFocus
+                                placeholder="e.g. Video editing takes too long"
+                                className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="category" className="block font-mono text-xs uppercase tracking-widest mb-2">
+                                Category
+                            </label>
+                            <input
+                                id="category"
+                                name="category"
+                                placeholder="e.g. Marketing, Engineering, Ops"
+                                className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
+                            />
+                        </div>
+                        <div>
+                            <label htmlFor="description" className="block font-mono text-xs uppercase tracking-widest mb-2">
+                                Context <span className="text-neutral-400">(optional)</span>
+                            </label>
+                            <textarea
+                                id="description"
+                                name="description"
+                                rows={3}
+                                placeholder="Describe the impact and current workarounds..."
+                                className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none resize-none"
+                            />
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                type="submit"
+                                className="border border-black px-6 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800"
+                            >
+                                Save Pain Point
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowForm(false)}
+                                className="border border-black px-6 py-2.5 font-mono text-xs bg-white hover:bg-neutral-100"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            )}
 
-            <AlertDialog open={!!pointToDelete} onOpenChange={(open) => !open && setPointToDelete(null)}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Pain Point?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This pain point will be removed and will no longer influence AI tool discovery.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                            className="bg-red-600 text-white border-red-600 hover:bg-red-700"
-                            onClick={() => {
-                                if (!pointToDelete) return;
-                                const id = pointToDelete;
-                                setPointToDelete(null);
-                                startTransition(async () => {
-                                    await deletePainPoint(id);
-                                    router.refresh();
-                                });
-                            }}
+            {/* Pain Points List */}
+            {initialData.length === 0 ? (
+                <div className="border border-dashed border-black/30 py-16 text-center">
+                    <p className="font-serif text-lg text-neutral-600 mb-1">No pain points yet</p>
+                    <p className="font-mono text-xs text-neutral-400 mb-4">
+                        Add pain points your team is facing to trigger AI tool discovery.
+                    </p>
+                    <button
+                        onClick={() => setShowForm(true)}
+                        className="border border-black px-6 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800"
+                    >
+                        Add Your First Pain Point
+                    </button>
+                </div>
+            ) : (
+                <div className="border border-black divide-y divide-black">
+                    {/* Active count */}
+                    <div className="px-5 py-3 bg-neutral-50 flex items-center justify-between">
+                        <span className="font-mono text-xs text-neutral-500">
+                            {initialData.filter(p => p.active).length} of {initialData.length} active — influencing AI discovery
+                        </span>
+                        <span className="font-mono text-xs text-neutral-400">
+                            Toggle to include/exclude from suggestions
+                        </span>
+                    </div>
+
+                    {initialData.map((point) => (
+                        <div
+                            key={point.id}
+                            className={`p-5 flex items-start gap-4 ${!point.active ? "opacity-50" : ""}`}
                         >
-                            Delete
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                            {/* Toggle */}
+                            <button
+                                onClick={() => handleToggle(point.id, point.active)}
+                                disabled={isPending}
+                                className={`mt-1 w-10 h-5 border border-black shrink-0 relative transition-colors ${
+                                    point.active ? "bg-black" : "bg-white"
+                                }`}
+                                title={point.active ? "Deactivate" : "Activate"}
+                            >
+                                <span
+                                    className={`absolute top-0.5 w-3.5 h-3.5 border border-black bg-white transition-all ${
+                                        point.active ? "left-5" : "left-0.5"
+                                    }`}
+                                />
+                            </button>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                                <div className="flex items-start gap-3 flex-wrap mb-1">
+                                    <h3 className="font-serif text-base leading-snug">{point.title}</h3>
+                                    {point.category && (
+                                        <span className="font-mono text-[10px] border border-black px-1.5 py-0.5 text-neutral-500 shrink-0">
+                                            {point.category}
+                                        </span>
+                                    )}
+                                    {point.active && (
+                                        <span className="font-mono text-[10px] border border-black bg-black text-white px-1.5 py-0.5 shrink-0">
+                                            Active
+                                        </span>
+                                    )}
+                                </div>
+                                {point.description && (
+                                    <p className="font-mono text-xs text-neutral-500 leading-relaxed mb-2">
+                                        {point.description}
+                                    </p>
+                                )}
+                                <span className="font-mono text-[10px] text-neutral-400">
+                                    Added {formatDistanceToNow(new Date(point.createdAt), { addSuffix: true })}
+                                </span>
+                            </div>
+
+                            {/* Delete */}
+                            <div className="shrink-0">
+                                {confirmDeleteId === point.id ? (
+                                    <div className="flex items-center gap-2">
+                                        <span className="font-mono text-xs text-neutral-500">Delete?</span>
+                                        <button
+                                            onClick={() => handleDelete(point.id)}
+                                            className="border border-black px-3 py-1 font-mono text-xs bg-black text-white hover:bg-neutral-800"
+                                        >
+                                            Yes
+                                        </button>
+                                        <button
+                                            onClick={() => setConfirmDeleteId(null)}
+                                            className="border border-black px-3 py-1 font-mono text-xs bg-white hover:bg-neutral-100"
+                                        >
+                                            No
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setConfirmDeleteId(point.id)}
+                                        className="border border-neutral-200 p-2 hover:border-black hover:text-black text-neutral-400 transition-colors"
+                                        title="Delete"
+                                    >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

@@ -2,28 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { addNote } from "@/lib/actions/notes";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, Send } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
-
-type Note = {
-    id: string;
-    content: string;
-    createdAt: Date;
-    workspaceMember?: {
-        userId: string;
-    } | null;
-    // We will join user data in the parent component or fetch it
-    userName?: string;
-    userAvatar?: string;
-};
 
 export function NotesSection({ toolId, notes = [] }: { toolId: string, notes?: any[] }) {
-    const { user } = useUser();
     const [content, setContent] = useState("");
     const [isPending, startTransition] = useTransition();
 
@@ -43,62 +25,70 @@ export function NotesSection({ toolId, notes = [] }: { toolId: string, notes?: a
 
     return (
         <div className="space-y-4">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-lg">Team Discussion</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                        {notes.length === 0 ? (
-                            <div className="text-center py-10 text-muted-foreground bg-muted/30 rounded-lg border border-dashed">
-                                <p>No notes yet.</p>
-                                <p className="text-xs mt-1">Share insights, pricing updates, or test results.</p>
-                            </div>
-                        ) : (
-                            notes.map((note) => (
-                                <div key={note.id} className="flex gap-3 group">
-                                    <Avatar className="h-8 w-8 border">
-                                        <AvatarImage src={note.userAvatar} />
-                                        <AvatarFallback>{note.userName?.charAt(0) || "U"}</AvatarFallback>
-                                    </Avatar>
-                                    <div className="flex-1 space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-semibold">{note.userName || "Team Member"}</span>
-                                            <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}</span>
-                                        </div>
-                                        <div className="text-sm bg-muted/50 p-3 rounded-lg rounded-tl-none text-foreground/90 leading-relaxed whitespace-pre-wrap">
-                                            {note.content}
-                                        </div>
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
+            <div className="border border-black">
+                <div className="border-b border-black px-4 py-3">
+                    <span className="font-mono text-xs uppercase tracking-widest">Team Discussion</span>
+                </div>
 
-                    <form onSubmit={handleSubmit} className="relative">
-                        <Textarea
-                            placeholder="Add a note..."
+                {/* Notes list */}
+                <div className="divide-y divide-neutral-100 max-h-[400px] overflow-y-auto">
+                    {notes.length === 0 ? (
+                        <div className="py-10 text-center">
+                            <p className="font-mono text-xs text-neutral-400">No notes yet.</p>
+                            <p className="font-mono text-xs text-neutral-400 mt-1">
+                                Share insights, pricing updates, or test results.
+                            </p>
+                        </div>
+                    ) : (
+                        notes.map((note) => (
+                            <div key={note.id} className="p-4 flex gap-3">
+                                <div className="w-7 h-7 border border-black bg-black text-white flex items-center justify-center font-mono text-xs shrink-0">
+                                    {note.userName?.charAt(0)?.toUpperCase() || "U"}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                        <span className="font-mono text-xs font-semibold">
+                                            {note.userName || "Team Member"}
+                                        </span>
+                                        <span className="font-mono text-xs text-neutral-400">
+                                            {formatDistanceToNow(new Date(note.createdAt), { addSuffix: true })}
+                                        </span>
+                                    </div>
+                                    <p className="font-mono text-xs text-neutral-700 leading-relaxed whitespace-pre-wrap">
+                                        {note.content}
+                                    </p>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Input */}
+                <div className="border-t border-black">
+                    <form onSubmit={handleSubmit} className="flex">
+                        <textarea
+                            placeholder="Add a note... (Enter to submit, Shift+Enter for new line)"
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
-                            className="min-h-[80px] pr-12 resize-none"
+                            rows={2}
+                            className="flex-1 px-4 py-3 font-mono text-xs bg-transparent focus:outline-none resize-none border-0"
                             onKeyDown={(e) => {
-                                if (e.key === 'Enter' && !e.shiftKey) {
+                                if (e.key === "Enter" && !e.shiftKey) {
                                     e.preventDefault();
                                     handleSubmit(e);
                                 }
                             }}
                         />
-                        <Button
+                        <button
                             type="submit"
-                            size="icon"
                             disabled={isPending || !content.trim()}
-                            className="absolute bottom-2 right-2 h-8 w-8"
+                            className="border-l border-black px-4 hover:bg-black hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                         >
-                            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                        </Button>
+                            {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                        </button>
                     </form>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 }

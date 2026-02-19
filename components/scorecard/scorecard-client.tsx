@@ -63,8 +63,9 @@ export function ScorecardClient({ savedRecipe }: ScorecardClientProps) {
         <div className="space-y-6">
             <div className="flex items-start justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight">Scorecard Recipe</h1>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Evaluation Config</p>
+                    <h1 className="font-serif text-2xl font-normal">Scorecard Recipe</h1>
+                    <p className="font-mono text-xs text-neutral-500 mt-1">
                         Research agents use this recipe when evaluating tools — the more specific, the better.
                     </p>
                 </div>
