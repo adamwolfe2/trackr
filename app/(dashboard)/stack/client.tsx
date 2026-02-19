@@ -168,7 +168,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
 
     // Build a lookup map from insights enrichedTools: id → classification
     const classificationMap = new Map<string, string>(
-        (insights?.enrichedTools ?? []).map(t => [t.id, t.aiClassification])
+        (insights?.enrichedTools ?? []).map(t => [t.id, t.classification])
     );
 
     const startEdit = (entry: SpendEntry) => {
@@ -502,15 +502,15 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                             {insights.opportunities.map((opp, i) => (
                                 <div key={i} className="flex items-start gap-3">
                                     <span className={`font-mono text-[10px] border px-1.5 py-0.5 shrink-0 mt-0.5 ${
-                                        opp.priority === "HIGH"
-                                            ? "border-black text-black bg-black text-white"
-                                            : opp.priority === "MED"
+                                        opp.priority === "high"
+                                            ? "border-black bg-black text-white"
+                                            : opp.priority === "medium"
                                             ? "border-black text-black"
                                             : "border-neutral-300 text-neutral-500"
                                     }`}>
-                                        {opp.priority}
+                                        {opp.priority.toUpperCase()}
                                     </span>
-                                    <p className="font-mono text-xs text-neutral-700">{opp.message}</p>
+                                    <p className="font-mono text-xs text-neutral-700">{opp.title}{opp.description ? ` — ${opp.description}` : ""}</p>
                                 </div>
                             ))}
                         </div>

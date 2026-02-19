@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
             const cost = parseFloat(e.monthlyCost ?? "0") || 0;
             const seats = e.seatCount ?? 0;
             const cls = insights.enrichedTools.find(t => t.id === e.id);
-            return `- ${e.toolName}: $${cost}/mo, ${seats} seats${e.category ? `, ${e.category}` : ""}${cls ? ` [${cls.aiClassification}]` : ""}`;
+            return `- ${e.toolName}: $${cost}/mo, ${seats} seats${e.category ? `, ${e.category}` : ""}${cls ? ` [${cls.classification}]` : ""}`;
         });
 
         // Build pain points summary
@@ -155,7 +155,7 @@ export async function POST(req: NextRequest) {
         );
 
         // Build opportunities summary
-        const oppLines = insights.opportunities.map(o => `- [${o.priority}] ${o.message}`);
+        const oppLines = insights.opportunities.map(o => `- [${o.priority}] ${o.title}${o.description ? `: ${o.description}` : ""}`);
 
         // Assemble system prompt
         const systemPrompt = `You are Trackr AI, an expert AI procurement and software stack advisor for ${workspace.name || "this workspace"}.

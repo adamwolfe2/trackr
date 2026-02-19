@@ -360,7 +360,7 @@ export default function OnboardingPage() {
                             let aiNative = 0, aiEnabled = 0, traditional = 0, unknown = 0;
                             for (const name of allSelected) {
                                 const c = classifyTool(name);
-                                if (!c) { unknown++; continue; }
+                                if (!c.matched) { unknown++; continue; }
                                 if (c.classification === "ai-native") aiNative++;
                                 else if (c.classification === "ai-enabled") aiEnabled++;
                                 else traditional++;
