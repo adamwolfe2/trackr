@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { TrackrLogo } from "@/components/common/trackr-logo";
 
 export function MarketingNavigation({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -10,8 +11,11 @@ export function MarketingNavigation({ isLoggedIn = false }: { isLoggedIn?: boole
     return (
         <header className="w-full flex items-center justify-between py-8 relative z-50">
             {/* Logo */}
-            <Link href="/" className="md:text-3xl text-2xl font-medium tracking-tight font-serif z-50 relative">
-                Trackr
+            <Link href="/" className="flex items-center gap-2.5 z-50 relative">
+                <span className="w-8 h-8 bg-black flex items-center justify-center flex-shrink-0">
+                    <TrackrLogo size={22} inverted />
+                </span>
+                <span className="md:text-3xl text-2xl font-medium tracking-tight font-serif">Trackr</span>
             </Link>
 
             {/* Desktop Nav */}

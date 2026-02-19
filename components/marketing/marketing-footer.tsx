@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { TrackrLogo } from "@/components/common/trackr-logo";
 
 export function MarketingFooter() {
     return (
@@ -8,7 +9,12 @@ export function MarketingFooter() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
                 {/* Brand */}
                 <div className="md:col-span-1">
-                    <h3 className="text-2xl font-serif font-medium mb-4">Trackr</h3>
+                    <h3 className="text-2xl font-serif font-medium mb-4 flex items-center gap-2">
+                        <span className="w-7 h-7 bg-black flex items-center justify-center flex-shrink-0">
+                            <TrackrLogo size={18} inverted />
+                        </span>
+                        Trackr
+                    </h3>
                     <p className="font-mono text-sm text-neutral-500 leading-relaxed">
                         Research smarter. Evaluate consistently. Stay ahead.
                     </p>

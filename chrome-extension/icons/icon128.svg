@@ -1,4 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
   <rect width="128" height="128" fill="#000000"/>
-  <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="#F3F3EF" font-family="monospace" font-size="86" font-weight="700">T</text>
+  <g transform="translate(22,22)">
+    <path d="M10 84L30 0H40L20 84H10Z" fill="#F3F3EF"/>
+    <path d="M32 84L52 0H62L42 84H32Z" fill="#F3F3EF"/>
+    <path d="M54 84L74 0H84L64 84H54Z" fill="#F3F3EF"/>
+  </g>
 </svg>

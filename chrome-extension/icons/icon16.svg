@@ -1,4 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
   <rect width="16" height="16" fill="#000000"/>
-  <text x="50%" y="50%" dominant-baseline="central" text-anchor="middle" fill="#F3F3EF" font-family="monospace" font-size="11" font-weight="700">T</text>
+  <g transform="translate(3,3) scale(0.625)">
+    <path d="M3 16L7 0H9L5 16H3Z" fill="#F3F3EF"/>
+    <path d="M7 16L11 0H13L9 16H7Z" fill="#F3F3EF"/>
+    <path d="M11 16L15 0H17L13 16H11Z" fill="#F3F3EF"/>
+  </g>
 </svg>

@@ -122,7 +122,7 @@
     widget.innerHTML = `
       <div class="trackr-lens-bar" id="trackr-lens-bar">
         <div class="trackr-lens-header" id="trackr-lens-header">
-          <span class="trackr-lens-logo">T</span>
+          <span class="trackr-lens-logo"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><path d="M8 28L14 4H18L12 28H8Z" fill="#F3F3EF"/><path d="M14 28L20 4H24L18 28H14Z" fill="#F3F3EF"/><path d="M20 28L26 4H30L24 28H20Z" fill="#F3F3EF"/></svg></span>
           <span class="trackr-lens-title">Trackr Lens</span>
           <button class="trackr-lens-toggle" id="trackr-lens-toggle" title="Minimize">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -137,7 +137,7 @@
         </div>
       </div>
       <div class="trackr-lens-collapsed hidden" id="trackr-lens-collapsed">
-        <span class="trackr-lens-logo">T</span>
+        <span class="trackr-lens-logo"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><path d="M8 28L14 4H18L12 28H8Z" fill="#F3F3EF"/><path d="M14 28L20 4H24L18 28H14Z" fill="#F3F3EF"/><path d="M20 28L26 4H30L24 28H20Z" fill="#F3F3EF"/></svg></span>
       </div>
     `;
 

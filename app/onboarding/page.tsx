@@ -6,6 +6,7 @@ import { Check, Loader2, Sparkles, ArrowRight, RefreshCw, Search, X, PlusCircle 
 import { generateCompanyContext, completeOnboarding } from "@/lib/actions/onboarding";
 import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS, getLogoUrl } from "@/lib/constants/integrations";
 import { classifyTool } from "@/lib/config/ai-tools";
+import { TrackrLogo } from "@/components/common/trackr-logo";
 import { toast } from "sonner";
 
 type Step = 1 | 2 | 3;
@@ -119,7 +120,12 @@ export default function OnboardingPage() {
         <div className="min-h-screen bg-[#F3F3EF] flex flex-col">
             {/* Top bar */}
             <div className="border-b border-black bg-[#F3F3EF] px-6 py-4 flex items-center justify-between">
-                <span className="text-xl font-serif">Trackr</span>
+                <span className="flex items-center gap-2 text-xl font-serif font-medium">
+                    <span className="w-6 h-6 bg-black flex items-center justify-center flex-shrink-0">
+                        <TrackrLogo size={16} inverted />
+                    </span>
+                    Trackr
+                </span>
                 <div className="flex items-center gap-2">
                     {([1, 2, 3] as Step[]).map((s) => (
                         <div key={s} className="flex items-center gap-2">

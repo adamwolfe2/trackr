@@ -3,6 +3,7 @@ import { reports, tools } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
+import { TrackrLogo } from "@/components/common/trackr-logo";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -76,7 +77,12 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
         <div className="min-h-screen bg-[#F3F3EF]">
             {/* Header */}
             <div className="border-b border-black bg-[#F3F3EF] px-6 py-4 flex items-center justify-between">
-                <a href="https://trytrackr.com" className="font-serif text-xl hover:opacity-70">Trackr</a>
+                <a href="https://trytrackr.com" className="flex items-center gap-2 font-serif text-xl font-medium hover:opacity-70">
+                    <span className="w-7 h-7 bg-black flex items-center justify-center flex-shrink-0">
+                        <TrackrLogo size={18} inverted />
+                    </span>
+                    Trackr
+                </a>
                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 border border-neutral-300 px-2 py-1">
                     Shared Report
                 </span>

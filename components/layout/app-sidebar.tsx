@@ -21,6 +21,7 @@ import {
     Rss,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
+import { TrackrLogo } from "@/components/common/trackr-logo";
 
 const navItems = [
     {
@@ -111,9 +112,9 @@ export function AppSidebar() {
             {/* Logo */}
             <div className="p-5 border-b border-black">
                 <Link href="/tools" className="flex items-center gap-2 font-serif text-xl font-medium mb-5">
-                    <div className="w-7 h-7 bg-black flex items-center justify-center text-white text-xs font-mono font-bold">
-                        T
-                    </div>
+                    <span className="w-7 h-7 bg-black flex items-center justify-center flex-shrink-0">
+                        <TrackrLogo size={20} inverted />
+                    </span>
                     Trackr
                 </Link>
                 <Link
