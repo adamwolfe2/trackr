@@ -270,7 +270,7 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
             {/* Drag Overlay — renders the card being dragged at cursor level */}
             <DragOverlay>
                 {activeTool ? (
-                    <div className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] opacity-95 rotate-1">
+                    <div className="shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] opacity-95">
                         <CardContent tool={activeTool} />
                     </div>
                 ) : null}
