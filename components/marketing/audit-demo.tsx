@@ -338,13 +338,15 @@ function ResearchPhase() {
 const AUDIT_FINDINGS = [
     {
         type: "critical",
+        logos: ["salesforce.com", "hubspot.com", "pipedrive.com"],
         title: "3 overlapping CRM tools",
-        detail: "Salesforce + HubSpot + Pipedrive · same function",
+        detail: "Salesforce + HubSpot + Pipedrive",
         saving: "$4,200/mo",
         action: "Consolidate → HubSpot",
     },
     {
         type: "warning",
+        logos: ["tableau.com"],
         title: "Tableau: 8 of 45 seats active",
         detail: "83% of licenses unused this quarter",
         saving: "$1,800/mo",
@@ -352,6 +354,7 @@ const AUDIT_FINDINGS = [
     },
     {
         type: "winner",
+        logos: ["clay.com"],
         title: "Clay — 93/100 · highest ROI",
         detail: "52 integrations · zero stack overlap",
         saving: null,
@@ -359,6 +362,7 @@ const AUDIT_FINDINGS = [
     },
     {
         type: "winner",
+        logos: ["linear.app"],
         title: "Linear — 91/100 · fastest adoption",
         detail: "Highest team NPS in your stack",
         saving: null,
@@ -370,7 +374,7 @@ function FindingsPhase() {
     const [revealed, setRevealed] = useState(0);
     useEffect(() => {
         const timers = AUDIT_FINDINGS.map((_, i) =>
-            setTimeout(() => setRevealed(i + 1), (i + 1) * 950)
+            setTimeout(() => setRevealed(i + 1), (i + 1) * 900)
         );
         return () => timers.forEach(clearTimeout);
     }, []);
@@ -379,10 +383,10 @@ function FindingsPhase() {
     const currentSavings = revealed > 0 ? savingsMap[revealed - 1] : 0;
 
     return (
-        <div className="h-full flex flex-col p-6">
-            <div className="flex items-start justify-between mb-4">
+        <div className="h-full flex flex-col p-4">
+            <div className="flex items-start justify-between mb-3">
                 <div>
-                    <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest mb-1">Step 03 · Findings</div>
+                    <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest mb-0.5">Step 03 · Findings</div>
                     <div className="font-serif text-lg">Audit complete</div>
                 </div>
                 <div className="text-right flex-shrink-0">
@@ -391,9 +395,9 @@ function FindingsPhase() {
                         key={currentSavings}
                         initial={{ scale: 1.1 }}
                         animate={{ scale: 1 }}
-                        className="font-mono text-2xl font-bold text-black leading-none"
+                        className="font-mono text-xl font-bold text-black leading-none"
                     >
-                        ${currentSavings.toLocaleString()}<span className="text-sm font-normal">/mo</span>
+                        ${currentSavings.toLocaleString()}<span className="text-xs font-normal">/mo</span>
                     </motion.div>
                 </div>
             </div>
@@ -401,37 +405,45 @@ function FindingsPhase() {
             <div className="space-y-2 flex-1">
                 {AUDIT_FINDINGS.map((f, i) => {
                     if (i >= revealed) {
-                        return (
-                            <div key={f.title} className="h-[66px] border border-black/10 bg-white/60 animate-pulse" />
-                        );
+                        return <div key={f.title} className="h-[58px] border border-black/10 bg-white animate-pulse" />;
                     }
-                    const isCritical = f.type === "critical";
-                    const isWarning = f.type === "warning";
-                    const isWinner = f.type === "winner";
+                    const isAlert = f.type === "critical" || f.type === "warning";
                     return (
                         <motion.div
                             key={f.title}
                             initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className={`border px-4 py-3 ${isCritical ? "border-black bg-black text-white" : isWarning ? "border-neutral-700 bg-neutral-800 text-white" : "border-black/20 bg-white text-black"}`}
+                            className="border border-black bg-white px-3 py-2.5"
                         >
-                            <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start justify-between gap-2">
                                 <div className="flex items-start gap-2 min-w-0">
-                                    {isWinner ? (
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-black flex-shrink-0 mt-0.5" />
+                                    {isAlert ? (
+                                        <AlertTriangle className="w-3.5 h-3.5 text-black flex-shrink-0 mt-0.5" />
                                     ) : (
-                                        <AlertTriangle className="w-3.5 h-3.5 text-white/70 flex-shrink-0 mt-0.5" />
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-black flex-shrink-0 mt-0.5" />
                                     )}
-                                    <div>
-                                        <div className={`font-mono text-[11px] font-bold ${isWinner ? "text-black" : "text-white"}`}>{f.title}</div>
-                                        <div className={`font-mono text-[9px] mt-0.5 ${isWinner ? "text-neutral-500" : "text-white/55"}`}>{f.detail}</div>
-                                        <div className={`font-mono text-[9px] mt-1 font-semibold ${isWinner ? "text-neutral-600" : "text-white/75"}`}>→ {f.action}</div>
+                                    <div className="min-w-0">
+                                        <div className="flex items-center gap-1 mb-0.5">
+                                            {f.logos.map(domain => (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    key={domain}
+                                                    src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`}
+                                                    alt="" width={11} height={11}
+                                                    className="w-[11px] h-[11px] flex-shrink-0"
+                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                                />
+                                            ))}
+                                        </div>
+                                        <div className="font-mono text-[11px] font-bold text-black">{f.title}</div>
+                                        <div className="font-mono text-[9px] text-neutral-500">{f.detail}</div>
+                                        <div className="font-mono text-[9px] font-semibold text-neutral-700">→ {f.action}</div>
                                     </div>
                                 </div>
                                 {f.saving && (
                                     <div className="flex-shrink-0 text-right">
-                                        <div className="font-mono text-sm font-bold text-white">{f.saving}</div>
-                                        <div className="font-mono text-[8px] text-white/45 uppercase">saved</div>
+                                        <div className="font-mono text-sm font-bold text-black">{f.saving}</div>
+                                        <div className="font-mono text-[8px] text-neutral-400 uppercase">saved</div>
                                     </div>
                                 )}
                             </div>
@@ -446,11 +458,13 @@ function FindingsPhase() {
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="mt-4 px-4 py-3 bg-black text-white"
+                        className="mt-3 px-4 py-2.5 border border-black bg-white flex items-center justify-between"
                     >
-                        <div className="font-mono text-[9px] text-white/45 uppercase tracking-widest mb-1">Total annual optimization potential</div>
-                        <div className="font-mono text-2xl font-bold">$72,000 / yr</div>
-                        <div className="font-mono text-[9px] text-white/40 mt-0.5">+ 90-day implementation roadmap included</div>
+                        <div>
+                            <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest">Total annual optimization</div>
+                            <div className="font-mono text-xl font-bold text-black">$72,000 / yr</div>
+                        </div>
+                        <ArrowRight className="w-4 h-4 text-black flex-shrink-0" />
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -463,31 +477,28 @@ const ROADMAP = [
     {
         period: "Days 1–30",
         label: "Consolidate & Cut",
-        header: "bg-black text-white",
         tasks: [
-            "Migrate Pipedrive → HubSpot (saves $1,400/mo)",
-            "Cancel 3 redundant Salesforce seat tiers",
-            "Right-size Tableau: 45 → 12 seat plan",
+            { text: "Migrate Pipedrive → HubSpot (saves $1,400/mo)", logos: ["pipedrive.com", "hubspot.com"] },
+            { text: "Cancel 3 redundant Salesforce seat tiers", logos: ["salesforce.com"] },
+            { text: "Right-size Tableau: 45 → 12 seat plan", logos: ["tableau.com"] },
         ],
     },
     {
         period: "Days 31–60",
         label: "Expand Winners",
-        header: "bg-neutral-700 text-white",
         tasks: [
-            "Roll Clay out to full 8-seat sales team",
-            "Linear enterprise rollout — all engineering",
-            "Configure Trackr auto-refresh on 12 tools",
+            { text: "Roll Clay out to full 8-seat sales team", logos: ["clay.com"] },
+            { text: "Linear enterprise rollout — all engineering", logos: ["linear.app"] },
+            { text: "Configure Trackr auto-refresh on 12 tools", logos: [] },
         ],
     },
     {
         period: "Days 61–90",
         label: "Measure & Optimize",
-        header: "bg-neutral-300 text-black",
         tasks: [
-            "Review Trackr scorecard vs. Q1 baseline",
-            "Evaluate 4 new tools flagged by AI agents",
-            "Present ROI report to leadership",
+            { text: "Review Trackr scorecard vs. Q1 baseline", logos: [] },
+            { text: "Evaluate 4 new tools flagged by AI agents", logos: [] },
+            { text: "Present ROI report to leadership", logos: [] },
         ],
     },
 ];
@@ -497,19 +508,19 @@ function RoadmapPhase() {
     const total = ROADMAP.reduce((s, b) => s + b.tasks.length, 0);
     useEffect(() => {
         const timers = Array.from({ length: total }, (_, i) =>
-            setTimeout(() => setTaskRevealed(i + 1), (i + 1) * 560)
+            setTimeout(() => setTaskRevealed(i + 1), (i + 1) * 540)
         );
         return () => timers.forEach(clearTimeout);
     }, [total]);
 
     return (
-        <div className="h-full flex flex-col p-6">
-            <div className="mb-4">
-                <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest mb-1">Step 04 · Roadmap</div>
+        <div className="h-full flex flex-col p-4">
+            <div className="mb-3">
+                <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest mb-0.5">Step 04 · Roadmap</div>
                 <div className="font-serif text-lg">Your 90-day implementation plan</div>
             </div>
 
-            <div className="space-y-3 flex-1">
+            <div className="space-y-2 flex-1">
                 {ROADMAP.map((block, bi) => {
                     const tasksBefore = ROADMAP.slice(0, bi).reduce((s, b) => s + b.tasks.length, 0);
                     const blockShown = Math.max(0, Math.min(taskRevealed - tasksBefore, block.tasks.length));
@@ -518,25 +529,25 @@ function RoadmapPhase() {
                         <motion.div
                             key={block.period}
                             animate={{ opacity: blockActive ? 1 : 0.25 }}
-                            className="border border-black/20 overflow-hidden"
+                            className="border border-black overflow-hidden"
                         >
-                            <div className={`flex items-center gap-3 px-4 py-2 ${block.header}`}>
-                                <span className="font-mono text-[9px] opacity-50 uppercase tracking-widest">{block.period}</span>
-                                <span className="font-mono text-[11px] font-bold">{block.label}</span>
+                            <div className="flex items-center gap-3 px-3 py-1.5 border-b border-black bg-white">
+                                <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest">{block.period}</span>
+                                <span className="font-mono text-[11px] font-bold text-black">{block.label}</span>
                                 {blockShown >= block.tasks.length && (
                                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="ml-auto">
-                                        <CheckCircle2 className={`w-3 h-3 ${bi === 2 ? "text-black/50" : "text-white/50"}`} />
+                                        <CheckCircle2 className="w-3 h-3 text-black/50" />
                                     </motion.div>
                                 )}
                             </div>
-                            <div className="px-4 py-2.5 bg-white space-y-1.5">
+                            <div className="px-3 py-2 bg-white space-y-1.5">
                                 {block.tasks.map((task, ti) => {
                                     const shown = ti < blockShown;
                                     return (
                                         <motion.div
-                                            key={task}
+                                            key={task.text}
                                             animate={{ opacity: shown ? 1 : 0.15 }}
-                                            className="flex items-start gap-2"
+                                            className="flex items-center gap-2"
                                         >
                                             {shown ? (
                                                 <motion.div
@@ -544,12 +555,22 @@ function RoadmapPhase() {
                                                     animate={{ scale: 1 }}
                                                     transition={{ type: "spring", stiffness: 340, damping: 20 }}
                                                 >
-                                                    <CheckCircle2 className="w-3 h-3 text-black flex-shrink-0 mt-0.5" />
+                                                    <CheckCircle2 className="w-3 h-3 text-black flex-shrink-0" />
                                                 </motion.div>
                                             ) : (
-                                                <div className="w-3 h-3 border border-neutral-300 flex-shrink-0 mt-0.5" />
+                                                <div className="w-3 h-3 border border-neutral-300 flex-shrink-0" />
                                             )}
-                                            <span className="font-mono text-[10px] text-neutral-700 leading-snug">{task}</span>
+                                            {task.logos.map(domain => (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img
+                                                    key={domain}
+                                                    src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`}
+                                                    alt="" width={11} height={11}
+                                                    className="w-[11px] h-[11px] flex-shrink-0"
+                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                                />
+                                            ))}
+                                            <span className="font-mono text-[10px] text-neutral-700 leading-snug">{task.text}</span>
                                         </motion.div>
                                     );
                                 })}
@@ -564,7 +585,7 @@ function RoadmapPhase() {
                     <motion.div
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="mt-4 px-4 py-3 border border-black bg-[#F3F3EF] flex items-center justify-between"
+                        className="mt-2 px-3 py-2 border border-black bg-white flex items-center justify-between"
                     >
                         <div>
                             <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-wider">Outcome at day 90</div>
