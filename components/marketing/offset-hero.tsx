@@ -37,6 +37,13 @@ const DEMO_TOOLS = [
             { label: "Ease of Use", score: 80 },
         ],
         verdict: "Strong fit for knowledge management workflows.",
+        findings: [
+            "3,840+ reviews scraped — G2, Capterra, Trustpilot",
+            "4 pricing plans found — Free, Plus, Business, Enterprise",
+            "89 native integrations detected",
+            "7 direct alternatives evaluated — Coda, Confluence, Slab...",
+            "Score complete — 5 dimensions calculated",
+        ],
         nextSteps: [
             { domain: "slack.com", action: "Send to Josh", sub: "#ops-tools channel" },
             { domain: "gmail.com", action: "Email the team", sub: "team@acme.com · 4 members" },
@@ -57,6 +64,13 @@ const DEMO_TOOLS = [
             { label: "Ease of Use", score: 94 },
         ],
         verdict: "Exceptional fit. Fastest issue tracker in the market.",
+        findings: [
+            "1,940+ reviews and community posts analyzed",
+            "4 pricing plans — Free, Basic, Business, Enterprise",
+            "31 integration endpoints found — GitHub, Slack, Figma...",
+            "9 alternatives mapped — Jira, Asana, ClickUp, Height...",
+            "Score complete — 5 dimensions calculated",
+        ],
         nextSteps: [
             { domain: "slack.com", action: "Notify Sarah", sub: "#engineering channel" },
             { domain: "gmail.com", action: "Email dev leads", sub: "eng@acme.com · 6 members" },
@@ -77,6 +91,13 @@ const DEMO_TOOLS = [
             { label: "Ease of Use", score: 78 },
         ],
         verdict: "Top-tier AI enrichment. Steep curve worth every bit.",
+        findings: [
+            "890+ use case reports and reviews analyzed",
+            "3 pricing tiers — Explorer ($149), Pro ($349), Enterprise",
+            "52 data source integrations detected",
+            "6 enrichment tool alternatives evaluated",
+            "Score complete — 5 dimensions calculated",
+        ],
         nextSteps: [
             { domain: "slack.com", action: "Send to Rev Ops", sub: "#revenue-ops channel" },
             { domain: "gmail.com", action: "Email leadership", sub: "leadership@acme.com" },
@@ -97,6 +118,13 @@ const DEMO_TOOLS = [
             { label: "Ease of Use", score: 92 },
         ],
         verdict: "Industry standard. Evaluate team-tier pricing.",
+        findings: [
+            "4,270+ design community reviews analyzed",
+            "5 pricing plans — Starter, Professional, Organization, Enterprise",
+            "41 plugin + integration endpoints found",
+            "8 alternatives mapped — Sketch, Adobe XD, Penpot...",
+            "Score complete — 5 dimensions calculated",
+        ],
         nextSteps: [
             { domain: "slack.com", action: "Share with design", sub: "#design channel" },
             { domain: "gmail.com", action: "Email to Mike", sub: "mike@acme.com" },
@@ -333,10 +361,17 @@ function HeroDemo() {
                     {phase === "researching" && (
                         <motion.div
                             initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.18 }}
-                            className="bg-[#F3F3EF] border-b border-black overflow-hidden"
+                            animate={{
+                                height: 408,
+                                opacity: 1,
+                                transition: { duration: 0.42, ease: [0.25, 0.46, 0.45, 0.94] },
+                            }}
+                            exit={{
+                                height: 0,
+                                opacity: 0,
+                                transition: { duration: 0.30, ease: [0.55, 0, 1, 0.45] },
+                            }}
+                            className="bg-[#F3F3EF] border-b border-black overflow-hidden flex flex-col"
                         >
                             {/* Stream headers */}
                             <div className="grid grid-cols-3 border-b border-black/10">
@@ -355,7 +390,7 @@ function HeroDemo() {
                             </div>
 
                             {/* Stream bodies */}
-                            <div className="grid grid-cols-3 py-2 min-h-[90px]">
+                            <div className="grid grid-cols-3 py-2 flex-shrink-0">
                                 {[0, 1, 2].map(si => (
                                     <div key={si} className={`px-2.5 space-y-1 ${si < 2 ? "border-r border-black/10" : ""}`}>
                                         {STREAM_STEPS[si].slice(0, streamVisible[si]).map((step, stepIdx) => (
@@ -406,11 +441,64 @@ function HeroDemo() {
                             </div>
 
                             {/* Integration logos marquee */}
-                            <div className="border-t border-black/10 px-3 pt-2 pb-2.5">
+                            <div className="border-t border-black/10 px-3 pt-2 pb-2.5 flex-shrink-0">
                                 <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest block mb-1.5">
                                     Scanning integrations
                                 </span>
                                 <IntegrationMarquee />
+                            </div>
+
+                            {/* ── Live findings — fills remaining space ─── */}
+                            <div className="border-t border-black/10 px-3 pt-3 pb-3 flex-1 bg-white/40">
+                                <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest block mb-2.5">
+                                    Live findings
+                                </span>
+                                <div className="space-y-1.5">
+                                    {currentTool.findings
+                                        .slice(0, Math.min(Math.max(tick - 1, 0), 5))
+                                        .map((finding, i) => (
+                                            <motion.div
+                                                key={`${toolIndex}-finding-${i}`}
+                                                initial={{ opacity: 0, x: -4 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ duration: 0.22 }}
+                                                className="flex items-start gap-2"
+                                            >
+                                                <motion.span
+                                                    className="font-mono text-[9px] text-black/40 flex-shrink-0 mt-[1px]"
+                                                    animate={{ opacity: [0.4, 1, 0.4] }}
+                                                    transition={
+                                                        i === Math.min(Math.max(tick - 1, 0), 5) - 1 && tick < 7
+                                                            ? { duration: 0.8, repeat: Infinity }
+                                                            : { duration: 0 }
+                                                    }
+                                                >
+                                                    →
+                                                </motion.span>
+                                                <span className={`font-mono text-[10px] leading-snug ${
+                                                    i === Math.min(Math.max(tick - 1, 0), 5) - 1 && tick < 7
+                                                        ? "text-black font-semibold"
+                                                        : "text-neutral-500"
+                                                }`}>
+                                                    {finding}
+                                                </span>
+                                            </motion.div>
+                                        ))
+                                    }
+                                    {/* Pulsing placeholder while no findings yet */}
+                                    {tick < 2 && (
+                                        <motion.div
+                                            animate={{ opacity: [0.3, 0.7, 0.3] }}
+                                            transition={{ duration: 1.2, repeat: Infinity }}
+                                            className="flex gap-1 items-center"
+                                        >
+                                            {[0, 1, 2].map(d => (
+                                                <span key={d} className="w-1.5 h-1.5 bg-black/15 inline-block" />
+                                            ))}
+                                            <span className="font-mono text-[9px] text-neutral-300 ml-1">Collecting data...</span>
+                                        </motion.div>
+                                    )}
+                                </div>
                             </div>
                         </motion.div>
                     )}
