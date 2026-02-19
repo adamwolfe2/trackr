@@ -129,6 +129,23 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
             redditAnswer?: string;
             competitorAnalysis?: string;
             reviewSources?: Array<{ title: string; url: string; score: number }>;
+            trustSources?: Array<{ title: string; url: string; score: number }>;
+            trustAnswer?: string;
+            redditThreads?: Array<{ title: string; url: string; subreddit: string; snippet: string }>;
+            sentimentConsensus?: {
+                overall: "very_positive" | "positive" | "mixed" | "negative" | "very_negative";
+                confidence: number;
+                sourceAgreement: string;
+            };
+            marketIntel?: {
+                founded?: string;
+                headquarters?: string;
+                employeeCount?: string;
+                funding?: string;
+                recentNews?: string[];
+            };
+            dataSources?: number;
+            pagesScraped?: number;
         } | null,
     } : null;
 

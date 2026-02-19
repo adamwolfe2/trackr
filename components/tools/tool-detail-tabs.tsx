@@ -8,11 +8,31 @@ import { NotesSection } from "@/components/tools/notes-section";
 
 type ScorecardEntry = { score: number; justification: string };
 type ReviewSource = { title: string; url: string; score: number };
+type RedditThread = { title: string; url: string; subreddit: string; snippet: string };
+type SentimentConsensus = {
+    overall: "very_positive" | "positive" | "mixed" | "negative" | "very_negative";
+    confidence: number;
+    sourceAgreement: string;
+};
+type MarketIntel = {
+    founded?: string;
+    headquarters?: string;
+    employeeCount?: string;
+    funding?: string;
+    recentNews?: string[];
+};
 type SentimentData = {
     reviewAnswer?: string;
     redditAnswer?: string;
     competitorAnalysis?: string;
     reviewSources?: ReviewSource[];
+    trustSources?: ReviewSource[];
+    trustAnswer?: string;
+    redditThreads?: RedditThread[];
+    sentimentConsensus?: SentimentConsensus;
+    marketIntel?: MarketIntel;
+    dataSources?: number;
+    pagesScraped?: number;
 };
 
 type SerializedReport = {
@@ -66,6 +86,28 @@ const TABS = [
 ] as const;
 
 type TabId = typeof TABS[number]["id"];
+
+function SourceLinks({ sources }: { sources: ReviewSource[] }) {
+    return (
+        <div className="space-y-1">
+            {sources.map((src, i) => {
+                let hostname = src.url;
+                try { hostname = new URL(src.url).hostname.replace("www.", ""); } catch { /* keep raw */ }
+                return (
+                    <a key={i} href={src.url} target="_blank" rel="noopener noreferrer"
+                        className="flex items-center justify-between p-2 border border-black hover:bg-neutral-50 transition-colors">
+                        <div className="flex items-center gap-2 min-w-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=16`} alt="" className="w-4 h-4 flex-shrink-0" />
+                            <span className="font-mono text-xs truncate">{src.title}</span>
+                        </div>
+                        <span className="font-mono text-[10px] text-neutral-400 flex-shrink-0 ml-2">{hostname}</span>
+                    </a>
+                );
+            })}
+        </div>
+    );
+}
 
 export function ToolDetailTabs({ toolId, report, historyItems, notes, workspaceTools, competitors }: Props) {
     const [activeTab, setActiveTab] = useState<TabId>("report");
@@ -186,41 +228,155 @@ export function ToolDetailTabs({ toolId, report, historyItems, notes, workspaceT
                 {activeTab === "sentiment" && (
                     report?.sentimentData ? (
                         <div className="space-y-5">
+                            {/* Data Sources Badge */}
+                            {(report.sentimentData.dataSources || report.sentimentData.pagesScraped) && (
+                                <div className="flex items-center gap-3 flex-wrap">
+                                    {report.sentimentData.dataSources && (
+                                        <span className="font-mono text-[10px] uppercase tracking-widest border border-black px-2 py-1">
+                                            {report.sentimentData.dataSources} sources analyzed
+                                        </span>
+                                    )}
+                                    {report.sentimentData.pagesScraped && (
+                                        <span className="font-mono text-[10px] uppercase tracking-widest border border-neutral-300 px-2 py-1 text-neutral-500">
+                                            {report.sentimentData.pagesScraped} pages scraped
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Sentiment Consensus Panel */}
+                            {report.sentimentData.sentimentConsensus && (
+                                <div className="border border-black p-4">
+                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-3">Multi-Source Consensus</h3>
+                                    <div className="flex items-center gap-4 mb-3">
+                                        <span className={`font-mono text-sm font-bold uppercase px-2 py-1 border ${
+                                            report.sentimentData.sentimentConsensus.overall === "very_positive" ? "border-black bg-black text-white" :
+                                            report.sentimentData.sentimentConsensus.overall === "positive" ? "border-black text-black" :
+                                            report.sentimentData.sentimentConsensus.overall === "mixed" ? "border-neutral-400 text-neutral-600" :
+                                            "border-neutral-400 text-neutral-500"
+                                        }`}>
+                                            {report.sentimentData.sentimentConsensus.overall.replace("_", " ")}
+                                        </span>
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Confidence</span>
+                                                <span className="font-mono text-xs font-bold">{report.sentimentData.sentimentConsensus.confidence}%</span>
+                                            </div>
+                                            <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
+                                                <div className="h-full bg-black" style={{ width: `${report.sentimentData.sentimentConsensus.confidence}%` }} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p className="font-mono text-xs text-neutral-600 leading-relaxed">{report.sentimentData.sentimentConsensus.sourceAgreement}</p>
+                                </div>
+                            )}
+
+                            {/* Market Intelligence */}
+                            {report.sentimentData.marketIntel && (
+                                <div className="border border-black p-4">
+                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-3">Market Intelligence</h3>
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                                        {report.sentimentData.marketIntel.founded && report.sentimentData.marketIntel.founded !== "Unknown" && (
+                                            <div>
+                                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">Founded</span>
+                                                <span className="font-mono text-xs">{report.sentimentData.marketIntel.founded}</span>
+                                            </div>
+                                        )}
+                                        {report.sentimentData.marketIntel.headquarters && report.sentimentData.marketIntel.headquarters !== "Unknown" && (
+                                            <div>
+                                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">HQ</span>
+                                                <span className="font-mono text-xs">{report.sentimentData.marketIntel.headquarters}</span>
+                                            </div>
+                                        )}
+                                        {report.sentimentData.marketIntel.employeeCount && report.sentimentData.marketIntel.employeeCount !== "Unknown" && (
+                                            <div>
+                                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">Employees</span>
+                                                <span className="font-mono text-xs">{report.sentimentData.marketIntel.employeeCount}</span>
+                                            </div>
+                                        )}
+                                        {report.sentimentData.marketIntel.funding && report.sentimentData.marketIntel.funding !== "Unknown" && (
+                                            <div>
+                                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">Funding</span>
+                                                <span className="font-mono text-xs">{report.sentimentData.marketIntel.funding}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {report.sentimentData.marketIntel.recentNews && report.sentimentData.marketIntel.recentNews.length > 0 && (
+                                        <div>
+                                            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">Recent News</span>
+                                            <ul className="space-y-1">
+                                                {report.sentimentData.marketIntel.recentNews.map((news, i) => (
+                                                    <li key={i} className="font-mono text-xs text-neutral-600 flex gap-2">
+                                                        <span className="text-neutral-400">→</span>
+                                                        {news}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Review Sites */}
                             {report.sentimentData.reviewAnswer && (
                                 <div>
-                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Review Site Summary</h3>
+                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Review Sites (G2, Capterra, TrustRadius)</h3>
                                     <p className="font-mono text-xs text-neutral-600 leading-relaxed">{report.sentimentData.reviewAnswer}</p>
                                 </div>
                             )}
                             {report.sentimentData.reviewSources && report.sentimentData.reviewSources.length > 0 && (
                                 <div>
-                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Sources Reviewed</h3>
+                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Review Sources</h3>
+                                    <SourceLinks sources={report.sentimentData.reviewSources} />
+                                </div>
+                            )}
+
+                            {/* Trust & Reputation */}
+                            {report.sentimentData.trustAnswer && (
+                                <div>
+                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Trust & Reputation (Trustpilot, BBB, Glassdoor)</h3>
+                                    <p className="font-mono text-xs text-neutral-600 leading-relaxed">{report.sentimentData.trustAnswer}</p>
+                                </div>
+                            )}
+                            {report.sentimentData.trustSources && report.sentimentData.trustSources.length > 0 && (
+                                <div>
+                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Trust Sources</h3>
+                                    <SourceLinks sources={report.sentimentData.trustSources} />
+                                </div>
+                            )}
+
+                            {/* Reddit Threads */}
+                            {report.sentimentData.redditAnswer && (
+                                <div>
+                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Reddit / Community</h3>
+                                    <p className="font-mono text-xs text-neutral-600 leading-relaxed mb-3">{report.sentimentData.redditAnswer}</p>
+                                </div>
+                            )}
+                            {report.sentimentData.redditThreads && report.sentimentData.redditThreads.length > 0 && (
+                                <div>
+                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Reddit Threads ({report.sentimentData.redditThreads.length})</h3>
                                     <div className="space-y-1">
-                                        {report.sentimentData.reviewSources.map((src, i) => (
-                                            <a key={i} href={src.url} target="_blank" rel="noopener noreferrer"
-                                                className="flex items-center justify-between p-2 border border-black hover:bg-neutral-50 transition-colors">
-                                                <div className="flex items-center gap-2 min-w-0">
-                                                    <img src={`https://www.google.com/s2/favicons?domain=${new URL(src.url).hostname}&sz=16`} alt="" className="w-4 h-4 flex-shrink-0" />
-                                                    <span className="font-mono text-xs truncate">{src.title}</span>
+                                        {report.sentimentData.redditThreads.map((thread, i) => (
+                                            <a key={i} href={thread.url} target="_blank" rel="noopener noreferrer"
+                                                className="block p-2 border border-black hover:bg-neutral-50 transition-colors">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <span className="font-mono text-xs truncate flex-1">{thread.title}</span>
+                                                    <span className="font-mono text-[10px] text-neutral-400 flex-shrink-0 ml-2">r/{thread.subreddit}</span>
                                                 </div>
-                                                <span className="font-mono text-[10px] text-neutral-400 flex-shrink-0 ml-2">
-                                                    {new URL(src.url).hostname.replace("www.", "")}
-                                                </span>
+                                                {thread.snippet && (
+                                                    <p className="font-mono text-[10px] text-neutral-500 line-clamp-2">{thread.snippet}</p>
+                                                )}
                                             </a>
                                         ))}
                                     </div>
                                 </div>
                             )}
-                            {report.sentimentData.redditAnswer && (
-                                <div>
-                                    <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Reddit / Community</h3>
-                                    <p className="font-mono text-xs text-neutral-600 leading-relaxed">{report.sentimentData.redditAnswer}</p>
-                                </div>
-                            )}
+
+                            {/* Competitive Context */}
                             {report.sentimentData.competitorAnalysis && (
                                 <div>
                                     <h3 className="font-mono text-xs uppercase tracking-widest mb-2">Competitive Context</h3>
-                                    <p className="font-mono text-xs text-neutral-600 leading-relaxed">{report.sentimentData.competitorAnalysis}</p>
+                                    <p className="font-mono text-xs text-neutral-600 leading-relaxed whitespace-pre-line">{report.sentimentData.competitorAnalysis}</p>
                                 </div>
                             )}
                         </div>

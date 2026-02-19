@@ -45,6 +45,18 @@ const ReportSchema = z.object({
     competitors: z.array(z.string()).describe("3-5 main competitors (use their domain names, e.g. notion.so)"),
     integrations: z.array(z.string()).describe("Tools/platforms this integrates with (e.g. Slack, Zapier, Salesforce, HubSpot)"),
     categories: z.array(z.string()).describe("3-5 relevant categories for this tool (e.g. CRM, Analytics, DevTool)"),
+    sentimentConsensus: z.object({
+        overall: z.enum(["very_positive", "positive", "mixed", "negative", "very_negative"]).describe("Overall consensus across all sources"),
+        confidence: z.number().min(0).max(100).describe("Confidence level 0-100 based on volume and agreement of sources"),
+        sourceAgreement: z.string().describe("1-2 sentence summary of whether sources agree or disagree, and on what"),
+    }).describe("Multi-source sentiment consensus — cross-reference all review sites, Reddit, Trustpilot, and competitor analyses"),
+    marketIntel: z.object({
+        founded: z.string().optional().describe("Year founded or 'Unknown'"),
+        headquarters: z.string().optional().describe("HQ location or 'Unknown'"),
+        employeeCount: z.string().optional().describe("Approximate employee count range, e.g. '51-200'"),
+        funding: z.string().optional().describe("Total funding raised or 'Bootstrapped' or 'Public' or 'Unknown'"),
+        recentNews: z.array(z.string()).describe("2-3 recent notable developments, launches, or news items from the past year"),
+    }).describe("Market intelligence about the company behind the tool"),
 });
 
 type ResearchLog = { message: string; timestamp: string };
@@ -140,7 +152,7 @@ export async function performDeepResearch(toolId: string) {
         const domain = getDomain(tool.websiteUrl);
 
         // ── Step 1: Map site ──────────────────────────────────────────────
-        await logProgress(toolId, `Step 1/6: Mapping site structure for ${domain}...`);
+        await logProgress(toolId, `Step 1/7: Mapping site structure for ${domain}...`);
         const mapStart = Date.now();
         const mapResult = await withTimeout(
             firecrawl.mapSite(tool.websiteUrl),
@@ -157,32 +169,35 @@ export async function performDeepResearch(toolId: string) {
         });
         const subPages: string[] = mapResult.success && Array.isArray(mapResult.data) ? mapResult.data : [];
 
-        const pricingUrl = subPages.find((u) => /\/pricing/.test(u)) ?? tool.websiteUrl;
+        // Detect key sub-pages from sitemap
+        const pricingUrl = subPages.find((u) => /\/pricing/i.test(u)) ?? tool.websiteUrl;
+        const featuresUrl = subPages.find((u) => /\/(features|product|platform)/i.test(u));
+        const aboutUrl = subPages.find((u) => /\/(about|company|team)/i.test(u));
+        const securityUrl = subPages.find((u) => /\/(security|compliance|trust|privacy)/i.test(u));
 
-        // ── Step 2: Scrape main + pricing pages ───────────────────────────
-        const pricingLabel = pricingUrl !== tool.websiteUrl ? " + pricing page" : "";
-        await logProgress(toolId, `Step 2/6: Crawling ${domain}${pricingLabel}...`);
+        // ── Step 2: Scrape up to 5 pages ───────────────────────────────
+        const pagesToScrape = [
+            { key: "main", url: tool.websiteUrl, label: "homepage" },
+            ...(pricingUrl !== tool.websiteUrl ? [{ key: "pricing", url: pricingUrl, label: "pricing" }] : []),
+            ...(featuresUrl ? [{ key: "features", url: featuresUrl, label: "features" }] : []),
+            ...(aboutUrl ? [{ key: "about", url: aboutUrl, label: "about" }] : []),
+            ...(securityUrl ? [{ key: "security", url: securityUrl, label: "security" }] : []),
+        ];
+        const pageLabels = pagesToScrape.map(p => p.label).join(", ");
+        await logProgress(toolId, `Step 2/7: Crawling ${pagesToScrape.length} pages (${pageLabels})...`);
 
         const scrapeFallback = { success: false, data: { markdown: "", metadata: {} } };
         const scrapeStart = Date.now();
-        const hasSeparatePricing = pricingUrl !== tool.websiteUrl;
-        const [mainScrape, pricingScrape] = await Promise.all([
-            withTimeout(firecrawl.scrapeUrl(tool.websiteUrl), 30000, scrapeFallback),
-            hasSeparatePricing
-                ? withTimeout(firecrawl.scrapeUrl(pricingUrl), 30000, scrapeFallback)
-                : Promise.resolve({ success: true, data: { markdown: "", metadata: {} } }),
-        ]);
+        const scrapeResults = await Promise.all(
+            pagesToScrape.map(({ url }) =>
+                withTimeout(firecrawl.scrapeUrl(url), 30000, scrapeFallback)
+            )
+        );
         const scrapeDuration = Date.now() - scrapeStart;
-        logApiCall({
-            service: "firecrawl",
-            endpoint: "scrape",
-            durationMs: scrapeDuration,
-            estimatedCost: COST_MAP.firecrawl.scrape,
-            workspaceId: tool.workspaceId,
-            toolId,
-            metadata: { target: "main" },
-        });
-        if (hasSeparatePricing) {
+
+        // Log each scrape and store results
+        pagesToScrape.forEach(({ key, label }, i) => {
+            rawData[key] = scrapeResults[i].data?.markdown ?? "";
             logApiCall({
                 service: "firecrawl",
                 endpoint: "scrape",
@@ -190,17 +205,14 @@ export async function performDeepResearch(toolId: string) {
                 estimatedCost: COST_MAP.firecrawl.scrape,
                 workspaceId: tool.workspaceId,
                 toolId,
-                metadata: { target: "pricing" },
+                metadata: { target: label },
             });
-        }
-
-        rawData.main = mainScrape.data?.markdown ?? "";
-        rawData.pricing = pricingScrape.data?.markdown ?? "";
+        });
 
         // Extract logo from Firecrawl metadata (favicon preferred, OG image fallback)
         const logoUrl: string | null =
-            mainScrape.data?.metadata?.favicon ||
-            mainScrape.data?.metadata?.ogImage ||
+            scrapeResults[0].data?.metadata?.favicon ||
+            scrapeResults[0].data?.metadata?.ogImage ||
             null;
 
         if (logoUrl) {
@@ -208,7 +220,7 @@ export async function performDeepResearch(toolId: string) {
         }
 
         // ── Step 3: Tavily — review sites ─────────────────────────────────
-        await logProgress(toolId, `Step 3/6: Searching reviews (G2, Capterra, TrustRadius)...`);
+        await logProgress(toolId, `Step 3/7: Searching reviews (G2, Capterra, TrustRadius, ProductHunt)...`);
         const tavilyFallback = { results: [], answer: "" };
         const reviewStart = Date.now();
         const reviewSearch = await withTimeout(
@@ -216,7 +228,7 @@ export async function performDeepResearch(toolId: string) {
                 `${tool.name} software reviews user feedback pros cons`,
                 {
                     includeDomains: ["g2.com", "capterra.com", "trustradius.com", "getapp.com", "producthunt.com"],
-                    maxResults: 6,
+                    maxResults: 8,
                     includeAnswer: true,
                 }
             ),
@@ -238,43 +250,121 @@ export async function performDeepResearch(toolId: string) {
                     try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; }
                 })
             )];
-            await logProgress(toolId, `Reviewing ${reviewSearch.results.length} sources: ${sourceNames.join(", ")}...`);
+            await logProgress(toolId, `Found ${reviewSearch.results.length} review sources: ${sourceNames.join(", ")}`);
         }
 
         rawData.reviews = reviewSearch.results
-            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 400)}`)
+            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`)
             .join("\n\n");
 
-        // ── Step 4: Tavily — Reddit sentiment ─────────────────────────────
-        await logProgress(toolId, `Step 4/6: Scanning Reddit + community discussions...`);
-        const redditStart = Date.now();
-        const redditSearch = await withTimeout(
+        // ── Step 4: Tavily — trust & reputation sites ───────────────────
+        await logProgress(toolId, `Step 4/7: Checking Trustpilot, BBB, Glassdoor...`);
+        const trustStart = Date.now();
+        const trustSearch = await withTimeout(
             tavily.search(
-                `${tool.name} reddit experiences pros cons issues 2024`,
-                { includeDomains: ["reddit.com"], maxResults: 5, includeAnswer: true }
+                `"${tool.name}" reviews rating`,
+                {
+                    includeDomains: ["trustpilot.com", "bbb.org", "glassdoor.com", "sitejabber.com"],
+                    maxResults: 6,
+                    includeAnswer: true,
+                }
             ),
             30000,
             tavilyFallback
         );
         logApiCall({
             service: "tavily",
-            endpoint: "search-reddit",
-            durationMs: Date.now() - redditStart,
+            endpoint: "search-trust",
+            durationMs: Date.now() - trustStart,
             estimatedCost: COST_MAP.tavily.search,
             workspaceId: tool.workspaceId,
             toolId,
         });
 
-        rawData.reddit = redditSearch.results
-            .map((r) => `${r.title}:\n${r.content.slice(0, 300)}`)
+        if (trustSearch.results.length > 0) {
+            const trustSourceNames = [...new Set(
+                trustSearch.results.map((r) => {
+                    try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; }
+                })
+            )];
+            await logProgress(toolId, `Found ${trustSearch.results.length} trust sources: ${trustSourceNames.join(", ")}`);
+        }
+
+        rawData.trust = trustSearch.results
+            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`)
             .join("\n\n");
 
-        // ── Step 5: Perplexity — competitors + market analysis ────────────
-        await logProgress(toolId, `Step 5/6: Analyzing competitive landscape...`);
+        // ── Step 5: Deep Reddit — 3 targeted queries ────────────────────
+        await logProgress(toolId, `Step 5/7: Deep scanning Reddit (3 targeted searches)...`);
+        const redditStart = Date.now();
+        const [redditReviews, redditComparisons, redditComplaints] = await Promise.all([
+            withTimeout(
+                tavily.search(
+                    `"${tool.name}" review experience worth it site:reddit.com`,
+                    { includeDomains: ["reddit.com"], maxResults: 5, includeAnswer: true }
+                ),
+                30000, tavilyFallback
+            ),
+            withTimeout(
+                tavily.search(
+                    `"${tool.name}" vs alternative comparison site:reddit.com`,
+                    { includeDomains: ["reddit.com"], maxResults: 5, includeAnswer: true }
+                ),
+                30000, tavilyFallback
+            ),
+            withTimeout(
+                tavily.search(
+                    `"${tool.name}" problems issues complaints frustrating site:reddit.com`,
+                    { includeDomains: ["reddit.com"], maxResults: 5, includeAnswer: true }
+                ),
+                30000, tavilyFallback
+            ),
+        ]);
+        const redditDuration = Date.now() - redditStart;
+        // Log all 3 Reddit searches
+        for (const label of ["reddit-reviews", "reddit-comparisons", "reddit-complaints"]) {
+            logApiCall({
+                service: "tavily",
+                endpoint: `search-${label}`,
+                durationMs: redditDuration,
+                estimatedCost: COST_MAP.tavily.search,
+                workspaceId: tool.workspaceId,
+                toolId,
+            });
+        }
+
+        // Deduplicate Reddit results by URL
+        const allRedditResults = [...redditReviews.results, ...redditComparisons.results, ...redditComplaints.results];
+        const seenUrls = new Set<string>();
+        const uniqueRedditResults = allRedditResults.filter(r => {
+            if (seenUrls.has(r.url)) return false;
+            seenUrls.add(r.url);
+            return true;
+        });
+
+        await logProgress(toolId, `Found ${uniqueRedditResults.length} unique Reddit threads`);
+
+        // Combine Reddit answers for synthesis
+        const redditAnswers = [redditReviews.answer, redditComparisons.answer, redditComplaints.answer]
+            .filter(Boolean).join("\n\n");
+
+        rawData.reddit = uniqueRedditResults
+            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`)
+            .join("\n\n");
+        rawData.redditAnswers = redditAnswers;
+
+        // ── Step 6: Perplexity — competitors + market intelligence ───────
+        await logProgress(toolId, `Step 6/7: Analyzing competitive landscape + market intel...`);
         const perplexityStart = Date.now();
         const competitorAnalysis = await withTimeout(
             perplexity.search(
-                `Who are the main competitors of ${tool.name}? What are the key differentiators? What do users typically choose instead, and why?`
+                `Provide a comprehensive analysis of ${tool.name} (${tool.websiteUrl}):
+1. Who are the main competitors? What are the key differentiators?
+2. What do users typically choose instead, and why?
+3. When was the company founded? Where is it headquartered?
+4. How many employees does it have? What is its funding status?
+5. What are the most notable recent developments, launches, or news from the past year?
+6. What is the general market sentiment — is the company growing, stable, or declining?`
             ),
             30000,
             ""
@@ -289,8 +379,18 @@ export async function performDeepResearch(toolId: string) {
         });
         rawData.competitors = competitorAnalysis;
 
-        // ── Step 6: GPT-4o synthesis ──────────────────────────────────────
-        await logProgress(toolId, `Step 6/6: Synthesizing final report with GPT-4o...`);
+        // ── Step 7: GPT-4o synthesis ──────────────────────────────────────
+        // Count total unique data sources used
+        const totalDataSources = [
+            ...new Set([
+                ...reviewSearch.results.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
+                ...trustSearch.results.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
+                ...uniqueRedditResults.map(r => "reddit.com"),
+                ...(competitorAnalysis ? ["perplexity.ai"] : []),
+                domain, // official site
+            ])
+        ];
+        await logProgress(toolId, `Step 7/7: Synthesizing from ${totalDataSources.length} sources with GPT-4o...`);
 
         const companyContext = tool.workspace.companyContext ?? "A technology company evaluating software tools.";
         const recipe = tool.workspace.scorecardConfig as {
@@ -320,6 +420,7 @@ ${recipe.dealBreakers ? `DEAL BREAKERS (flag these prominently in cons):\n${reci
             schema: ReportSchema,
             prompt: `
 You are a rigorous software procurement analyst evaluating ${tool.name} (${tool.websiteUrl}).
+You have access to data from ${totalDataSources.length} unique sources. Cross-reference all sources to form your analysis.
 
 ${recipeSection}
 
@@ -332,20 +433,35 @@ For the scorecardSnapshot, score these dimensions from 0-10:
 - security: Security & Compliance
 - ai_capabilities: AI Capabilities
 
-=== OFFICIAL WEBSITE ===
+=== OFFICIAL WEBSITE (HOMEPAGE) ===
 ${rawData.main.slice(0, 5000)}
 
 === PRICING PAGE ===
-${rawData.pricing.slice(0, 3000)}
+${rawData.pricing?.slice(0, 3000) || "No separate pricing page found."}
+
+=== FEATURES / PRODUCT PAGE ===
+${rawData.features?.slice(0, 2500) || "No features page found."}
+
+=== ABOUT / COMPANY PAGE ===
+${rawData.about?.slice(0, 2000) || "No about page found."}
+
+=== SECURITY / COMPLIANCE PAGE ===
+${rawData.security?.slice(0, 2000) || "No security page found."}
 
 === REVIEW SITES (G2, Capterra, TrustRadius, Product Hunt) ===
-${rawData.reviews?.slice(0, 3000) || "No review data found."}
+${rawData.reviews?.slice(0, 3500) || "No review data found."}
 
-=== REDDIT / COMMUNITY FEEDBACK ===
-${rawData.reddit?.slice(0, 2000) || "No Reddit data found."}
+=== TRUST & REPUTATION (Trustpilot, BBB, Glassdoor, Sitejabber) ===
+${rawData.trust?.slice(0, 2500) || "No trust/reputation data found."}
 
-=== COMPETITIVE LANDSCAPE ===
-${rawData.competitors?.slice(0, 2000) || "No competitor data."}
+=== REDDIT COMMUNITY FEEDBACK (${uniqueRedditResults.length} threads) ===
+${rawData.reddit?.slice(0, 4000) || "No Reddit data found."}
+
+=== REDDIT AI SUMMARIES ===
+${rawData.redditAnswers?.slice(0, 2000) || "No Reddit summaries available."}
+
+=== COMPETITIVE LANDSCAPE + MARKET INTEL ===
+${rawData.competitors?.slice(0, 3000) || "No competitor data."}
 
 INSTRUCTIONS:
 - Be critical and specific. Don't repeat marketing copy — synthesize real user pain points.
@@ -353,6 +469,8 @@ INSTRUCTIONS:
 - Extract ALL integrations mentioned (Slack, Zapier, Salesforce, etc.).
 - For competitors, use their domain name (e.g. notion.so, linear.app).
 - Evaluate through the lens of the company's recipe above: what works for their specific business units, and flag any deal breakers prominently.
+- For sentimentConsensus: cross-reference ALL sources (reviews, trust sites, Reddit, Perplexity). Do sources agree? What's the confidence based on volume of data?
+- For marketIntel: extract company details from the about page, Perplexity analysis, and any other available sources. Use "Unknown" for fields you can't determine.
             `.trim(),
         });
         logApiCall({
@@ -366,16 +484,32 @@ INSTRUCTIONS:
             toolId,
         });
 
-        // ── Step 7: Store report ──────────────────────────────────────────
+        // ── Step 8: Store report ──────────────────────────────────────────
         const sentimentData = {
             reviewSources: reviewSearch.results.map((r) => ({
                 title: r.title,
                 url: r.url,
                 score: r.score,
             })),
+            trustSources: trustSearch.results.map((r) => ({
+                title: r.title,
+                url: r.url,
+                score: r.score,
+            })),
             reviewAnswer: reviewSearch.answer,
-            redditAnswer: redditSearch.answer,
+            trustAnswer: trustSearch.answer,
+            redditThreads: uniqueRedditResults.map((r) => ({
+                title: r.title,
+                url: r.url,
+                subreddit: (() => { try { return new URL(r.url).pathname.split("/")[2] || "reddit"; } catch { return "reddit"; } })(),
+                snippet: r.content.slice(0, 200),
+            })),
+            redditAnswer: redditAnswers,
             competitorAnalysis: rawData.competitors,
+            sentimentConsensus: reportData.sentimentConsensus,
+            marketIntel: reportData.marketIntel,
+            dataSources: totalDataSources.length,
+            pagesScraped: pagesToScrape.length,
         };
 
         // Count existing reports for this tool to set correct version
