@@ -114,7 +114,7 @@ Be concise, data-driven, and helpful. Reference specific tool names and scores w
             ],
         });
 
-        return result.toDataStreamResponse();
+        return result.toUIMessageStreamResponse();
     } catch {
         return new Response("Internal Server Error", { status: 500 });
     }

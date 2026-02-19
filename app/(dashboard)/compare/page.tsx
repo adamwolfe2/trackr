@@ -55,8 +55,8 @@ export default async function ComparePage() {
                 status: tool.status,
                 pros: report?.pros ?? [],
                 cons: report?.cons ?? [],
-                pricing: report?.pricing,
-                features: report?.features,
+                pricing: (report?.pricing ?? null) as Array<{ price?: string; tier?: string; [key: string]: unknown }> | string | null,
+                features: (report?.features ?? null) as string[] | { list: string[] } | null,
                 summary: report?.summary ?? null,
             };
         })

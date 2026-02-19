@@ -1,14 +1,17 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import type { TextUIPart } from "ai";
 import { useState, useEffect, useRef } from "react";
 import { Send, Bot, User } from "lucide-react";
 
 export default function AskTrackrPage() {
     const [input, setInput] = useState("");
-    const { messages, append, isLoading } = useChat({
-        api: "/api/chat",
-    });
+    // AI SDK v6: useChat defaults to POST /api/chat — no api option needed.
+    // Returns sendMessage (not append), status (not isLoading), parts (not content).
+    const { messages, sendMessage, status } = useChat();
+
+    const isLoading = status === "submitted" || status === "streaming";
 
     const bottomRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -20,7 +23,7 @@ export default function AskTrackrPage() {
         const trimmed = input.trim();
         if (!trimmed || isLoading) return;
         setInput("");
-        append({ role: "user", content: trimmed });
+        sendMessage({ text: trimmed });
     };
 
     return (
@@ -60,32 +63,40 @@ export default function AskTrackrPage() {
                         </div>
                     )}
 
-                    {messages.map((m) => (
-                        <div
-                            key={m.id}
-                            className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}
-                        >
-                            {m.role !== "user" && (
-                                <div className="w-6 h-6 bg-black flex items-center justify-center shrink-0 mt-0.5">
-                                    <Bot className="w-3.5 h-3.5 text-white" />
-                                </div>
-                            )}
+                    {messages.map((m) => {
+                        const text = m.parts
+                            .filter((p): p is TextUIPart => p.type === "text")
+                            .map((p) => p.text)
+                            .join("");
+                        // Skip assistant messages that have no text yet (e.g. tool-only steps)
+                        if (!text && m.role !== "user") return null;
+                        return (
                             <div
-                                className={`max-w-[75%] border border-black px-4 py-3 font-mono text-xs leading-relaxed ${
-                                    m.role === "user"
-                                        ? "bg-black text-white"
-                                        : "bg-white text-black"
-                                }`}
+                                key={m.id}
+                                className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}
                             >
-                                {m.content}
-                            </div>
-                            {m.role === "user" && (
-                                <div className="w-6 h-6 border border-black flex items-center justify-center shrink-0 mt-0.5 bg-black">
-                                    <User className="w-3.5 h-3.5 text-white" />
+                                {m.role !== "user" && (
+                                    <div className="w-6 h-6 bg-black flex items-center justify-center shrink-0 mt-0.5">
+                                        <Bot className="w-3.5 h-3.5 text-white" />
+                                    </div>
+                                )}
+                                <div
+                                    className={`max-w-[75%] border border-black px-4 py-3 font-mono text-xs leading-relaxed ${
+                                        m.role === "user"
+                                            ? "bg-black text-white"
+                                            : "bg-white text-black"
+                                    }`}
+                                >
+                                    {text}
                                 </div>
-                            )}
-                        </div>
-                    ))}
+                                {m.role === "user" && (
+                                    <div className="w-6 h-6 border border-black flex items-center justify-center shrink-0 mt-0.5 bg-black">
+                                        <User className="w-3.5 h-3.5 text-white" />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
 
                     {isLoading && (
                         <div className="flex gap-3 justify-start">
