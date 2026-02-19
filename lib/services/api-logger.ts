@@ -40,9 +40,11 @@ export const COST_MAP = {
     tavily: { search: 0.01 },
     perplexity: { "sonar-reasoning-pro": 0.05 }, // rough estimate per call
     openai: {
-        "gpt-4o-input": 2.50 / 1_000_000,   // $2.50/1M input tokens
-        "gpt-4o-output": 10.00 / 1_000_000,  // $10/1M output tokens
-        "embedding": 0.02 / 1_000_000,       // $0.02/1M tokens
+        "gpt-4o-input": 2.50 / 1_000_000,         // $2.50/1M input tokens
+        "gpt-4o-output": 10.00 / 1_000_000,        // $10/1M output tokens
+        "gpt-4o-mini-input": 0.15 / 1_000_000,     // $0.15/1M input tokens
+        "gpt-4o-mini-output": 0.60 / 1_000_000,    // $0.60/1M output tokens
+        "embedding": 0.02 / 1_000_000,             // $0.02/1M tokens
     },
     resend: { send: 0 }, // free tier
     slack: { post: 0 },  // free
@@ -50,6 +52,9 @@ export const COST_MAP = {
 
 /** Estimate OpenAI cost from token counts */
 export function estimateOpenAICost(tokensIn: number, tokensOut: number, model = "gpt-4o"): number {
+    if (model.includes("gpt-4o-mini")) {
+        return tokensIn * COST_MAP.openai["gpt-4o-mini-input"] + tokensOut * COST_MAP.openai["gpt-4o-mini-output"];
+    }
     if (model.includes("gpt-4o")) {
         return tokensIn * COST_MAP.openai["gpt-4o-input"] + tokensOut * COST_MAP.openai["gpt-4o-output"];
     }

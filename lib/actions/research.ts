@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { tools, reports, workspaces, researchJobs, subscriptions } from "@/lib/db/schema";
 import { eq, sql, and, gte, ne } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
-import { perplexity } from "@/lib/services/perplexity";
 import { tavily } from "@/lib/services/tavily";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
@@ -175,13 +174,23 @@ export async function performDeepResearch(toolId: string) {
         const aboutUrl = subPages.find((u) => /\/(about|company|team)/i.test(u));
         const securityUrl = subPages.find((u) => /\/(security|compliance|trust|privacy)/i.test(u));
 
-        // ── Step 2: Scrape up to 5 pages ───────────────────────────────
+        // Only scrape about/security pages if workspace recipe mentions security/compliance
+        // or if those pages are likely valuable (reduces Firecrawl costs for most runs)
+        const recipe = tool.workspace.scorecardConfig as {
+            systemContext?: string;
+            dealBreakers?: string;
+            evaluationCriteria?: string;
+        } | null;
+        const recipeText = [recipe?.systemContext, recipe?.dealBreakers, recipe?.evaluationCriteria].filter(Boolean).join(" ").toLowerCase();
+        const needsDeepScrape = recipeText.includes("security") || recipeText.includes("compliance") || recipeText.includes("enterprise") || recipeText.includes("soc") || recipeText.includes("hipaa");
+
+        // ── Step 2: Scrape pages (2-5 depending on context) ─────────────
         const pagesToScrape = [
             { key: "main", url: tool.websiteUrl, label: "homepage" },
             ...(pricingUrl !== tool.websiteUrl ? [{ key: "pricing", url: pricingUrl, label: "pricing" }] : []),
             ...(featuresUrl ? [{ key: "features", url: featuresUrl, label: "features" }] : []),
-            ...(aboutUrl ? [{ key: "about", url: aboutUrl, label: "about" }] : []),
-            ...(securityUrl ? [{ key: "security", url: securityUrl, label: "security" }] : []),
+            ...(needsDeepScrape && aboutUrl ? [{ key: "about", url: aboutUrl, label: "about" }] : []),
+            ...(needsDeepScrape && securityUrl ? [{ key: "security", url: securityUrl, label: "security" }] : []),
         ];
         const pageLabels = pagesToScrape.map(p => p.label).join(", ");
         await logProgress(toolId, `Step 2/7: Crawling ${pagesToScrape.length} pages (${pageLabels})...`);
@@ -353,47 +362,74 @@ export async function performDeepResearch(toolId: string) {
             .join("\n\n");
         rawData.redditAnswers = redditAnswers;
 
-        // ── Step 6: Perplexity — competitors + market intelligence ───────
+        // ── Step 6: Tavily — competitors + market intelligence ────────────
         await logProgress(toolId, `Step 6/7: Analyzing competitive landscape + market intel...`);
-        const perplexityStart = Date.now();
-        const competitorAnalysis = await withTimeout(
-            perplexity.search(
-                `Provide a comprehensive analysis of ${tool.name} (${tool.websiteUrl}):
-1. Who are the main competitors? What are the key differentiators?
-2. What do users typically choose instead, and why?
-3. When was the company founded? Where is it headquartered?
-4. How many employees does it have? What is its funding status?
-5. What are the most notable recent developments, launches, or news from the past year?
-6. What is the general market sentiment — is the company growing, stable, or declining?`
+        const competitorStart = Date.now();
+        const [competitorSearch, marketSearch] = await Promise.all([
+            withTimeout(
+                tavily.search(
+                    `${tool.name} competitors alternatives comparison vs`,
+                    { maxResults: 6, includeAnswer: true }
+                ),
+                30000, tavilyFallback
             ),
-            30000,
-            ""
-        );
+            withTimeout(
+                tavily.search(
+                    `"${tool.name}" company funding employees headquarters founded`,
+                    { maxResults: 4, includeAnswer: true }
+                ),
+                30000, tavilyFallback
+            ),
+        ]);
+        const competitorDuration = Date.now() - competitorStart;
         logApiCall({
-            service: "perplexity",
-            endpoint: "sonar-reasoning-pro",
-            durationMs: Date.now() - perplexityStart,
-            estimatedCost: COST_MAP.perplexity["sonar-reasoning-pro"],
+            service: "tavily",
+            endpoint: "search-competitors",
+            durationMs: competitorDuration,
+            estimatedCost: COST_MAP.tavily.search,
             workspaceId: tool.workspaceId,
             toolId,
         });
-        rawData.competitors = competitorAnalysis;
+        logApiCall({
+            service: "tavily",
+            endpoint: "search-market-intel",
+            durationMs: competitorDuration,
+            estimatedCost: COST_MAP.tavily.search,
+            workspaceId: tool.workspaceId,
+            toolId,
+        });
 
-        // ── Step 7: GPT-4o synthesis ──────────────────────────────────────
+        // Combine competitor + market intel into one block for synthesis
+        const competitorContent = competitorSearch.results
+            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 400)}`)
+            .join("\n\n");
+        const marketContent = marketSearch.results
+            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 400)}`)
+            .join("\n\n");
+        rawData.competitors = [
+            competitorSearch.answer && `COMPETITOR ANALYSIS:\n${competitorSearch.answer}`,
+            competitorContent && `COMPETITOR SOURCES:\n${competitorContent}`,
+            marketSearch.answer && `MARKET INTEL:\n${marketSearch.answer}`,
+            marketContent && `MARKET SOURCES:\n${marketContent}`,
+        ].filter(Boolean).join("\n\n");
+
+        // ── Step 7: GPT-4o-mini synthesis ───────────────────────────────────
         // Count total unique data sources used
         const totalDataSources = [
             ...new Set([
                 ...reviewSearch.results.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
                 ...trustSearch.results.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
-                ...uniqueRedditResults.map(r => "reddit.com"),
-                ...(competitorAnalysis ? ["perplexity.ai"] : []),
+                ...uniqueRedditResults.map(() => "reddit.com"),
+                ...competitorSearch.results.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
+                ...marketSearch.results.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
                 domain, // official site
             ])
         ];
-        await logProgress(toolId, `Step 7/7: Synthesizing from ${totalDataSources.length} sources with GPT-4o...`);
+        await logProgress(toolId, `Step 7/7: Synthesizing from ${totalDataSources.length} sources...`);
 
         const companyContext = tool.workspace.companyContext ?? "A technology company evaluating software tools.";
-        const recipe = tool.workspace.scorecardConfig as {
+        // recipe was already loaded above for conditional scraping — cast to full type for prompt building
+        const fullRecipe = tool.workspace.scorecardConfig as {
             systemContext?: string;
             businessUnits?: Array<{ name: string; description: string; priorities: string }>;
             evaluationCriteria?: string;
@@ -401,22 +437,22 @@ export async function performDeepResearch(toolId: string) {
         } | null;
 
         // Build a rich recipe-based prompt if a recipe exists, otherwise fall back to context only
-        const recipeSection = recipe?.systemContext ? `
+        const recipeSection = fullRecipe?.systemContext ? `
 === COMPANY SCORECARD RECIPE ===
-${recipe.systemContext}
+${fullRecipe.systemContext}
 
-${recipe.businessUnits?.length ? `BUSINESS UNITS:\n${recipe.businessUnits.map(bu =>
+${fullRecipe.businessUnits?.length ? `BUSINESS UNITS:\n${fullRecipe.businessUnits.map(bu =>
     `• ${bu.name}: ${bu.description}\n  Priorities: ${bu.priorities}`
 ).join("\n\n")}` : ""}
 
-${recipe.evaluationCriteria ? `EVALUATION CRITERIA:\n${recipe.evaluationCriteria}` : ""}
+${fullRecipe.evaluationCriteria ? `EVALUATION CRITERIA:\n${fullRecipe.evaluationCriteria}` : ""}
 
-${recipe.dealBreakers ? `DEAL BREAKERS (flag these prominently in cons):\n${recipe.dealBreakers}` : ""}
+${fullRecipe.dealBreakers ? `DEAL BREAKERS (flag these prominently in cons):\n${fullRecipe.dealBreakers}` : ""}
 ` : `COMPANY CONTEXT: ${companyContext}`;
 
         const openaiStart = Date.now();
         const { object: reportData, usage } = await generateObject({
-            model: openai("gpt-4o"),
+            model: openai("gpt-4o-mini"),
             schema: ReportSchema,
             prompt: `
 You are a rigorous software procurement analyst evaluating ${tool.name} (${tool.websiteUrl}).
@@ -475,11 +511,11 @@ INSTRUCTIONS:
         });
         logApiCall({
             service: "openai",
-            endpoint: "gpt-4o",
+            endpoint: "gpt-4o-mini",
             durationMs: Date.now() - openaiStart,
             tokensIn: usage?.inputTokens,
             tokensOut: usage?.outputTokens,
-            estimatedCost: estimateOpenAICost(usage?.inputTokens ?? 0, usage?.outputTokens ?? 0),
+            estimatedCost: estimateOpenAICost(usage?.inputTokens ?? 0, usage?.outputTokens ?? 0, "gpt-4o-mini"),
             workspaceId: tool.workspaceId,
             toolId,
         });
