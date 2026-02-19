@@ -37,7 +37,7 @@ export default async function BillingPage({
         {
             key: "free" as const,
             name: "Free",
-            price: "$0",
+            price: `$${PLANS.FREE.price}`,
             period: "/mo",
             description: "Perfect for exploring Trackr and evaluating a handful of tools.",
             features: [
@@ -53,7 +53,7 @@ export default async function BillingPage({
         {
             key: "team" as const,
             name: "Team",
-            price: "$29",
+            price: `$${PLANS.TEAM.price}`,
             period: "/mo",
             description: "For ops teams that evaluate tools regularly and track spend.",
             features: [
@@ -70,7 +70,7 @@ export default async function BillingPage({
         {
             key: "agency" as const,
             name: "Agency",
-            price: "$99",
+            price: `$${PLANS.AGENCY.price}`,
             period: "/mo",
             description: "For agencies managing tools across multiple clients.",
             features: [

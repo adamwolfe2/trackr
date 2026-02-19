@@ -1,13 +1,14 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import type { Message } from "ai";
 import { Send, Bot, User } from "lucide-react";
 import { useEffect, useRef } from "react";
 
 export default function AskTrackrPage() {
     const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
         api: "/api/chat",
-    } as any) as any;
+    });
 
     const bottomRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -51,7 +52,7 @@ export default function AskTrackrPage() {
                         </div>
                     )}
 
-                    {messages.map((m: any) => (
+                    {messages.map((m: Message) => (
                         <div
                             key={m.id}
                             className={`flex gap-3 ${m.role === "user" ? "justify-end" : "justify-start"}`}

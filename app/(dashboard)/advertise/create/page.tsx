@@ -1,10 +1,5 @@
 export const dynamic = "force-dynamic";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { db } from "@/lib/db";
 import { tools, workspaceMembers } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -28,21 +23,22 @@ export default async function CreateAdPage() {
     });
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6 animate-fade-in-up">
+        <div className="max-w-2xl mx-auto space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">New Ad Campaign</h1>
-                <p className="text-muted-foreground">Boost your tool's visibility with a sponsored placement.</p>
+                <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Advertise</p>
+                <h1 className="font-serif text-3xl font-normal">New Ad Campaign</h1>
+                <p className="font-mono text-sm text-neutral-500 mt-1">Boost your tool&apos;s visibility with a sponsored placement.</p>
             </div>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Campaign Details</CardTitle>
-                    <CardDescription>Select a tool and set your budget.</CardDescription>
-                </CardHeader>
-                <CardContent>
+            <div className="border border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <div className="border-b border-black px-6 py-4">
+                    <h2 className="font-mono text-xs uppercase tracking-widest">Campaign Details</h2>
+                    <p className="font-mono text-xs text-neutral-500 mt-1">Select a tool and set your budget.</p>
+                </div>
+                <div className="p-6">
                     <CreateAdForm tools={myTools} workspaceId={member.workspaceId} />
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 }

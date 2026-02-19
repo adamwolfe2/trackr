@@ -1,36 +1,50 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
+import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
+import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { currentUser } from "@clerk/nextjs/server";
 
-import { Header } from "@/components/marketing/header";
+export const metadata: Metadata = {
+    title: "Privacy Policy — Trackr",
+    description: "How Trackr collects, uses, and protects your information.",
+    openGraph: {
+        title: "Privacy Policy — Trackr",
+        description: "How Trackr collects, uses, and protects your information.",
+        type: "website",
+        url: "https://trytrackr.com/privacy",
+    },
+};
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+    const user = await currentUser();
+
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-50 font-sans selection:bg-emerald-500/30">
-            <Header />
+        <main className="flex-grow w-full max-w-6xl mx-auto px-6">
+            <MarketingNavigation isLoggedIn={!!user} />
 
-            <main className="pt-32 pb-16 container mx-auto px-4 max-w-3xl prose prose-zinc dark:prose-invert">
-                <h1>Privacy Policy</h1>
-                <p>Last updated: March 2024</p>
+            <section className="py-16 border-t border-black/10 max-w-3xl">
+                <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">Legal</span>
+                <h1 className="font-serif text-4xl font-normal mb-2">Privacy Policy</h1>
+                <p className="font-mono text-xs text-neutral-400 mb-12">Last updated: March 2024</p>
 
-                <h2>1. Information We Collect</h2>
-                <p>We collect information you provide directly to us, such as when you create an account, update your profile, or use our interactive features.</p>
+                <div className="space-y-10 font-mono text-sm text-neutral-700 leading-relaxed">
+                    <div>
+                        <h2 className="font-serif text-xl font-normal mb-3 text-black">1. Information We Collect</h2>
+                        <p>We collect information you provide directly to us, such as when you create an account, update your profile, or use our interactive features.</p>
+                    </div>
 
-                <h2>2. How We Use Your Information</h2>
-                <p>
-                    We use the information we collect to provide, maintain, and improve our services, such as to personalize your experience and provide customer support.
-                </p>
+                    <div>
+                        <h2 className="font-serif text-xl font-normal mb-3 text-black">2. How We Use Your Information</h2>
+                        <p>We use the information we collect to provide, maintain, and improve our services, such as to personalize your experience and provide customer support.</p>
+                    </div>
 
-                <h2>3. Data Security</h2>
-                <p>
-                    We take reasonable measures to help protect information about you from loss, theft, misuse and unauthorized access, disclosure, alteration and destruction.
-                </p>
-            </main>
-
-            <footer className="border-t border-zinc-200 dark:border-zinc-800 py-12 bg-zinc-50 dark:bg-zinc-900 mt-24">
-                <div className="container mx-auto px-4 text-center text-sm text-zinc-500">
-                    <p>&copy; 2024 Trackr Inc. All rights reserved.</p>
+                    <div>
+                        <h2 className="font-serif text-xl font-normal mb-3 text-black">3. Data Security</h2>
+                        <p>We take reasonable measures to help protect information about you from loss, theft, misuse and unauthorized access, disclosure, alteration and destruction.</p>
+                    </div>
                 </div>
-            </footer>
-        </div>
+            </section>
+
+            <MarketingFooter />
+        </main>
     );
 }

@@ -1,17 +1,10 @@
 "use server";
 
 import { db } from "@/lib/db";
-// We don't have a notifications table yet, so I will simulate them from researchJobs for now
-// or better, I should add a notifications table to the schema if I want true persistence.
-// Given strict instructions to "execute phases", let's first check if I should add the table.
-// Phase 20 says "In-app inbox".
-// Let's create a partial implementation using researchJobs completions as "notifications" for MVP.
-// Wait, true notifications usually require a table.
-// Let's look at schema again. 
-
-import { researchJobs, tools } from "@/lib/db/schema";
-import { eq, desc, and, ne } from "drizzle-orm";
+import { researchJobs, workspaceMembers } from "@/lib/db/schema";
+import { eq, desc, and, ne, sql } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 
 export type Notification = {
     id: string;
@@ -23,34 +16,58 @@ export type Notification = {
     link: string;
 };
 
-// For this MVP phase, we will generate "virtual" notifications from completed research jobs
-// that haven't been "seen" (we might need a 'seen' flag on jobs, or just show recent 5).
-// Actually, let's just show the last 5 completed jobs as notifications.
-
 export async function getNotifications(): Promise<Notification[]> {
     const user = await currentUser();
     if (!user) return [];
 
-    // Fetch recent completed jobs
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+    });
+    if (!member) return [];
+
+    const seenIds = member.seenJobIds ?? [];
+
+    // Fetch recent completed/failed jobs for this workspace
     const jobs = await db.query.researchJobs.findMany({
         where: and(
             ne(researchJobs.status, 'running'),
             ne(researchJobs.status, 'queued')
         ),
-        with: {
-            tool: true
-        },
+        with: { tool: true },
         orderBy: [desc(researchJobs.completedAt)],
         limit: 10
     });
 
-    return jobs.map(job => ({
+    // Only show jobs belonging to this workspace
+    const workspaceJobs = jobs.filter(job => job.tool.workspaceId === member.workspaceId);
+
+    return workspaceJobs.map(job => ({
         id: job.id,
         type: job.status === 'failed' ? 'job_failed' : 'job_complete',
         title: job.status === 'failed' ? 'Research Failed' : 'Research Complete',
         message: `${job.tool.name} analysis has finished.`,
         createdAt: job.completedAt || job.triggeredAt,
-        read: false, // We don't track read state in MVP without a table
+        read: seenIds.includes(job.id),
         link: `/tools/${job.toolId}`
     }));
+}
+
+export async function markNotificationsRead(jobIds: string[]) {
+    const user = await currentUser();
+    if (!user || jobIds.length === 0) return;
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+    });
+    if (!member) return;
+
+    const existing = member.seenJobIds ?? [];
+    const merged = Array.from(new Set([...existing, ...jobIds]));
+
+    await db
+        .update(workspaceMembers)
+        .set({ seenJobIds: merged })
+        .where(eq(workspaceMembers.id, member.id));
+
+    revalidatePath("/");
 }

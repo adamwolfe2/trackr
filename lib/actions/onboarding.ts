@@ -44,11 +44,13 @@ export async function completeOnboarding({
     companyContext,
     selectedTools,
     scorecardDimensions,
+    plan,
 }: {
     companyName: string;
     companyContext: string;
     selectedTools: Array<{ name: string; url?: string }>;
     scorecardDimensions: Array<{ key: string; label: string; weight: number }>;
+    plan?: string;
 }) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
@@ -102,6 +104,10 @@ export async function completeOnboarding({
     revalidatePath("/tools");
     revalidatePath("/workspace");
     revalidatePath("/stack");
+
+    if (plan === "team" || plan === "agency") {
+        redirect(`/settings/billing?upgrade=${plan}`);
+    }
     redirect("/tools");
 }
 

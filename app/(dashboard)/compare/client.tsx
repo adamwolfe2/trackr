@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Check, X, ArrowRightLeft, Plus, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
+type PricingEntry = { price?: string; tier?: string; [key: string]: unknown };
+type FeaturesValue = string[] | { list: string[] } | null;
+
 interface CompareTool {
     id: string;
     name: string;
@@ -12,8 +15,8 @@ interface CompareTool {
     status: string;
     pros: string[];
     cons: string[];
-    pricing: any;
-    features: any;
+    pricing: PricingEntry[] | string | null;
+    features: FeaturesValue;
     summary: string | null;
 }
 
@@ -32,7 +35,7 @@ export function CompareClient({ tools }: CompareClientProps) {
 
     const selectedTools = selectedToolIds.map(id => id ? tools.find(t => t.id === id) ?? null : null);
 
-    const getPricingText = (pricing: any): string => {
+    const getPricingText = (pricing: PricingEntry[] | string | null): string => {
         if (!pricing) return "Unknown";
         if (typeof pricing === "string") return pricing;
         if (Array.isArray(pricing) && pricing.length > 0) {
@@ -41,7 +44,7 @@ export function CompareClient({ tools }: CompareClientProps) {
         return "See website";
     };
 
-    const getFeaturesList = (features: any): string[] => {
+    const getFeaturesList = (features: FeaturesValue): string[] => {
         if (!features) return [];
         if (Array.isArray(features)) return features.slice(0, 5);
         if (typeof features === "object" && "list" in features && Array.isArray(features.list)) {

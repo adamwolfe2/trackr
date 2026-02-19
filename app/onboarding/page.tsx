@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { Check, Loader2, Sparkles, ArrowRight, RefreshCw } from "lucide-react";
 import { generateCompanyContext, completeOnboarding } from "@/lib/actions/onboarding";
 import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS } from "@/lib/constants/integrations";
@@ -13,6 +14,8 @@ type Dimension = { key: string; label: string; weight: number };
 export default function OnboardingPage() {
     const [step, setStep] = useState<Step>(1);
     const [isPending, startTransition] = useTransition();
+    const searchParams = useSearchParams();
+    const plan = searchParams.get("plan") ?? "";
 
     // Step 1
     const [companyName, setCompanyName] = useState("");
@@ -71,6 +74,7 @@ export default function OnboardingPage() {
                     companyContext,
                     selectedTools: toolsArray,
                     scorecardDimensions: dimensions,
+                    plan: plan || undefined,
                 });
             } catch {
                 toast.error("Failed to save workspace. Please try again.");
@@ -101,6 +105,13 @@ export default function OnboardingPage() {
                     ))}
                 </div>
             </div>
+
+            {(plan === "team" || plan === "agency") && (
+                <div className="border-b border-black bg-black text-white px-6 py-2.5 text-center font-mono text-xs">
+                    You&apos;re signing up for the <span className="font-bold uppercase">{plan === "team" ? "Team" : "Agency"}</span> plan.
+                    Complete onboarding to activate your subscription.
+                </div>
+            )}
 
             <div className="flex-1 flex flex-col items-center justify-start py-12 px-6">
 

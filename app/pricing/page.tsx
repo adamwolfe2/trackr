@@ -8,6 +8,12 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
     title: "Pricing — Trackr",
     description: "Free for getting started. Team at $29/mo. Agency at $99/mo. No hidden fees.",
+    openGraph: {
+        title: "Pricing — Trackr",
+        description: "Free for getting started. Team at $29/mo. Agency at $99/mo. No hidden fees.",
+        type: "website",
+        url: "https://trytrackr.com/pricing",
+    },
 };
 
 const plans = [

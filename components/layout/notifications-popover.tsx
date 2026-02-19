@@ -2,27 +2,38 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Bell, CheckCircle2, XCircle } from "lucide-react";
-import { getNotifications, type Notification } from "@/lib/actions/notifications";
+import { getNotifications, markNotificationsRead, type Notification } from "@/lib/actions/notifications";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
 export function NotificationsPopover() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
+
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     useEffect(() => {
         const fetchNotifications = async () => {
             const data = await getNotifications();
             setNotifications(data);
-            setUnreadCount(data.length);
         };
 
         fetchNotifications();
         const interval = setInterval(fetchNotifications, 60000);
         return () => clearInterval(interval);
     }, []);
+
+    // Mark visible unread notifications as read when popover opens
+    useEffect(() => {
+        if (!isOpen) return;
+        const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+        if (unreadIds.length === 0) return;
+
+        markNotificationsRead(unreadIds).then(() => {
+            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+        });
+    }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Close on outside click
     useEffect(() => {
@@ -70,7 +81,7 @@ export function NotificationsPopover() {
                                     key={notification.id}
                                     href={notification.link}
                                     onClick={() => setIsOpen(false)}
-                                    className="flex items-start gap-3 p-4 hover:bg-neutral-50 transition-colors"
+                                    className={`flex items-start gap-3 p-4 hover:bg-neutral-50 transition-colors ${notification.read ? "opacity-60" : ""}`}
                                 >
                                     <div className="mt-0.5 shrink-0">
                                         {notification.type === "job_complete" ? (

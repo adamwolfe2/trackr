@@ -1,41 +1,55 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import type { Metadata } from "next";
+import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
+import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { currentUser } from "@clerk/nextjs/server";
 
-import { Header } from "@/components/marketing/header";
+export const metadata: Metadata = {
+    title: "Terms of Service — Trackr",
+    description: "Terms and conditions for using the Trackr platform.",
+    openGraph: {
+        title: "Terms of Service — Trackr",
+        description: "Terms and conditions for using the Trackr platform.",
+        type: "website",
+        url: "https://trytrackr.com/terms",
+    },
+};
 
-export default function TermsPage() {
+export default async function TermsPage() {
+    const user = await currentUser();
+
     return (
-        <div className="min-h-screen bg-white dark:bg-black text-zinc-900 dark:text-zinc-50 font-sans selection:bg-emerald-500/30">
-            <Header />
+        <main className="flex-grow w-full max-w-6xl mx-auto px-6">
+            <MarketingNavigation isLoggedIn={!!user} />
 
-            <main className="pt-32 pb-16 container mx-auto px-4 max-w-3xl prose prose-zinc dark:prose-invert">
-                <h1>Terms of Service</h1>
-                <p>Last updated: March 2024</p>
+            <section className="py-16 border-t border-black/10 max-w-3xl">
+                <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">Legal</span>
+                <h1 className="font-serif text-4xl font-normal mb-2">Terms of Service</h1>
+                <p className="font-mono text-xs text-neutral-400 mb-12">Last updated: March 2024</p>
 
-                <h2>1. Acceptance of Terms</h2>
-                <p>By accessing and using Trackr ("the Service"), you agree to these Terms of Service.</p>
+                <div className="space-y-10 font-mono text-sm text-neutral-700 leading-relaxed">
+                    <div>
+                        <h2 className="font-serif text-xl font-normal mb-3 text-black">1. Acceptance of Terms</h2>
+                        <p>By accessing and using Trackr (&quot;the Service&quot;), you agree to these Terms of Service.</p>
+                    </div>
 
-                <h2>2. Use License</h2>
-                <p>
-                    Permission is granted to temporarily view the materials on Trackr's website for personal, non-commercial transitory viewing only.
-                </p>
+                    <div>
+                        <h2 className="font-serif text-xl font-normal mb-3 text-black">2. Use License</h2>
+                        <p>Permission is granted to temporarily view the materials on Trackr&apos;s website for personal, non-commercial transitory viewing only.</p>
+                    </div>
 
-                <h2>3. Subscription and Billing</h2>
-                <p>
-                    Some parts of the Service are billed on a subscription basis ("Subscription(s)"). You will be billed is advance on a recurring and periodic basis ("Billing Cycle").
-                </p>
+                    <div>
+                        <h2 className="font-serif text-xl font-normal mb-3 text-black">3. Subscription and Billing</h2>
+                        <p>Some parts of the Service are billed on a subscription basis (&quot;Subscription(s)&quot;). You will be billed in advance on a recurring and periodic basis (&quot;Billing Cycle&quot;).</p>
+                    </div>
 
-                <h2>4. Termination</h2>
-                <p>
-                    We may terminate or suspend access to our Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.
-                </p>
-            </main>
-
-            <footer className="border-t border-zinc-200 dark:border-zinc-800 py-12 bg-zinc-50 dark:bg-zinc-900 mt-24">
-                <div className="container mx-auto px-4 text-center text-sm text-zinc-500">
-                    <p>&copy; 2024 Trackr Inc. All rights reserved.</p>
+                    <div>
+                        <h2 className="font-serif text-xl font-normal mb-3 text-black">4. Termination</h2>
+                        <p>We may terminate or suspend access to our Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p>
+                    </div>
                 </div>
-            </footer>
-        </div>
+            </section>
+
+            <MarketingFooter />
+        </main>
     );
 }

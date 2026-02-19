@@ -1,12 +1,17 @@
 import { Clock } from "lucide-react";
 import { db } from "@/lib/db";
-import { tools, painPoints, workspaceMembers, researchJobs, reports } from "@/lib/db/schema";
+import { tools, painPoints, workspaceMembers, workspaces, researchJobs, reports } from "@/lib/db/schema";
 import { eq, sql, desc } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+
+type MemberWithWorkspace = InferSelectModel<typeof workspaceMembers> & {
+    workspace: InferSelectModel<typeof workspaces>;
+};
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +21,8 @@ export default async function DashboardPage() {
 
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),
-        with: {
-            // @ts-ignore
-            workspace: true
-        }
-    });
+        with: { workspace: true },
+    }) as MemberWithWorkspace | undefined;
 
     if (!member) {
         return (
@@ -86,7 +88,7 @@ export default async function DashboardPage() {
             <div className="flex items-center justify-between">
                 <h1 className="font-serif text-3xl font-normal">Dashboard</h1>
                 <span className="font-mono text-xs text-neutral-400">
-                    {(member as any).workspace?.name}
+                    {member.workspace.name}
                 </span>
             </div>
 

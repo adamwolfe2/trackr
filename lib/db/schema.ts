@@ -19,6 +19,7 @@ export const workspaceMembers = pgTable('workspace_members', {
     role: text('role').notNull().default('member'), // owner | admin | member
     invitedBy: uuid('invited_by'),
     joinedAt: timestamp('joined_at').defaultNow().notNull(),
+    seenJobIds: text('seen_job_ids').array().default([]).notNull(),
 }, (table) => [
     index('workspace_members_user_id_idx').on(table.userId),
     index('workspace_members_workspace_id_idx').on(table.workspaceId),
