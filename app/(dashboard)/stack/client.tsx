@@ -630,9 +630,9 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                         <thead>
                             <tr className="border-b border-black bg-neutral-50">
                                 <th className="text-left px-4 py-3 font-mono text-xs uppercase tracking-widest">Tool</th>
-                                <th className="text-left px-4 py-3 font-mono text-xs uppercase tracking-widest">Category</th>
+                                <th className="text-left px-4 py-3 font-mono text-xs uppercase tracking-widest hidden md:table-cell">Category</th>
                                 <th className="text-right px-4 py-3 font-mono text-xs uppercase tracking-widest">Monthly</th>
-                                <th className="text-right px-4 py-3 font-mono text-xs uppercase tracking-widest">Seats</th>
+                                <th className="text-right px-4 py-3 font-mono text-xs uppercase tracking-widest hidden sm:table-cell">Seats</th>
                                 <th className="text-left px-4 py-3 font-mono text-xs uppercase tracking-widest hidden md:table-cell">Renewal</th>
                                 <th className="text-left px-4 py-3 font-mono text-xs uppercase tracking-widest">Status</th>
                                 <th className="px-4 py-3"></th>
@@ -676,7 +676,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                 </a>
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 font-mono text-xs text-neutral-500">{entry.category || "—"}</td>
+                                        <td className="px-4 py-3 font-mono text-xs text-neutral-500 hidden md:table-cell">{entry.category || "—"}</td>
                                         <td className="px-4 py-3 text-right font-mono text-sm">
                                             {isEditing ? (
                                                 <input
@@ -693,7 +693,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                     : "—"
                                             )}
                                         </td>
-                                        <td className="px-4 py-3 text-right font-mono text-sm">
+                                        <td className="px-4 py-3 text-right font-mono text-sm hidden sm:table-cell">
                                             {isEditing ? (
                                                 <input
                                                     type="number"

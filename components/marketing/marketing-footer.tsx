@@ -34,7 +34,7 @@ export function MarketingFooter() {
                     <div className="flex flex-col gap-4">
                         <span className="font-bold text-black uppercase tracking-wider">Company</span>
                         <Link href="/about" className="text-neutral-600 hover:text-black hover:underline">About</Link>
-                        <Link href="/blog" className="text-neutral-600 hover:text-black hover:underline">Blog</Link>
+                        <span className="text-neutral-400 cursor-not-allowed">Blog (Coming Soon)</span>
                         <Link href="/contact" className="text-neutral-600 hover:text-black hover:underline">Contact</Link>
                         <span className="text-neutral-400 cursor-not-allowed">API (Coming Soon)</span>
                     </div>

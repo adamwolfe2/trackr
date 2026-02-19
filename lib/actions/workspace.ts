@@ -75,23 +75,12 @@ export async function inviteMember(formData: FormData) {
 
     // Send invite email via Resend if available
     try {
-        const resendKey = process.env.RESEND_API_KEY;
-        if (resendKey) {
-            const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
-            const { Resend } = await import("resend");
-            const resend = new Resend(resendKey);
-
-            const workspace = await db.query.workspaces.findFirst({
-                where: eq(workspaces.id, workspaceId),
-            });
-
-            await resend.emails.send({
-                from: "Trackr <noreply@trytrackr.com>",
-                to: [email],
-                subject: `You've been invited to ${workspace?.name || "a Trackr workspace"}`,
-                text: `You have been invited to join a Trackr workspace. Sign up at ${appUrl}/sign-up to get started.`,
-            });
-        }
+        const workspace = await db.query.workspaces.findFirst({
+            where: eq(workspaces.id, workspaceId),
+        });
+        const { sendInviteEmail } = await import("@/lib/email/resend");
+        const inviterName = [user.firstName, user.lastName].filter(Boolean).join(" ") || undefined;
+        await sendInviteEmail(email, workspace?.name || "a Trackr workspace", inviterName);
     } catch {
         // Email sending failure is non-fatal
     }

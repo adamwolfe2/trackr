@@ -4,15 +4,39 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Menu, X, LayoutDashboard, Database, Sparkles, CreditCard, Settings, PlusCircle, Search, Gift, Zap, MessageSquare } from "lucide-react";
+import {
+    Menu,
+    X,
+    LayoutDashboard,
+    Database,
+    Search,
+    Rss,
+    Zap,
+    MessageSquare,
+    Layers,
+    BarChart3,
+    AlertCircle,
+    SlidersHorizontal,
+    Sparkles,
+    Gift,
+    CreditCard,
+    Settings,
+    PlusCircle,
+} from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
+import { TrackrLogo } from "@/components/common/trackr-logo";
 
 const navItems = [
     { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Tool Database", href: "/tools", icon: Database },
     { title: "Discover", href: "/discover", icon: Search },
+    { title: "Your Feed", href: "/feed", icon: Rss },
     { title: "Research Queue", href: "/queue", icon: Zap },
     { title: "Ask Trackr AI", href: "/ask", icon: MessageSquare },
+    { title: "Software Stack", href: "/stack", icon: Layers },
+    { title: "Analytics", href: "/analytics", icon: BarChart3 },
+    { title: "Pain Points", href: "/pain-points", icon: AlertCircle },
+    { title: "Scorecard", href: "/scorecard", icon: SlidersHorizontal },
     { title: "Advertise", href: "/advertise", icon: Sparkles },
     { title: "Referrals", href: "/referrals", icon: Gift },
 ];
@@ -56,11 +80,13 @@ export function MobileNav() {
                 {/* Drawer Header */}
                 <div className="p-5 border-b border-black/10 flex items-center justify-between">
                     <Link
-                        href="/"
+                        href="/tools"
                         onClick={() => setOpen(false)}
                         className="flex items-center gap-2 font-serif text-xl font-medium"
                     >
-                        <div className="w-7 h-7 bg-black flex items-center justify-center text-white text-xs font-mono font-bold">T</div>
+                        <span className="w-7 h-7 bg-black flex items-center justify-center flex-shrink-0">
+                            <TrackrLogo size={18} inverted />
+                        </span>
                         Trackr
                     </Link>
                     <button

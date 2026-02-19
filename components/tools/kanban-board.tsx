@@ -141,7 +141,7 @@ function DraggableCard({ tool, onDelete }: { tool: KanbanTool; onDelete: (id: st
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={handleDelete}
                 disabled={deleting}
-                className="absolute top-1.5 right-1.5 w-4 h-4 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-white border border-black hover:bg-black hover:text-white disabled:opacity-40 z-10"
+                className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-white border border-black hover:bg-black hover:text-white disabled:opacity-40 z-10"
                 aria-label="Delete tool"
             >
                 <X className="w-2.5 h-2.5" />
