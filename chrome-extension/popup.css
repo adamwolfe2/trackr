@@ -36,6 +36,47 @@ html, body {
   display: none !important;
 }
 
+/* ---- State transitions ---- */
+.state {
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ---- Loading Skeleton ---- */
+.loading-skeleton {
+  padding: 8px 0;
+}
+
+.skel {
+  background: #E0E0DC;
+  height: 14px;
+  margin-bottom: 10px;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.skel-title {
+  width: 60%;
+  height: 20px;
+  margin-bottom: 14px;
+}
+
+.skel-text {
+  width: 100%;
+}
+
+.skel-text.short {
+  width: 40%;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.3; }
+}
+
 /* ---- Toast ---- */
 .toast {
   position: fixed;
@@ -45,11 +86,12 @@ html, body {
   z-index: 100;
   padding: 10px 14px;
   border: 2px solid var(--border);
-  border-radius: 0;
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
   text-align: center;
+  transform: translateY(0);
+  opacity: 1;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
@@ -99,13 +141,7 @@ html, body {
   gap: 8px;
 }
 
-.logo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  background: #000000;
+.logo-mark {
   flex-shrink: 0;
 }
 
@@ -117,10 +153,9 @@ html, body {
   height: 28px;
   background: transparent;
   border: 1.5px solid var(--border);
-  border-radius: 0;
   color: var(--fg);
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
 
 .btn-icon:hover {
@@ -158,6 +193,7 @@ html, body {
 
 .form-group {
   margin-bottom: 12px;
+  position: relative;
 }
 
 .form-group label {
@@ -171,12 +207,11 @@ html, body {
 
 .form-group input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 36px 10px 12px;
   font-family: var(--font-mono);
   font-size: 13px;
   background: #FFFFFF;
   border: 2px solid var(--border);
-  border-radius: 0;
   color: var(--fg);
   outline: none;
   transition: box-shadow 0.15s;
@@ -188,6 +223,26 @@ html, body {
 
 .form-group input:focus {
   box-shadow: 3px 3px 0 var(--border);
+}
+
+.toggle-key-btn {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 32px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #AAAAAA;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.toggle-key-btn:hover {
+  color: var(--fg);
 }
 
 .settings-link {
@@ -217,7 +272,6 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   border: 2px solid var(--border);
-  border-radius: 0;
   cursor: pointer;
   transition: all 0.15s;
   text-decoration: none;
@@ -243,6 +297,11 @@ html, body {
   cursor: not-allowed;
   box-shadow: none;
   transform: none;
+}
+
+.btn-primary.btn-success {
+  background: var(--bg);
+  color: var(--fg);
 }
 
 .btn-full {
@@ -288,7 +347,6 @@ html, body {
 .current-page {
   padding: 10px 12px;
   border: 1.5px solid #D0D0CC;
-  border-radius: 0;
   margin-bottom: 10px;
   background: #FFFFFF;
   overflow: hidden;
@@ -326,7 +384,6 @@ html, body {
   width: 8px;
   height: 8px;
   border: 1.5px solid var(--border);
-  border-radius: 0;
 }
 
 .status-dot.status-active {
@@ -345,7 +402,6 @@ html, body {
 
 .stack-card {
   border: 2px solid var(--border);
-  border-radius: 0;
   padding: 12px 14px;
 }
 
@@ -402,7 +458,6 @@ html, body {
   gap: 12px;
   padding: 12px 14px;
   border: 2px solid var(--border);
-  border-radius: 0;
   background: #FFFFFF;
 }
 

@@ -112,9 +112,7 @@ export function AppSidebar() {
             {/* Logo */}
             <div className="p-5 border-b border-black">
                 <Link href="/tools" className="flex items-center gap-2 font-serif text-xl font-medium mb-5">
-                    <span className="w-7 h-7 bg-black flex items-center justify-center flex-shrink-0">
-                        <TrackrLogo size={20} inverted />
-                    </span>
+                    <TrackrLogo size={24} />
                     Trackr
                 </Link>
                 <Link

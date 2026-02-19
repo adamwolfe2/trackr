@@ -5,10 +5,12 @@
 const DEFAULT_API_URL = "https://trytrackr.com";
 
 // --- DOM Elements ---
+const stateLoading = document.getElementById("state-loading");
 const stateDisconnected = document.getElementById("state-disconnected");
 const stateConnected = document.getElementById("state-connected");
 const apiKeyInput = document.getElementById("api-key-input");
 const connectBtn = document.getElementById("connect-btn");
+const toggleKeyBtn = document.getElementById("toggle-key-btn");
 const disconnectBtn = document.getElementById("disconnect-btn");
 const workspaceNameEl = document.getElementById("workspace-name");
 const pageUrlEl = document.getElementById("page-url");
@@ -100,6 +102,9 @@ function formatCost(cost) {
 async function initialize() {
   const { apiKey } = await getStorage(["apiKey"]);
 
+  // Hide loading, show appropriate state
+  stateLoading.classList.add("hidden");
+
   if (apiKey) {
     showConnectedState();
   } else {
@@ -110,29 +115,40 @@ async function initialize() {
 function showDisconnectedState() {
   stateDisconnected.classList.remove("hidden");
   stateConnected.classList.add("hidden");
+  stateLoading.classList.add("hidden");
   apiKeyInput.value = "";
-  apiKeyInput.focus();
+  // Focus after a tick to ensure element is visible
+  setTimeout(() => apiKeyInput.focus(), 50);
 }
 
 async function showConnectedState() {
   stateDisconnected.classList.add("hidden");
   stateConnected.classList.remove("hidden");
+  stateLoading.classList.add("hidden");
 
   // Get current tab info
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTab = tab;
 
   if (tab) {
-    pageUrlEl.textContent = getDomainFromUrl(tab.url) || tab.url;
+    const domain = getDomainFromUrl(tab.url);
+    pageUrlEl.textContent = domain || tab.url;
     pageTitleEl.textContent = tab.title || "";
+
+    // Disable add button for non-http pages
+    if (!tab.url.startsWith("http")) {
+      addQueueBtn.disabled = true;
+      addQueueBtn.textContent = "NOT A WEBPAGE";
+    }
   }
 
-  // Fetch workspace context
+  // Fetch workspace context and check stack in parallel
   loadContext();
-
-  // Check if current page tool is in stack
-  if (tab && tab.url) {
+  if (tab && tab.url && tab.url.startsWith("http")) {
     checkStack(getDomainFromUrl(tab.url));
+  } else {
+    stackCheckLoading.classList.add("hidden");
+    stackOut.classList.remove("hidden");
   }
 }
 
@@ -142,12 +158,12 @@ async function loadContext() {
     workspaceNameEl.textContent = data.workspaceName || "Your Workspace";
     aiScoreNumber.textContent = data.aiScore != null ? `${data.aiScore}/100` : "—";
     aiScoreLabel.textContent = data.aiLabel || "";
-    stackCountEl.textContent = data.stackCount != null ? `${data.stackCount} tools` : "— tools";
-  } catch (err) {
-    workspaceNameEl.textContent = "Unable to load";
+    stackCountEl.textContent = data.stackCount != null ? `${data.stackCount}` : "—";
+  } catch {
+    workspaceNameEl.textContent = "Unable to connect";
     aiScoreNumber.textContent = "—";
     aiScoreLabel.textContent = "Connection error";
-    stackCountEl.textContent = "— tools";
+    stackCountEl.textContent = "—";
   }
 }
 
@@ -174,7 +190,7 @@ async function checkStack(domain) {
     } else {
       stackOut.classList.remove("hidden");
     }
-  } catch (err) {
+  } catch {
     stackCheckLoading.classList.add("hidden");
     stackOut.classList.remove("hidden");
   }
@@ -184,8 +200,16 @@ async function checkStack(domain) {
 
 connectBtn.addEventListener("click", async () => {
   const key = apiKeyInput.value.trim();
+
   if (!key) {
     showToast("Please enter an API key", "error");
+    apiKeyInput.focus();
+    return;
+  }
+
+  if (!key.startsWith("trk_")) {
+    showToast("API key should start with trk_", "error");
+    apiKeyInput.focus();
     return;
   }
 
@@ -200,7 +224,7 @@ connectBtn.addEventListener("click", async () => {
 
     showToast("Connected to " + (data.workspaceName || "Trackr"));
     showConnectedState();
-  } catch (err) {
+  } catch {
     await removeStorage(["apiKey"]);
     showToast("Invalid API key or connection error", "error");
   } finally {
@@ -213,6 +237,13 @@ apiKeyInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     connectBtn.click();
   }
+});
+
+// Toggle password visibility
+toggleKeyBtn.addEventListener("click", () => {
+  const isPassword = apiKeyInput.type === "password";
+  apiKeyInput.type = isPassword ? "text" : "password";
+  toggleKeyBtn.title = isPassword ? "Hide key" : "Show key";
 });
 
 disconnectBtn.addEventListener("click", async () => {
@@ -232,12 +263,18 @@ addQueueBtn.addEventListener("click", async () => {
       url: currentTab.url,
       title: currentTab.title || "",
     });
+    addQueueBtn.textContent = "ADDED";
+    addQueueBtn.classList.add("btn-success");
     showToast("Added to research queue");
-  } catch (err) {
+    setTimeout(() => {
+      addQueueBtn.textContent = "ADD TO QUEUE";
+      addQueueBtn.classList.remove("btn-success");
+      addQueueBtn.disabled = false;
+    }, 2500);
+  } catch {
     showToast("Failed to add to queue", "error");
-  } finally {
-    addQueueBtn.disabled = false;
     addQueueBtn.textContent = "ADD TO QUEUE";
+    addQueueBtn.disabled = false;
   }
 });
 
@@ -253,11 +290,15 @@ researchBtn.addEventListener("click", async () => {
       title: currentTab.title || "",
     });
     showToast("Added to research queue");
-  } catch (err) {
+    researchBtn.textContent = "ADDED";
+    setTimeout(() => {
+      researchBtn.textContent = "RESEARCH THIS TOOL";
+      researchBtn.disabled = false;
+    }, 2500);
+  } catch {
     showToast("Failed to add to queue", "error");
-  } finally {
-    researchBtn.disabled = false;
     researchBtn.textContent = "RESEARCH THIS TOOL";
+    researchBtn.disabled = false;
   }
 });
 

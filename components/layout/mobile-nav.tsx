@@ -84,9 +84,7 @@ export function MobileNav() {
                         onClick={() => setOpen(false)}
                         className="flex items-center gap-2 font-serif text-xl font-medium"
                     >
-                        <span className="w-7 h-7 bg-black flex items-center justify-center flex-shrink-0">
-                            <TrackrLogo size={18} inverted />
-                        </span>
+                        <TrackrLogo size={24} />
                         Trackr
                     </Link>
                     <button

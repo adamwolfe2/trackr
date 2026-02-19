@@ -1,6 +1,6 @@
 /**
  * Trackr logo mark — three diagonal slashes.
- * Usage: <TrackrLogo size={24} /> or <TrackrLogo size={16} inverted />
+ * Default: black lines on transparent. Use inverted for white lines (e.g. favicon on black bg).
  */
 export function TrackrLogo({
     size = 24,
@@ -31,7 +31,6 @@ export function TrackrLogo({
 
 /**
  * Full Trackr wordmark with logo icon + text.
- * Usage: <TrackrWordmark /> or <TrackrWordmark size="lg" />
  */
 export function TrackrWordmark({
     size = "md",
@@ -41,16 +40,14 @@ export function TrackrWordmark({
     className?: string;
 }) {
     const config = {
-        sm: { icon: 16, text: "text-base", gap: "gap-1.5" },
-        md: { icon: 20, text: "text-xl", gap: "gap-2" },
-        lg: { icon: 28, text: "text-3xl", gap: "gap-2.5" },
+        sm: { icon: 18, text: "text-base", gap: "gap-1.5" },
+        md: { icon: 24, text: "text-xl", gap: "gap-2" },
+        lg: { icon: 32, text: "text-3xl", gap: "gap-2.5" },
     }[size];
 
     return (
         <span className={`flex items-center ${config.gap} ${className}`}>
-            <span className="w-7 h-7 bg-black flex items-center justify-center flex-shrink-0">
-                <TrackrLogo size={config.icon} inverted />
-            </span>
+            <TrackrLogo size={config.icon} />
             <span className={`font-serif font-medium ${config.text}`}>Trackr</span>
         </span>
     );

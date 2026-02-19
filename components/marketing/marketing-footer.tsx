@@ -10,9 +10,7 @@ export function MarketingFooter() {
                 {/* Brand */}
                 <div className="md:col-span-1">
                     <h3 className="text-2xl font-serif font-medium mb-4 flex items-center gap-2">
-                        <span className="w-7 h-7 bg-black flex items-center justify-center flex-shrink-0">
-                            <TrackrLogo size={18} inverted />
-                        </span>
+                        <TrackrLogo size={24} />
                         Trackr
                     </h3>
                     <p className="font-mono text-sm text-neutral-500 leading-relaxed">

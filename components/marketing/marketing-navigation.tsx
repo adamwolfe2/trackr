@@ -12,9 +12,7 @@ export function MarketingNavigation({ isLoggedIn = false }: { isLoggedIn?: boole
         <header className="w-full flex items-center justify-between py-8 relative z-50">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 z-50 relative">
-                <span className="w-8 h-8 bg-black flex items-center justify-center flex-shrink-0">
-                    <TrackrLogo size={22} inverted />
-                </span>
+                <TrackrLogo size={28} />
                 <span className="md:text-3xl text-2xl font-medium tracking-tight font-serif">Trackr</span>
             </Link>
 

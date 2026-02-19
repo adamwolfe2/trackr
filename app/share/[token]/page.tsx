@@ -78,9 +78,7 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
             {/* Header */}
             <div className="border-b border-black bg-[#F3F3EF] px-6 py-4 flex items-center justify-between">
                 <a href="https://trytrackr.com" className="flex items-center gap-2 font-serif text-xl font-medium hover:opacity-70">
-                    <span className="w-7 h-7 bg-black flex items-center justify-center flex-shrink-0">
-                        <TrackrLogo size={18} inverted />
-                    </span>
+                    <TrackrLogo size={24} />
                     Trackr
                 </a>
                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 border border-neutral-300 px-2 py-1">

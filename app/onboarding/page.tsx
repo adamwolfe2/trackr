@@ -121,9 +121,7 @@ export default function OnboardingPage() {
             {/* Top bar */}
             <div className="border-b border-black bg-[#F3F3EF] px-6 py-4 flex items-center justify-between">
                 <span className="flex items-center gap-2 text-xl font-serif font-medium">
-                    <span className="w-6 h-6 bg-black flex items-center justify-center flex-shrink-0">
-                        <TrackrLogo size={16} inverted />
-                    </span>
+                    <TrackrLogo size={22} />
                     Trackr
                 </span>
                 <div className="flex items-center gap-2">
