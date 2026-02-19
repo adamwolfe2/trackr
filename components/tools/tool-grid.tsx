@@ -1,0 +1,90 @@
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+import { Star } from "lucide-react";
+
+interface GridTool {
+    id: string;
+    name: string;
+    websiteUrl: string | null;
+    logoUrl: string | null;
+    status: string;
+    overallScore: string | null;
+    category: string[] | null;
+}
+
+function ToolIcon({ name, logoUrl, websiteUrl }: { name: string; logoUrl?: string | null; websiteUrl?: string | null }) {
+    const [hasError, setHasError] = useState(false);
+    const domain = websiteUrl
+        ? (() => { try { return new URL(websiteUrl).hostname.replace("www.", ""); } catch { return null; } })()
+        : null;
+    const src = !hasError && logoUrl ? logoUrl : domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=64` : null;
+
+    if (!src) {
+        return (
+            <div className="w-full h-full flex items-center justify-center bg-neutral-100">
+                <span className="font-mono font-bold text-2xl text-neutral-400">{name.charAt(0)}</span>
+            </div>
+        );
+    }
+    return (
+        <img
+            src={src}
+            alt={name}
+            className="w-full h-full object-contain p-2"
+            onError={() => setHasError(true)}
+        />
+    );
+}
+
+const STATUS_DOT: Record<string, string> = {
+    active: "bg-black",
+    researching: "bg-neutral-400 animate-pulse",
+    failed: "bg-red-400",
+    queued: "bg-neutral-300",
+    archived: "bg-neutral-200",
+};
+
+export function ToolGrid({ tools }: { tools: GridTool[] }) {
+    if (tools.length === 0) {
+        return (
+            <div className="border border-dashed border-neutral-300 py-20 text-center">
+                <p className="font-mono text-sm text-neutral-400">No tools yet. Add one to get started.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-px border border-black bg-black">
+            {tools.map((tool) => (
+                <Link
+                    key={tool.id}
+                    href={`/tools/${tool.id}`}
+                    className="group bg-white hover:bg-[#F3F3EF] transition-colors flex flex-col items-center gap-1.5 p-3 relative"
+                >
+                    {/* Status dot */}
+                    <span className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 ${STATUS_DOT[tool.status] ?? "bg-neutral-300"}`} />
+
+                    {/* Logo */}
+                    <div className="w-10 h-10 flex-shrink-0">
+                        <ToolIcon name={tool.name} logoUrl={tool.logoUrl} websiteUrl={tool.websiteUrl} />
+                    </div>
+
+                    {/* Name */}
+                    <span className="font-mono text-[10px] text-neutral-700 text-center leading-tight line-clamp-2 w-full">
+                        {tool.name}
+                    </span>
+
+                    {/* Score badge — only if scored */}
+                    {tool.overallScore && (
+                        <span className="flex items-center gap-0.5 font-mono text-[9px] text-neutral-500">
+                            <Star className="w-2 h-2 fill-neutral-400 text-neutral-400" />
+                            {Number(tool.overallScore).toFixed(1)}
+                        </span>
+                    )}
+                </Link>
+            ))}
+        </div>
+    );
+}

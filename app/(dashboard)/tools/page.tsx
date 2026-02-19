@@ -5,7 +5,7 @@ import { tools, workspaceMembers, softwareSpend } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { KanbanBoard } from "@/components/tools/kanban-board";
+import { ToolsView } from "@/components/tools/tools-view";
 
 export const dynamic = "force-dynamic";
 
@@ -68,7 +68,7 @@ export default async function ToolsPage() {
                 </Link>
             </div>
 
-            <KanbanBoard tools={toolsList} stats={stats} isEmpty={toolsList.length === 0} />
+            <ToolsView tools={toolsList} stats={stats} isEmpty={toolsList.length === 0} />
         </div>
     );
 }

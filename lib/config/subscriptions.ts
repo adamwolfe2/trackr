@@ -36,6 +36,10 @@ export const PLANS = {
 
 export function getPlanLimits(subscription?: { status: string; planId?: string | null }) {
     if (subscription?.status === 'active' || subscription?.status === 'trialing') {
+        // Slug-based overrides (for manually-granted or internal accounts)
+        if (subscription.planId === 'agency') return PLANS.AGENCY;
+        if (subscription.planId === 'team') return PLANS.TEAM;
+
         const agencyPriceId = process.env.STRIPE_AGENCY_PRICE_ID;
         const teamPriceId = process.env.STRIPE_TEAM_PRICE_ID;
         if (subscription.planId && agencyPriceId && subscription.planId === agencyPriceId) {
@@ -45,7 +49,6 @@ export function getPlanLimits(subscription?: { status: string; planId?: string |
             return PLANS.TEAM;
         }
         // Active subscription but planId doesn't match known IDs — default to TEAM
-        // (safer than FREE to avoid punishing paying customers for misconfigured env vars)
         return PLANS.TEAM;
     }
     return PLANS.FREE;
