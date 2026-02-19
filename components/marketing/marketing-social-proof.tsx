@@ -3,31 +3,9 @@
 import { useRef } from "react";
 import { motion, useInView, type Variants } from "framer-motion";
 
-function AnimatedStat({ value, label, suffix = "" }: { value: string; label: string; suffix?: string }) {
-    const ref = useRef(null);
-    const inView = useInView(ref, { once: true, margin: "-80px" });
-
-    return (
-        <motion.div
-            ref={ref}
-            initial={{ opacity: 0, y: 16 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="text-center"
-        >
-            <div className="text-4xl md:text-5xl font-mono font-medium mb-2 text-black">{value}</div>
-            <div className="text-xs font-mono text-neutral-500 uppercase tracking-widest">{label}</div>
-        </motion.div>
-    );
-}
-
 const containerVariants: Variants = {
     hidden: {},
-    show: {
-        transition: {
-            staggerChildren: 0.12,
-        },
-    },
+    show: { transition: { staggerChildren: 0.12 } },
 };
 
 const cardVariants: Variants = {
@@ -35,81 +13,119 @@ const cardVariants: Variants = {
     show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" } },
 };
 
-export function MarketingSocialProof() {
-    const statsRef = useRef(null);
-    const statsInView = useInView(statsRef, { once: true, margin: "-60px" });
+const BENCHMARKS = [
+    {
+        stat: "271%",
+        statLabel: "revenue per employee increase",
+        context: "$369K → $1M per employee in two years",
+        quote: "By embedding AI across the business, we've now hit a major milestone: $1 million in revenue per employee, up from $369,000 just two years ago. Real results, real impact.",
+        attribution: "Sebastian Siemiatkowski",
+        title: "CEO, Klarna",
+        date: "August 2025",
+    },
+    {
+        stat: "$3.48M",
+        statLabel: "revenue per employee",
+        context: "5.7× higher than leading SaaS firms",
+        quote: "Lean AI startups are dramatically outperforming traditional SaaS. The top 10 AI startups average $3.48 million in revenue per employee — approximately 5.7× higher than the leading SaaS firms.",
+        attribution: "Jeremiah Owyang",
+        title: "Venture Partner & AI Analyst",
+        date: "May 2025",
+        footnote: "Cursor: $5M/employee · Midjourney: $12.5M/employee",
+    },
+    {
+        stat: "12+ hrs",
+        statLabel: "saved per week",
+        context: "Top 20% of executives, every single week",
+        quote: "33% of executives say AI saves them 4 to 8 hours per week, and nearly 20% claim more than 12 hours saved. The worst thing you can do as a founder is wait.",
+        attribution: "Section AI Research",
+        title: "Endorsed by Luis von Ahn, CEO of Duolingo",
+        date: "2025",
+        footnote: "Elite founders are reclaiming 1.5 full workdays per week",
+    },
+];
 
-    const testimonialsRef = useRef(null);
-    const testimonialsInView = useInView(testimonialsRef, { once: true, margin: "-60px" });
+export function MarketingSocialProof() {
+    const headingRef = useRef(null);
+    const headingInView = useInView(headingRef, { once: true, margin: "-60px" });
+
+    const cardsRef = useRef(null);
+    const cardsInView = useInView(cardsRef, { once: true, margin: "-60px" });
 
     return (
         <section className="w-full py-24 border-t border-black/10">
-            <div className="mb-20">
-                {/* Headline */}
-                <motion.h2
-                    initial={{ opacity: 0, y: 16 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-60px" }}
-                    transition={{ duration: 0.5 }}
-                    className="text-3xl md:text-4xl font-serif font-normal text-center mb-16"
-                >
-                    Built for teams who evaluate tools seriously.
-                </motion.h2>
+            {/* Headline */}
+            <motion.div
+                ref={headingRef}
+                initial={{ opacity: 0, y: 16 }}
+                animate={headingInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5 }}
+                className="mb-14"
+            >
+                <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-4 block">
+                    AI-Native Performance Benchmarks
+                </span>
+                <h2 className="text-3xl md:text-4xl font-serif font-normal max-w-2xl">
+                    The benchmark has changed. The question is whether your team has.
+                </h2>
+                <p className="font-mono text-sm text-neutral-500 mt-4 max-w-xl leading-relaxed">
+                    These aren&apos;t projections. They&apos;re real metrics from real operators who moved fast on AI — reported in 2025.
+                </p>
+            </motion.div>
 
-                {/* Stat Bar */}
-                <motion.div
-                    ref={statsRef}
-                    initial={{ opacity: 0 }}
-                    animate={statsInView ? { opacity: 1 } : {}}
-                    transition={{ duration: 0.3 }}
-                    className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-0 mb-20"
-                >
-                    <div className="md:border-r border-black/10">
-                        <AnimatedStat value="&lt; 2 min" label="Average time to report" />
-                    </div>
-                    <div className="md:border-r border-black/10">
-                        <AnimatedStat value="7 dims" label="Scored on every tool" />
-                    </div>
-                    <div>
-                        <AnimatedStat value="30-day" label="Auto-refresh cycle" />
-                    </div>
-                </motion.div>
+            {/* Benchmark cards */}
+            <motion.div
+                ref={cardsRef}
+                variants={containerVariants}
+                initial="hidden"
+                animate={cardsInView ? "show" : "hidden"}
+                className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-black"
+            >
+                {BENCHMARKS.map((b, i) => (
+                    <motion.div
+                        key={b.attribution}
+                        variants={cardVariants}
+                        className={`flex flex-col bg-white ${i < BENCHMARKS.length - 1 ? "border-b md:border-b-0 md:border-r border-black" : ""}`}
+                    >
+                        {/* Stat hero */}
+                        <div className="px-6 pt-6 pb-5 border-b border-black/10">
+                            <div className="text-5xl md:text-6xl font-mono font-bold leading-none mb-1">
+                                {b.stat}
+                            </div>
+                            <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mt-2">
+                                {b.statLabel}
+                            </div>
+                            <div className="font-mono text-[10px] text-black mt-1 border border-black/20 px-2 py-0.5 inline-block bg-[#F3F3EF]">
+                                {b.context}
+                            </div>
+                        </div>
 
-                {/* Testimonials */}
-                <motion.div
-                    ref={testimonialsRef}
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate={testimonialsInView ? "show" : "hidden"}
-                    className="grid grid-cols-1 md:grid-cols-3 gap-6"
-                >
-                    <motion.blockquote variants={cardVariants} className="bg-white p-8 border border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] transition-shadow duration-300">
-                        <p className="font-serif text-lg italic mb-6 leading-relaxed">
-                            &ldquo;We used to spend half a Friday afternoon looking at tools. Now we submit Monday morning and have reports by lunch.&rdquo;
-                        </p>
-                        <footer className="font-mono text-xs uppercase tracking-wider text-neutral-500">
-                            — Head of Operations, AI Services Agency
-                        </footer>
-                    </motion.blockquote>
+                        {/* Quote */}
+                        <div className="px-6 py-5 flex-1 flex flex-col justify-between">
+                            <blockquote className="font-serif text-base italic leading-relaxed text-neutral-800 mb-5">
+                                &ldquo;{b.quote}&rdquo;
+                            </blockquote>
 
-                    <motion.blockquote variants={cardVariants} className="bg-white p-8 border border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] transition-shadow duration-300">
-                        <p className="font-serif text-lg italic mb-6 leading-relaxed">
-                            &ldquo;The scorecard is the thing. Everyone was evaluating tools on different criteria. Trackr forced us to agree on what actually matters.&rdquo;
-                        </p>
-                        <footer className="font-mono text-xs uppercase tracking-wider text-neutral-500">
-                            — Founder, Growth Agency
-                        </footer>
-                    </motion.blockquote>
+                            <div>
+                                <div className="font-mono text-xs font-semibold text-black">{b.attribution}</div>
+                                <div className="font-mono text-[10px] text-neutral-500 mt-0.5">{b.title}</div>
+                                <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-wider mt-0.5">{b.date}</div>
+                                {b.footnote && (
+                                    <div className="font-mono text-[9px] text-neutral-400 mt-3 pt-3 border-t border-neutral-100 leading-relaxed">
+                                        {b.footnote}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
+            </motion.div>
 
-                    <motion.blockquote variants={cardVariants} className="bg-white p-8 border border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] transition-shadow duration-300">
-                        <p className="font-serif text-lg italic mb-6 leading-relaxed">
-                            &ldquo;The discovery feed alone is worth it. We found 3 tools that directly addressed pain points we&apos;d been stuck on for months.&rdquo;
-                        </p>
-                        <footer className="font-mono text-xs uppercase tracking-wider text-neutral-500">
-                            — Technical Project Lead, Modern Amenities Group
-                        </footer>
-                    </motion.blockquote>
-                </motion.div>
+            {/* Source line */}
+            <div className="mt-4 flex items-center gap-2">
+                <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-wider">
+                    Sources: Klarna Q3 2025 Report · CB Insights · Section AI Research · Observer.com
+                </span>
             </div>
         </section>
     );
