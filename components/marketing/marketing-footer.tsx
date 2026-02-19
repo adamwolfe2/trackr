@@ -15,14 +15,14 @@ export function MarketingFooter() {
                 </div>
 
                 {/* Links */}
-                <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-8 font-mono text-sm">
+                <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-8 font-mono text-sm">
 
                     <div className="flex flex-col gap-4">
                         <span className="font-bold text-black uppercase tracking-wider">Product</span>
-                        <Link href="#how-it-works" className="text-neutral-600 hover:text-black hover:underline">How It Works</Link>
-                        <Link href="#features" className="text-neutral-600 hover:text-black hover:underline">Features</Link>
-                        <Link href="#pricing" className="text-neutral-600 hover:text-black hover:underline">Pricing</Link>
-                        <Link href="/discover" className="text-neutral-600 hover:text-black hover:underline">Discover</Link>
+                        <Link href="/#how-it-works" className="text-neutral-600 hover:text-black hover:underline">How It Works</Link>
+                        <Link href="/#features" className="text-neutral-600 hover:text-black hover:underline">Features</Link>
+                        <Link href="/pricing" className="text-neutral-600 hover:text-black hover:underline">Pricing</Link>
+                        <Link href="/audit" className="text-neutral-600 hover:text-black hover:underline">AI Audit</Link>
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -35,10 +35,9 @@ export function MarketingFooter() {
 
                     <div className="flex flex-col gap-4">
                         <span className="font-bold text-black uppercase tracking-wider">Resources</span>
-                        <Link href="/docs" className="text-neutral-600 hover:text-black hover:underline">Documentation</Link>
-                        <Link href="#sample-report" className="text-neutral-600 hover:text-black hover:underline">Sample Report</Link>
-                        <Link href="/changelog" className="text-neutral-600 hover:text-black hover:underline">Changelog</Link>
-                        <Link href="/status" className="text-neutral-600 hover:text-black hover:underline">Status</Link>
+                        <span className="text-neutral-400 cursor-not-allowed">Docs (Coming Soon)</span>
+                        <span className="text-neutral-400 cursor-not-allowed">Changelog (Coming Soon)</span>
+                        <span className="text-neutral-400 cursor-not-allowed">Status (Coming Soon)</span>
                     </div>
 
                 </div>

@@ -16,9 +16,9 @@ export function MarketingNavigation({ isLoggedIn = false }: { isLoggedIn?: boole
 
             {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-10 font-mono text-sm">
-                <Link href="#how-it-works" className="hover:underline underline-offset-4">How It Works</Link>
-                <Link href="#features" className="hover:underline underline-offset-4">Features</Link>
-                <Link href="#pricing" className="hover:underline underline-offset-4">Pricing</Link>
+                <Link href="/#how-it-works" className="hover:underline underline-offset-4">How It Works</Link>
+                <Link href="/#features" className="hover:underline underline-offset-4">Features</Link>
+                <Link href="/pricing" className="hover:underline underline-offset-4">Pricing</Link>
             </nav>
 
             {/* Desktop CTAs */}
@@ -51,9 +51,9 @@ export function MarketingNavigation({ isLoggedIn = false }: { isLoggedIn?: boole
             {mobileMenuOpen && (
                 <div className="fixed inset-0 bg-[#F3F3EF] z-40 flex flex-col justify-center px-8 animate-in slide-in-from-top-10 duration-200">
                     <nav className="flex flex-col gap-8 text-2xl font-serif mb-12">
-                        <Link href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>How It Works</Link>
-                        <Link href="#features" onClick={() => setMobileMenuOpen(false)}>Features</Link>
-                        <Link href="#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+                        <Link href="/#how-it-works" onClick={() => setMobileMenuOpen(false)}>How It Works</Link>
+                        <Link href="/#features" onClick={() => setMobileMenuOpen(false)}>Features</Link>
+                        <Link href="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
                     </nav>
                     <div className="flex flex-col gap-4">
                         {isLoggedIn ? (
