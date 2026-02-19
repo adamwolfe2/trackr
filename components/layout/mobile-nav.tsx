@@ -8,7 +8,7 @@ import { Menu, X, LayoutDashboard, Database, Sparkles, CreditCard, Settings, Plu
 import { UserButton } from "@clerk/nextjs";
 
 const navItems = [
-    { title: "Dashboard", href: "/tools", icon: LayoutDashboard },
+    { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { title: "Tool Database", href: "/tools", icon: Database },
     { title: "Discover", href: "/discover", icon: Search },
     { title: "Research Queue", href: "/queue", icon: Zap },
