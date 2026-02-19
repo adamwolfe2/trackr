@@ -416,7 +416,7 @@ function HeroDemo() {
                             >
                                 {/* Stream headers */}
                                 <div className="grid grid-cols-3 border-b border-black/10">
-                                    {["Agent α", "Agent β", "Agent γ"].map((label, i) => (
+                                    {["Crawler", "Reviews", "Analyst"].map((label, i) => (
                                         <div key={label} className={`px-2.5 py-1.5 ${i < 2 ? "border-r border-black/10" : ""}`}>
                                             <div className="flex items-center gap-1.5">
                                                 <motion.div
