@@ -18,7 +18,7 @@ const steps = [
         headline: "Agents go to work. You do something else.",
         body: "Trackr's research agents crawl the tool's website, pricing page, and docs. They pull community reviews, funding data, and competitive context — then score the tool against your scorecard.",
         micro: "Full report ready in under 2 minutes.",
-        color: "bg-black text-white",
+        color: "bg-neutral-600 text-white",
     },
     {
         id: "03",
@@ -26,7 +26,7 @@ const steps = [
         headline: "Get a clean, scored report. No noise.",
         body: "Every report includes: overall score, dimension-by-dimension breakdown, pricing tiers, key features, pros and cons, integrations, and top competitors. Everything your team needs to make a call.",
         micro: "Structured the same way, every time.",
-        color: "bg-neutral-200 text-black",
+        color: "bg-neutral-300 text-black",
     },
     {
         id: "04",
@@ -34,7 +34,7 @@ const steps = [
         headline: "Add notes. Change status. Re-research anytime.",
         body: "The whole team can add notes, flag tools as 'Testing' or 'Active', and trigger fresh research whenever the tool updates. Your database grows with your team.",
         micro: "Tools auto-refresh every 30 days.",
-        color: "bg-neutral-100 text-black",
+        color: "bg-white text-black",
     },
 ];
 

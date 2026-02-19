@@ -299,7 +299,7 @@ function HeroDemo() {
 
     return (
         <div className="relative w-full max-w-[440px]">
-            <div className="border border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden h-[488px]">
+            <div className="border border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
 
                 {/* Window chrome */}
                 <div className="bg-black px-4 py-2.5 flex items-center gap-2">
@@ -356,260 +356,297 @@ function HeroDemo() {
                     {phase === "done" && <CheckCircle2 className="w-4 h-4 text-black flex-shrink-0" />}
                 </div>
 
-                {/* ── Parallel agent streams ──────────────────────────────── */}
-                <AnimatePresence>
-                    {phase === "researching" && (
-                        <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{
-                                height: 408,
-                                opacity: 1,
-                                transition: { duration: 0.42, ease: [0.25, 0.46, 0.45, 0.94] },
-                            }}
-                            exit={{
-                                height: 0,
-                                opacity: 0,
-                                transition: { duration: 0.30, ease: [0.55, 0, 1, 0.45] },
-                            }}
-                            className="bg-[#F3F3EF] border-b border-black overflow-hidden flex flex-col"
-                        >
-                            {/* Stream headers */}
-                            <div className="grid grid-cols-3 border-b border-black/10">
-                                {["Agent α", "Agent β", "Agent γ"].map((label, i) => (
-                                    <div key={label} className={`px-2.5 py-1.5 ${i < 2 ? "border-r border-black/10" : ""}`}>
-                                        <div className="flex items-center gap-1.5">
-                                            <motion.div
-                                                className="w-1.5 h-1.5 bg-black"
-                                                animate={{ opacity: streamVisible[i] < 4 ? [0.3, 1, 0.3] : 1 }}
-                                                transition={{ duration: 0.7, repeat: streamVisible[i] < 4 ? Infinity : 0 }}
-                                            />
-                                            <span className="font-mono text-[9px] text-neutral-500 uppercase tracking-widest">{label}</span>
-                                        </div>
+                {/* ── Fixed-height content area — all phases crossfade in place ── */}
+                <div className="relative h-[460px] overflow-hidden">
+
+                    {/* Idle / Typing: skeleton placeholder so the widget never looks empty */}
+                    <AnimatePresence>
+                        {(phase === "idle" || phase === "typing") && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                                className="absolute inset-0 bg-white p-5"
+                            >
+                                <div className="flex items-start justify-between mb-5">
+                                    <div className="space-y-2">
+                                        <div className="h-[18px] w-28 bg-neutral-100 animate-pulse" />
+                                        <div className="h-[11px] w-44 bg-neutral-50 animate-pulse" />
                                     </div>
-                                ))}
-                            </div>
+                                    <div className="h-9 w-10 bg-neutral-100 animate-pulse" />
+                                </div>
+                                <div className="space-y-3 mb-5">
+                                    {[0, 1, 2, 3, 4].map(i => (
+                                        <div key={i}>
+                                            <div className="flex justify-between mb-1">
+                                                <div className="h-2.5 w-24 bg-neutral-100 animate-pulse" />
+                                                <div className="h-2.5 w-5 bg-neutral-100 animate-pulse" />
+                                            </div>
+                                            <div className="h-[3px] bg-neutral-100 border border-neutral-100" />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="bg-neutral-50 border border-neutral-200 px-3 py-2.5 mb-5">
+                                    <div className="h-3 w-52 bg-neutral-100 animate-pulse" />
+                                </div>
+                                <div className="border-t border-black/10 pt-4 space-y-3">
+                                    {[0, 1, 2].map(i => (
+                                        <div key={i} className="flex items-center gap-3">
+                                            <div className="w-6 h-6 bg-neutral-100 animate-pulse flex-shrink-0" />
+                                            <div className="space-y-1 flex-1">
+                                                <div className="h-3 w-32 bg-neutral-100 animate-pulse" />
+                                                <div className="h-2.5 w-24 bg-neutral-50 animate-pulse" />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                            {/* Stream bodies */}
-                            <div className="grid grid-cols-3 py-2 flex-shrink-0">
-                                {[0, 1, 2].map(si => (
-                                    <div key={si} className={`px-2.5 space-y-1 ${si < 2 ? "border-r border-black/10" : ""}`}>
-                                        {STREAM_STEPS[si].slice(0, streamVisible[si]).map((step, stepIdx) => (
-                                            <motion.div
-                                                key={`${toolIndex}-${si}-${stepIdx}`}
-                                                initial={{ opacity: 0, x: -3 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ duration: 0.18 }}
-                                                className="flex items-start gap-1"
-                                            >
-                                                <span className="font-mono text-[9px] text-black/30 mt-[1px] flex-shrink-0">›</span>
-                                                <span className={`font-mono text-[9px] leading-snug ${
-                                                    stepIdx === streamActive[si] && tick < 7
-                                                        ? "text-black font-semibold"
-                                                        : "text-neutral-400"
-                                                }`}>
-                                                    {step}
-                                                </span>
-                                            </motion.div>
-                                        ))}
+                    {/* ── Parallel agent streams ──────────────────────────── */}
+                    <AnimatePresence>
+                        {phase === "researching" && (
+                            <motion.div
+                                key={`researching-${toolIndex}`}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1, transition: { duration: 0.3 } }}
+                                exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                                className="absolute inset-0 bg-[#F3F3EF] overflow-hidden flex flex-col"
+                            >
+                                {/* Stream headers */}
+                                <div className="grid grid-cols-3 border-b border-black/10">
+                                    {["Agent α", "Agent β", "Agent γ"].map((label, i) => (
+                                        <div key={label} className={`px-2.5 py-1.5 ${i < 2 ? "border-r border-black/10" : ""}`}>
+                                            <div className="flex items-center gap-1.5">
+                                                <motion.div
+                                                    className="w-1.5 h-1.5 bg-black"
+                                                    animate={{ opacity: streamVisible[i] < 4 ? [0.3, 1, 0.3] : 1 }}
+                                                    transition={{ duration: 0.7, repeat: streamVisible[i] < 4 ? Infinity : 0 }}
+                                                />
+                                                <span className="font-mono text-[9px] text-neutral-500 uppercase tracking-widest">{label}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
 
-                                        {/* Pulsing dots while in progress */}
-                                        {streamVisible[si] > 0 && streamVisible[si] < 4 && (
+                                {/* Stream bodies */}
+                                <div className="grid grid-cols-3 py-2 flex-shrink-0">
+                                    {[0, 1, 2].map(si => (
+                                        <div key={si} className={`px-2.5 space-y-1 ${si < 2 ? "border-r border-black/10" : ""}`}>
+                                            {STREAM_STEPS[si].slice(0, streamVisible[si]).map((step, stepIdx) => (
+                                                <motion.div
+                                                    key={`${toolIndex}-${si}-${stepIdx}`}
+                                                    initial={{ opacity: 0, x: -3 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ duration: 0.18 }}
+                                                    className="flex items-start gap-1"
+                                                >
+                                                    <span className="font-mono text-[9px] text-black/30 mt-[1px] flex-shrink-0">›</span>
+                                                    <span className={`font-mono text-[9px] leading-snug ${
+                                                        stepIdx === streamActive[si] && tick < 7
+                                                            ? "text-black font-semibold"
+                                                            : "text-neutral-400"
+                                                    }`}>
+                                                        {step}
+                                                    </span>
+                                                </motion.div>
+                                            ))}
+
+                                            {/* Pulsing dots while in progress */}
+                                            {streamVisible[si] > 0 && streamVisible[si] < 4 && (
+                                                <motion.div
+                                                    animate={{ opacity: [0.3, 1, 0.3] }}
+                                                    transition={{ duration: 0.65, repeat: Infinity }}
+                                                    className="flex gap-0.5 pl-3 pt-0.5"
+                                                >
+                                                    {[0, 1, 2].map(d => (
+                                                        <span key={d} className="w-1 h-1 bg-black/25 inline-block" />
+                                                    ))}
+                                                </motion.div>
+                                            )}
+
+                                            {/* Done checkmark per stream */}
+                                            {streamVisible[si] >= 4 && (
+                                                <motion.div
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    className="flex items-center gap-1 pl-3 pt-0.5"
+                                                >
+                                                    <CheckCircle2 className="w-2.5 h-2.5 text-black" />
+                                                    <span className="font-mono text-[9px] text-black font-semibold">Done</span>
+                                                </motion.div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Integration logos marquee */}
+                                <div className="border-t border-black/10 px-3 pt-2 pb-2.5 flex-shrink-0">
+                                    <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest block mb-1.5">
+                                        Scanning integrations
+                                    </span>
+                                    <IntegrationMarquee />
+                                </div>
+
+                                {/* ── Live findings — fills remaining space ─── */}
+                                <div className="border-t border-black/10 px-3 pt-3 pb-3 flex-1 bg-white/40 overflow-hidden">
+                                    <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest block mb-2.5">
+                                        Live findings
+                                    </span>
+                                    <div className="space-y-1.5">
+                                        {currentTool.findings
+                                            .slice(0, Math.min(Math.max(tick - 1, 0), 5))
+                                            .map((finding, i) => (
+                                                <motion.div
+                                                    key={`${toolIndex}-finding-${i}`}
+                                                    initial={{ opacity: 0, x: -4 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ duration: 0.22 }}
+                                                    className="flex items-start gap-2"
+                                                >
+                                                    <motion.span
+                                                        className="font-mono text-[9px] text-black/40 flex-shrink-0 mt-[1px]"
+                                                        animate={{ opacity: [0.4, 1, 0.4] }}
+                                                        transition={
+                                                            i === Math.min(Math.max(tick - 1, 0), 5) - 1 && tick < 7
+                                                                ? { duration: 0.8, repeat: Infinity }
+                                                                : { duration: 0 }
+                                                        }
+                                                    >
+                                                        →
+                                                    </motion.span>
+                                                    <span className={`font-mono text-[10px] leading-snug ${
+                                                        i === Math.min(Math.max(tick - 1, 0), 5) - 1 && tick < 7
+                                                            ? "text-black font-semibold"
+                                                            : "text-neutral-500"
+                                                    }`}>
+                                                        {finding}
+                                                    </span>
+                                                </motion.div>
+                                            ))
+                                        }
+                                        {/* Pulsing placeholder while no findings yet */}
+                                        {tick < 2 && (
                                             <motion.div
-                                                animate={{ opacity: [0.3, 1, 0.3] }}
-                                                transition={{ duration: 0.65, repeat: Infinity }}
-                                                className="flex gap-0.5 pl-3 pt-0.5"
+                                                animate={{ opacity: [0.3, 0.7, 0.3] }}
+                                                transition={{ duration: 1.2, repeat: Infinity }}
+                                                className="flex gap-1 items-center"
                                             >
                                                 {[0, 1, 2].map(d => (
-                                                    <span key={d} className="w-1 h-1 bg-black/25 inline-block" />
+                                                    <span key={d} className="w-1.5 h-1.5 bg-black/15 inline-block" />
                                                 ))}
+                                                <span className="font-mono text-[9px] text-neutral-300 ml-1">Collecting data...</span>
                                             </motion.div>
                                         )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                                        {/* Done checkmark per stream */}
-                                        {streamVisible[si] >= 4 && (
+                    {/* ── Report card ──────────────────────────────────────── */}
+                    <AnimatePresence mode="wait">
+                        {phase === "done" && (
+                            <motion.div
+                                key={`report-${toolIndex}`}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -4 }}
+                                transition={{ duration: 0.28, ease: "easeOut" }}
+                                className="absolute inset-0 overflow-y-auto"
+                            >
+                                {/* Score + dimensions */}
+                                <div className="p-5 pb-4">
+                                    <div className="flex items-start justify-between mb-3.5">
+                                        <div>
+                                            <div className="font-serif text-lg font-medium">{currentTool.name}</div>
+                                            <div className="font-mono text-[10px] text-neutral-500 mt-0.5">{currentTool.tagline}</div>
+                                        </div>
+                                        <div className="text-right flex-shrink-0 ml-3">
+                                            <div className="font-mono text-3xl font-bold text-black leading-none">
+                                                <AnimatedScore score={currentTool.score} animate={phase === "done"} />
+                                            </div>
+                                            <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-wider mt-0.5">/100 Score</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 mb-4">
+                                        {currentTool.dimensions.map((dim, i) => (
                                             <motion.div
+                                                key={`${toolIndex}-${dim.label}`}
                                                 initial={{ opacity: 0 }}
                                                 animate={{ opacity: 1 }}
-                                                className="flex items-center gap-1 pl-3 pt-0.5"
+                                                transition={{ delay: i * 0.055 }}
                                             >
-                                                <CheckCircle2 className="w-2.5 h-2.5 text-black" />
-                                                <span className="font-mono text-[9px] text-black font-semibold">Done</span>
+                                                <div className="flex justify-between items-center mb-0.5">
+                                                    <span className="font-mono text-[10px] text-neutral-500 uppercase tracking-wide">{dim.label}</span>
+                                                    <span className="font-mono text-[10px] font-bold">{dim.score}</span>
+                                                </div>
+                                                <div className="h-[3px] bg-neutral-100 border border-neutral-200">
+                                                    <motion.div
+                                                        className="h-full bg-black"
+                                                        initial={{ width: 0 }}
+                                                        animate={{ width: `${dim.score}%` }}
+                                                        transition={{ duration: 0.45, delay: 0.12 + i * 0.055, ease: "easeOut" }}
+                                                    />
+                                                </div>
                                             </motion.div>
-                                        )}
+                                        ))}
                                     </div>
-                                ))}
-                            </div>
 
-                            {/* Integration logos marquee */}
-                            <div className="border-t border-black/10 px-3 pt-2 pb-2.5 flex-shrink-0">
-                                <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest block mb-1.5">
-                                    Scanning integrations
-                                </span>
-                                <IntegrationMarquee />
-                            </div>
-
-                            {/* ── Live findings — fills remaining space ─── */}
-                            <div className="border-t border-black/10 px-3 pt-3 pb-3 flex-1 bg-white/40">
-                                <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest block mb-2.5">
-                                    Live findings
-                                </span>
-                                <div className="space-y-1.5">
-                                    {currentTool.findings
-                                        .slice(0, Math.min(Math.max(tick - 1, 0), 5))
-                                        .map((finding, i) => (
-                                            <motion.div
-                                                key={`${toolIndex}-finding-${i}`}
-                                                initial={{ opacity: 0, x: -4 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                transition={{ duration: 0.22 }}
-                                                className="flex items-start gap-2"
-                                            >
-                                                <motion.span
-                                                    className="font-mono text-[9px] text-black/40 flex-shrink-0 mt-[1px]"
-                                                    animate={{ opacity: [0.4, 1, 0.4] }}
-                                                    transition={
-                                                        i === Math.min(Math.max(tick - 1, 0), 5) - 1 && tick < 7
-                                                            ? { duration: 0.8, repeat: Infinity }
-                                                            : { duration: 0 }
-                                                    }
-                                                >
-                                                    →
-                                                </motion.span>
-                                                <span className={`font-mono text-[10px] leading-snug ${
-                                                    i === Math.min(Math.max(tick - 1, 0), 5) - 1 && tick < 7
-                                                        ? "text-black font-semibold"
-                                                        : "text-neutral-500"
-                                                }`}>
-                                                    {finding}
-                                                </span>
-                                            </motion.div>
-                                        ))
-                                    }
-                                    {/* Pulsing placeholder while no findings yet */}
-                                    {tick < 2 && (
-                                        <motion.div
-                                            animate={{ opacity: [0.3, 0.7, 0.3] }}
-                                            transition={{ duration: 1.2, repeat: Infinity }}
-                                            className="flex gap-1 items-center"
-                                        >
-                                            {[0, 1, 2].map(d => (
-                                                <span key={d} className="w-1.5 h-1.5 bg-black/15 inline-block" />
-                                            ))}
-                                            <span className="font-mono text-[9px] text-neutral-300 ml-1">Collecting data...</span>
-                                        </motion.div>
-                                    )}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {/* ── Report card ─────────────────────────────────────────── */}
-                <AnimatePresence mode="wait">
-                    {phase === "done" && (
-                        <motion.div
-                            key={`report-${toolIndex}`}
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.28, ease: "easeOut" }}
-                        >
-                            {/* Score + dimensions */}
-                            <div className="p-5 pb-4">
-                                <div className="flex items-start justify-between mb-3.5">
-                                    <div>
-                                        <div className="font-serif text-lg font-medium">{currentTool.name}</div>
-                                        <div className="font-mono text-[10px] text-neutral-500 mt-0.5">{currentTool.tagline}</div>
-                                    </div>
-                                    <div className="text-right flex-shrink-0 ml-3">
-                                        <div className="font-mono text-3xl font-bold text-black leading-none">
-                                            <AnimatedScore score={currentTool.score} animate={phase === "done"} />
+                                    <div className="bg-neutral-100 border border-black px-3 py-2">
+                                        <div className="flex items-start gap-2">
+                                            <CheckCircle2 className="w-3 h-3 text-black flex-shrink-0 mt-0.5" />
+                                            <span className="font-mono text-[10px] text-neutral-700">{currentTool.verdict}</span>
                                         </div>
-                                        <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-wider mt-0.5">/100 Score</div>
                                     </div>
                                 </div>
 
-                                <div className="space-y-2 mb-4">
-                                    {currentTool.dimensions.map((dim, i) => (
+                                {/* ── What's next ──────────────────────────── */}
+                                <div className="border-t border-black">
+                                    <div className="px-5 py-2 bg-black flex items-center justify-between">
+                                        <span className="font-mono text-[9px] uppercase tracking-widest text-white/70">
+                                            Report ready — send it
+                                        </span>
                                         <motion.div
-                                            key={`${toolIndex}-${dim.label}`}
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            transition={{ delay: i * 0.055 }}
-                                        >
-                                            <div className="flex justify-between items-center mb-0.5">
-                                                <span className="font-mono text-[10px] text-neutral-500 uppercase tracking-wide">{dim.label}</span>
-                                                <span className="font-mono text-[10px] font-bold">{dim.score}</span>
-                                            </div>
-                                            <div className="h-[3px] bg-neutral-100 border border-neutral-200">
-                                                <motion.div
-                                                    className="h-full bg-black"
-                                                    initial={{ width: 0 }}
-                                                    animate={{ width: `${dim.score}%` }}
-                                                    transition={{ duration: 0.45, delay: 0.12 + i * 0.055, ease: "easeOut" }}
-                                                />
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-
-                                <div className="bg-neutral-100 border border-black px-3 py-2">
-                                    <div className="flex items-start gap-2">
-                                        <CheckCircle2 className="w-3 h-3 text-black flex-shrink-0 mt-0.5" />
-                                        <span className="font-mono text-[10px] text-neutral-700">{currentTool.verdict}</span>
+                                            className="w-1.5 h-1.5 bg-white/60"
+                                            animate={{ opacity: [1, 0.2, 1] }}
+                                            transition={{ duration: 1.4, repeat: Infinity }}
+                                        />
+                                    </div>
+                                    <div className="divide-y divide-black/8">
+                                        {currentTool.nextSteps.map((step, i) => (
+                                            <motion.div
+                                                key={`${toolIndex}-next-${i}`}
+                                                initial={{ opacity: 0, x: 5 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: 0.25 + i * 0.1 }}
+                                                className="flex items-center gap-3 px-5 py-2.5 hover:bg-[#F3F3EF] transition-colors cursor-pointer group"
+                                            >
+                                                <div className="w-6 h-6 border border-black/20 bg-white flex items-center justify-center flex-shrink-0">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img
+                                                        src={`https://www.google.com/s2/favicons?domain=${step.domain}&sz=32`}
+                                                        alt=""
+                                                        width={14}
+                                                        height={14}
+                                                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                                    />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-mono text-[11px] text-black font-semibold truncate">{step.action}</div>
+                                                    <div className="font-mono text-[9px] text-neutral-400 truncate">{step.sub}</div>
+                                                </div>
+                                                <ArrowRight className="w-3 h-3 text-neutral-300 group-hover:text-black transition-colors flex-shrink-0" />
+                                            </motion.div>
+                                        ))}
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* ── What's next ─────────────────────────────── */}
-                            <div className="border-t border-black">
-                                <div className="px-5 py-2 bg-black flex items-center justify-between">
-                                    <span className="font-mono text-[9px] uppercase tracking-widest text-white/70">
-                                        Report ready — send it
-                                    </span>
-                                    <motion.div
-                                        className="w-1.5 h-1.5 bg-white/60"
-                                        animate={{ opacity: [1, 0.2, 1] }}
-                                        transition={{ duration: 1.4, repeat: Infinity }}
-                                    />
-                                </div>
-                                <div className="divide-y divide-black/8">
-                                    {currentTool.nextSteps.map((step, i) => (
-                                        <motion.div
-                                            key={`${toolIndex}-next-${i}`}
-                                            initial={{ opacity: 0, x: 5 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            transition={{ delay: 0.25 + i * 0.1 }}
-                                            className="flex items-center gap-3 px-5 py-2.5 hover:bg-[#F3F3EF] transition-colors cursor-pointer group"
-                                        >
-                                            <div className="w-6 h-6 border border-black/20 bg-white flex items-center justify-center flex-shrink-0">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img
-                                                    src={`https://www.google.com/s2/favicons?domain=${step.domain}&sz=32`}
-                                                    alt=""
-                                                    width={14}
-                                                    height={14}
-                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                                                />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="font-mono text-[11px] text-black font-semibold truncate">{step.action}</div>
-                                                <div className="font-mono text-[9px] text-neutral-400 truncate">{step.sub}</div>
-                                            </div>
-                                            <ArrowRight className="w-3 h-3 text-neutral-300 group-hover:text-black transition-colors flex-shrink-0" />
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-
-                {phase === "idle" && (
-                    <div className="px-5 py-8 text-center">
-                        <div className="font-mono text-xs text-neutral-400">Initializing agents...</div>
-                    </div>
-                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
             </div>
 
             {/* Tool cycle dots */}
