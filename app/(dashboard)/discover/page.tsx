@@ -138,7 +138,7 @@ export default async function DiscoverPage() {
                                 key={i}
                                 className={`p-5 flex flex-col gap-3 bg-white ${
                                     i % 2 === 0 ? "md:border-r border-black" : ""
-                                } ${i < newsItems.length - 2 ? "border-b border-black" : ""}`}
+                                } ${Math.floor(i / 2) < Math.floor((newsItems.length - 1) / 2) ? "border-b border-black" : ""}`}
                             >
                                 <div className="flex-1">
                                     <div className="font-mono text-[10px] text-neutral-400 uppercase tracking-wider mb-1.5">
@@ -226,7 +226,7 @@ export default async function DiscoverPage() {
                                     className={`p-5 flex flex-col gap-3 bg-white ${
                                         i % 3 !== 2 ? "lg:border-r border-black" : ""
                                     } ${i % 2 === 0 ? "md:border-r border-black lg:border-r-0" : ""} ${
-                                        i < suggestions.length - 3 ? "border-b border-black" : ""
+                                        Math.floor(i / 3) < Math.floor((suggestions.length - 1) / 3) ? "border-b border-black" : ""
                                     }`}
                                 >
                                     <div className="flex-1">

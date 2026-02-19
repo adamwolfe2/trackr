@@ -44,8 +44,9 @@ export function getPlanLimits(subscription?: { status: string; planId?: string |
         if (subscription.planId && teamPriceId && subscription.planId === teamPriceId) {
             return PLANS.TEAM;
         }
-        // Active subscription but planId doesn't match known IDs — default to FREE
-        return PLANS.FREE;
+        // Active subscription but planId doesn't match known IDs — default to TEAM
+        // (safer than FREE to avoid punishing paying customers for misconfigured env vars)
+        return PLANS.TEAM;
     }
     return PLANS.FREE;
 }

@@ -1,6 +1,11 @@
 "use server";
 
+import { currentUser } from "@clerk/nextjs/server";
+
 export async function previewTool(url: string) {
+    const user = await currentUser();
+    if (!user) return { error: "Unauthorized" };
+
     if (!url) return { error: "URL is required" };
 
     try {

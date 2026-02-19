@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 export function AddToolWizard() {
     const searchParams = useSearchParams();
-    const [step, setStep] = useState<1 | 2 | 3>(1);
+    const [step, setStep] = useState<1 | 2>(1);
     const [url, setUrl] = useState(searchParams.get("url") ?? "");
     const [isPreviewing, startPreview] = useTransition();
     const [metadata, setMetadata] = useState<{ title: string; description: string; image: string } | null>(null);
@@ -38,12 +38,11 @@ export function AddToolWizard() {
             {/* Header */}
             <div className="mb-8">
                 <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-1">
-                    Step {step} of {step === 3 ? 3 : 2}
+                    Step {step} of 2
                 </p>
                 <h1 className="font-serif text-3xl font-normal">
                     {step === 1 && "Add a New Tool"}
                     {step === 2 && "Review Details"}
-                    {step === 3 && "Submission Complete"}
                 </h1>
                 <p className="font-mono text-sm text-neutral-500 mt-1">
                     {step === 1 && "Enter the URL of the AI tool you want to track."}

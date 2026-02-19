@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { tools, reports, researchJobs, notes } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { tools, reports, researchJobs, notes, workspaceMembers } from "@/lib/db/schema";
+import { eq, desc, inArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ExternalLink, ChevronLeft } from "lucide-react";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import { ResearchStream } from "@/components/tools/research-stream";
 import { ResearchButton } from "@/components/tools/research-button";
 import { ExportButton } from "@/components/common/export-button";
 import { ToolDetailTabs } from "@/components/tools/tool-detail-tabs";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,27 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         where: eq(notes.toolId, id),
         orderBy: [desc(notes.createdAt)],
     });
+
+    // Resolve workspace member names for notes
+    const noteMemberIds = [...new Set(toolNotes.map(n => n.workspaceMemberId).filter(Boolean))] as string[];
+    const noteMembers = noteMemberIds.length > 0
+        ? await db.query.workspaceMembers.findMany({
+            where: inArray(workspaceMembers.id, noteMemberIds),
+            columns: { id: true, userId: true },
+        })
+        : [];
+    const clerkUserIds = noteMembers.map(m => m.userId);
+    const clerkUsers = clerkUserIds.length > 0
+        ? await (await clerkClient()).users.getUserList({ userId: clerkUserIds, limit: 100 })
+        : { data: [] };
+    const memberIdToName = new Map<string, string>();
+    for (const member of noteMembers) {
+        const clerkUser = clerkUsers.data.find(u => u.id === member.userId);
+        if (clerkUser) {
+            const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || clerkUser.emailAddresses[0]?.emailAddress || "Team Member";
+            memberIdToName.set(member.id, name);
+        }
+    }
 
     const isResearching = tool.status === "researching";
 
@@ -96,6 +118,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         noteType: n.noteType ?? "general",
         createdAt: n.createdAt.toISOString(),
         workspaceMemberId: n.workspaceMemberId,
+        userName: (n.workspaceMemberId ? memberIdToName.get(n.workspaceMemberId) : undefined) ?? "Team Member",
     }));
 
     const statusColors: Record<string, string> = {

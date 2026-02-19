@@ -20,7 +20,7 @@ export default function DiscoverError({
                 <span className="font-mono font-bold">!</span>
             </div>
             <div className="space-y-2">
-                <h2 className="font-serif text-2xl font-normal">Failed to load digest</h2>
+                <h2 className="font-serif text-2xl font-normal">Failed to load Discover</h2>
                 <p className="font-mono text-sm text-neutral-500 max-w-sm">
                     {error.message || "An unexpected error occurred. Please try again."}
                 </p>
