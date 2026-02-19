@@ -38,7 +38,7 @@ export default async function DashboardLayout({
     }
 
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
+        <div className="flex min-h-screen bg-[#F3F3EF] text-black">
             <div className="hidden md:flex w-64 flex-col fixed inset-y-0 z-50">
                 <AppSidebar />
             </div>
