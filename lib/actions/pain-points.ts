@@ -52,6 +52,29 @@ export async function deletePainPoint(id: string) {
     revalidatePath("/pain-points");
 }
 
+export async function batchAddPainPoints(items: Array<{ title: string; category?: string; description?: string }>) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const valid = items.filter(i => i.title?.trim());
+    if (valid.length === 0) throw new Error("No valid pain points to add");
+
+    await db.insert(painPoints).values(
+        valid.map(i => ({
+            workspaceId,
+            title: i.title.trim(),
+            description: i.description?.trim() || undefined,
+            category: i.category?.trim() || "General",
+        }))
+    );
+
+    revalidatePath("/pain-points");
+    return { success: true, count: valid.length };
+}
+
 export async function togglePainPointActive(id: string, currentState: boolean) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
