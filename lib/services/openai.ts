@@ -14,36 +14,21 @@ export class OpenAIService {
 
     async generateEmbedding(text: string): Promise<number[]> {
         if (!this.client) {
-            console.warn("OPENAI_API_KEY is not set. Returning mock 1536-dim vector.");
-            return Array(1536).fill(0).map(() => Math.random());
+            throw new Error("OPENAI_API_KEY is not configured");
         }
 
-        try {
-            const response = await this.client.embeddings.create({
-                model: "text-embedding-3-small",
-                input: text,
-                encoding_format: "float",
-            });
+        const response = await this.client.embeddings.create({
+            model: "text-embedding-3-small",
+            input: text,
+            encoding_format: "float",
+        });
 
-            return response.data[0].embedding;
-        } catch (error) {
-            console.error("OpenAI embedding generation failed:", error);
-            return Array(1536).fill(0).map(() => Math.random());
-        }
+        return response.data[0].embedding;
     }
 
     async analyzeTool(content: string): Promise<any> {
         if (!this.client) {
-            console.warn("OPENAI_API_KEY is not set. Returning mock analysis.");
-            return {
-                summary: "Mock analysis: OpenAI key missing. Content length: " + content.length,
-                features: ["Mock Feature 1", "Mock Feature 2"],
-                pricing: [{ tier: "Free", price: "$0" }],
-                pros: ["Fast", "Free"],
-                cons: ["Not real"],
-                scorecard: { "innovation": { score: 5, justification: "Mock" } },
-                overallScore: 5.0
-            };
+            throw new Error("OPENAI_API_KEY is not configured");
         }
 
         const systemPrompt = `You are an expert software analyst. Analyze the provided website content for a software tool.

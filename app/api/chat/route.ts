@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { tools, workspaceMembers, reports } from "@/lib/db/schema";
-import { and, cosineDistance, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, cosineDistance, desc, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
 import { generateEmbedding } from "@/lib/ai/embedding";
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
                 similarity,
             })
             .from(tools)
-            .where(and(eq(tools.workspaceId, member.workspaceId), gt(similarity, 0.4)))
+            .where(and(eq(tools.workspaceId, member.workspaceId), isNotNull(tools.embedding), gt(similarity, 0.4)))
             .orderBy(desc(similarity))
             .limit(5);
 

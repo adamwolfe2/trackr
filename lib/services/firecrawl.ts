@@ -31,8 +31,8 @@ export class FirecrawlService {
      */
     async scrapeUrl(url: string): Promise<ScrapeResult> {
         if (!this.apiKey) {
-            console.warn("FIRECRAWL_API_KEY is not set. Returning mock data.");
-            return this.getMockData(url);
+            console.error("FIRECRAWL_API_KEY is not configured — cannot scrape URL");
+            return { success: false, error: "FIRECRAWL_API_KEY is not configured" };
         }
 
         try {

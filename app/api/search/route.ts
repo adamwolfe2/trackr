@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { tools, workspaceMembers } from "@/lib/db/schema";
-import { and, cosineDistance, desc, eq, gt, sql } from "drizzle-orm";
+import { and, cosineDistance, desc, eq, gt, isNotNull, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { generateEmbedding } from "@/lib/ai/embedding";
 import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
                 matchScore: similarity,
             })
             .from(tools)
-            .where(and(eq(tools.workspaceId, member.workspaceId), gt(similarity, 0.5)))
+            .where(and(eq(tools.workspaceId, member.workspaceId), isNotNull(tools.embedding), gt(similarity, 0.5)))
             .orderBy(desc(similarity))
             .limit(5);
 
