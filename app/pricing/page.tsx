@@ -43,7 +43,7 @@ const plans = [
             "Priority support",
         ],
         cta: "Start with Team",
-        href: "/sign-up",
+        href: "/sign-up?plan=team",
         highlight: true,
     },
     {
@@ -61,7 +61,7 @@ const plans = [
             "Priority support",
         ],
         cta: "Start with Agency",
-        href: "/sign-up",
+        href: "/sign-up?plan=agency",
         highlight: false,
     },
 ];

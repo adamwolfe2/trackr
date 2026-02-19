@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { tools, workspaceMembers } from "@/lib/db/schema";
-import { and, cosineDistance, desc, eq, gt, sql } from "drizzle-orm";
+import { tools, workspaceMembers, reports } from "@/lib/db/schema";
+import { and, cosineDistance, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { generateEmbedding } from "@/lib/ai/embedding";
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
 
         const relevantTools = await db
             .select({
+                id: tools.id,
                 name: tools.name,
                 overallScore: tools.overallScore,
                 status: tools.status,
@@ -67,8 +68,34 @@ export async function POST(req: NextRequest) {
             .orderBy(desc(similarity))
             .limit(5);
 
+        // Fetch the most recent report for each relevant tool to enrich context
+        const reportMap = new Map<string, { summary: string | null; pros: string[] | null; cons: string[] | null }>();
+        if (relevantTools.length > 0) {
+            const toolIds = relevantTools.map(t => t.id);
+            const latestReports = await db
+                .selectDistinctOn([reports.toolId], {
+                    toolId: reports.toolId,
+                    summary: reports.summary,
+                    pros: reports.pros,
+                    cons: reports.cons,
+                })
+                .from(reports)
+                .where(inArray(reports.toolId, toolIds))
+                .orderBy(reports.toolId, desc(reports.createdAt));
+            for (const r of latestReports) {
+                reportMap.set(r.toolId, { summary: r.summary, pros: r.pros, cons: r.cons });
+            }
+        }
+
         const context = relevantTools
-            .map(t => `Tool: ${t.name}\nScore: ${t.overallScore ?? "N/A"}\nStatus: ${t.status}\nURL: ${t.websiteUrl ?? "N/A"}`)
+            .map(t => {
+                const report = reportMap.get(t.id);
+                let entry = `Tool: ${t.name}\nScore: ${t.overallScore ?? "N/A"}\nStatus: ${t.status}\nURL: ${t.websiteUrl ?? "N/A"}`;
+                if (report?.summary) entry += `\nSummary: ${report.summary}`;
+                if (report?.pros?.length) entry += `\nPros: ${report.pros.join("; ")}`;
+                if (report?.cons?.length) entry += `\nCons: ${report.cons.join("; ")}`;
+                return entry;
+            })
             .join("\n---\n");
 
         const result = await streamText({

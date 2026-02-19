@@ -2,10 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { workspaces, workspaceMembers } from "@/lib/db/schema";
+import { workspaces, workspaceMembers, subscriptions } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { getWorkspaceId } from "./tools";
+import { getPlanLimits } from "@/lib/config/subscriptions";
 
 export async function updateWorkspaceName(formData: FormData) {
     const user = await currentUser();
@@ -57,6 +58,19 @@ export async function inviteMember(formData: FormData) {
 
     if (!currentMember || (currentMember.role !== "owner" && currentMember.role !== "admin")) {
         throw new Error("Only workspace owners can invite members");
+    }
+
+    // Enforce plan member limit
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspaceId),
+    });
+    const limits = getPlanLimits(subscription ?? undefined);
+    const [{ value: memberCount }] = await db
+        .select({ value: count() })
+        .from(workspaceMembers)
+        .where(eq(workspaceMembers.workspaceId, workspaceId));
+    if (memberCount >= limits.limits.members) {
+        throw new Error(`Your ${limits.name} plan allows up to ${limits.limits.members} member${limits.limits.members === 1 ? "" : "s"}. Upgrade to add more.`);
     }
 
     // Send invite email via Resend if available
