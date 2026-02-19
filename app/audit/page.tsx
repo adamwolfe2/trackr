@@ -4,6 +4,7 @@ import { ArrowRight, Zap, TrendingDown, Clock, Target } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { AuditWizard } from "@/components/marketing/audit-wizard";
+import { AuditDemo } from "@/components/marketing/audit-demo";
 import { currentUser } from "@clerk/nextjs/server";
 
 export const metadata: Metadata = {
@@ -79,31 +80,9 @@ export default async function AuditPage() {
                         </div>
                     </div>
 
-                    {/* Right side — urgency card */}
-                    <div className="space-y-4">
-                        <div className="border border-black bg-black text-white p-8">
-                            <div className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-4">The real situation</div>
-                            <p className="font-serif text-xl leading-relaxed mb-6">
-                                &ldquo;We evaluated 40 AI tools last year. 6 made it to production. We have no idea if we picked the right 6.&rdquo;
-                            </p>
-                            <div className="font-mono text-xs text-neutral-400 uppercase tracking-widest">
-                                — CTO, $80M ARR SaaS Company
-                            </div>
-                        </div>
-                        <div className="border border-black bg-white p-6">
-                            <div className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-3">This is why we built Trackr + the AI Audit</div>
-                            <p className="font-mono text-sm text-neutral-600 leading-relaxed">
-                                Self-serve tool evaluation for teams who move fast. White-glove architect sessions for organizations that want it done right the first time.
-                            </p>
-                            <div className="mt-4 flex gap-3">
-                                <Link href="/sign-up" className="font-mono text-xs border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors uppercase tracking-wide">
-                                    Self-Serve Free
-                                </Link>
-                                <a href="#audit-form" className="font-mono text-xs bg-black text-white px-4 py-2 hover:bg-neutral-800 transition-colors uppercase tracking-wide border border-black">
-                                    Book Audit Call
-                                </a>
-                            </div>
-                        </div>
+                    {/* Right side — interactive enterprise audit demo */}
+                    <div>
+                        <AuditDemo />
                     </div>
                 </div>
             </section>
