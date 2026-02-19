@@ -5,12 +5,29 @@ import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
+/* ─── Integration logos (marquee + next-steps) ─────────────────────────── */
+const INTEGRATION_LOGOS = [
+    { domain: "slack.com", label: "Slack" },
+    { domain: "gmail.com", label: "Gmail" },
+    { domain: "notion.so", label: "Notion" },
+    { domain: "asana.com", label: "Asana" },
+    { domain: "drive.google.com", label: "Drive" },
+    { domain: "figma.com", label: "Figma" },
+    { domain: "linear.app", label: "Linear" },
+    { domain: "github.com", label: "GitHub" },
+    { domain: "zapier.com", label: "Zapier" },
+    { domain: "hubspot.com", label: "HubSpot" },
+    { domain: "loom.com", label: "Loom" },
+    { domain: "airtable.com", label: "Airtable" },
+];
+
+/* ─── Demo tools ────────────────────────────────────────────────────────── */
 const DEMO_TOOLS = [
     {
         url: "notion.so",
         favicon: "https://www.google.com/s2/favicons?domain=notion.so&sz=32",
         name: "Notion",
-        tagline: "Collaborative workspace for docs & databases",
+        tagline: "Knowledge management workflows",
         score: 84,
         dimensions: [
             { label: "Features", score: 92 },
@@ -20,6 +37,11 @@ const DEMO_TOOLS = [
             { label: "Ease of Use", score: 80 },
         ],
         verdict: "Strong fit for knowledge management workflows.",
+        nextSteps: [
+            { domain: "slack.com", action: "Send to Josh", sub: "#ops-tools channel" },
+            { domain: "gmail.com", action: "Email the team", sub: "team@acme.com · 4 members" },
+            { domain: "notion.so", action: "Save to workspace", sub: "Tool Reviews / Q1 2025" },
+        ],
     },
     {
         url: "linear.app",
@@ -35,6 +57,31 @@ const DEMO_TOOLS = [
             { label: "Ease of Use", score: 94 },
         ],
         verdict: "Exceptional fit. Fastest issue tracker in the market.",
+        nextSteps: [
+            { domain: "slack.com", action: "Notify Sarah", sub: "#engineering channel" },
+            { domain: "gmail.com", action: "Email dev leads", sub: "eng@acme.com · 6 members" },
+            { domain: "asana.com", action: "Create eval task", sub: "Q1 Tool Review board" },
+        ],
+    },
+    {
+        url: "clay.com",
+        favicon: "https://www.google.com/s2/favicons?domain=clay.com&sz=32",
+        name: "Clay",
+        tagline: "AI-powered data enrichment & outreach",
+        score: 93,
+        dimensions: [
+            { label: "Features", score: 96 },
+            { label: "Pricing Value", score: 82 },
+            { label: "AI Capabilities", score: 97 },
+            { label: "Integrations", score: 94 },
+            { label: "Ease of Use", score: 78 },
+        ],
+        verdict: "Top-tier AI enrichment. Steep curve worth every bit.",
+        nextSteps: [
+            { domain: "slack.com", action: "Send to Rev Ops", sub: "#revenue-ops channel" },
+            { domain: "gmail.com", action: "Email leadership", sub: "leadership@acme.com" },
+            { domain: "hubspot.com", action: "Log in CRM stack", sub: "Sales Tools / AI Tier" },
+        ],
     },
     {
         url: "figma.com",
@@ -49,130 +96,222 @@ const DEMO_TOOLS = [
             { label: "Integrations", score: 89 },
             { label: "Ease of Use", score: 92 },
         ],
-        verdict: "Industry standard. Consider team pricing tier.",
-    },
-    {
-        url: "slack.com",
-        favicon: "https://www.google.com/s2/favicons?domain=slack.com&sz=32",
-        name: "Slack",
-        tagline: "Business messaging and collaboration hub",
-        score: 82,
-        dimensions: [
-            { label: "Features", score: 88 },
-            { label: "Pricing Value", score: 74 },
-            { label: "AI Capabilities", score: 81 },
-            { label: "Integrations", score: 95 },
-            { label: "Ease of Use", score: 86 },
+        verdict: "Industry standard. Evaluate team-tier pricing.",
+        nextSteps: [
+            { domain: "slack.com", action: "Share with design", sub: "#design channel" },
+            { domain: "gmail.com", action: "Email to Mike", sub: "mike@acme.com" },
+            { domain: "notion.so", action: "Log to tracker", sub: "Design Stack / Apps" },
         ],
-        verdict: "Good integration depth. Re-evaluate pricing at scale.",
     },
 ];
 
-const AGENT_LOGS = [
-    "Mapping site structure...",
-    "Crawling pricing page...",
-    "Scanning G2 + Capterra reviews...",
-    "Analyzing Reddit sentiment...",
-    "Comparing 4 competitors...",
-    "Scoring on 7 dimensions...",
-    "Generating structured report...",
+/* ─── 3 parallel agent streams ──────────────────────────────────────────── */
+const STREAM_STEPS = [
+    [
+        "Mapping site structure...",
+        "Crawling pricing page...",
+        "Extracting feature list...",
+        "Parsing changelog...",
+    ],
+    [
+        "Scanning G2 reviews...",
+        "Fetching Capterra data...",
+        "Analyzing Reddit posts...",
+        "Checking Product Hunt...",
+    ],
+    [
+        "Comparing 6 competitors...",
+        "Detecting integrations...",
+        "Scoring 7 dimensions...",
+        "Writing verdict...",
+    ],
 ];
 
-type DemoPhase = "idle" | "typing" | "researching" | "done";
+type Phase = "idle" | "typing" | "researching" | "done";
 
+/* ─── Animated score counter ────────────────────────────────────────────── */
 function AnimatedScore({ score, animate }: { score: number; animate: boolean }) {
     const [display, setDisplay] = useState(0);
     useEffect(() => {
         if (!animate) { setDisplay(0); return; }
-        let start = 0;
-        const step = score / 30;
-        const timer = setInterval(() => {
-            start += step;
-            if (start >= score) { setDisplay(score); clearInterval(timer); }
-            else setDisplay(Math.round(start));
-        }, 30);
-        return () => clearInterval(timer);
+        let val = 0;
+        const step = score / 22;
+        const t = setInterval(() => {
+            val += step;
+            if (val >= score) { setDisplay(score); clearInterval(t); }
+            else setDisplay(Math.round(val));
+        }, 26);
+        return () => clearInterval(t);
     }, [animate, score]);
     return <span>{display}</span>;
 }
 
+/* ─── Integration marquee ───────────────────────────────────────────────── */
+function IntegrationMarquee() {
+    const duped = [...INTEGRATION_LOGOS, ...INTEGRATION_LOGOS];
+    // Each logo: w-9 (36px) + gap-2.5 (10px) = 46px per item
+    // Half-width to translate = 12 * 46 = 552px
+    return (
+        <div className="overflow-hidden relative">
+            <style>{`
+                @keyframes marqueeScroll {
+                    0%   { transform: translateX(0); }
+                    100% { transform: translateX(-50%); }
+                }
+                .marquee-track { animation: marqueeScroll 9s linear infinite; }
+            `}</style>
+            <div className="marquee-track flex gap-2.5" style={{ width: "max-content" }}>
+                {duped.map((logo, i) => (
+                    <div key={`${logo.domain}-${i}`} className="flex flex-col items-center gap-0.5 w-9 flex-shrink-0">
+                        <div className="w-7 h-7 border border-black/10 bg-white flex items-center justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={`https://www.google.com/s2/favicons?domain=${logo.domain}&sz=32`}
+                                alt={logo.label}
+                                width={16}
+                                height={16}
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                            />
+                        </div>
+                        <span className="font-mono text-[8px] text-neutral-400 whitespace-nowrap">{logo.label}</span>
+                    </div>
+                ))}
+            </div>
+            <div className="absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-[#F3F3EF] to-transparent pointer-events-none" />
+            <div className="absolute inset-y-0 right-0 w-5 bg-gradient-to-l from-[#F3F3EF] to-transparent pointer-events-none" />
+        </div>
+    );
+}
+
+/* ─── Main demo widget ──────────────────────────────────────────────────── */
 function HeroDemo() {
-    const [phase, setPhase] = useState<DemoPhase>("idle");
+    const [phase, setPhase] = useState<Phase>("idle");
     const [toolIndex, setToolIndex] = useState(0);
     const [typedUrl, setTypedUrl] = useState("");
-    const [visibleLogs, setVisibleLogs] = useState<string[]>([]);
+    const [tick, setTick] = useState(-1);
+
     const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const toolIndexRef = useRef(0);
 
-    const currentTool = DEMO_TOOLS[toolIndex];
+    const clearAll = () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+        if (intervalRef.current) clearInterval(intervalRef.current);
+    };
 
-    useEffect(() => {
-        timerRef.current = setTimeout(() => startDemo(0), 1200);
-        return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const startDemo = (idx: number) => {
-        const tool = DEMO_TOOLS[idx];
+        clearAll();
+        toolIndexRef.current = idx;
         setToolIndex(idx);
         setPhase("typing");
         setTypedUrl("");
-        setVisibleLogs([]);
+        setTick(-1);
 
+        const tool = DEMO_TOOLS[idx];
         let i = 0;
         const typeChar = () => {
             if (i <= tool.url.length) {
                 setTypedUrl(tool.url.slice(0, i));
                 i++;
-                timerRef.current = setTimeout(typeChar, 65);
+                timerRef.current = setTimeout(typeChar, 52);
             } else {
                 timerRef.current = setTimeout(() => {
                     setPhase("researching");
-                    runLogs(0, idx);
-                }, 450);
+                    setTick(0);
+                    // Tick every 370ms — 7 ticks (0-6) = ~2.6s total research
+                    intervalRef.current = setInterval(() => {
+                        setTick(prev => {
+                            const next = prev + 1;
+                            if (next >= 7) {
+                                clearInterval(intervalRef.current!);
+                            }
+                            return next;
+                        });
+                    }, 370);
+                }, 300);
             }
         };
         typeChar();
     };
 
-    const runLogs = (logIdx: number, toolIdx: number) => {
-        if (logIdx >= AGENT_LOGS.length) {
+    useEffect(() => {
+        timerRef.current = setTimeout(() => startDemo(0), 800);
+        return clearAll;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Transition to "done" when all 3 streams finish
+    useEffect(() => {
+        if (tick >= 7) {
             timerRef.current = setTimeout(() => {
                 setPhase("done");
-                // After 4.5s, cycle to the next tool
                 timerRef.current = setTimeout(() => {
-                    const nextIdx = (toolIdx + 1) % DEMO_TOOLS.length;
-                    startDemo(nextIdx);
-                }, 4500);
-            }, 350);
-            return;
+                    startDemo((toolIndexRef.current + 1) % DEMO_TOOLS.length);
+                }, 4200);
+            }, 180);
         }
-        setVisibleLogs(prev => [...prev, AGENT_LOGS[logIdx]]);
-        timerRef.current = setTimeout(() => runLogs(logIdx + 1, toolIdx), 480);
-    };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tick]);
+
+    const currentTool = DEMO_TOOLS[toolIndex];
+
+    // Stream A starts at tick=0, B at tick=1, C at tick=2
+    // Each stream shows 1 new step per tick, finishes at tick=3/4/5
+    const streamVisible = [
+        tick >= 0 ? Math.min(tick + 1, 4) : 0,
+        tick >= 1 ? Math.min(tick, 4) : 0,
+        tick >= 2 ? Math.min(tick - 1, 4) : 0,
+    ];
+    const streamActive = [
+        Math.min(tick, 3),
+        Math.min(tick - 1, 3),
+        Math.min(tick - 2, 3),
+    ];
 
     return (
-        <div className="relative w-full max-w-md">
-            <div className="border border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <div className="relative w-full max-w-[440px]">
+            <div className="border border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden h-[488px]">
+
                 {/* Window chrome */}
-                <div className="bg-black px-4 py-2.5 flex items-center gap-2 border-b border-black">
+                <div className="bg-black px-4 py-2.5 flex items-center gap-2">
                     <div className="w-2 h-2 bg-white/20" />
                     <div className="w-2 h-2 bg-white/20" />
                     <div className="w-2 h-2 bg-white/20" />
-                    <span className="ml-3 font-mono text-[10px] text-white/60 uppercase tracking-wider">trackr — research agent</span>
+                    <span className="ml-2 font-mono text-[10px] text-white/60 uppercase tracking-wider">
+                        trackr — research agent
+                    </span>
+                    {phase === "researching" && (
+                        <div className="ml-auto flex gap-1">
+                            {[0, 1, 2].map(i => (
+                                <motion.div
+                                    key={i}
+                                    className="w-1.5 h-1.5 bg-white/50"
+                                    animate={{ opacity: [0.2, 1, 0.2] }}
+                                    transition={{ duration: 0.8, repeat: Infinity, delay: i * 0.22 }}
+                                />
+                            ))}
+                        </div>
+                    )}
+                    {phase === "done" && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="ml-auto flex items-center gap-1.5"
+                        >
+                            <CheckCircle2 className="w-3 h-3 text-white/70" />
+                            <span className="font-mono text-[9px] text-white/50 uppercase tracking-wider">Report ready</span>
+                        </motion.div>
+                    )}
                 </div>
 
-                {/* URL Input Area */}
+                {/* URL input */}
                 <div className="bg-white border-b border-black px-4 py-3 flex items-center gap-3">
                     {phase !== "idle" ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                            src={currentTool.favicon}
-                            alt=""
-                            width={16}
-                            height={16}
+                        <img src={currentTool.favicon} alt="" width={16} height={16}
                             className="flex-shrink-0 opacity-80 w-4 h-4"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                        />
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                     ) : (
                         <div className="w-4 h-4 flex-shrink-0" />
                     )}
@@ -189,46 +328,95 @@ function HeroDemo() {
                     {phase === "done" && <CheckCircle2 className="w-4 h-4 text-black flex-shrink-0" />}
                 </div>
 
-                {/* Agent Logs */}
+                {/* ── Parallel agent streams ──────────────────────────────── */}
                 <AnimatePresence>
-                    {(phase === "researching" || phase === "done") && (
+                    {phase === "researching" && (
                         <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
-                            className="bg-[#F3F3EF] px-4 py-3 border-b border-black"
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.18 }}
+                            className="bg-[#F3F3EF] border-b border-black overflow-hidden"
                         >
-                            <div className="space-y-1">
-                                {visibleLogs.map((log, i) => (
-                                    <motion.div
-                                        key={`${toolIndex}-${i}`}
-                                        initial={{ opacity: 0, x: -4 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        className="flex items-start gap-2"
-                                    >
-                                        <span className="text-black font-mono text-[10px] mt-0.5 flex-shrink-0">›</span>
-                                        <span className={`font-mono text-[10px] ${i === visibleLogs.length - 1 && phase === "researching" ? "text-black font-semibold" : "text-neutral-500"}`}>
-                                            {log}
-                                        </span>
-                                    </motion.div>
+                            {/* Stream headers */}
+                            <div className="grid grid-cols-3 border-b border-black/10">
+                                {["Agent α", "Agent β", "Agent γ"].map((label, i) => (
+                                    <div key={label} className={`px-2.5 py-1.5 ${i < 2 ? "border-r border-black/10" : ""}`}>
+                                        <div className="flex items-center gap-1.5">
+                                            <motion.div
+                                                className="w-1.5 h-1.5 bg-black"
+                                                animate={{ opacity: streamVisible[i] < 4 ? [0.3, 1, 0.3] : 1 }}
+                                                transition={{ duration: 0.7, repeat: streamVisible[i] < 4 ? Infinity : 0 }}
+                                            />
+                                            <span className="font-mono text-[9px] text-neutral-500 uppercase tracking-widest">{label}</span>
+                                        </div>
+                                    </div>
                                 ))}
-                                {phase === "researching" && (
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: [0.4, 1, 0.4] }}
-                                        transition={{ duration: 1.2, repeat: Infinity }}
-                                        className="flex gap-1 mt-1 pl-4"
-                                    >
-                                        {[0, 1, 2].map(i => (
-                                            <span key={i} className="w-1.5 h-1.5 bg-black inline-block" />
+                            </div>
+
+                            {/* Stream bodies */}
+                            <div className="grid grid-cols-3 py-2 min-h-[90px]">
+                                {[0, 1, 2].map(si => (
+                                    <div key={si} className={`px-2.5 space-y-1 ${si < 2 ? "border-r border-black/10" : ""}`}>
+                                        {STREAM_STEPS[si].slice(0, streamVisible[si]).map((step, stepIdx) => (
+                                            <motion.div
+                                                key={`${toolIndex}-${si}-${stepIdx}`}
+                                                initial={{ opacity: 0, x: -3 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ duration: 0.18 }}
+                                                className="flex items-start gap-1"
+                                            >
+                                                <span className="font-mono text-[9px] text-black/30 mt-[1px] flex-shrink-0">›</span>
+                                                <span className={`font-mono text-[9px] leading-snug ${
+                                                    stepIdx === streamActive[si] && tick < 7
+                                                        ? "text-black font-semibold"
+                                                        : "text-neutral-400"
+                                                }`}>
+                                                    {step}
+                                                </span>
+                                            </motion.div>
                                         ))}
-                                    </motion.div>
-                                )}
+
+                                        {/* Pulsing dots while in progress */}
+                                        {streamVisible[si] > 0 && streamVisible[si] < 4 && (
+                                            <motion.div
+                                                animate={{ opacity: [0.3, 1, 0.3] }}
+                                                transition={{ duration: 0.65, repeat: Infinity }}
+                                                className="flex gap-0.5 pl-3 pt-0.5"
+                                            >
+                                                {[0, 1, 2].map(d => (
+                                                    <span key={d} className="w-1 h-1 bg-black/25 inline-block" />
+                                                ))}
+                                            </motion.div>
+                                        )}
+
+                                        {/* Done checkmark per stream */}
+                                        {streamVisible[si] >= 4 && (
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                className="flex items-center gap-1 pl-3 pt-0.5"
+                                            >
+                                                <CheckCircle2 className="w-2.5 h-2.5 text-black" />
+                                                <span className="font-mono text-[9px] text-black font-semibold">Done</span>
+                                            </motion.div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Integration logos marquee */}
+                            <div className="border-t border-black/10 px-3 pt-2 pb-2.5">
+                                <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest block mb-1.5">
+                                    Scanning integrations
+                                </span>
+                                <IntegrationMarquee />
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
-                {/* Report Card */}
+                {/* ── Report card ─────────────────────────────────────────── */}
                 <AnimatePresence mode="wait">
                     {phase === "done" && (
                         <motion.div
@@ -236,50 +424,93 @@ function HeroDemo() {
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.35, ease: "easeOut" }}
-                            className="p-5"
+                            transition={{ duration: 0.28, ease: "easeOut" }}
                         >
-                            <div className="flex items-start justify-between mb-4">
-                                <div>
-                                    <div className="font-serif text-lg font-medium">{currentTool.name}</div>
-                                    <div className="font-mono text-[10px] text-neutral-500 mt-0.5">{currentTool.tagline}</div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="font-mono text-3xl font-bold text-black leading-none">
-                                        <AnimatedScore score={currentTool.score} animate={phase === "done"} />
+                            {/* Score + dimensions */}
+                            <div className="p-5 pb-4">
+                                <div className="flex items-start justify-between mb-3.5">
+                                    <div>
+                                        <div className="font-serif text-lg font-medium">{currentTool.name}</div>
+                                        <div className="font-mono text-[10px] text-neutral-500 mt-0.5">{currentTool.tagline}</div>
                                     </div>
-                                    <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-wider mt-0.5">/100 Score</div>
+                                    <div className="text-right flex-shrink-0 ml-3">
+                                        <div className="font-mono text-3xl font-bold text-black leading-none">
+                                            <AnimatedScore score={currentTool.score} animate={phase === "done"} />
+                                        </div>
+                                        <div className="font-mono text-[9px] text-neutral-400 uppercase tracking-wider mt-0.5">/100 Score</div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2 mb-4">
+                                    {currentTool.dimensions.map((dim, i) => (
+                                        <motion.div
+                                            key={`${toolIndex}-${dim.label}`}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            transition={{ delay: i * 0.055 }}
+                                        >
+                                            <div className="flex justify-between items-center mb-0.5">
+                                                <span className="font-mono text-[10px] text-neutral-500 uppercase tracking-wide">{dim.label}</span>
+                                                <span className="font-mono text-[10px] font-bold">{dim.score}</span>
+                                            </div>
+                                            <div className="h-[3px] bg-neutral-100 border border-neutral-200">
+                                                <motion.div
+                                                    className="h-full bg-black"
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${dim.score}%` }}
+                                                    transition={{ duration: 0.45, delay: 0.12 + i * 0.055, ease: "easeOut" }}
+                                                />
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </div>
+
+                                <div className="bg-neutral-100 border border-black px-3 py-2">
+                                    <div className="flex items-start gap-2">
+                                        <CheckCircle2 className="w-3 h-3 text-black flex-shrink-0 mt-0.5" />
+                                        <span className="font-mono text-[10px] text-neutral-700">{currentTool.verdict}</span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-2.5 mb-4">
-                                {currentTool.dimensions.map((dim, i) => (
+                            {/* ── What's next ─────────────────────────────── */}
+                            <div className="border-t border-black">
+                                <div className="px-5 py-2 bg-black flex items-center justify-between">
+                                    <span className="font-mono text-[9px] uppercase tracking-widest text-white/70">
+                                        Report ready — send it
+                                    </span>
                                     <motion.div
-                                        key={`${toolIndex}-${dim.label}`}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={{ delay: i * 0.08 }}
-                                    >
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className="font-mono text-[10px] text-neutral-600 uppercase tracking-wide">{dim.label}</span>
-                                            <span className="font-mono text-[10px] font-bold">{dim.score}</span>
-                                        </div>
-                                        <div className="h-1 bg-neutral-100 border border-neutral-200">
-                                            <motion.div
-                                                className="h-full bg-black"
-                                                initial={{ width: 0 }}
-                                                animate={{ width: `${dim.score}%` }}
-                                                transition={{ duration: 0.6, delay: 0.2 + i * 0.08, ease: "easeOut" }}
-                                            />
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-
-                            <div className="bg-neutral-100 border border-black px-3 py-2">
-                                <div className="flex items-start gap-2">
-                                    <CheckCircle2 className="w-3 h-3 text-black flex-shrink-0 mt-0.5" />
-                                    <span className="font-mono text-[10px] text-neutral-700">{currentTool.verdict}</span>
+                                        className="w-1.5 h-1.5 bg-white/60"
+                                        animate={{ opacity: [1, 0.2, 1] }}
+                                        transition={{ duration: 1.4, repeat: Infinity }}
+                                    />
+                                </div>
+                                <div className="divide-y divide-black/8">
+                                    {currentTool.nextSteps.map((step, i) => (
+                                        <motion.div
+                                            key={`${toolIndex}-next-${i}`}
+                                            initial={{ opacity: 0, x: 5 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.25 + i * 0.1 }}
+                                            className="flex items-center gap-3 px-5 py-2.5 hover:bg-[#F3F3EF] transition-colors cursor-pointer group"
+                                        >
+                                            <div className="w-6 h-6 border border-black/20 bg-white flex items-center justify-center flex-shrink-0">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img
+                                                    src={`https://www.google.com/s2/favicons?domain=${step.domain}&sz=32`}
+                                                    alt=""
+                                                    width={14}
+                                                    height={14}
+                                                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-mono text-[11px] text-black font-semibold truncate">{step.action}</div>
+                                                <div className="font-mono text-[9px] text-neutral-400 truncate">{step.sub}</div>
+                                            </div>
+                                            <ArrowRight className="w-3 h-3 text-neutral-300 group-hover:text-black transition-colors flex-shrink-0" />
+                                        </motion.div>
+                                    ))}
                                 </div>
                             </div>
                         </motion.div>
@@ -288,7 +519,7 @@ function HeroDemo() {
 
                 {phase === "idle" && (
                     <div className="px-5 py-8 text-center">
-                        <div className="font-mono text-xs text-neutral-400">Initializing agent...</div>
+                        <div className="font-mono text-xs text-neutral-400">Initializing agents...</div>
                     </div>
                 )}
             </div>
@@ -298,7 +529,7 @@ function HeroDemo() {
                 {DEMO_TOOLS.map((t, i) => (
                     <div
                         key={t.url}
-                        className={`w-1.5 h-1.5 transition-all duration-300 ${i === toolIndex ? "bg-black w-4" : "bg-neutral-300"}`}
+                        className={`h-1.5 transition-all duration-300 ${i === toolIndex ? "bg-black w-4" : "bg-neutral-300 w-1.5"}`}
                     />
                 ))}
             </div>
@@ -308,6 +539,7 @@ function HeroDemo() {
     );
 }
 
+/* ─── Hero section ──────────────────────────────────────────────────────── */
 export function OffsetHero() {
     return (
         <section className="mb-24 md:mb-32 pt-8">
@@ -364,14 +596,16 @@ export function OffsetHero() {
 
                 {/* Right: Live Demo */}
                 <motion.div
-                    className="flex-shrink-0 w-full lg:w-auto lg:max-w-[420px]"
+                    className="flex-shrink-0 w-full lg:w-auto lg:max-w-[460px]"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
                 >
                     <div className="mb-3 flex items-center gap-2">
                         <div className="w-2 h-2 bg-black animate-pulse" />
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-500">Live Agent Demo — Cycling 4 Tools</span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-500">
+                            Live Demo — 3 Parallel Research Agents
+                        </span>
                     </div>
                     <HeroDemo />
                 </motion.div>
