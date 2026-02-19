@@ -24,7 +24,7 @@ import { UserButton } from "@clerk/nextjs";
 const navItems = [
     {
         title: "Dashboard",
-        href: "/",
+        href: "/tools",
         icon: LayoutDashboard,
     },
     {

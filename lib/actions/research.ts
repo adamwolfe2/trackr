@@ -41,7 +41,7 @@ const ReportSchema = z.object({
     pros: z.array(z.string()).describe("Top 3-5 pros based on user reviews and official info"),
     cons: z.array(z.string()).describe("Top 3-5 cons based on user reviews and complaints"),
     competitors: z.array(z.string()).describe("3-5 main competitors (use their domain names, e.g. notion.so)"),
-    integrations: z.array(z.string()).default([]).describe("Tools/platforms this integrates with (e.g. Slack, Zapier, Salesforce, HubSpot)"),
+    integrations: z.array(z.string()).describe("Tools/platforms this integrates with (e.g. Slack, Zapier, Salesforce, HubSpot)"),
     categories: z.array(z.string()).describe("3-5 relevant categories for this tool (e.g. CRM, Analytics, DevTool)"),
 });
 

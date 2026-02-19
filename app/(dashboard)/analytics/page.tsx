@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { db } from "@/lib/db";
 import { tools, reports, researchJobs, softwareSpend, subscriptions } from "@/lib/db/schema";
-import { eq, sql, desc, gte, inArray, and } from "drizzle-orm";
+import { eq, sql, desc, gte, inArray, and, ne } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getWorkspaceId } from "@/lib/actions/tools";
@@ -67,7 +67,11 @@ export default async function AnalyticsPage() {
     let runsThisMonth = 0;
     if (toolIds.length > 0) {
         const jobs = await db.query.researchJobs.findMany({
-            where: and(gte(researchJobs.triggeredAt, startOfMonth), inArray(researchJobs.toolId, toolIds)),
+            where: and(
+                gte(researchJobs.triggeredAt, startOfMonth),
+                inArray(researchJobs.toolId, toolIds),
+                ne(researchJobs.status, "failed"),
+            ),
             columns: { id: true, toolId: true },
         });
         runsThisMonth = jobs.length;

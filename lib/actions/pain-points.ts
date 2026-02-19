@@ -35,7 +35,6 @@ export async function addPainPoint(formData: FormData) {
         title: validated.data.title,
         description: validated.data.description,
         category: validated.data.category || "General",
-        createdBy: user.id,
     });
 
     revalidatePath("/pain-points");

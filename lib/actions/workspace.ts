@@ -114,8 +114,6 @@ export async function saveScorecardRecipe(recipe: ScorecardRecipeInput) {
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
 
-    if (!recipe.systemContext) throw new Error("System context is required");
-
     await db.update(workspaces)
         .set({ scorecardConfig: recipe as unknown as Record<string, unknown> })
         .where(eq(workspaces.id, workspaceId));

@@ -8,7 +8,7 @@ import { Menu, X, LayoutDashboard, Database, Sparkles, CreditCard, Settings, Plu
 import { UserButton } from "@clerk/nextjs";
 
 const navItems = [
-    { title: "Dashboard", href: "/", icon: LayoutDashboard },
+    { title: "Dashboard", href: "/tools", icon: LayoutDashboard },
     { title: "Tool Database", href: "/tools", icon: Database },
     { title: "Discover", href: "/discover", icon: Search },
     { title: "Research Queue", href: "/queue", icon: Zap },
@@ -26,10 +26,7 @@ export function MobileNav() {
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
 
-    const isActive = (href: string) => {
-        if (href === "/") return pathname === "/";
-        return pathname.startsWith(href);
-    };
+    const isActive = (href: string) => pathname.startsWith(href);
 
     return (
         <>
