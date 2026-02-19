@@ -33,12 +33,16 @@ export async function GET(req: NextRequest) {
         // OR toolName fuzzy-matches the domain (without TLD)
         const domainBase = domain.replace(/\.(com|io|co|app|dev|org|net|ai|so)$/, "");
 
+        // Escape LIKE wildcards to prevent injection
+        const escapedDomain = domain.replace(/[\\%_]/g, '\\$&');
+        const escapedBase = domainBase.replace(/[\\%_]/g, '\\$&');
+
         const match = await db.query.softwareSpend.findFirst({
             where: and(
                 eq(softwareSpend.workspaceId, workspace.id),
                 or(
-                    ilike(softwareSpend.vendorUrl, `%${domain}%`),
-                    ilike(softwareSpend.toolName, `%${domainBase}%`)
+                    ilike(softwareSpend.vendorUrl, `%${escapedDomain}%`),
+                    ilike(softwareSpend.toolName, `%${escapedBase}%`)
                 )
             ),
         });

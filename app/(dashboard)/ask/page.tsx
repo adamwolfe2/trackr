@@ -19,7 +19,7 @@ export default async function AskPage() {
     });
 
     if (!member) {
-        return <div>No workspace found</div>;
+        redirect("/onboarding");
     }
 
     // Check Subscription

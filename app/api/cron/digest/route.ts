@@ -6,6 +6,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { Resend } from "resend";
 import { sendRenewalAlertEmail } from "@/lib/email/resend";
 import { postMessage, renewalAlertBlocks } from "@/lib/services/slack";
+import { timingSafeEqual } from "crypto";
 
 export const dynamic = 'force-dynamic';
 
@@ -13,7 +14,9 @@ const FROM = "Trackr <noreply@trytrackr.com>";
 function getResend() { return new Resend(process.env.RESEND_API_KEY || "re_placeholder"); }
 
 export async function GET(req: Request) {
-    if (req.headers.get('Authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+    const authHeader = req.headers.get('Authorization') || '';
+    const expected = `Bearer ${process.env.CRON_SECRET || ''}`;
+    if (!process.env.CRON_SECRET || authHeader.length !== expected.length || !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -34,6 +37,7 @@ export async function GET(req: Request) {
         thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
         const now = new Date();
+        now.setHours(0, 0, 0, 0);
 
         let digestsSent = 0;
         let renewalsSent = 0;

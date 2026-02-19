@@ -24,9 +24,8 @@ export async function POST(req: NextRequest) {
     });
     if (!member) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
 
-    // Rate limit: 10 research requests per minute per IP
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    const rl = rateLimit(`research:${ip}`, { limit: 10, windowSeconds: 60 });
+    // Rate limit: 10 research requests per minute per user
+    const rl = rateLimit(`research:${user.id}`, { limit: 10, windowSeconds: 60 });
     if (!rl.success) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
     // Parse body once — req.json() can only be consumed once per request

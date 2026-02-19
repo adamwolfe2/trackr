@@ -62,7 +62,7 @@ function StepCard({ step, index }: { step: typeof steps[0]; index: number }) {
                     {step.body}
                 </p>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-black text-xs font-mono text-neutral-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    <span className="w-1.5 h-1.5 rounded-full bg-black" />
+                    <span className="w-1.5 h-1.5 bg-black" />
                     {step.micro}
                 </div>
             </div>

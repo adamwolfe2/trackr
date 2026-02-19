@@ -29,8 +29,7 @@ export async function POST(req: NextRequest) {
     });
     if (!member) return new Response("No workspace found", { status: 403 });
 
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    const rl = rateLimit(`chat:${ip}`, { limit: 20, windowSeconds: 60 });
+    const rl = rateLimit(`chat:${user.id}`, { limit: 20, windowSeconds: 60 });
 
     if (!rl.success) {
         return new Response("Too many requests", { status: 429 });
@@ -57,7 +56,7 @@ export async function POST(req: NextRequest) {
     try {
         // Fetch all context in parallel
         const [queryEmbedding, spendEntries, activePainPoints] = await Promise.all([
-            generateEmbedding(query),
+            generateEmbedding(query).catch(() => null),
             db.query.softwareSpend.findMany({
                 where: eq(softwareSpend.workspaceId, wsId),
             }),
@@ -66,22 +65,25 @@ export async function POST(req: NextRequest) {
             }),
         ]);
 
-        // pgvector similarity search for tools relevant to the question
-        const similarity = sql<number>`1 - (${cosineDistance(tools.embedding, queryEmbedding)})`;
-        const relevantTools = await db
-            .select({
-                id: tools.id,
-                name: tools.name,
-                overallScore: tools.overallScore,
-                status: tools.status,
-                websiteUrl: tools.websiteUrl,
-                category: tools.category,
-                similarity,
-            })
-            .from(tools)
-            .where(and(eq(tools.workspaceId, wsId), isNotNull(tools.embedding), gt(similarity, 0.35)))
-            .orderBy(desc(similarity))
-            .limit(5);
+        // pgvector similarity search for tools relevant to the question (skip if embedding failed)
+        let relevantTools: { id: string; name: string; overallScore: string | null; status: string; websiteUrl: string | null; category: string[] | null; similarity: number }[] = [];
+        if (queryEmbedding) {
+            const similarity = sql<number>`1 - (${cosineDistance(tools.embedding, queryEmbedding)})`;
+            relevantTools = await db
+                .select({
+                    id: tools.id,
+                    name: tools.name,
+                    overallScore: tools.overallScore,
+                    status: tools.status,
+                    websiteUrl: tools.websiteUrl,
+                    category: tools.category,
+                    similarity,
+                })
+                .from(tools)
+                .where(and(eq(tools.workspaceId, wsId), isNotNull(tools.embedding), gt(similarity, 0.35)))
+                .orderBy(desc(similarity))
+                .limit(5);
+        }
 
         // Fetch full reports for relevant tools
         let toolContext = "";

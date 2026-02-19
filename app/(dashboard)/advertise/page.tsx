@@ -17,7 +17,7 @@ export default async function AdvertisePage() {
         where: eq(workspaceMembers.userId, user.id),
     });
 
-    if (!member) return <div className="font-mono text-sm">No workspace found</div>;
+    if (!member) redirect("/onboarding");
 
     const myAds = await db.query.ads.findMany({
         where: eq(ads.workspaceId, member.workspaceId),

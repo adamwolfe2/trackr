@@ -104,7 +104,7 @@ export default async function DiscoverPage() {
     });
 
     if (!member) {
-        return <div className="font-mono text-sm text-neutral-500 py-12 text-center">No workspace found.</div>;
+        redirect("/onboarding");
     }
 
     const [{ suggestions, painPointTitles }, newsItems] = await Promise.all([

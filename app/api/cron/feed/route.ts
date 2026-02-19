@@ -5,13 +5,16 @@ import { NextResponse } from "next/server";
 import { ingestAllChannels } from "@/lib/actions/feed";
 import { enrichFeedItems } from "@/lib/actions/feed-enrichment";
 import { extractToolsFromFeedItems, generateSuggestions } from "@/lib/actions/suggestions";
+import { timingSafeEqual } from "crypto";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 5 min max for processing all workspaces
 
 export async function GET(req: Request) {
-    if (req.headers.get("Authorization") !== `Bearer ${process.env.CRON_SECRET}`) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const authHeader = req.headers.get('Authorization') || '';
+    const expected = `Bearer ${process.env.CRON_SECRET || ''}`;
+    if (!process.env.CRON_SECRET || authHeader.length !== expected.length || !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {

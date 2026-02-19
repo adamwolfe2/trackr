@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { db } from "@/lib/db";
 import { referrals, workspaceMembers } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -14,7 +16,7 @@ export default async function ReferralsPage() {
         where: eq(workspaceMembers.userId, user.id),
     });
 
-    if (!member) return <div className="font-mono text-sm">No workspace found</div>;
+    if (!member) redirect("/onboarding");
 
     const myReferral = await db.query.referrals.findFirst({
         where: eq(referrals.referrerWorkspaceId, member.workspaceId),

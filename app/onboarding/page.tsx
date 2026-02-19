@@ -193,7 +193,7 @@ export default function OnboardingPage() {
                             <div>
                                 <label className="text-xs font-mono uppercase tracking-wide text-neutral-500 block mb-1">
                                     Company Context
-                                    {companyContext && <span className="text-green-600 ml-2">✓ Generated</span>}
+                                    {companyContext && <span className="text-black ml-2">✓ Generated</span>}
                                 </label>
                                 <textarea
                                     placeholder="Describe your company, industry, and what you're looking for in tools. This context is used by research agents to tailor every report."

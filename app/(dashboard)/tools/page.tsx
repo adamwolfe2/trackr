@@ -18,12 +18,7 @@ export default async function ToolsPage() {
     });
 
     if (!member) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
-                <h1 className="text-2xl font-bold">No Workspace Found</h1>
-                <p className="font-mono text-sm text-neutral-500">Please contact support or complete onboarding.</p>
-            </div>
-        );
+        redirect("/onboarding");
     }
 
     const [toolsList, spendEntries] = await Promise.all([

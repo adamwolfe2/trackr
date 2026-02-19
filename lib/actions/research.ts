@@ -15,6 +15,7 @@ import { getPlanLimits } from "@/lib/config/subscriptions";
 import { sendResearchCompleteEmail, sendResearchFailedEmail } from "@/lib/email/resend";
 import { clerkClient } from "@clerk/nextjs/server";
 import { postMessage, researchCompleteBlocks, researchFailedBlocks } from "@/lib/services/slack";
+import { logApiCall, COST_MAP, estimateOpenAICost } from "@/lib/services/api-logger";
 
 type ToolWithWorkspace = InferSelectModel<typeof tools> & {
     workspace: InferSelectModel<typeof workspaces>;
@@ -140,11 +141,20 @@ export async function performDeepResearch(toolId: string) {
 
         // ── Step 1: Map site ──────────────────────────────────────────────
         await logProgress(toolId, `Step 1/6: Mapping site structure for ${domain}...`);
+        const mapStart = Date.now();
         const mapResult = await withTimeout(
             firecrawl.mapSite(tool.websiteUrl),
             30000,
             { success: false, data: [] }
         );
+        logApiCall({
+            service: "firecrawl",
+            endpoint: "map",
+            durationMs: Date.now() - mapStart,
+            estimatedCost: COST_MAP.firecrawl.map,
+            workspaceId: tool.workspaceId,
+            toolId,
+        });
         const subPages: string[] = mapResult.success && Array.isArray(mapResult.data) ? mapResult.data : [];
 
         const pricingUrl = subPages.find((u) => /\/pricing/.test(u)) ?? tool.websiteUrl;
@@ -154,12 +164,35 @@ export async function performDeepResearch(toolId: string) {
         await logProgress(toolId, `Step 2/6: Crawling ${domain}${pricingLabel}...`);
 
         const scrapeFallback = { success: false, data: { markdown: "", metadata: {} } };
+        const scrapeStart = Date.now();
+        const hasSeparatePricing = pricingUrl !== tool.websiteUrl;
         const [mainScrape, pricingScrape] = await Promise.all([
             withTimeout(firecrawl.scrapeUrl(tool.websiteUrl), 30000, scrapeFallback),
-            pricingUrl !== tool.websiteUrl
+            hasSeparatePricing
                 ? withTimeout(firecrawl.scrapeUrl(pricingUrl), 30000, scrapeFallback)
                 : Promise.resolve({ success: true, data: { markdown: "", metadata: {} } }),
         ]);
+        const scrapeDuration = Date.now() - scrapeStart;
+        logApiCall({
+            service: "firecrawl",
+            endpoint: "scrape",
+            durationMs: scrapeDuration,
+            estimatedCost: COST_MAP.firecrawl.scrape,
+            workspaceId: tool.workspaceId,
+            toolId,
+            metadata: { target: "main" },
+        });
+        if (hasSeparatePricing) {
+            logApiCall({
+                service: "firecrawl",
+                endpoint: "scrape",
+                durationMs: scrapeDuration,
+                estimatedCost: COST_MAP.firecrawl.scrape,
+                workspaceId: tool.workspaceId,
+                toolId,
+                metadata: { target: "pricing" },
+            });
+        }
 
         rawData.main = mainScrape.data?.markdown ?? "";
         rawData.pricing = pricingScrape.data?.markdown ?? "";
@@ -177,6 +210,7 @@ export async function performDeepResearch(toolId: string) {
         // ── Step 3: Tavily — review sites ─────────────────────────────────
         await logProgress(toolId, `Step 3/6: Searching reviews (G2, Capterra, TrustRadius)...`);
         const tavilyFallback = { results: [], answer: "" };
+        const reviewStart = Date.now();
         const reviewSearch = await withTimeout(
             tavily.search(
                 `${tool.name} software reviews user feedback pros cons`,
@@ -189,6 +223,14 @@ export async function performDeepResearch(toolId: string) {
             30000,
             tavilyFallback
         );
+        logApiCall({
+            service: "tavily",
+            endpoint: "search-reviews",
+            durationMs: Date.now() - reviewStart,
+            estimatedCost: COST_MAP.tavily.search,
+            workspaceId: tool.workspaceId,
+            toolId,
+        });
 
         if (reviewSearch.results.length > 0) {
             const sourceNames = [...new Set(
@@ -205,6 +247,7 @@ export async function performDeepResearch(toolId: string) {
 
         // ── Step 4: Tavily — Reddit sentiment ─────────────────────────────
         await logProgress(toolId, `Step 4/6: Scanning Reddit + community discussions...`);
+        const redditStart = Date.now();
         const redditSearch = await withTimeout(
             tavily.search(
                 `${tool.name} reddit experiences pros cons issues 2024`,
@@ -213,6 +256,14 @@ export async function performDeepResearch(toolId: string) {
             30000,
             tavilyFallback
         );
+        logApiCall({
+            service: "tavily",
+            endpoint: "search-reddit",
+            durationMs: Date.now() - redditStart,
+            estimatedCost: COST_MAP.tavily.search,
+            workspaceId: tool.workspaceId,
+            toolId,
+        });
 
         rawData.reddit = redditSearch.results
             .map((r) => `${r.title}:\n${r.content.slice(0, 300)}`)
@@ -220,6 +271,7 @@ export async function performDeepResearch(toolId: string) {
 
         // ── Step 5: Perplexity — competitors + market analysis ────────────
         await logProgress(toolId, `Step 5/6: Analyzing competitive landscape...`);
+        const perplexityStart = Date.now();
         const competitorAnalysis = await withTimeout(
             perplexity.search(
                 `Who are the main competitors of ${tool.name}? What are the key differentiators? What do users typically choose instead, and why?`
@@ -227,6 +279,14 @@ export async function performDeepResearch(toolId: string) {
             30000,
             ""
         );
+        logApiCall({
+            service: "perplexity",
+            endpoint: "sonar-reasoning-pro",
+            durationMs: Date.now() - perplexityStart,
+            estimatedCost: COST_MAP.perplexity["sonar-reasoning-pro"],
+            workspaceId: tool.workspaceId,
+            toolId,
+        });
         rawData.competitors = competitorAnalysis;
 
         // ── Step 6: GPT-4o synthesis ──────────────────────────────────────
@@ -254,7 +314,8 @@ ${recipe.evaluationCriteria ? `EVALUATION CRITERIA:\n${recipe.evaluationCriteria
 ${recipe.dealBreakers ? `DEAL BREAKERS (flag these prominently in cons):\n${recipe.dealBreakers}` : ""}
 ` : `COMPANY CONTEXT: ${companyContext}`;
 
-        const { object: reportData } = await generateObject({
+        const openaiStart = Date.now();
+        const { object: reportData, usage } = await generateObject({
             model: openai("gpt-4o"),
             schema: ReportSchema,
             prompt: `
@@ -293,6 +354,16 @@ INSTRUCTIONS:
 - For competitors, use their domain name (e.g. notion.so, linear.app).
 - Evaluate through the lens of the company's recipe above: what works for their specific business units, and flag any deal breakers prominently.
             `.trim(),
+        });
+        logApiCall({
+            service: "openai",
+            endpoint: "gpt-4o",
+            durationMs: Date.now() - openaiStart,
+            tokensIn: usage?.inputTokens,
+            tokensOut: usage?.outputTokens,
+            estimatedCost: estimateOpenAICost(usage?.inputTokens ?? 0, usage?.outputTokens ?? 0),
+            workspaceId: tool.workspaceId,
+            toolId,
         });
 
         // ── Step 7: Store report ──────────────────────────────────────────
