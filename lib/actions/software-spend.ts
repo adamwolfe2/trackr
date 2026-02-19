@@ -69,6 +69,45 @@ export async function updateSoftwareSpendStatus(id: string, status: string) {
     return { success: true };
 }
 
+export async function batchAddSoftwareSpend(items: Array<{
+    toolName: string;
+    category?: string | null;
+    vendorUrl?: string | null;
+    monthlyCost?: string | null;
+    seatCount?: number | null;
+    billingCycle?: string | null;
+    notes?: string | null;
+}>) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const valid = items.filter(i => i.toolName?.trim());
+    if (valid.length === 0) throw new Error("No valid tools to add");
+
+    await db.insert(softwareSpend).values(
+        valid.map(i => {
+            const cost = i.monthlyCost ? parseFloat(i.monthlyCost) : null;
+            return {
+                workspaceId,
+                toolName: i.toolName.trim(),
+                category: i.category?.trim() || null,
+                vendorUrl: i.vendorUrl?.trim() || null,
+                monthlyCost: cost && !isNaN(cost) ? cost.toFixed(2) : "0",
+                seatCount: i.seatCount ?? null,
+                billingCycle: i.billingCycle || "monthly",
+                status: "active",
+                notes: i.notes?.trim() || null,
+            };
+        })
+    );
+
+    revalidatePath("/stack");
+    return { success: true, count: valid.length };
+}
+
 export async function updateSoftwareSpendDetails(id: string, monthlyCost: string, seatCount: number | null) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");

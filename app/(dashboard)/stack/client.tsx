@@ -1,10 +1,57 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addSoftwareSpend, deleteSoftwareSpend, updateSoftwareSpendStatus, updateSoftwareSpendDetails } from "@/lib/actions/software-spend";
-import { PlusCircle, Trash2, ExternalLink, DollarSign, Users, Pencil, Check, X, AlertTriangle } from "lucide-react";
+import { addSoftwareSpend, deleteSoftwareSpend, updateSoftwareSpendStatus, updateSoftwareSpendDetails, batchAddSoftwareSpend } from "@/lib/actions/software-spend";
+import { PlusCircle, Trash2, ExternalLink, DollarSign, Users, Pencil, Check, X, AlertTriangle, Sparkles, Clipboard, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+
+const STACK_PROMPT = `You are a software asset inventory specialist. I need you to help me document my company's complete software and SaaS stack.
+
+Please ask me the following questions to build a comprehensive picture, or if you already know our stack, generate the full list:
+
+1. What communication tools does your team use daily? (e.g. Slack, Teams, Zoom, Google Meet)
+2. What project management or task tracking tools? (e.g. Asana, Jira, Linear, Monday, Notion)
+3. What CRM or sales tools? (e.g. Salesforce, HubSpot, Close, Pipedrive)
+4. What marketing tools? (e.g. Mailchimp, HubSpot, Marketo, Klaviyo, ActiveCampaign)
+5. What development or engineering tools? (e.g. GitHub, GitLab, Vercel, AWS, Datadog, Sentry)
+6. What design tools? (e.g. Figma, Canva, Adobe Creative Suite)
+7. What HR or people management tools? (e.g. Rippling, Gusto, Lattice, Greenhouse)
+8. What finance or accounting tools? (e.g. QuickBooks, Xero, Brex, Ramp, Expensify)
+9. What analytics or BI tools? (e.g. Google Analytics, Mixpanel, Amplitude, Tableau, Looker)
+10. What productivity or documentation tools? (e.g. Google Workspace, Microsoft 365, Confluence, Coda)
+11. What customer support tools? (e.g. Intercom, Zendesk, Front, Freshdesk)
+12. What security or compliance tools? (e.g. 1Password, Okta, Vanta, Drata)
+13. What AI tools is the team using? (e.g. ChatGPT, Claude, Midjourney, GitHub Copilot)
+14. Any other SaaS subscriptions, plugins, or services the company pays for?
+
+For each tool you identify, please return a JSON array in this exact format (no markdown, no explanation, just the raw JSON array):
+
+[
+  {
+    "toolName": "Slack",
+    "category": "Communication",
+    "vendorUrl": "https://slack.com",
+    "estimatedSeats": 25,
+    "billingCycle": "monthly",
+    "notes": "Primary team chat"
+  },
+  {
+    "toolName": "Notion",
+    "category": "Documentation",
+    "vendorUrl": "https://notion.so",
+    "estimatedSeats": 25,
+    "billingCycle": "monthly",
+    "notes": ""
+  }
+]
+
+Guidelines:
+- estimatedSeats should be your best estimate of how many people use this tool (0 if unknown)
+- billingCycle should be "monthly", "annual", or "one-time"
+- category should be one of: Communication, Project Management, CRM, Marketing, Development, Design, HR, Finance, Analytics, Productivity, Support, Security, AI, Other
+- Include ALL tools even if you're unsure of the price — we'll fill in costs later
+- Return ONLY the JSON array, nothing else`;
 
 type SpendEntry = {
     id: string;
@@ -21,6 +68,15 @@ type SpendEntry = {
 
 const STATUS_OPTIONS = ["active", "evaluating", "canceling", "canceled"] as const;
 
+type ParsedStackItem = {
+    toolName: string;
+    category?: string | null;
+    vendorUrl?: string | null;
+    estimatedSeats?: number | null;
+    billingCycle?: string | null;
+    notes?: string | null;
+};
+
 export function StackClient({ initialData = [], lowScoredNames = [] }: { initialData?: SpendEntry[]; lowScoredNames?: string[] }) {
     const [showForm, setShowForm] = useState(false);
     const [toDelete, setToDelete] = useState<string | null>(null);
@@ -29,6 +85,69 @@ export function StackClient({ initialData = [], lowScoredNames = [] }: { initial
     const [editSeats, setEditSeats] = useState("");
     const [isPending, startTransition] = useTransition();
     const router = useRouter();
+
+    // AI bulk import state
+    const [copied, setCopied] = useState(false);
+    const [showPaste, setShowPaste] = useState(false);
+    const [pasteText, setPasteText] = useState("");
+    const [parseError, setParseError] = useState<string | null>(null);
+    const [parsedItems, setParsedItems] = useState<ParsedStackItem[] | null>(null);
+    const [isImporting, startImportTransition] = useTransition();
+
+    const copyPrompt = async () => {
+        await navigator.clipboard.writeText(STACK_PROMPT);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+    };
+
+    const parseStackJson = () => {
+        setParseError(null);
+        setParsedItems(null);
+        const cleaned = pasteText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+        try {
+            const parsed = JSON.parse(cleaned);
+            if (!Array.isArray(parsed)) { setParseError("Expected a JSON array. Make sure the AI returned a list of tools."); return; }
+            const items: ParsedStackItem[] = parsed
+                .filter((i: unknown) => i && typeof i === "object" && typeof (i as Record<string, unknown>).toolName === "string")
+                .map((i: Record<string, unknown>) => ({
+                    toolName: String(i.toolName),
+                    category: typeof i.category === "string" ? i.category : null,
+                    vendorUrl: typeof i.vendorUrl === "string" ? i.vendorUrl : null,
+                    estimatedSeats: typeof i.estimatedSeats === "number" ? i.estimatedSeats : null,
+                    billingCycle: typeof i.billingCycle === "string" ? i.billingCycle : "monthly",
+                    notes: typeof i.notes === "string" ? i.notes : null,
+                }));
+            if (items.length === 0) { setParseError("No valid tools found. Each item needs a 'toolName' field."); return; }
+            setParsedItems(items);
+        } catch {
+            setParseError("Invalid JSON. Make sure to copy just the raw JSON array from the AI response.");
+        }
+    };
+
+    const importAll = () => {
+        if (!parsedItems || parsedItems.length === 0) return;
+        startImportTransition(async () => {
+            try {
+                const result = await batchAddSoftwareSpend(
+                    parsedItems.map(i => ({
+                        toolName: i.toolName,
+                        category: i.category,
+                        vendorUrl: i.vendorUrl,
+                        seatCount: i.estimatedSeats,
+                        billingCycle: i.billingCycle,
+                        notes: i.notes,
+                    }))
+                );
+                toast.success(`Imported ${result.count} tool${result.count === 1 ? "" : "s"} to your stack`);
+                setShowPaste(false);
+                setPasteText("");
+                setParsedItems(null);
+                router.refresh();
+            } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Import failed");
+            }
+        });
+    };
 
     const totalMonthly = initialData
         .filter(e => e.status === "active")
@@ -66,7 +185,7 @@ export function StackClient({ initialData = [], lowScoredNames = [] }: { initial
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
                     <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Spend Intelligence</p>
                     <h1 className="font-serif text-2xl font-normal">Software Stack</h1>
@@ -74,14 +193,111 @@ export function StackClient({ initialData = [], lowScoredNames = [] }: { initial
                         Track all tools your team pays for. Understand your total software spend.
                     </p>
                 </div>
-                <button
-                    onClick={() => setShowForm(prev => !prev)}
-                    className="flex items-center gap-2 border border-black px-4 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 whitespace-nowrap"
-                >
-                    {showForm ? <X className="h-3.5 w-3.5" /> : <PlusCircle className="h-3.5 w-3.5" />}
-                    {showForm ? "Cancel" : "Add Tool"}
-                </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                        onClick={() => { setShowPaste(prev => !prev); setShowForm(false); }}
+                        className="flex items-center gap-2 border border-black px-4 py-2.5 font-mono text-xs bg-white hover:bg-neutral-100 whitespace-nowrap"
+                    >
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Bulk Import via AI
+                    </button>
+                    <button
+                        onClick={() => { setShowForm(prev => !prev); setShowPaste(false); }}
+                        className="flex items-center gap-2 border border-black px-4 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 whitespace-nowrap"
+                    >
+                        {showForm ? <X className="h-3.5 w-3.5" /> : <PlusCircle className="h-3.5 w-3.5" />}
+                        {showForm ? "Cancel" : "Add Tool"}
+                    </button>
+                </div>
             </div>
+
+            {/* AI Bulk Import Panel */}
+            {showPaste && (
+                <div className="border border-black bg-white">
+                    <div className="border-b border-black px-5 py-3 flex items-center justify-between">
+                        <span className="font-mono text-xs uppercase tracking-widest">Bulk Import via AI</span>
+                        <button onClick={() => { setShowPaste(false); setPasteText(""); setParsedItems(null); setParseError(null); }} className="text-neutral-400 hover:text-black">
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                    <div className="p-5 space-y-4">
+                        <div className="bg-[#F3F3EF] border border-black/10 p-4 space-y-2">
+                            <p className="font-mono text-xs font-semibold">Step 1 — Copy the AI prompt</p>
+                            <p className="font-mono text-xs text-neutral-600">
+                                Click the button below to copy a detailed prompt. Paste it into ChatGPT, Claude, or any AI and tell it about your company&apos;s software stack. The AI will return a JSON list of all your tools.
+                            </p>
+                            <button
+                                onClick={copyPrompt}
+                                className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800 mt-1"
+                            >
+                                <Clipboard className="h-3.5 w-3.5" />
+                                {copied ? "Copied!" : "Copy AI Prompt"}
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <p className="font-mono text-xs font-semibold">Step 2 — Paste the AI&apos;s JSON response</p>
+                            <p className="font-mono text-xs text-neutral-500">The AI should return a JSON array. Paste the full response here — we&apos;ll strip any extra formatting automatically.</p>
+                            <textarea
+                                value={pasteText}
+                                onChange={e => { setPasteText(e.target.value); setParsedItems(null); setParseError(null); }}
+                                rows={8}
+                                placeholder={'[\n  {\n    "toolName": "Slack",\n    "category": "Communication",\n    "vendorUrl": "https://slack.com",\n    "estimatedSeats": 25,\n    "billingCycle": "monthly",\n    "notes": ""\n  }\n]'}
+                                className="w-full border border-black px-4 py-3 font-mono text-xs bg-white focus:outline-none resize-y"
+                            />
+                            {parseError && (
+                                <p className="font-mono text-xs text-red-600 flex items-center gap-1">
+                                    <AlertTriangle className="h-3 w-3" /> {parseError}
+                                </p>
+                            )}
+                            <button
+                                onClick={parseStackJson}
+                                disabled={!pasteText.trim()}
+                                className="border border-black px-4 py-2 font-mono text-xs hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                <ChevronDown className="h-3.5 w-3.5" />
+                                Preview Tools
+                            </button>
+                        </div>
+
+                        {parsedItems && parsedItems.length > 0 && (
+                            <div className="space-y-3">
+                                <p className="font-mono text-xs font-semibold">Step 3 — Review and import</p>
+                                <div className="border border-black divide-y divide-neutral-100 max-h-64 overflow-y-auto">
+                                    {parsedItems.map((item, i) => (
+                                        <div key={i} className="px-4 py-2.5 flex items-center justify-between gap-4 text-xs">
+                                            <div>
+                                                <span className="font-mono font-semibold">{item.toolName}</span>
+                                                {item.category && <span className="font-mono text-neutral-400 ml-2">{item.category}</span>}
+                                                {item.vendorUrl && (
+                                                    <span className="font-mono text-neutral-300 ml-2">
+                                                        {(() => { try { return new URL(item.vendorUrl!).hostname; } catch { return item.vendorUrl; } })()}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-3 shrink-0 text-neutral-400 font-mono">
+                                                {item.estimatedSeats ? <span>{item.estimatedSeats} seats</span> : null}
+                                                {item.billingCycle && <span>{item.billingCycle}</span>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={importAll}
+                                    disabled={isImporting}
+                                    className="flex items-center gap-2 border border-black px-6 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 disabled:opacity-60"
+                                >
+                                    <PlusCircle className="h-3.5 w-3.5" />
+                                    {isImporting ? "Importing..." : `Import All ${parsedItems.length} Tool${parsedItems.length === 1 ? "" : "s"}`}
+                                </button>
+                                <p className="font-mono text-[10px] text-neutral-400">
+                                    Costs will be $0 initially — edit each row to add your actual monthly spend.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Add Form (inline) */}
             {showForm && (
