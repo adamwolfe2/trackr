@@ -298,8 +298,8 @@ function HeroDemo() {
     ];
 
     return (
-        <div className="relative w-full max-w-[440px]">
-            <div className="border border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+        <div className="relative w-full">
+            <div className="w-full border border-black bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
 
                 {/* Window chrome */}
                 <div className="bg-black px-4 py-2.5 flex items-center gap-2">
@@ -721,7 +721,7 @@ export function OffsetHero() {
 
                 {/* Right: Live Demo */}
                 <motion.div
-                    className="flex-shrink-0 w-full lg:w-auto lg:max-w-[460px]"
+                    className="flex-shrink-0 w-full lg:w-[440px]"
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
