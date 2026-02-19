@@ -41,22 +41,27 @@ export async function GET(
         return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Generate PDF Stream
-    const stream = await renderToStream(
-        <InvoiceDocument
-            id={ad.id}
-            date={ad.createdAt}
-            amount={ad.budget}
-            description={`Ad Campaign for ${ad.tool.name}`}
-            customerName={user.fullName || "Valued Customer"}
-            customerEmail={user.emailAddresses[0].emailAddress}
-        />
-    );
+    try {
+        // Generate PDF Stream
+        const stream = await renderToStream(
+            <InvoiceDocument
+                id={ad.id}
+                date={ad.createdAt}
+                amount={ad.budget}
+                description={`Ad Campaign for ${ad.tool.name}`}
+                customerName={user.fullName || "Valued Customer"}
+                customerEmail={user.emailAddresses[0].emailAddress}
+            />
+        );
 
-    return new NextResponse(stream as any, {
-        headers: {
-            "Content-Type": "application/pdf",
-            "Content-Disposition": `attachment; filename="invoice-${ad.id.slice(0, 8)}.pdf"`,
-        },
-    });
+        return new NextResponse(stream as unknown as BodyInit, {
+            headers: {
+                "Content-Type": "application/pdf",
+                "Content-Disposition": `attachment; filename="invoice-${ad.id.slice(0, 8)}.pdf"`,
+            },
+        });
+    } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to generate PDF";
+        return new NextResponse(message, { status: 500 });
+    }
 }

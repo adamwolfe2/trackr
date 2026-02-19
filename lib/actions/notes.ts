@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { notes, workspaceMembers } from "@/lib/db/schema";
+import { notes, workspaceMembers, tools } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -22,6 +22,13 @@ export async function addNote(toolId: string, content: string) {
     });
 
     if (!member) throw new Error("User is not a member of any workspace");
+
+    // Verify the tool belongs to the caller's workspace
+    const tool = await db.query.tools.findFirst({
+        where: eq(tools.id, toolId),
+    });
+    if (!tool) throw new Error("Tool not found");
+    if (tool.workspaceId !== member.workspaceId) throw new Error("Not authorized");
 
     const validated = addNoteSchema.safeParse({ toolId, content });
     if (!validated.success) {

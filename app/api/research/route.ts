@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { tools, reports } from "@/lib/db/schema";
+import { tools, reports, workspaceMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { FirecrawlService } from "@/lib/services/firecrawl";
 import { OpenAIService } from "@/lib/services/openai";
+import { currentUser } from "@clerk/nextjs/server";
+import { rateLimit } from "@/lib/middleware/rate-limit";
 import { z } from "zod";
 
 const ResearchRequestSchema = z.object({
@@ -12,6 +14,21 @@ const ResearchRequestSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+    // Auth check
+    const user = await currentUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Workspace membership check
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+    });
+    if (!member) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
+
+    // Rate limit: 10 research requests per minute per IP
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const rl = rateLimit(`research:${ip}`, { limit: 10, windowSeconds: 60 });
+    if (!rl.success) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+
     // Parse body once — req.json() can only be consumed once per request
     let body: unknown;
     try {
@@ -30,23 +47,22 @@ export async function POST(req: NextRequest) {
 
     const { toolId, url: providedUrl } = parsed.data;
 
-    try {
-        // 1. Fetch tool details if URL not provided
-        let targetUrl = providedUrl;
-        if (!targetUrl) {
-            const tool = await db.query.tools.findFirst({
-                where: eq(tools.id, toolId),
-            });
-            if (!tool?.websiteUrl) {
-                return NextResponse.json(
-                    { error: "Tool has no website URL" },
-                    { status: 400 }
-                );
-            }
-            targetUrl = tool.websiteUrl;
-        }
+    // Fetch tool and verify workspace ownership
+    const tool = await db.query.tools.findFirst({
+        where: eq(tools.id, toolId),
+    });
+    if (!tool) return NextResponse.json({ error: "Tool not found" }, { status: 404 });
+    if (tool.workspaceId !== member.workspaceId) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
-        // 2. Update status to 'researching'
+    const targetUrl = providedUrl ?? tool.websiteUrl;
+    if (!targetUrl) {
+        return NextResponse.json({ error: "Tool has no website URL" }, { status: 400 });
+    }
+
+    try {
+        // Update status to 'researching'
         await db
             .update(tools)
             .set({ status: "researching", lastResearchedAt: new Date() })
@@ -55,7 +71,7 @@ export async function POST(req: NextRequest) {
         const firecrawl = new FirecrawlService();
         const openaiService = new OpenAIService();
 
-        // 3. Scrape website
+        // Scrape website
         const scrapeResult = await firecrawl.scrapeUrl(targetUrl);
         if (!scrapeResult.success) {
             throw new Error("Failed to scrape website: " + (scrapeResult.error ?? "unknown"));
@@ -66,10 +82,10 @@ export async function POST(req: NextRequest) {
             scrapeResult.data?.content ??
             "No content found.";
 
-        // 4. Analyze with AI
+        // Analyze with AI
         const analysis = await openaiService.analyzeTool(content);
 
-        // 5. Save report
+        // Save report
         await db.insert(reports).values({
             toolId,
             summary: analysis.summary ?? null,
@@ -81,7 +97,7 @@ export async function POST(req: NextRequest) {
             createdAt: new Date(),
         });
 
-        // 6. Update tool status — "active" is the valid post-research status
+        // Update tool status — "active" is the valid post-research status
         await db
             .update(tools)
             .set({
