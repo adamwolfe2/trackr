@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { tools, reports, workspaces, researchJobs, subscriptions } from "@/lib/db/schema";
-import { eq, sql, and, gte } from "drizzle-orm";
+import { eq, sql, and, gte, ne } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { perplexity } from "@/lib/services/perplexity";
 import { tavily } from "@/lib/services/tavily";
@@ -102,9 +102,11 @@ export async function performDeepResearch(toolId: string) {
         const toolIds = workspaceToolIds.map((t) => t.id);
 
         if (toolIds.length > 0) {
+            // Count all non-failed jobs (running + complete) this month — not just completed
             const jobsThisMonth = await db.query.researchJobs.findMany({
                 where: and(
                     gte(researchJobs.triggeredAt, startOfMonth),
+                    ne(researchJobs.status, "failed"),
                 ),
                 columns: { id: true, toolId: true },
             }).then((jobs) => jobs.filter((j) => toolIds.includes(j.toolId)));
@@ -304,9 +306,16 @@ INSTRUCTIONS:
             competitorAnalysis: rawData.competitors,
         };
 
+        // Count existing reports for this tool to set correct version
+        const existingReports = await db.query.reports.findMany({
+            where: eq(reports.toolId, tool.id),
+            columns: { id: true },
+        });
+        const reportVersion = existingReports.length + 1;
+
         await db.insert(reports).values({
             toolId: tool.id,
-            version: 1,
+            version: reportVersion,
             scorecardSnapshot: reportData.scorecardSnapshot,
             summary: reportData.summary,
             features: reportData.features,

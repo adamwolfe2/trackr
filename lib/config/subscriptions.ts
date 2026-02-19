@@ -7,7 +7,7 @@ export const PLANS = {
             tools: 25,
             research: 5,
             members: 1,
-            deepResearch: true,
+            deepResearch: false,
         }
     },
     TEAM: {
@@ -37,10 +37,15 @@ export const PLANS = {
 export function getPlanLimits(subscription?: { status: string; planId?: string | null }) {
     if (subscription?.status === 'active' || subscription?.status === 'trialing') {
         const agencyPriceId = process.env.STRIPE_AGENCY_PRICE_ID;
+        const teamPriceId = process.env.STRIPE_TEAM_PRICE_ID;
         if (subscription.planId && agencyPriceId && subscription.planId === agencyPriceId) {
             return PLANS.AGENCY;
         }
-        return PLANS.TEAM;
+        if (subscription.planId && teamPriceId && subscription.planId === teamPriceId) {
+            return PLANS.TEAM;
+        }
+        // Active subscription but planId doesn't match known IDs — default to FREE
+        return PLANS.FREE;
     }
     return PLANS.FREE;
 }

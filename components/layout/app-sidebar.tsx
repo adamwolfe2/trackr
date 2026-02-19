@@ -17,6 +17,7 @@ import {
     SlidersHorizontal,
     Layers,
     BarChart3,
+    AlertCircle,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 
@@ -55,6 +56,11 @@ const navItems = [
         title: "Analytics",
         href: "/analytics",
         icon: BarChart3,
+    },
+    {
+        title: "Pain Points",
+        href: "/pain-points",
+        icon: AlertCircle,
     },
     {
         title: "Scorecard",

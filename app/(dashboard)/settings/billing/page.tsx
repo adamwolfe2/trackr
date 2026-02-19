@@ -10,7 +10,11 @@ import { Check } from "lucide-react";
 import { UpgradeButton } from "@/components/billing/upgrade-button";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 
-export default async function BillingPage() {
+export default async function BillingPage({
+    searchParams,
+}: {
+    searchParams: Promise<Record<string, string>>;
+}) {
     const user = await currentUser();
     if (!user) return null;
 
@@ -26,7 +30,8 @@ export default async function BillingPage() {
     const isAgency = limits.slug === "agency";
     const isFree = limits.slug === "free";
 
-    const success = false; // Would come from searchParams in real impl
+    const params = await searchParams;
+    const success = params.success === "true";
 
     const plans = [
         {
