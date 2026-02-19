@@ -237,10 +237,10 @@ export function ScorecardClient({ savedRecipe }: ScorecardClientProps) {
 
             {/* System Context */}
             <div className="border border-black bg-white">
-                <div className="border-b border-black px-4 py-3 flex items-center gap-2 bg-neutral-50">
+                <div className="border-b border-black px-4 py-3 flex items-center gap-2 bg-neutral-50 flex-wrap">
                     <BookOpen className="w-4 h-4" />
                     <span className="font-mono text-sm font-semibold uppercase tracking-wide">System Context</span>
-                    <span className="text-xs font-mono text-neutral-500 ml-auto">Who you are overall</span>
+                    <span className="text-xs font-mono text-neutral-500 ml-auto hidden sm:inline">Who you are overall</span>
                 </div>
                 <div className="p-4">
                     <textarea
@@ -255,10 +255,10 @@ export function ScorecardClient({ savedRecipe }: ScorecardClientProps) {
 
             {/* Business Units */}
             <div className="border border-black bg-white">
-                <div className="border-b border-black px-4 py-3 flex items-center gap-2 bg-neutral-50">
+                <div className="border-b border-black px-4 py-3 flex items-center gap-2 bg-neutral-50 flex-wrap">
                     <Building2 className="w-4 h-4" />
                     <span className="font-mono text-sm font-semibold uppercase tracking-wide">Business Units</span>
-                    <span className="text-xs font-mono text-neutral-500 ml-auto">How each subsidiary evaluates tools differently</span>
+                    <span className="text-xs font-mono text-neutral-500 ml-auto hidden sm:inline">How each subsidiary evaluates tools differently</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-black">
                     {recipe.businessUnits.map((bu, i) => (
@@ -301,10 +301,10 @@ export function ScorecardClient({ savedRecipe }: ScorecardClientProps) {
 
             {/* Evaluation Criteria */}
             <div className="border border-black bg-white">
-                <div className="border-b border-black px-4 py-3 flex items-center gap-2 bg-neutral-50">
+                <div className="border-b border-black px-4 py-3 flex items-center gap-2 bg-neutral-50 flex-wrap">
                     <Target className="w-4 h-4" />
                     <span className="font-mono text-sm font-semibold uppercase tracking-wide">Evaluation Criteria</span>
-                    <span className="text-xs font-mono text-neutral-500 ml-auto">What matters most across all tools</span>
+                    <span className="text-xs font-mono text-neutral-500 ml-auto hidden sm:inline">What matters most across all tools</span>
                 </div>
                 <div className="p-4">
                     <textarea
@@ -319,10 +319,10 @@ export function ScorecardClient({ savedRecipe }: ScorecardClientProps) {
 
             {/* Deal Breakers */}
             <div className="border border-black bg-white">
-                <div className="border-b border-black px-4 py-3 flex items-center gap-2 bg-neutral-50">
+                <div className="border-b border-black px-4 py-3 flex items-center gap-2 bg-neutral-50 flex-wrap">
                     <XCircle className="w-4 h-4" />
                     <span className="font-mono text-sm font-semibold uppercase tracking-wide">Deal Breakers</span>
-                    <span className="text-xs font-mono text-neutral-500 ml-auto">Hard no&apos;s — flag these in every report</span>
+                    <span className="text-xs font-mono text-neutral-500 ml-auto hidden sm:inline">Hard no&apos;s — flag these in every report</span>
                 </div>
                 <div className="p-4">
                     <textarea

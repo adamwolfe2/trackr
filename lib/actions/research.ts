@@ -444,6 +444,7 @@ INSTRUCTIONS:
                     tool.workspace.slackChannelId,
                     `Research complete: ${tool.name} scored ${avgScore.toFixed(1)}/10`,
                     researchCompleteBlocks(tool.name, toolId, avgScore),
+                    tool.workspace.slackBotToken ?? undefined,
                 );
             } catch {
                 // Non-critical
@@ -491,6 +492,7 @@ INSTRUCTIONS:
                     tool.workspace.slackChannelId,
                     `Research failed: ${tool.name}`,
                     researchFailedBlocks(tool.name, toolId, message),
+                    tool.workspace.slackBotToken ?? undefined,
                 );
             } catch {
                 // Non-critical

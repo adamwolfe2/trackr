@@ -301,8 +301,8 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
 
             {/* Comparison Table */}
             {(oneSelected || bothSelected) && (
-                <div className="overflow-x-auto pb-4">
-                    <div className="min-w-[700px] border border-black">
+                <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className="min-w-[600px] sm:min-w-[700px] border border-black">
                         {/* Overall Score Row */}
                         <div className="grid grid-cols-3 border-b border-black">
                             <div className="p-4 border-r border-black bg-neutral-50">

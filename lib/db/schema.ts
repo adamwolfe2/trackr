@@ -12,6 +12,9 @@ export const workspaces = pgTable('workspaces', {
     apiKey: text('api_key').unique(), // For Chrome extension + external integrations
     slackChannelId: text('slack_channel_id'), // Channel to post notifications to
     slackEnabled: boolean('slack_enabled').default(false).notNull(),
+    slackBotToken: text('slack_bot_token'),     // Per-workspace OAuth bot token
+    slackTeamId: text('slack_team_id'),         // Slack workspace ID
+    slackTeamName: text('slack_team_name'),     // Slack workspace name for display
     createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

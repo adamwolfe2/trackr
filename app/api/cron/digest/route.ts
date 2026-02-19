@@ -131,6 +131,7 @@ export async function GET(req: Request) {
                                 workspace.slackChannelId,
                                 `${renewalData.length} upcoming renewal${renewalData.length !== 1 ? "s" : ""} in the next 30 days`,
                                 renewalAlertBlocks(renewalData),
+                                workspace.slackBotToken ?? undefined,
                             );
                         } catch {
                             // Non-critical

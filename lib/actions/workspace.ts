@@ -190,6 +190,31 @@ export async function removeMember(memberId: string) {
     return { success: true };
 }
 
+export async function disconnectSlackWorkspace() {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId)
+        ),
+    });
+
+    if (!member || (member.role !== "owner" && member.role !== "admin")) {
+        throw new Error("Only workspace owners or admins can manage Slack settings");
+    }
+
+    const { disconnectSlack } = await import("@/lib/services/slack");
+    await disconnectSlack(workspaceId);
+
+    revalidatePath("/workspace");
+    return { success: true };
+}
+
 export async function updateSlackSettings(channelId: string | null, enabled: boolean) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");

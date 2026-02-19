@@ -133,13 +133,15 @@ export default async function DiscoverPage() {
                         No news available right now. Check back soon.
                     </div>
                 ) : (
-                    <div className="grid gap-0 md:grid-cols-2 border border-black">
+                    <div className="grid gap-0 grid-cols-1 md:grid-cols-2 border border-black">
                         {newsItems.map((item, i) => (
                             <div
                                 key={i}
                                 className={`p-5 flex flex-col gap-3 bg-white ${
                                     i % 2 === 0 ? "md:border-r border-black" : ""
-                                } ${Math.floor(i / 2) < Math.floor((newsItems.length - 1) / 2) ? "border-b border-black" : ""}`}
+                                } ${i < newsItems.length - 1 ? "border-b md:border-b-0 border-black" : ""} ${
+                                    Math.floor(i / 2) < Math.floor((newsItems.length - 1) / 2) ? "md:border-b md:border-black" : ""
+                                }`}
                             >
                                 <div className="flex-1">
                                     <div className="font-mono text-[10px] text-neutral-400 uppercase tracking-wider mb-1.5">
@@ -148,10 +150,10 @@ export default async function DiscoverPage() {
                                     <h3 className="font-serif text-base leading-snug line-clamp-2 mb-2">{item.title}</h3>
                                     <p className="font-mono text-xs text-neutral-500 leading-relaxed line-clamp-3">{item.content}</p>
                                 </div>
-                                <div className="flex items-center gap-2 mt-auto pt-3 border-t border-neutral-100">
+                                <div className="flex items-center gap-2 mt-auto pt-3 border-t border-neutral-100 flex-wrap">
                                     <Link
                                         href={`/submit?url=${encodeURIComponent(item.url)}&name=${encodeURIComponent(item.title.slice(0, 60))}`}
-                                        className="flex items-center gap-1.5 border border-black px-3 py-1.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 flex-1 justify-center"
+                                        className="flex items-center gap-1.5 border border-black px-3 py-1.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 flex-1 justify-center min-w-0"
                                     >
                                         <PlusCircle className="h-3 w-3" /> Add to Queue
                                     </Link>
@@ -220,14 +222,18 @@ export default async function DiscoverPage() {
                             ))}
                         </div>
 
-                        <div className="grid gap-0 md:grid-cols-2 lg:grid-cols-3 border border-black">
+                        <div className="grid gap-0 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 border border-black">
                             {suggestions.map((tool, i) => (
                                 <div
                                     key={i}
                                     className={`p-5 flex flex-col gap-3 bg-white ${
-                                        i % 3 !== 2 ? "lg:border-r border-black" : ""
-                                    } ${i % 2 === 0 ? "md:border-r border-black lg:border-r-0" : ""} ${
-                                        Math.floor(i / 3) < Math.floor((suggestions.length - 1) / 3) ? "border-b border-black" : ""
+                                        i % 3 !== 2 ? "lg:border-r lg:border-black" : ""
+                                    } ${i % 2 === 0 ? "md:border-r md:border-black lg:border-r-0" : ""} ${
+                                        i < suggestions.length - 1 ? "border-b border-black md:border-b-0" : ""
+                                    } ${
+                                        Math.floor(i / 3) < Math.floor((suggestions.length - 1) / 3) ? "lg:border-b lg:border-black" : ""
+                                    } ${
+                                        Math.floor(i / 2) < Math.floor((suggestions.length - 1) / 2) ? "md:border-b md:border-black lg:border-b-0" : ""
                                     }`}
                                 >
                                     <div className="flex-1">

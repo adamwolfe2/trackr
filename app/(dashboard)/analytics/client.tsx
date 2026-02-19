@@ -94,7 +94,7 @@ export default function AnalyticsClient({
                 ].map((stat, i) => (
                     <div
                         key={stat.label}
-                        className={`p-5 ${i < 3 ? "border-r border-black" : ""} ${i < 2 ? "border-b md:border-b-0 border-black" : ""}`}
+                        className={`p-5 ${i % 2 === 0 ? "border-r border-black" : ""} ${i < 3 ? "md:border-r" : ""} ${i < 2 ? "border-b md:border-b-0 border-black" : ""}`}
                     >
                         <div className="font-mono text-xs text-neutral-500 uppercase tracking-widest mb-1">
                             {stat.label}

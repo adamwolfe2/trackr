@@ -155,9 +155,9 @@ export default async function DashboardPage() {
                 </div>
             )}
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
                 {/* Recent Tools */}
-                <div className="col-span-4 border border-black">
+                <div className="lg:col-span-4 border border-black">
                     <div className="border-b border-black px-5 py-3">
                         <h2 className="font-mono text-xs uppercase tracking-widest">Recent Tools</h2>
                     </div>
@@ -191,7 +191,7 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="col-span-3 border border-black">
+                <div className="lg:col-span-3 border border-black">
                     <div className="border-b border-black px-5 py-3">
                         <h2 className="font-mono text-xs uppercase tracking-widest">Recent Activity</h2>
                     </div>

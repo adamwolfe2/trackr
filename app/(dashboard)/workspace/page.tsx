@@ -63,15 +63,15 @@ export default async function WorkspacePage() {
                             <form action={async (fd: FormData) => {
                                 "use server";
                                 await inviteMember(fd);
-                            }} className="flex gap-0">
+                            }} className="flex flex-col sm:flex-row gap-0">
                                 <input
                                     name="email"
                                     type="email"
                                     placeholder="colleague@company.com"
                                     required
-                                    className="flex-1 max-w-sm border border-black px-4 py-2 font-mono text-sm bg-white focus:outline-none"
+                                    className="flex-1 sm:max-w-sm border border-black px-4 py-2 font-mono text-sm bg-white focus:outline-none"
                                 />
-                                <button type="submit" className="border border-l-0 border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800">
+                                <button type="submit" className="border sm:border-l-0 border-t-0 sm:border-t border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800 whitespace-nowrap">
                                     Send Invite
                                 </button>
                             </form>
@@ -84,24 +84,24 @@ export default async function WorkspacePage() {
                                 const isThisOwner = member.role === "owner";
 
                                 return (
-                                    <div key={member.id} className="flex items-center justify-between py-3">
-                                        <div className="flex items-center gap-3">
+                                    <div key={member.id} className="flex items-center justify-between py-3 gap-2">
+                                        <div className="flex items-center gap-3 min-w-0">
                                             <div className="h-8 w-8 border border-black flex items-center justify-center font-mono text-xs font-bold flex-shrink-0">
                                                 {isCurrentUser ? (user.firstName?.[0] ?? "U") : initials.charAt(0)}
                                             </div>
-                                            <div>
-                                                <div className="font-mono text-sm font-medium">
+                                            <div className="min-w-0">
+                                                <div className="font-mono text-sm font-medium truncate">
                                                     {isCurrentUser ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "You" : `Member ${initials}`}
                                                     {isCurrentUser && <span className="font-mono text-[10px] text-neutral-400 ml-2">(you)</span>}
                                                 </div>
-                                                <div className="font-mono text-[10px] text-neutral-400">
+                                                <div className="font-mono text-[10px] text-neutral-400 truncate">
                                                     {isCurrentUser && user.emailAddresses[0]?.emailAddress
                                                         ? user.emailAddresses[0].emailAddress
                                                         : `Joined ${new Date(member.joinedAt).toLocaleDateString()}`}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                                             {roleLabel(member.role)}
                                             {isOwnerOrAdmin && !isCurrentUser && !isThisOwner && (
                                                 <form action={async () => {
@@ -194,6 +194,8 @@ export default async function WorkspacePage() {
                     currentChannelId={workspace?.slackChannelId ?? null}
                     currentEnabled={workspace?.slackEnabled ?? false}
                     isOwnerOrAdmin={isOwnerOrAdmin}
+                    slackTeamName={workspace?.slackTeamName ?? null}
+                    isConnected={!!workspace?.slackBotToken}
                 />
 
                 {/* API Key & Integrations */}

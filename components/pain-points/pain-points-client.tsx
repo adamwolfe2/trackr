@@ -335,11 +335,11 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
                 </div>
             ) : (
                 <div className="border border-black divide-y divide-black">
-                    <div className="px-5 py-3 bg-neutral-50 flex items-center justify-between">
+                    <div className="px-5 py-3 bg-neutral-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1">
                         <span className="font-mono text-xs text-neutral-500">
-                            {initialData.filter(p => p.active).length} of {initialData.length} active — influencing AI discovery
+                            {initialData.filter(p => p.active).length} of {initialData.length} active
                         </span>
-                        <span className="font-mono text-xs text-neutral-400">
+                        <span className="font-mono text-[10px] sm:text-xs text-neutral-400">
                             Toggle to include/exclude from suggestions
                         </span>
                     </div>

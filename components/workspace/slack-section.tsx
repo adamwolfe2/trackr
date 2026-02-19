@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { MessageSquare, Check, Loader2 } from "lucide-react";
+import { MessageSquare, Check, Loader2, Unplug, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { updateSlackSettings } from "@/lib/actions/workspace";
+import { updateSlackSettings, disconnectSlackWorkspace } from "@/lib/actions/workspace";
+import { useSearchParams } from "next/navigation";
 
 interface Channel {
     id: string;
@@ -14,18 +15,39 @@ export function SlackSection({
     currentChannelId,
     currentEnabled,
     isOwnerOrAdmin,
+    slackTeamName,
+    isConnected,
 }: {
     currentChannelId: string | null;
     currentEnabled: boolean;
     isOwnerOrAdmin: boolean;
+    slackTeamName: string | null;
+    isConnected: boolean;
 }) {
     const [channels, setChannels] = useState<Channel[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [disconnecting, setDisconnecting] = useState(false);
     const [channelId, setChannelId] = useState<string | null>(currentChannelId);
     const [enabled, setEnabled] = useState(currentEnabled);
+    const searchParams = useSearchParams();
 
+    // Show toast based on OAuth callback status
     useEffect(() => {
+        const slackStatus = searchParams.get("slack");
+        if (slackStatus === "connected") {
+            toast.success("Slack workspace connected successfully");
+        } else if (slackStatus === "denied") {
+            toast.error("Slack connection was denied");
+        } else if (slackStatus === "error") {
+            toast.error("Failed to connect Slack workspace");
+        }
+    }, [searchParams]);
+
+    // Only fetch channels if connected
+    useEffect(() => {
+        if (!isConnected) return;
+        setLoading(true);
         fetch("/api/slack/channels")
             .then((r) => r.json())
             .then((data) => {
@@ -34,7 +56,7 @@ export function SlackSection({
             })
             .catch(() => toast.error("Failed to load Slack channels"))
             .finally(() => setLoading(false));
-    }, []);
+    }, [isConnected]);
 
     const handleSave = async () => {
         setSaving(true);
@@ -65,6 +87,56 @@ export function SlackSection({
         }
     };
 
+    const handleDisconnect = async () => {
+        if (!confirm("Disconnect Slack? This will remove the bot token and stop all notifications.")) return;
+        setDisconnecting(true);
+        try {
+            await disconnectSlackWorkspace();
+            toast.success("Slack disconnected");
+            // Force reload to reflect new state
+            window.location.href = "/workspace";
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Failed to disconnect";
+            toast.error(message);
+            setDisconnecting(false);
+        }
+    };
+
+    // Not connected — show "Connect to Slack" button
+    if (!isConnected) {
+        return (
+            <div className="border border-black">
+                <div className="border-b border-black px-5 py-3 flex items-center gap-2">
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    <h2 className="font-mono text-xs uppercase tracking-widest">Slack Integration</h2>
+                </div>
+                <div className="p-5 space-y-4">
+                    <p className="font-mono text-xs text-neutral-500 leading-relaxed">
+                        Connect your Slack workspace to receive notifications when research completes,
+                        tools are added, and renewal alerts are due. Use <code className="text-black">/trackr</code> commands to trigger research directly from Slack.
+                    </p>
+
+                    {isOwnerOrAdmin ? (
+                        <a
+                            href="/api/slack/oauth"
+                            className="inline-flex items-center gap-2 border border-black px-5 py-2.5 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800"
+                        >
+                            <ExternalLink className="h-3 w-3" />
+                            Connect to Slack
+                        </a>
+                    ) : (
+                        <div className="border border-neutral-200 px-4 py-3">
+                            <p className="font-mono text-xs text-neutral-500">
+                                Ask a workspace owner or admin to connect Slack.
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // Connected — show team name, channel selector, disconnect button
     return (
         <div className="border border-black">
             <div className="border-b border-black px-5 py-3 flex items-center justify-between">
@@ -72,23 +144,49 @@ export function SlackSection({
                     <MessageSquare className="h-3.5 w-3.5" />
                     <h2 className="font-mono text-xs uppercase tracking-widest">Slack Integration</h2>
                 </div>
-                {channelId && isOwnerOrAdmin && (
-                    <button
-                        onClick={handleToggle}
-                        disabled={saving}
-                        className={`font-mono text-[10px] uppercase tracking-widest px-3 py-1 border transition-colors ${
-                            enabled
-                                ? "border-black bg-black text-white"
-                                : "border-neutral-300 text-neutral-400 hover:border-black hover:text-black"
-                        }`}
-                    >
-                        {enabled ? "Enabled" : "Disabled"}
-                    </button>
-                )}
+                <div className="flex items-center gap-3">
+                    {channelId && isOwnerOrAdmin && (
+                        <button
+                            onClick={handleToggle}
+                            disabled={saving}
+                            className={`font-mono text-[10px] uppercase tracking-widest px-3 py-1 border transition-colors ${
+                                enabled
+                                    ? "border-black bg-black text-white"
+                                    : "border-neutral-300 text-neutral-400 hover:border-black hover:text-black"
+                            }`}
+                        >
+                            {enabled ? "Enabled" : "Disabled"}
+                        </button>
+                    )}
+                </div>
             </div>
             <div className="p-5 space-y-4">
+                {/* Connected status */}
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="h-2 w-2 bg-black" />
+                        <span className="font-mono text-xs">
+                            Connected to <span className="font-bold">{slackTeamName || "Slack workspace"}</span>
+                        </span>
+                    </div>
+                    {isOwnerOrAdmin && (
+                        <button
+                            onClick={handleDisconnect}
+                            disabled={disconnecting}
+                            className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest border border-red-300 text-red-500 px-3 py-1 hover:bg-red-50 disabled:opacity-40"
+                        >
+                            {disconnecting ? (
+                                <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                            ) : (
+                                <Unplug className="h-2.5 w-2.5" />
+                            )}
+                            Disconnect
+                        </button>
+                    )}
+                </div>
+
                 <p className="font-mono text-xs text-neutral-500 leading-relaxed">
-                    Connect a Slack channel to receive notifications when research completes,
+                    Choose a channel for notifications when research completes,
                     tools are added, and renewal alerts are due. Use <code className="text-black">/trackr</code> commands to trigger research directly from Slack.
                 </p>
 
@@ -100,8 +198,8 @@ export function SlackSection({
                 ) : channels.length === 0 ? (
                     <div className="border border-neutral-200 px-4 py-3">
                         <p className="font-mono text-xs text-neutral-500">
-                            No channels found. Make sure the Trackr bot is installed in your Slack workspace
-                            and has been invited to at least one channel.
+                            No channels found. Make sure the Trackr bot has been invited to at least one channel
+                            in your Slack workspace.
                         </p>
                     </div>
                 ) : (

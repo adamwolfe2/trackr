@@ -357,7 +357,7 @@ function HeroDemo() {
                 </div>
 
                 {/* ── Fixed-height content area — all phases crossfade in place ── */}
-                <div className="relative h-[460px] overflow-hidden">
+                <div className="relative h-[400px] sm:h-[460px] overflow-hidden">
 
                     {/* Idle / Typing: skeleton placeholder so the widget never looks empty */}
                     <AnimatePresence>
@@ -680,7 +680,7 @@ export function OffsetHero() {
                     <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-5 block">
                         AI Tool Intelligence for Ops Teams
                     </span>
-                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] tracking-tight max-w-2xl mb-7 font-serif">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] tracking-tight max-w-2xl mb-7 font-serif">
                         Your team&apos;s AI tool<br className="hidden sm:block" /> intelligence layer.
                     </h1>
 

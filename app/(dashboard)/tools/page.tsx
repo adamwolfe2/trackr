@@ -52,12 +52,12 @@ export default async function ToolsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                    <h1 className="font-serif text-3xl font-normal">AI Tools Portfolio</h1>
+                    <h1 className="font-serif text-2xl sm:text-3xl font-normal">AI Tools Portfolio</h1>
                     <p className="font-mono text-sm text-neutral-500 mt-1">Your team&apos;s AI tool intelligence at a glance.</p>
                 </div>
-                <Link href="/submit" className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-sm bg-black text-white hover:bg-neutral-800">
+                <Link href="/submit" className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-sm bg-black text-white hover:bg-neutral-800 whitespace-nowrap">
                     <PlusCircle className="h-4 w-4" />
                     Add Tool
                 </Link>

@@ -1,10 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { db } from "@/lib/db";
-import { subscriptions, workspaceMembers } from "@/lib/db/schema";
+import { subscriptions, workspaceMembers, tools, researchJobs } from "@/lib/db/schema";
 import { getWorkspaceId } from "@/lib/actions/tools";
 import { currentUser } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, inArray, count } from "drizzle-orm";
 import { getPlanLimits, PLANS } from "@/lib/config/subscriptions";
 import { Check } from "lucide-react";
 import { UpgradeButton } from "@/components/billing/upgrade-button";
@@ -32,6 +32,34 @@ export default async function BillingPage({
 
     const params = await searchParams;
     const success = params.success === "true";
+    const canceled = params.canceled === "true";
+
+    // Usage stats
+    const toolCountResult = await db
+        .select({ count: count() })
+        .from(tools)
+        .where(eq(tools.workspaceId, workspaceId));
+    const toolCount = toolCountResult[0]?.count ?? 0;
+
+    const periodStart = subscription?.currentPeriodEnd
+        ? new Date(new Date(subscription.currentPeriodEnd).getTime() - 30 * 24 * 60 * 60 * 1000)
+        : new Date(new Date().setDate(new Date().getDate() - 30));
+
+    const workspaceToolIds = db
+        .select({ id: tools.id })
+        .from(tools)
+        .where(eq(tools.workspaceId, workspaceId));
+
+    const researchCountResult = await db
+        .select({ count: count() })
+        .from(researchJobs)
+        .where(
+            and(
+                inArray(researchJobs.toolId, workspaceToolIds),
+                gte(researchJobs.triggeredAt, periodStart)
+            )
+        );
+    const researchCount = researchCountResult[0]?.count ?? 0;
 
     const plans = [
         {
@@ -87,6 +115,8 @@ export default async function BillingPage({
         },
     ];
 
+    const hasActiveSubscription = subscription && (subscription.status === "active" || subscription.status === "trialing" || subscription.status === "past_due");
+
     return (
         <div className="space-y-8">
             <div>
@@ -101,15 +131,21 @@ export default async function BillingPage({
 
             {success && (
                 <div className="border border-black bg-white p-4 font-mono text-sm">
-                    ✓ Subscription activated. Welcome to {limits.name}!
+                    Subscription activated. Welcome to {limits.name}!
                 </div>
             )}
 
-            <div className="grid md:grid-cols-3 gap-0 border border-black">
+            {canceled && (
+                <div className="border border-neutral-400 bg-white p-4 font-mono text-sm text-neutral-600">
+                    Checkout was canceled. No charges were made.
+                </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border border-black">
                 {plans.map((plan, i) => (
                     <div
                         key={plan.key}
-                        className={`p-6 ${i < plans.length - 1 ? "border-r border-black" : ""} ${plan.isCurrent ? "bg-black text-white" : "bg-white"}`}
+                        className={`p-6 ${i < plans.length - 1 ? "border-b md:border-b-0 md:border-r border-black" : ""} ${plan.isCurrent ? "bg-black text-white" : "bg-white"}`}
                     >
                         <div className="mb-1">
                             <span className={`font-mono text-xs uppercase tracking-widest ${plan.isCurrent ? "text-neutral-400" : "text-neutral-500"}`}>
@@ -148,8 +184,114 @@ export default async function BillingPage({
                 ))}
             </div>
 
+            {/* Subscription Details */}
+            {hasActiveSubscription && (
+                <div className="border border-black bg-white p-6 space-y-4">
+                    <h2 className="font-serif text-lg">Subscription Details</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div>
+                            <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 block mb-1">
+                                Status
+                            </span>
+                            <SubscriptionStatusBadge status={subscription!.status} />
+                        </div>
+                        <div>
+                            <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 block mb-1">
+                                Current Period Ends
+                            </span>
+                            <span className="font-mono text-sm">
+                                {subscription!.currentPeriodEnd
+                                    ? new Date(subscription!.currentPeriodEnd).toLocaleDateString("en-US", {
+                                          month: "long",
+                                          day: "numeric",
+                                          year: "numeric",
+                                      })
+                                    : "N/A"}
+                            </span>
+                        </div>
+                        <div>
+                            <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 block mb-1">
+                                Customer ID
+                            </span>
+                            <span className="font-mono text-sm text-neutral-600" title={subscription!.stripeCustomerId ?? ""}>
+                                {subscription!.stripeCustomerId
+                                    ? `${subscription!.stripeCustomerId.slice(0, 14)}...`
+                                    : "N/A"}
+                            </span>
+                        </div>
+                        <div className="flex items-end">
+                            {subscription!.stripeCustomerId && (
+                                <ManageSubscriptionButton workspaceId={workspaceId} />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Usage Stats */}
+            <div className="border border-black bg-white p-6 space-y-5">
+                <h2 className="font-serif text-lg">Usage This Period</h2>
+                <div className="space-y-4">
+                    <UsageBar
+                        label="Tools"
+                        current={Number(toolCount)}
+                        limit={limits.limits.tools}
+                    />
+                    <UsageBar
+                        label="Research Runs"
+                        current={Number(researchCount)}
+                        limit={limits.limits.research}
+                    />
+                </div>
+            </div>
+
             <div className="border border-black/20 p-4 font-mono text-xs text-neutral-500">
                 Subscriptions are billed monthly. Cancel any time from the billing portal. Upgrades take effect immediately.
+            </div>
+        </div>
+    );
+}
+
+function SubscriptionStatusBadge({ status }: { status: string }) {
+    if (status === "active" || status === "trialing") {
+        return (
+            <span className="inline-block bg-black text-white font-mono text-xs px-2 py-1 uppercase tracking-widest">
+                {status === "trialing" ? "Trial" : "Active"}
+            </span>
+        );
+    }
+    if (status === "past_due") {
+        return (
+            <span className="inline-block border-2 border-red-600 text-red-600 font-mono text-xs px-2 py-1 uppercase tracking-widest">
+                Past Due
+            </span>
+        );
+    }
+    return (
+        <span className="inline-block border border-neutral-400 text-neutral-500 font-mono text-xs px-2 py-1 uppercase tracking-widest">
+            {status}
+        </span>
+    );
+}
+
+function UsageBar({ label, current, limit }: { label: string; current: number; limit: number }) {
+    const isUnlimited = limit === Infinity;
+    const percentage = isUnlimited ? 0 : limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
+    const displayLimit = isUnlimited ? "Unlimited" : limit.toString();
+
+    return (
+        <div>
+            <div className="flex items-baseline justify-between mb-1.5">
+                <span className="font-mono text-xs uppercase tracking-widest text-neutral-500">{label}</span>
+                <span className="font-mono text-sm">
+                    {current} <span className="text-neutral-400">/</span> {displayLimit}
+                </span>
+            </div>
+            <div className="h-2 bg-neutral-200 w-full">
+                <div
+                    className="h-full bg-black transition-all"
+                    style={{ width: isUnlimited ? "0%" : `${percentage}%` }}
+                />
             </div>
         </div>
     );

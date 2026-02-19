@@ -31,27 +31,27 @@ export default async function AdvertisePage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                     <h1 className="font-serif text-3xl font-normal">Ad Manager</h1>
                     <p className="font-mono text-sm text-neutral-500 mt-1">Promote your tools to the entire Trackr network.</p>
                 </div>
-                <Link href="/advertise/create" className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800">
+                <Link href="/advertise/create" className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800 whitespace-nowrap">
                     <PlusCircle className="h-3.5 w-3.5" />
                     New Campaign
                 </Link>
             </div>
 
             {/* Stats Bar */}
-            <div className="grid grid-cols-3 border border-black">
-                <div className="p-5 border-r border-black">
+            <div className="grid grid-cols-1 sm:grid-cols-3 border border-black">
+                <div className="p-5 sm:border-r border-b sm:border-b-0 border-black">
                     <div className="flex items-center justify-between mb-2">
                         <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">Impressions</span>
                         <Eye className="h-3.5 w-3.5 text-neutral-400" />
                     </div>
                     <div className="font-mono text-2xl font-bold">{totalImpressions.toLocaleString()}</div>
                 </div>
-                <div className="p-5 border-r border-black">
+                <div className="p-5 sm:border-r border-b sm:border-b-0 border-black">
                     <div className="flex items-center justify-between mb-2">
                         <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">Clicks</span>
                         <MousePointer2 className="h-3.5 w-3.5 text-neutral-400" />

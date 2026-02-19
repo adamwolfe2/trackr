@@ -1,8 +1,17 @@
 import { WebClient } from "@slack/web-api";
+import { db } from "@/lib/db";
+import { workspaces } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 let _client: WebClient | null = null;
 
-export function getSlackClient(): WebClient | null {
+/**
+ * Get a Slack client using the provided token, or fall back to the global env var.
+ */
+export function getSlackClient(botToken?: string): WebClient | null {
+    if (botToken) return new WebClient(botToken);
+
+    // Fallback to global env var for backwards compatibility
     const token = process.env.SLACK_BOT_TOKEN;
     if (!token) return null;
     if (!_client) _client = new WebClient(token);
@@ -10,10 +19,44 @@ export function getSlackClient(): WebClient | null {
 }
 
 /**
- * Post a message to a Slack channel using Block Kit.
+ * Get a Slack client for a specific workspace using its stored OAuth token.
+ * Falls back to the global env var if no workspace token is stored.
  */
-export async function postMessage(channelId: string, text: string, blocks?: object[]) {
-    const client = getSlackClient();
+export async function getWorkspaceSlackClient(workspaceId: string): Promise<WebClient | null> {
+    const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.id, workspaceId),
+        columns: { slackBotToken: true },
+    });
+
+    if (workspace?.slackBotToken) {
+        return new WebClient(workspace.slackBotToken);
+    }
+
+    // Fallback to global env var
+    return getSlackClient();
+}
+
+/**
+ * Disconnect Slack from a workspace by clearing all OAuth fields.
+ */
+export async function disconnectSlack(workspaceId: string) {
+    await db.update(workspaces)
+        .set({
+            slackBotToken: null,
+            slackTeamId: null,
+            slackTeamName: null,
+            slackEnabled: false,
+            slackChannelId: null,
+        })
+        .where(eq(workspaces.id, workspaceId));
+}
+
+/**
+ * Post a message to a Slack channel using Block Kit.
+ * Accepts an optional botToken to use a workspace-specific client.
+ */
+export async function postMessage(channelId: string, text: string, blocks?: object[], botToken?: string) {
+    const client = getSlackClient(botToken);
     if (!client) return null;
 
     return client.chat.postMessage({
@@ -26,9 +69,10 @@ export async function postMessage(channelId: string, text: string, blocks?: obje
 
 /**
  * List public channels the bot can post to.
+ * Accepts an optional botToken to use a workspace-specific client.
  */
-export async function listChannels() {
-    const client = getSlackClient();
+export async function listChannels(botToken?: string) {
+    const client = getSlackClient(botToken);
     if (!client) return [];
 
     const result = await client.conversations.list({
