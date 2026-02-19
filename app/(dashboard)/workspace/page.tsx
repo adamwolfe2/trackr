@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -9,6 +10,11 @@ import { Shield, UserX, Building2 } from "lucide-react";
 import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext } from "@/lib/actions/workspace";
 import { ApiKeySection } from "@/components/workspace/api-key-section";
 import { SlackSection } from "@/components/workspace/slack-section";
+
+export const metadata: Metadata = {
+    title: "Workspace Settings — Trackr",
+    description: "Manage your team, integrations, and preferences.",
+};
 
 export default async function WorkspacePage() {
     const user = await currentUser();

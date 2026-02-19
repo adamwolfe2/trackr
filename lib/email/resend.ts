@@ -3,7 +3,7 @@ import { Resend } from "resend";
 const FROM = "Trackr <noreply@trytrackr.com>";
 
 function getResend() {
-    return new Resend(process.env.RESEND_API_KEY || "re_placeholder");
+    return new Resend(process.env.RESEND_API_KEY!);
 }
 
 function emailWrapper(content: string) {

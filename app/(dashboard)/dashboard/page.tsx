@@ -9,12 +9,18 @@ import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
+import type { Metadata } from "next";
 
 type MemberWithWorkspace = InferSelectModel<typeof workspaceMembers> & {
     workspace: InferSelectModel<typeof workspaces>;
 };
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+    title: "Dashboard — Trackr",
+    description: "Your AI tool research overview and workspace activity.",
+};
 
 export default async function DashboardPage() {
     const user = await currentUser();

@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
+
+export const metadata: Metadata = {
+    title: "Your Feed — Trackr",
+    description: "AI news digest curated for your workspace.",
+};
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { feedChannels, feedItems, toolSuggestions, workspaceMembers } from "@/lib/db/schema";

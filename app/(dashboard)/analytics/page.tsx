@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
+
+export const metadata: Metadata = {
+    title: "Analytics — Trackr",
+    description: "Workspace usage analytics and research activity.",
+};
 import { tools, reports, researchJobs, workspaceMembers, painPoints } from "@/lib/db/schema";
 import { eq, sql, desc, gte, inArray, and } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";

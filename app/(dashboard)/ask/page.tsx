@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
+
+export const metadata: Metadata = {
+    title: "Ask Trackr AI — Trackr",
+    description: "Chat with AI about tools in your database.",
+};
 import { db } from "@/lib/db";
 import { subscriptions, workspaceMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";

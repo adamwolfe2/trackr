@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -8,6 +9,11 @@ import { eq, desc } from "drizzle-orm";
 import { CompareClient } from "./client";
 import { PlanGate } from "@/components/billing/plan-gate";
 import { getPlanLimits } from "@/lib/config/subscriptions";
+
+export const metadata: Metadata = {
+    title: "Compare Tools — Trackr",
+    description: "Side-by-side comparison of researched AI tools.",
+};
 
 interface ComparePageProps {
     searchParams: Promise<{ tools?: string }>;

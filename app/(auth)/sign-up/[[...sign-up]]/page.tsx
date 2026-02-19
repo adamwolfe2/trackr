@@ -1,4 +1,10 @@
 import { SignUp } from "@clerk/nextjs";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Sign Up — Trackr",
+    description: "Create your Trackr account and start researching AI tools.",
+};
 
 export default async function Page({
     searchParams,

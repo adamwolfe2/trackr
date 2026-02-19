@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { Sparkles, PlusCircle, ExternalLink, AlertCircle, Newspaper } from "lucide-react";
+
+export const metadata: Metadata = {
+    title: "Discover — Trackr",
+    description: "Discover trending AI tools and get personalized recommendations.",
+};
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";

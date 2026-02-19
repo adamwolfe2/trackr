@@ -1,13 +1,27 @@
+export interface ScrapeData {
+    markdown?: string;
+    html?: string;
+    content?: string;
+    metadata?: Record<string, string | undefined>;
+    [key: string]: unknown;
+}
+
 export interface ScrapeResult {
     success: boolean;
-    data?: any;
+    data?: ScrapeData;
+    error?: string;
+}
+
+export interface MapResult {
+    success: boolean;
+    data?: string[];
     error?: string;
 }
 
 export interface CrawlResult {
     success: boolean;
     jobId?: string;
-    data?: any[];
+    data?: ScrapeData[];
     error?: string;
 }
 
@@ -56,9 +70,10 @@ export class FirecrawlService {
 
             const data = await response.json();
             return { success: true, data: data.data };
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Firecrawl scrape failed:", error);
-            return { success: false, error: error.message };
+            const message = error instanceof Error ? error.message : "Unknown error";
+            return { success: false, error: message };
         }
     }
 
@@ -66,7 +81,7 @@ export class FirecrawlService {
      * Crawl a website to find subpages (e.g. documentation, pricing)
      * Optimized to exclude irrelevant paths and limit depth via search query or limit.
      */
-    async mapSite(url: string, options: MapOptions = {}): Promise<ScrapeResult> {
+    async mapSite(url: string, options: MapOptions = {}): Promise<MapResult> {
         if (!this.apiKey) return { success: false, error: "No API Key" };
 
         const { limit = 50, includeSubdomains = false, search, ignoreSitemap = true } = options;
@@ -96,11 +111,12 @@ export class FirecrawlService {
 
             const data = await response.json();
             // Firecrawl map returns { success: true, links: [...] }
-            const links = data.links ?? data.data ?? [];
+            const links: string[] = data.links ?? data.data ?? [];
             return { success: true, data: links };
-        } catch (e: any) {
-            console.error("Firecrawl map failed:", e);
-            return { success: false, error: e.message };
+        } catch (error: unknown) {
+            console.error("Firecrawl map failed:", error);
+            const message = error instanceof Error ? error.message : "Unknown error";
+            return { success: false, error: message };
         }
     }
 

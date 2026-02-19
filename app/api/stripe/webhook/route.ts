@@ -49,7 +49,6 @@ export async function POST(req: NextRequest) {
             }
             default: {
                 // Unhandled event type — return 200 to acknowledge receipt
-                console.log(`Unhandled event type: ${event.type}`);
             }
         }
     } catch (err) {

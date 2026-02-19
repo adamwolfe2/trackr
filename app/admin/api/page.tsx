@@ -1,7 +1,14 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { apiLogs, workspaces } from "@/lib/db/schema";
+
+export const metadata: Metadata = {
+    title: "Admin API Dashboard — Trackr",
+    description: "Monitor API usage and costs.",
+    robots: { index: false },
+};
 import { sql, desc, eq, gte } from "drizzle-orm";
 
 // ── Auth check ──────────────────────────────────────────────────────────────

@@ -6,8 +6,14 @@ import { eq, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { ToolsView } from "@/components/tools/tools-view";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+    title: "Tool Database — Trackr",
+    description: "Browse and manage your researched AI tools.",
+};
 
 export default async function ToolsPage() {
     const user = await currentUser();

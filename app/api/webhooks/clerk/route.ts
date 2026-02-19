@@ -79,8 +79,6 @@ export async function POST(req: Request) {
                 role: 'owner'
             });
 
-            console.log(`Created workspace for user ${id}`);
-
             // Send welcome email (fire and forget)
             if (primaryEmail) {
                 const firstName = evt.data.first_name || displayName;

@@ -2,7 +2,7 @@ import { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/blog';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = 'https://trytrackr.com'; // Replace with actual domain
+    const baseUrl = 'https://trytrackr.com';
     const posts = getAllPosts();
 
     const blogPosts = posts.map((post) => ({

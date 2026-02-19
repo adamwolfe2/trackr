@@ -1,7 +1,13 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { referrals, workspaceMembers } from "@/lib/db/schema";
+
+export const metadata: Metadata = {
+    title: "Referrals — Trackr",
+    description: "Invite others to Trackr and earn rewards.",
+};
 import { eq, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";

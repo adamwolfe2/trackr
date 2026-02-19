@@ -1,11 +1,17 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { workspaceMembers, workspaces } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { ScorecardClient, type ScorecardRecipe } from "@/components/scorecard/scorecard-client";
+
+export const metadata: Metadata = {
+    title: "Scorecard — Trackr",
+    description: "Configure your custom tool evaluation scorecard.",
+};
 
 export default async function ScorecardPage() {
     const user = await currentUser();

@@ -5,8 +5,14 @@ import { redirect } from "next/navigation";
 import { getWorkspaceId } from "@/lib/actions/tools";
 import { painPoints } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+    title: "Pain Points — Trackr",
+    description: "Track and manage team pain points to find the right tools.",
+};
 
 export default async function PainPointsPage() {
     const user = await currentUser();

@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
+
+export const metadata: Metadata = {
+    title: "Research Queue — Trackr",
+    description: "Track active and pending tool research jobs.",
+};
 import { researchJobs, tools } from "@/lib/db/schema";
 import { desc, eq, inArray } from "drizzle-orm";
 import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";

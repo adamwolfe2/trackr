@@ -1,7 +1,13 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { subscriptions, workspaceMembers, tools, researchJobs } from "@/lib/db/schema";
+
+export const metadata: Metadata = {
+    title: "Billing & Plans — Trackr",
+    description: "Manage your subscription and view usage.",
+};
 import { getWorkspaceId } from "@/lib/actions/tools";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq, and, gte, inArray, count } from "drizzle-orm";

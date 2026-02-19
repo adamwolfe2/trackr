@@ -11,8 +11,22 @@ import { ExportButton } from "@/components/common/export-button";
 import { ShareReportButton } from "@/components/tools/share-report-button";
 import { ToolDetailTabs } from "@/components/tools/tool-detail-tabs";
 import { clerkClient } from "@clerk/nextjs/server";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    const tool = await db.query.tools.findFirst({
+        where: eq(tools.id, id),
+        columns: { name: true },
+    });
+    if (!tool) return { title: "Tool Not Found — Trackr" };
+    return {
+        title: `${tool.name} — Trackr`,
+        description: `Research report and analysis for ${tool.name}.`,
+    };
+}
 
 export default async function ToolDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;

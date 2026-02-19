@@ -4,7 +4,7 @@ import { and, cosineDistance, desc, eq, gt, inArray, isNotNull, sql } from "driz
 import { generateEmbedding } from "@/lib/ai/embedding";
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
@@ -21,30 +21,30 @@ const ChatSchema = z.object({
 
 export async function POST(req: NextRequest) {
     const user = await currentUser();
-    if (!user) return new Response("Unauthorized", { status: 401 });
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),
         with: { workspace: true },
     });
-    if (!member) return new Response("No workspace found", { status: 403 });
+    if (!member) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
 
     const rl = rateLimit(`chat:${user.id}`, { limit: 20, windowSeconds: 60 });
 
     if (!rl.success) {
-        return new Response("Too many requests", { status: 429 });
+        return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
     let body: unknown;
     try {
         body = await req.json();
     } catch {
-        return new Response("Invalid JSON", { status: 400 });
+        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
     const parsed = ChatSchema.safeParse(body);
     if (!parsed.success) {
-        return new Response("Invalid request", { status: 400 });
+        return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
     const { messages } = parsed.data;
@@ -193,6 +193,6 @@ ${toolContext ? `## Researched Tool Reports\n${toolContext}\n` : ""}
         return result.toUIMessageStreamResponse();
     } catch (error) {
         console.error("Chat API error:", error);
-        return new Response("Internal Server Error", { status: 500 });
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

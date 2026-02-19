@@ -11,7 +11,7 @@ import { timingSafeEqual } from "crypto";
 export const dynamic = 'force-dynamic';
 
 const FROM = "Trackr <noreply@trytrackr.com>";
-function getResend() { return new Resend(process.env.RESEND_API_KEY || "re_placeholder"); }
+function getResend() { return new Resend(process.env.RESEND_API_KEY!); }
 
 export async function GET(req: Request) {
     const authHeader = req.headers.get('Authorization') || '';

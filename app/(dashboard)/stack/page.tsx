@@ -1,6 +1,12 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
+
+export const metadata: Metadata = {
+    title: "Software Stack — Trackr",
+    description: "Track your software spend, contracts, and AI nativeness score.",
+};
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { softwareSpend, workspaceMembers, tools } from "@/lib/db/schema";
