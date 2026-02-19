@@ -316,4 +316,25 @@ export const toolSuggestionsRelations = relations(toolSuggestions, ({ one }) => 
     }),
 }));
 
+// API Usage Logs (cost tracking for external services)
+export const apiLogs = pgTable('api_logs', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    service: text('service').notNull(), // firecrawl | tavily | perplexity | openai | resend | slack
+    endpoint: text('endpoint').notNull(), // e.g. "map", "scrape", "search", "chat.completions", "sonar-reasoning-pro"
+    method: text('method').default('POST').notNull(),
+    statusCode: integer('status_code'),
+    durationMs: integer('duration_ms'),
+    tokensIn: integer('tokens_in'),
+    tokensOut: integer('tokens_out'),
+    estimatedCost: numeric('estimated_cost', { precision: 10, scale: 6 }), // in USD
+    workspaceId: uuid('workspace_id').references(() => workspaces.id),
+    toolId: uuid('tool_id').references(() => tools.id),
+    metadata: jsonb('metadata'), // flexible extra data
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+    index('api_logs_service_idx').on(table.service),
+    index('api_logs_created_at_idx').on(table.createdAt),
+    index('api_logs_workspace_id_idx').on(table.workspaceId),
+]);
+
 export * from './referrals-schema';

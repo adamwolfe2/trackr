@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 // Routes that handle their own auth (API key, HMAC, etc.) — skip Clerk
-const BYPASS_CLERK = ["/api/extension/", "/api/slack/commands", "/api/cron/"];
+const BYPASS_CLERK = ["/api/extension/", "/api/slack/commands", "/api/cron/", "/admin/"];
 
 // Gracefully handle missing Clerk credentials (e.g., during local builds)
 const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
