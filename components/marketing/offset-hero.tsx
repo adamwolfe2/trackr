@@ -659,10 +659,10 @@ export function OffsetHero() {
                             Start Free — No Card Required <ArrowRight className="w-4 h-4" />
                         </Link>
                         <Link
-                            href="#how-it-works"
+                            href="/audit"
                             className="px-6 py-3.5 font-mono text-sm uppercase tracking-wide hover:bg-neutral-100 transition-colors border border-black whitespace-nowrap flex items-center gap-2 justify-center"
                         >
-                            See how it works
+                            Book an AI Stack Audit <ArrowRight className="w-4 h-4" />
                         </Link>
                     </div>
 
