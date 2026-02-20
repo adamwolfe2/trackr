@@ -52,6 +52,7 @@ export const tools = pgTable('tools', {
     logoUrl: text('logo_url'),
     researchLogs: jsonb('research_logs'), // Array of { message: string, timestamp: string }
     embedding: vector('embedding', { dimensions: 1536 }), // pgvector
+    publicSlug: text('public_slug').unique(), // Set when a report is published to the public library
 }, (table) => [
     index('tools_workspace_id_idx').on(table.workspaceId),
     index('tools_status_idx').on(table.status),
@@ -75,6 +76,7 @@ export const reports = pgTable('reports', {
     rawScrapedData: jsonb('raw_scraped_data'),
     sentimentData: jsonb('sentiment_data'),
     shareToken: text('share_token').unique(), // Public sharing URL token
+    isPublic: boolean('is_public').default(false).notNull(), // Published to /research/[slug] library
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
     index('reports_tool_id_idx').on(table.toolId),

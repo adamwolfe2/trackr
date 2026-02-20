@@ -4,12 +4,12 @@ import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { workspaceMembers, workspaces, subscriptions } from "@/lib/db/schema";
-import { asc, eq } from "drizzle-orm";
+import { workspaceMembers, workspaces, subscriptions, pendingInvitations } from "@/lib/db/schema";
+import { and, asc, eq, gt } from "drizzle-orm";
 import { Shield, Building2, Lock } from "lucide-react";
 import { ApiKeySection } from "@/components/workspace/api-key-section";
 import { SlackSection } from "@/components/workspace/slack-section";
-import { InviteMemberForm, RemoveMemberButton, UpdateWorkspaceNameForm, UpdateCompanyContextForm } from "@/components/workspace/workspace-forms";
+import { InviteMemberForm, RemoveMemberButton, CancelInvitationButton, UpdateWorkspaceNameForm, UpdateCompanyContextForm } from "@/components/workspace/workspace-forms";
 import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 import Link from "next/link";
 
@@ -44,6 +44,15 @@ export default async function WorkspacePage() {
         orderBy: [asc(workspaceMembers.joinedAt)],
     });
 
+    // Fetch active (non-expired) pending invitations for this workspace
+    const pendingInvites = await db.query.pendingInvitations.findMany({
+        where: and(
+            eq(pendingInvitations.workspaceId, currentMember.workspaceId),
+            gt(pendingInvitations.expiresAt, new Date())
+        ),
+        orderBy: [asc(pendingInvitations.createdAt)],
+    });
+
     const isOwnerOrAdmin = currentMember.role === "owner" || currentMember.role === "admin";
 
     // Plan check for feature gating
@@ -72,7 +81,10 @@ export default async function WorkspacePage() {
                 <div className="border border-black">
                     <div className="border-b border-black px-5 py-3 flex items-center justify-between">
                         <h2 className="font-mono text-xs uppercase tracking-widest">Team Members</h2>
-                        <span className="font-mono text-[10px] text-neutral-400">{members.length} member{members.length !== 1 ? "s" : ""}</span>
+                        <span className="font-mono text-[10px] text-neutral-400">
+                            {members.length} member{members.length !== 1 ? "s" : ""}
+                            {pendingInvites.length > 0 && ` · ${pendingInvites.length} pending`}
+                        </span>
                     </div>
                     <div className="p-5 space-y-5">
                         {isOwnerOrAdmin && <InviteMemberForm />}
@@ -111,6 +123,34 @@ export default async function WorkspacePage() {
                                 );
                             })}
                         </div>
+
+                        {/* Pending Invitations */}
+                        {isOwnerOrAdmin && pendingInvites.length > 0 && (
+                            <div className="mt-4 pt-4 border-t border-neutral-100">
+                                <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-2">Pending Invitations</p>
+                                <div className="divide-y divide-neutral-100">
+                                    {pendingInvites.map((invite) => (
+                                        <div key={invite.id} className="flex items-center justify-between py-2.5 gap-2">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="h-8 w-8 border border-dashed border-neutral-300 flex items-center justify-center font-mono text-xs text-neutral-300 flex-shrink-0">
+                                                    ?
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="font-mono text-sm text-neutral-600 truncate">{invite.email}</div>
+                                                    <div className="font-mono text-[10px] text-neutral-400">
+                                                        Expires {new Date(invite.expiresAt).toLocaleDateString()}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-2 flex-shrink-0">
+                                                <span className="font-mono text-[10px] uppercase tracking-widest border border-dashed border-neutral-300 text-neutral-400 px-2 py-0.5">Invited</span>
+                                                <CancelInvitationButton invitationId={invite.id} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 

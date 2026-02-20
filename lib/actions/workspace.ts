@@ -244,6 +244,41 @@ export async function disconnectSlackWorkspace() {
     return { success: true };
 }
 
+export async function cancelInvitation(invitationId: string) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    // Only owner/admin can cancel invitations
+    const currentMember = await db.query.workspaceMembers.findFirst({
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId)
+        ),
+    });
+
+    if (!currentMember || (currentMember.role !== "owner" && currentMember.role !== "admin")) {
+        throw new Error("Only workspace owners or admins can cancel invitations");
+    }
+
+    // Verify invitation belongs to this workspace
+    const invitation = await db.query.pendingInvitations.findFirst({
+        where: and(
+            eq(pendingInvitations.id, invitationId),
+            eq(pendingInvitations.workspaceId, workspaceId)
+        ),
+    });
+
+    if (!invitation) throw new Error("Invitation not found");
+
+    await db.delete(pendingInvitations).where(eq(pendingInvitations.id, invitationId));
+
+    revalidatePath("/workspace");
+    return { success: true };
+}
+
 export async function updateSlackSettings(channelId: string | null, enabled: boolean) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");

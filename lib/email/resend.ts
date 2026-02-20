@@ -1,6 +1,21 @@
 import { Resend } from "resend";
 
 const FROM = "Trackr <noreply@trytrackr.com>";
+const MAX_RETRIES = 3;
+
+async function sendWithRetry(
+    fn: () => Promise<unknown>,
+    attempt = 0
+): Promise<void> {
+    try {
+        await fn();
+    } catch (err) {
+        if (attempt >= MAX_RETRIES - 1) throw err;
+        const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
+        await new Promise((r) => setTimeout(r, delay));
+        return sendWithRetry(fn, attempt + 1);
+    }
+}
 
 function escapeHtml(text: string): string {
     return text.replace(/[&<>"']/g, (ch) =>
@@ -32,7 +47,8 @@ function emailButton(href: string, label: string) {
 export async function sendWelcomeEmail(to: string, firstName: string) {
     if (!process.env.RESEND_API_KEY) return;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
-    await getResend().emails.send({
+    const resend = getResend();
+    await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
         subject: "Welcome to Trackr",
@@ -51,7 +67,7 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
             </ol>
             ${emailButton(`${appUrl}/tools`, "Open Trackr →")}
         `),
-    });
+    }));
 }
 
 export async function sendInviteEmail(
@@ -61,8 +77,9 @@ export async function sendInviteEmail(
 ) {
     if (!process.env.RESEND_API_KEY) return;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+    const resend = getResend();
     const invitedBy = inviterName ? ` by ${escapeHtml(inviterName)}` : "";
-    await getResend().emails.send({
+    await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
         subject: `You've been invited to ${escapeHtml(workspaceName)} on Trackr`,
@@ -79,7 +96,7 @@ export async function sendInviteEmail(
             </p>
             ${emailButton(`${appUrl}/sign-up`, "Accept Invitation →")}
         `),
-    });
+    }));
 }
 
 export async function sendResearchCompleteEmail(
@@ -90,7 +107,8 @@ export async function sendResearchCompleteEmail(
 ) {
     if (!process.env.RESEND_API_KEY) return;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
-    await getResend().emails.send({
+    const resend = getResend();
+    await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
         subject: `Research complete: ${escapeHtml(toolName)} (${score.toFixed(1)}/10)`,
@@ -103,7 +121,7 @@ export async function sendResearchCompleteEmail(
             </p>
             ${emailButton(`${appUrl}/tools/${toolId}`, "View Report →")}
         `),
-    });
+    }));
 }
 
 export async function sendResearchFailedEmail(
@@ -114,7 +132,8 @@ export async function sendResearchFailedEmail(
 ) {
     if (!process.env.RESEND_API_KEY) return;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
-    await getResend().emails.send({
+    const resend = getResend();
+    await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
         subject: `Research failed: ${escapeHtml(toolName)}`,
@@ -125,7 +144,7 @@ export async function sendResearchFailedEmail(
             <p style="font-size: 12px; color: #C0392B; background: #fff; padding: 8px 12px; margin: 0 0 24px; border: 1px solid #C0392B;">${escapeHtml(errorMessage)}</p>
             ${emailButton(`${appUrl}/tools/${toolId}`, "Retry Research →")}
         `),
-    });
+    }));
 }
 
 export async function sendTrialEndingEmail(
@@ -135,10 +154,11 @@ export async function sendTrialEndingEmail(
 ) {
     if (!process.env.RESEND_API_KEY) return;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+    const resend = getResend();
     const urgency = daysLeft <= 3
         ? `<p style="font-size: 13px; color: #C0392B; font-weight: bold; margin: 0 0 16px;">Your trial expires ${daysLeft === 0 ? "today" : `in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`}.</p>`
         : `<p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">Your ${escapeHtml(planName)} trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.</p>`;
-    await getResend().emails.send({
+    await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
         subject: `Your Trackr trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
@@ -153,7 +173,7 @@ export async function sendTrialEndingEmail(
             </p>
             ${emailButton(`${appUrl}/settings/billing`, "Add Payment Method →")}
         `),
-    });
+    }));
 }
 
 // ── Drip Email Sequence ──────────────────────────────────────────────────────
@@ -266,7 +286,8 @@ export async function sendRenewalAlertEmail(
         </tr>`;
     }).join("");
 
-    await getResend().emails.send({
+    const resend = getResend();
+    await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
         subject: `${tools.length} tool renewal${tools.length !== 1 ? "s" : ""} coming up`,
@@ -290,5 +311,5 @@ export async function sendRenewalAlertEmail(
             </table>
             ${emailButton(`${appUrl}/stack`, "Review Stack →")}
         `),
-    });
+    }));
 }

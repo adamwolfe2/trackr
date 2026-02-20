@@ -9,6 +9,7 @@ import { ResearchStream } from "@/components/tools/research-stream";
 import { ResearchButton } from "@/components/tools/research-button";
 import { ExportButton } from "@/components/common/export-button";
 import { ShareReportButton } from "@/components/tools/share-report-button";
+import { PublishButton } from "@/components/tools/publish-button";
 import { ToolDetailTabs } from "@/components/tools/tool-detail-tabs";
 import { clerkClient } from "@clerk/nextjs/server";
 import { currentUser } from "@clerk/nextjs/server";
@@ -236,6 +237,13 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                 </div>
 
                 <div className="flex items-center gap-3 flex-shrink-0">
+                    {report && (
+                        <PublishButton
+                            reportId={report.id}
+                            isPublic={report.isPublic ?? false}
+                            publicSlug={tool.publicSlug ?? null}
+                        />
+                    )}
                     {report && <ShareReportButton reportId={report.id} />}
                     {canExport && (
                         <ExportButton

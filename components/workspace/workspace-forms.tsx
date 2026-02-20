@@ -3,8 +3,8 @@
 import { useRef } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext } from "@/lib/actions/workspace";
-import { Loader2, UserX } from "lucide-react";
+import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext, cancelInvitation } from "@/lib/actions/workspace";
+import { Loader2, UserX, X } from "lucide-react";
 
 function SubmitButton({ children, className }: { children: React.ReactNode; className: string }) {
     const { pending } = useFormStatus();
@@ -60,6 +60,23 @@ export function RemoveMemberButton({ memberId }: { memberId: string }) {
         }}>
             <SubmitButton className="font-mono text-[10px] uppercase tracking-widest border border-red-300 text-red-500 px-2 py-0.5 hover:bg-red-50 flex items-center gap-1">
                 <UserX className="h-2.5 w-2.5" /> Remove
+            </SubmitButton>
+        </form>
+    );
+}
+
+export function CancelInvitationButton({ invitationId }: { invitationId: string }) {
+    return (
+        <form action={async () => {
+            try {
+                await cancelInvitation(invitationId);
+                toast.success("Invitation cancelled");
+            } catch (error) {
+                toast.error(error instanceof Error ? error.message : "Failed to cancel invitation");
+            }
+        }}>
+            <SubmitButton className="font-mono text-[10px] uppercase tracking-widest border border-neutral-300 text-neutral-500 px-2 py-0.5 hover:bg-neutral-100 hover:border-neutral-400 flex items-center gap-1">
+                <X className="h-2.5 w-2.5" /> Cancel
             </SubmitButton>
         </form>
     );

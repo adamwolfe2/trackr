@@ -137,3 +137,72 @@ export async function updateToolStatus(toolId: string, status: string) {
     revalidatePath(`/tools/${toolId}`);
     return { success: true };
 }
+
+function slugify(name: string): string {
+    return name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 80);
+}
+
+export async function publishReport(reportId: string) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const report = await db.query.reports.findFirst({
+        where: eq(reports.id, reportId),
+    });
+    if (!report) throw new Error("Report not found");
+
+    const tool = await db.query.tools.findFirst({
+        where: and(eq(tools.id, report.toolId), eq(tools.workspaceId, workspaceId)),
+    });
+    if (!tool) throw new Error("Tool not found or not in your workspace");
+
+    const baseSlug = slugify(tool.name);
+
+    // If this tool already has a slug, unpublish (toggle off)
+    if (tool.publicSlug) {
+        await db.update(reports)
+            .set({ isPublic: false })
+            .where(eq(reports.toolId, tool.id));
+        await db.update(tools)
+            .set({ publicSlug: null })
+            .where(eq(tools.id, tool.id));
+        revalidatePath(`/tools/${tool.id}`);
+        revalidatePath(`/research/${tool.publicSlug}`);
+        revalidatePath("/research");
+        return { published: false, slug: null };
+    }
+
+    // Generate unique slug — append -2, -3 etc if taken
+    let slug = baseSlug;
+    let attempt = 2;
+    while (true) {
+        const existing = await db.query.tools.findFirst({
+            where: eq(tools.publicSlug, slug),
+            columns: { id: true },
+        });
+        if (!existing) break;
+        slug = `${baseSlug}-${attempt++}`;
+        if (attempt > 50) throw new Error("Could not generate a unique slug");
+    }
+
+    await db.transaction(async (tx) => {
+        // Unpublish any other reports for this tool
+        await tx.update(reports).set({ isPublic: false }).where(eq(reports.toolId, tool.id));
+        // Publish this report
+        await tx.update(reports).set({ isPublic: true }).where(eq(reports.id, reportId));
+        // Set slug on tool
+        await tx.update(tools).set({ publicSlug: slug }).where(eq(tools.id, tool.id));
+    });
+
+    revalidatePath(`/tools/${tool.id}`);
+    revalidatePath(`/research/${slug}`);
+    revalidatePath("/research");
+    return { published: true, slug };
+}

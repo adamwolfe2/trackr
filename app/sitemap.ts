@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/blog';
 import { db } from '@/lib/db';
-import { reports } from '@/lib/db/schema';
-import { isNotNull } from 'drizzle-orm';
+import { reports, tools } from '@/lib/db/schema';
+import { isNotNull, eq, and } from 'drizzle-orm';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://trytrackr.com';
@@ -30,6 +30,24 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         }));
     } catch {
         // Non-critical — sitemap still works without shared reports
+    }
+
+    // Public tool library pages
+    let researchPages: { url: string; lastModified: Date; changeFrequency: 'weekly'; priority: number }[] = [];
+    try {
+        const publicTools = await db
+            .select({ publicSlug: tools.publicSlug, updatedAt: reports.createdAt })
+            .from(tools)
+            .innerJoin(reports, and(eq(reports.toolId, tools.id), eq(reports.isPublic, true)))
+            .where(isNotNull(tools.publicSlug));
+        researchPages = publicTools.map((t) => ({
+            url: `${baseUrl}/research/${t.publicSlug}`,
+            lastModified: new Date(t.updatedAt),
+            changeFrequency: 'weekly' as const,
+            priority: 0.8,
+        }));
+    } catch {
+        // Non-critical
     }
 
     return [
@@ -87,7 +105,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'yearly',
             priority: 0.3,
         },
+        {
+            url: `${baseUrl}/research`,
+            lastModified: new Date(),
+            changeFrequency: 'daily',
+            priority: 0.9,
+        },
         ...blogPosts,
         ...sharedReports,
+        ...researchPages,
     ];
 }

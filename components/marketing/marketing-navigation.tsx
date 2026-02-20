@@ -30,6 +30,7 @@ export function MarketingNavigation({ isLoggedIn = false }: { isLoggedIn?: boole
                 <Link href="/#how-it-works" className="hover:underline underline-offset-4">How It Works</Link>
                 <Link href="/#features" className="hover:underline underline-offset-4">Features</Link>
                 <Link href="/process" className="hover:underline underline-offset-4">Process</Link>
+                <Link href="/research" className="hover:underline underline-offset-4">Tool Library</Link>
                 <Link href="/pricing" className="hover:underline underline-offset-4">Pricing</Link>
             </nav>
 
@@ -66,6 +67,7 @@ export function MarketingNavigation({ isLoggedIn = false }: { isLoggedIn?: boole
                         <Link href="/#how-it-works" onClick={() => setMobileMenuOpen(false)}>How It Works</Link>
                         <Link href="/#features" onClick={() => setMobileMenuOpen(false)}>Features</Link>
                         <Link href="/process" onClick={() => setMobileMenuOpen(false)}>Process</Link>
+                        <Link href="/research" onClick={() => setMobileMenuOpen(false)}>Tool Library</Link>
                         <Link href="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
                     </nav>
                     <div className="flex flex-col gap-4">
