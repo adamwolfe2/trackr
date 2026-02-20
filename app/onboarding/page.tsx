@@ -194,6 +194,27 @@ export default function OnboardingPage() {
 
     const totalWeight = dimensions.reduce((s, d) => s + d.weight, 0);
 
+    // Enter key to advance steps (Typeform-style)
+    const handleStepKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key !== "Enter") return;
+        // Don't trigger if user is in a textarea (they need Enter for newlines)
+        if ((e.target as HTMLElement).tagName === "TEXTAREA") return;
+        // Don't trigger if a modifier key is held
+        if (e.shiftKey || e.ctrlKey || e.metaKey) return;
+
+        e.preventDefault();
+
+        if (step === 1 && companyName.trim() && !isPending) {
+            setStep(2);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        } else if (step === 2 && !isPending) {
+            setStep(3);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        } else if (step === 3 && totalWeight === 100 && !isPending) {
+            handleComplete();
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[#F3F3EF] flex flex-col">
             {/* Top bar */}
@@ -229,7 +250,8 @@ export default function OnboardingPage() {
                 </div>
             )}
 
-            <div className="flex-1 flex flex-col items-center justify-start py-12 px-6">
+            {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+            <div className="flex-1 flex flex-col items-center justify-start py-12 px-6" onKeyDown={handleStepKeyDown}>
 
                 {/* ── STEP 1: Company Context ── */}
                 {step === 1 && (
@@ -296,13 +318,16 @@ export default function OnboardingPage() {
                         </div>
 
                         <div className="flex justify-between items-center mt-6">
-                            <button
-                                onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                                disabled={!companyName.trim() || isPending}
-                                className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-40 disabled:cursor-not-allowed transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
-                            >
-                                Continue <ArrowRight className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                    disabled={!companyName.trim() || isPending}
+                                    className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-40 disabled:cursor-not-allowed transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
+                                >
+                                    Continue <ArrowRight className="w-4 h-4" />
+                                </button>
+                                <span className="font-mono text-[10px] text-neutral-400">press Enter ↵</span>
+                            </div>
                             <button
                                 onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                                 disabled={isPending}
@@ -505,13 +530,16 @@ export default function OnboardingPage() {
                             >
                                 &larr; Back
                             </button>
-                            <button
-                                onClick={() => { setStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                                disabled={isPending}
-                                className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
-                            >
-                                Continue <ArrowRight className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={() => { setStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                    disabled={isPending}
+                                    className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
+                                >
+                                    Continue <ArrowRight className="w-4 h-4" />
+                                </button>
+                                <span className="font-mono text-[10px] text-neutral-400">press Enter ↵</span>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -566,19 +594,24 @@ export default function OnboardingPage() {
                             >
                                 ← Back
                             </button>
-                            <button
-                                onClick={handleComplete}
-                                disabled={isPending || totalWeight !== 100}
-                                className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-60 disabled:cursor-not-allowed transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
-                            >
-                                {isPending ? (
-                                    <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
-                                ) : totalWeight !== 100 ? (
-                                    <>Weights must equal 100%</>
-                                ) : (
-                                    <><Check className="w-4 h-4" /> Launch Workspace</>
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleComplete}
+                                    disabled={isPending || totalWeight !== 100}
+                                    className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-60 disabled:cursor-not-allowed transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
+                                >
+                                    {isPending ? (
+                                        <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                                    ) : totalWeight !== 100 ? (
+                                        <>Weights must equal 100%</>
+                                    ) : (
+                                        <><Check className="w-4 h-4" /> Launch Workspace</>
+                                    )}
+                                </button>
+                                {totalWeight === 100 && !isPending && (
+                                    <span className="font-mono text-[10px] text-neutral-400">press Enter ↵</span>
                                 )}
-                            </button>
+                            </div>
                         </div>
                     </div>
                 )}

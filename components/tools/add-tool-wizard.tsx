@@ -98,6 +98,7 @@ export function AddToolWizard() {
                         </div>
                         <p className="font-mono text-xs text-neutral-400 mt-2">
                             We&apos;ll automatically fetch the tool&apos;s name and description.
+                            <span className="ml-2 text-neutral-300">Press Enter ↵ to continue</span>
                         </p>
                     </div>
                 </div>
