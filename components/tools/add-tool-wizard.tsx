@@ -14,17 +14,27 @@ export function AddToolWizard() {
     const [isPreviewing, startPreview] = useTransition();
     const [metadata, setMetadata] = useState<{ title: string; description: string; image: string } | null>(null);
     const [description, setDescription] = useState("");
+    const [previewFailed, setPreviewFailed] = useState(false);
 
     const handlePreview = () => {
         if (!url) return;
+        // Basic URL validation before hitting the server
+        let normalizedUrl = url.trim();
+        if (!/^https?:\/\//i.test(normalizedUrl)) normalizedUrl = `https://${normalizedUrl}`;
+        try { new URL(normalizedUrl); } catch {
+            toast.error("Please enter a valid URL (e.g. https://example.com)");
+            return;
+        }
+        setUrl(normalizedUrl);
         startPreview(async () => {
-            const data = await previewTool(url);
-            if (data.error) {
+            const data = await previewTool(normalizedUrl);
+            if ("error" in data) {
                 // Preview failed — still advance so the user can fill in details manually
                 setMetadata({ title: "", description: "", image: "" });
                 setDescription("");
+                setPreviewFailed(true);
                 setStep(2);
-                toast("Couldn't auto-fetch details — please fill in the name and description manually.");
+                toast.warning("Couldn't auto-fetch details — please fill in the name and description manually.");
             } else {
                 setMetadata({
                     title: data.title || "",
@@ -50,7 +60,9 @@ export function AddToolWizard() {
                 </h1>
                 <p className="font-mono text-sm text-neutral-500 mt-1">
                     {step === 1 && "Enter the URL of the AI tool you want to track."}
-                    {step === 2 && "We found some information. Please verify before adding."}
+                    {step === 2 && (previewFailed
+                        ? "We couldn't fetch details automatically. Please enter the tool name and description."
+                        : "We found some information. Please verify before adding.")}
                 </p>
             </div>
 
@@ -108,6 +120,8 @@ export function AddToolWizard() {
                                     name="name"
                                     defaultValue={metadata.title}
                                     required
+                                    minLength={1}
+                                    maxLength={200}
                                     className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none"
                                 />
                             </div>
@@ -124,6 +138,7 @@ export function AddToolWizard() {
                                     onChange={(e) => setDescription(e.target.value)}
                                     placeholder="Describe what this tool does..."
                                     rows={5}
+                                    maxLength={2000}
                                     className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none resize-none"
                                 />
                             </div>

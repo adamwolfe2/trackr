@@ -143,7 +143,8 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                         notes: i.notes,
                     }))
                 );
-                toast.success(`Imported ${result.count} tool${result.count === 1 ? "" : "s"} to your stack`);
+                const skippedMsg = result.skipped ? ` (${result.skipped} duplicate${result.skipped === 1 ? "" : "s"} skipped)` : "";
+                toast.success(`Imported ${result.count} tool${result.count === 1 ? "" : "s"} to your stack${skippedMsg}`);
                 setShowPaste(false);
                 setPasteText("");
                 setParsedItems(null);
@@ -343,6 +344,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                     name="toolName"
                                     required
                                     autoFocus
+                                    maxLength={200}
                                     placeholder="e.g. Slack, Notion, Salesforce"
                                     className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
                                 />
@@ -363,6 +365,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                     name="monthlyCost"
                                     type="number"
                                     step="0.01"
+                                    min="0"
                                     placeholder="99.00"
                                     className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
                                 />
@@ -372,6 +375,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                 <input
                                     name="seatCount"
                                     type="number"
+                                    min="1"
                                     placeholder="10"
                                     className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
                                 />
@@ -682,6 +686,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                 <input
                                                     type="number"
                                                     step="0.01"
+                                                    min="0"
                                                     value={editCost}
                                                     onChange={e => setEditCost(e.target.value)}
                                                     className="w-24 border border-black px-2 py-1 text-right text-xs font-mono focus:outline-none ml-auto block"
@@ -697,6 +702,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                             {isEditing ? (
                                                 <input
                                                     type="number"
+                                                    min="1"
                                                     value={editSeats}
                                                     onChange={e => setEditSeats(e.target.value)}
                                                     className="w-16 border border-black px-2 py-1 text-right text-xs font-mono focus:outline-none ml-auto block"

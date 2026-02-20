@@ -16,12 +16,22 @@ export async function addSoftwareSpend(formData: FormData) {
 
     const toolName = (formData.get("toolName") as string)?.trim();
     if (!toolName) throw new Error("Tool name is required");
+    if (toolName.length > 200) throw new Error("Tool name too long");
+
+    // Check for duplicates
+    const existing = await db.query.softwareSpend.findFirst({
+        where: and(eq(softwareSpend.workspaceId, workspaceId), eq(softwareSpend.toolName, toolName)),
+        columns: { id: true },
+    });
+    if (existing) throw new Error(`"${toolName}" is already in your stack`);
 
     const monthlyCostRaw = formData.get("monthlyCost") as string;
-    const monthlyCost = monthlyCostRaw ? parseFloat(monthlyCostRaw).toFixed(2) : "0";
+    const parsedCost = monthlyCostRaw ? parseFloat(monthlyCostRaw) : 0;
+    const monthlyCost = isNaN(parsedCost) || parsedCost < 0 ? "0" : parsedCost.toFixed(2);
 
     const seatCountRaw = formData.get("seatCount") as string;
-    const seatCount = seatCountRaw ? parseInt(seatCountRaw, 10) : null;
+    const parsedSeats = seatCountRaw ? parseInt(seatCountRaw, 10) : null;
+    const seatCount = parsedSeats !== null && (isNaN(parsedSeats) || parsedSeats < 0) ? null : parsedSeats;
 
     const renewalDateRaw = formData.get("renewalDate") as string;
     const renewalDate = renewalDateRaw ? new Date(renewalDateRaw) : null;
@@ -98,16 +108,26 @@ export async function batchAddSoftwareSpend(items: Array<{
     const valid = items.filter(i => i.toolName?.trim());
     if (valid.length === 0) throw new Error("No valid tools to add");
 
+    // Filter out tools already in the stack
+    const existingEntries = await db.query.softwareSpend.findMany({
+        where: eq(softwareSpend.workspaceId, workspaceId),
+        columns: { toolName: true },
+    });
+    const existingNames = new Set(existingEntries.map(e => e.toolName.toLowerCase()));
+    const deduped = valid.filter(i => !existingNames.has(i.toolName.trim().toLowerCase()));
+
+    if (deduped.length === 0) throw new Error("All tools are already in your stack");
+
     await db.insert(softwareSpend).values(
-        valid.map(i => {
+        deduped.map(i => {
             const cost = i.monthlyCost ? parseFloat(i.monthlyCost) : null;
             return {
                 workspaceId,
                 toolName: i.toolName.trim(),
                 category: i.category?.trim() || null,
                 vendorUrl: i.vendorUrl?.trim() || null,
-                monthlyCost: cost && !isNaN(cost) ? cost.toFixed(2) : "0",
-                seatCount: i.seatCount ?? null,
+                monthlyCost: cost && !isNaN(cost) && cost >= 0 ? cost.toFixed(2) : "0",
+                seatCount: i.seatCount != null && i.seatCount >= 0 ? i.seatCount : null,
                 billingCycle: i.billingCycle || "monthly",
                 status: "active",
                 notes: i.notes?.trim() || null,
@@ -115,8 +135,9 @@ export async function batchAddSoftwareSpend(items: Array<{
         })
     );
 
+    const skipped = valid.length - deduped.length;
     revalidatePath("/stack");
-    return { success: true, count: valid.length };
+    return { success: true, count: deduped.length, skipped };
 }
 
 export async function updateSoftwareSpendDetails(
@@ -134,8 +155,8 @@ export async function updateSoftwareSpendDetails(
 
     const cost = parseFloat(monthlyCost);
     const updates: Record<string, unknown> = {
-        monthlyCost: isNaN(cost) ? "0" : cost.toFixed(2),
-        seatCount,
+        monthlyCost: isNaN(cost) || cost < 0 ? "0" : cost.toFixed(2),
+        seatCount: seatCount !== null && seatCount >= 0 ? seatCount : null,
     };
 
     if (renewalDate !== undefined) {
