@@ -1,21 +1,18 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { referrals, workspaceMembers } from "@/lib/db/schema";
+import { referrals } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getWorkspaceId } from "@/lib/db/queries";
 
-export async function createReferralCode(workspaceId: string) {
+export async function createReferralCode() {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
-    // Verify the caller belongs to the given workspace
-    const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
-    });
-    if (!member) throw new Error("User is not a member of any workspace");
-    if (member.workspaceId !== workspaceId) throw new Error("Forbidden");
+    // Derive workspace from authenticated user
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
 
     try {
         // Generate simple random code

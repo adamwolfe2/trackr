@@ -106,8 +106,7 @@ export async function POST(req: NextRequest) {
             { success: true, toolId: newTool.id },
             { status: 200, headers }
         );
-    } catch (error: unknown) {
-        console.error("Extension research error:", error instanceof Error ? error.message : error);
+    } catch {
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500, headers }

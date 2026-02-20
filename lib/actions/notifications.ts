@@ -111,6 +111,7 @@ export async function getNotifications(): Promise<Notification[]> {
 export async function markNotificationsRead(notificationIds: string[]) {
     const user = await currentUser();
     if (!user || notificationIds.length === 0) return;
+    if (notificationIds.length > 500) throw new Error("Too many notification IDs");
 
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),

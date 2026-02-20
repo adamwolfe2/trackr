@@ -15,7 +15,6 @@ export async function POST(req: NextRequest) {
 
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
     if (!webhookSecret) {
-        console.error("STRIPE_WEBHOOK_SECRET is not configured");
         return NextResponse.json({ error: "Webhook secret not configured" }, { status: 500 });
     }
 
@@ -23,9 +22,7 @@ export async function POST(req: NextRequest) {
 
     try {
         event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
-    } catch (err) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        console.error(`Webhook signature verification failed: ${message}`);
+    } catch {
         return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
@@ -51,9 +48,7 @@ export async function POST(req: NextRequest) {
                 // Unhandled event type — return 200 to acknowledge receipt
             }
         }
-    } catch (err) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        console.error(`Error processing webhook event ${event.type}: ${message}`);
+    } catch {
         return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
     }
 
@@ -87,16 +82,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     const workspaceId = session.metadata?.workspaceId;
-    if (!workspaceId) {
-        console.error("No workspaceId in checkout session metadata");
-        return;
-    }
+    if (!workspaceId) return;
 
     const subscriptionId = session.subscription as string;
-    if (!subscriptionId) {
-        console.error("No subscription ID in checkout session");
-        return;
-    }
+    if (!subscriptionId) return;
 
     // Retrieve the full subscription to get period and item details
     const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -144,10 +133,7 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
         where: eq(subscriptions.stripeSubscriptionId, subscriptionId),
     });
 
-    if (!existing) {
-        console.error(`No subscription found for stripeSubscriptionId: ${subscriptionId}`);
-        return;
-    }
+    if (!existing) return;
 
     await db
         .update(subscriptions)
@@ -168,10 +154,7 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
         where: eq(subscriptions.stripeSubscriptionId, subscriptionId),
     });
 
-    if (!existing) {
-        console.error(`No subscription found for stripeSubscriptionId: ${subscriptionId}`);
-        return;
-    }
+    if (!existing) return;
 
     await db
         .update(subscriptions)
@@ -189,19 +172,13 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
         ? subRef
         : subRef?.id ?? null;
 
-    if (!subscriptionId) {
-        console.error("No subscription ID in failed invoice");
-        return;
-    }
+    if (!subscriptionId) return;
 
     const existing = await db.query.subscriptions.findFirst({
         where: eq(subscriptions.stripeSubscriptionId, subscriptionId),
     });
 
-    if (!existing) {
-        console.error(`No subscription found for stripeSubscriptionId: ${subscriptionId}`);
-        return;
-    }
+    if (!existing) return;
 
     await db
         .update(subscriptions)

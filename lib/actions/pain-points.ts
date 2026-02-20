@@ -76,6 +76,34 @@ export async function batchAddPainPoints(items: Array<{ title: string; category?
     return { success: true, count: valid.length };
 }
 
+const updatePainPointSchema = z.object({
+    title: z.string().min(1, "Title is required").max(200, "Title too long (max 200 characters)"),
+    description: z.string().max(2000, "Description too long").optional(),
+    category: z.string().max(100, "Category too long").optional(),
+});
+
+export async function updatePainPoint(id: string, data: { title: string; description?: string; category?: string }) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const validated = updatePainPointSchema.safeParse(data);
+    if (!validated.success) throw new Error(validated.error.issues[0].message);
+
+    await db.update(painPoints)
+        .set({
+            title: validated.data.title,
+            description: validated.data.description,
+            category: validated.data.category || "General",
+        })
+        .where(and(eq(painPoints.id, id), eq(painPoints.workspaceId, workspaceId)));
+
+    revalidatePath("/pain-points");
+    return { success: true };
+}
+
 export async function togglePainPointActive(id: string, currentState: boolean) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");

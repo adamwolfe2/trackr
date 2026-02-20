@@ -84,8 +84,7 @@ For each article, generate a concise 2-3 sentence summary, a relevance score (0-
                     enrichedCount++;
                 }
             }
-        } catch (error) {
-            console.error("Feed enrichment batch failed:", error);
+        } catch {
             // Mark items with fallback score to prevent infinite re-processing
             for (const item of batch) {
                 await db.update(feedItems).set({ relevanceScore: "0.3" }).where(eq(feedItems.id, item.id));

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addPainPoint, batchAddPainPoints, deletePainPoint, togglePainPointActive } from "@/lib/actions/pain-points";
-import { PlusCircle, Trash2, X, Sparkles, Copy, Check, ChevronUp } from "lucide-react";
+import { addPainPoint, batchAddPainPoints, deletePainPoint, togglePainPointActive, updatePainPoint } from "@/lib/actions/pain-points";
+import { PlusCircle, Trash2, X, Sparkles, Copy, Check, ChevronUp, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -63,7 +63,46 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
     const [pasteText, setPasteText] = useState("");
     const [parseError, setParseError] = useState("");
     const [parsedItems, setParsedItems] = useState<ParsedPainPoint[] | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editTitle, setEditTitle] = useState("");
+    const [editDescription, setEditDescription] = useState("");
+    const [editCategory, setEditCategory] = useState("");
     const router = useRouter();
+
+    const startEdit = (point: PainPoint) => {
+        setEditingId(point.id);
+        setEditTitle(point.title);
+        setEditDescription(point.description || "");
+        setEditCategory(point.category || "");
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
+        setEditTitle("");
+        setEditDescription("");
+        setEditCategory("");
+    };
+
+    const handleUpdate = (id: string) => {
+        if (!editTitle.trim()) {
+            toast.error("Title is required");
+            return;
+        }
+        cancelEdit();
+        startTransition(async () => {
+            try {
+                await updatePainPoint(id, {
+                    title: editTitle.trim(),
+                    description: editDescription.trim() || undefined,
+                    category: editCategory.trim() || undefined,
+                });
+                toast.success("Pain point updated");
+                router.refresh();
+            } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Failed to update");
+            }
+        });
+    };
 
     const handleAddSubmit = async (formData: FormData) => {
         setShowForm(false);
@@ -347,68 +386,133 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
                     {initialData.map((point) => (
                         <div
                             key={point.id}
-                            className={`p-5 flex items-start gap-4 ${!point.active ? "opacity-50" : ""}`}
+                            className={`p-5 ${!point.active ? "opacity-50" : ""}`}
                         >
-                            <button
-                                onClick={() => handleToggle(point.id, point.active)}
-                                disabled={isPending}
-                                className={`mt-1 w-10 h-5 border border-black shrink-0 relative transition-colors ${point.active ? "bg-black" : "bg-white"}`}
-                                title={point.active ? "Deactivate" : "Activate"}
-                            >
-                                <span className={`absolute top-0.5 w-3.5 h-3.5 border border-black bg-white transition-all ${point.active ? "left-5" : "left-0.5"}`} />
-                            </button>
-
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-start gap-3 flex-wrap mb-1">
-                                    <h3 className="font-serif text-base leading-snug">{point.title}</h3>
-                                    {point.category && (
-                                        <span className="font-mono text-[10px] border border-black px-1.5 py-0.5 text-neutral-500 shrink-0">
-                                            {point.category}
-                                        </span>
-                                    )}
-                                    {point.active && (
-                                        <span className="font-mono text-[10px] border border-black bg-black text-white px-1.5 py-0.5 shrink-0">
-                                            Active
-                                        </span>
-                                    )}
-                                </div>
-                                {point.description && (
-                                    <p className="font-mono text-xs text-neutral-500 leading-relaxed mb-2">
-                                        {point.description}
-                                    </p>
-                                )}
-                                <span className="font-mono text-[10px] text-neutral-400">
-                                    Added {formatDistanceToNow(new Date(point.createdAt), { addSuffix: true })}
-                                </span>
-                            </div>
-
-                            <div className="shrink-0">
-                                {confirmDeleteId === point.id ? (
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-mono text-xs text-neutral-500">Delete?</span>
+                            {editingId === point.id ? (
+                                <div className="space-y-3">
+                                    <div>
+                                        <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">Problem Statement</label>
+                                        <input
+                                            value={editTitle}
+                                            onChange={(e) => setEditTitle(e.target.value)}
+                                            maxLength={200}
+                                            autoFocus
+                                            className="w-full border border-black px-3 py-2 font-mono text-sm bg-white focus:outline-none"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <div className="sm:col-span-1">
+                                            <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">Category</label>
+                                            <input
+                                                value={editCategory}
+                                                onChange={(e) => setEditCategory(e.target.value)}
+                                                maxLength={100}
+                                                placeholder="General"
+                                                className="w-full border border-black px-3 py-2 font-mono text-sm bg-white focus:outline-none"
+                                            />
+                                        </div>
+                                        <div className="sm:col-span-2">
+                                            <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">Context</label>
+                                            <textarea
+                                                value={editDescription}
+                                                onChange={(e) => setEditDescription(e.target.value)}
+                                                maxLength={2000}
+                                                rows={2}
+                                                className="w-full border border-black px-3 py-2 font-mono text-sm bg-white focus:outline-none resize-none"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-2">
                                         <button
-                                            onClick={() => handleDelete(point.id)}
-                                            className="border border-black px-3 py-1 font-mono text-xs bg-black text-white hover:bg-neutral-800"
+                                            onClick={() => handleUpdate(point.id)}
+                                            disabled={isPending}
+                                            className="border border-black px-4 py-1.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 disabled:opacity-40"
                                         >
-                                            Yes
+                                            Save
                                         </button>
                                         <button
-                                            onClick={() => setConfirmDeleteId(null)}
-                                            className="border border-black px-3 py-1 font-mono text-xs bg-white hover:bg-neutral-100"
+                                            onClick={cancelEdit}
+                                            className="border border-black px-4 py-1.5 font-mono text-xs bg-white hover:bg-neutral-100"
                                         >
-                                            No
+                                            Cancel
                                         </button>
                                     </div>
-                                ) : (
+                                </div>
+                            ) : (
+                                <div className="flex items-start gap-4">
                                     <button
-                                        onClick={() => setConfirmDeleteId(point.id)}
-                                        className="border border-neutral-200 p-2 hover:border-black hover:text-black text-neutral-400 transition-colors"
-                                        title="Delete"
+                                        onClick={() => handleToggle(point.id, point.active)}
+                                        disabled={isPending}
+                                        className={`mt-1 w-10 h-5 border border-black shrink-0 relative transition-colors ${point.active ? "bg-black" : "bg-white"}`}
+                                        aria-label={point.active ? "Deactivate pain point" : "Activate pain point"}
+                                        role="switch"
+                                        aria-checked={point.active}
                                     >
-                                        <Trash2 className="h-3.5 w-3.5" />
+                                        <span className={`absolute top-0.5 w-3.5 h-3.5 border border-black bg-white transition-all ${point.active ? "left-5" : "left-0.5"}`} />
                                     </button>
-                                )}
-                            </div>
+
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start gap-3 flex-wrap mb-1">
+                                            <h3 className="font-serif text-base leading-snug">{point.title}</h3>
+                                            {point.category && (
+                                                <span className="font-mono text-[10px] border border-black px-1.5 py-0.5 text-neutral-500 shrink-0">
+                                                    {point.category}
+                                                </span>
+                                            )}
+                                            {point.active && (
+                                                <span className="font-mono text-[10px] border border-black bg-black text-white px-1.5 py-0.5 shrink-0">
+                                                    Active
+                                                </span>
+                                            )}
+                                        </div>
+                                        {point.description && (
+                                            <p className="font-mono text-xs text-neutral-500 leading-relaxed mb-2">
+                                                {point.description}
+                                            </p>
+                                        )}
+                                        <span className="font-mono text-[10px] text-neutral-400">
+                                            Added {formatDistanceToNow(new Date(point.createdAt), { addSuffix: true })}
+                                        </span>
+                                    </div>
+
+                                    <div className="shrink-0 flex items-center gap-1">
+                                        {confirmDeleteId === point.id ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-mono text-xs text-neutral-500">Delete?</span>
+                                                <button
+                                                    onClick={() => handleDelete(point.id)}
+                                                    className="border border-black px-3 py-1 font-mono text-xs bg-black text-white hover:bg-neutral-800"
+                                                >
+                                                    Yes
+                                                </button>
+                                                <button
+                                                    onClick={() => setConfirmDeleteId(null)}
+                                                    className="border border-black px-3 py-1 font-mono text-xs bg-white hover:bg-neutral-100"
+                                                >
+                                                    No
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => startEdit(point)}
+                                                    className="border border-neutral-200 p-2 hover:border-black hover:text-black text-neutral-400 transition-colors"
+                                                    aria-label="Edit pain point"
+                                                >
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setConfirmDeleteId(point.id)}
+                                                    className="border border-neutral-200 p-2 hover:border-black hover:text-black text-neutral-400 transition-colors"
+                                                    aria-label="Delete pain point"
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ))}
                 </div>

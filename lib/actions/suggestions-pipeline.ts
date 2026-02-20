@@ -83,8 +83,7 @@ Return results grouped by articleIndex (1-based). Include an entry for every art
         }
 
         return totalExtracted;
-    } catch (error) {
-        console.error("Tool extraction failed:", error);
+    } catch {
         for (const item of items) {
             await db.update(feedItems).set({
                 extractedTools: [{ name: "__error", url: "", description: "", confidence: 0 }],

@@ -103,8 +103,7 @@ async function ingestRss(workspaceId: string, channelId: string, config: Channel
             }
         }
         return count;
-    } catch (error) {
-        console.error(`RSS fetch failed for ${feedUrl}:`, error);
+    } catch {
         return 0;
     }
 }
@@ -178,8 +177,8 @@ export async function ingestAllChannels(workspaceId: string): Promise<number> {
         try {
             const count = await ingestChannel(ch.id);
             total += count;
-        } catch (error) {
-            console.error(`Channel ${ch.id} ingestion failed:`, error);
+        } catch {
+            // Skip failing channel and continue
         }
     }
     return total;

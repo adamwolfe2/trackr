@@ -56,8 +56,7 @@ export async function GET(req: NextRequest) {
             },
             { status: 200, headers }
         );
-    } catch (error: unknown) {
-        console.error("Extension context error:", error);
+    } catch {
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500, headers }

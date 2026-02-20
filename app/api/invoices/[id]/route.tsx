@@ -60,8 +60,7 @@ export async function GET(
                 "Content-Disposition": `attachment; filename="invoice-${ad.id.slice(0, 8)}.pdf"`,
             },
         });
-    } catch (error) {
-        console.error("Invoice PDF error:", error instanceof Error ? error.message : error);
+    } catch {
         return new NextResponse("Failed to generate invoice", { status: 500 });
     }
 }

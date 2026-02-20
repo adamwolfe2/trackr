@@ -130,8 +130,8 @@ async function handleResearch(urlArg: string, channelId: string) {
     after(async () => {
         try {
             await performDeepResearch(tool.id);
-        } catch (e) {
-            console.error("[Slack /trackr research] Research failed:", e);
+        } catch {
+            // Research failure is handled by the job status update
         }
     });
 

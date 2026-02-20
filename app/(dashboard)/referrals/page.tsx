@@ -48,7 +48,7 @@ export default async function ReferralsPage() {
                         ) : (
                             <form action={async () => {
                                 "use server";
-                                await createReferralCode(member.workspaceId);
+                                await createReferralCode();
                             }}>
                                 <button type="submit" className="w-full border border-black px-5 py-3 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800">
                                     Generate Referral Link

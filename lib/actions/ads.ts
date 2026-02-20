@@ -5,8 +5,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { workspaceMembers, ads, tools } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { getWorkspaceId } from "@/lib/db/queries";
 
-export async function createAdCampaign(workspaceId: string, toolId: string, budget: number) {
+export async function createAdCampaign(_workspaceId: string, toolId: string, budget: number) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
@@ -15,7 +16,10 @@ export async function createAdCampaign(workspaceId: string, toolId: string, budg
         throw new Error("Budget must be between $5 and $100,000");
     }
 
-    // Verify workspace membership
+    // Derive workspace from authenticated user instead of trusting client parameter
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
     const member = await db.query.workspaceMembers.findFirst({
         where: and(
             eq(workspaceMembers.userId, user.id),

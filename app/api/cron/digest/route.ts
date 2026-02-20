@@ -144,8 +144,7 @@ export async function GET(req: Request) {
         }
 
         return NextResponse.json({ success: true, digestsSent, renewalsSent });
-    } catch (error) {
-        console.error("Digest Cron Error:", error);
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

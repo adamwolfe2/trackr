@@ -30,8 +30,7 @@ export function CreateAdForm({ tools, workspaceId }: CreateAdFormProps) {
             } else {
                 toast.error("Failed to create checkout session");
             }
-        } catch (error) {
-            console.error(error);
+        } catch {
             toast.error("Something went wrong");
         } finally {
             setIsLoading(false);

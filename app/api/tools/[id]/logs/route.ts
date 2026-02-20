@@ -44,8 +44,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         }
 
         return NextResponse.json({ logs, status: tool.status, errorMessage });
-    } catch (error) {
-        console.error("Failed to fetch logs:", error);
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

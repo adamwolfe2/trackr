@@ -15,8 +15,7 @@ export function ManageSubscriptionButton({ workspaceId }: { workspaceId: string 
             if (url) {
                 window.location.href = url;
             }
-        } catch (error) {
-            console.error(error);
+        } catch {
             toast.error("Something went wrong");
         } finally {
             setIsLoading(false);

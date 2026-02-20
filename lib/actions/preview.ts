@@ -96,8 +96,7 @@ export async function previewToolInternal(url: string) {
             url // Normalized URL
         };
 
-    } catch (error) {
-        console.error("Preview error:", error);
+    } catch {
         return { error: "Failed to preview URL" };
     }
 }

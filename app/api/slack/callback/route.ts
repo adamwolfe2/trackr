@@ -83,7 +83,6 @@ export async function GET(req: Request) {
         const tokenData = await tokenResponse.json();
 
         if (!tokenData.ok) {
-            console.error("Slack OAuth error:", tokenData.error);
             return NextResponse.redirect(`${appUrl}/workspace?slack=error`);
         }
 
@@ -93,7 +92,6 @@ export async function GET(req: Request) {
         const teamName = tokenData.team?.name;
 
         if (!botToken) {
-            console.error("Slack OAuth: no access_token in response");
             return NextResponse.redirect(`${appUrl}/workspace?slack=error`);
         }
 
@@ -108,8 +106,7 @@ export async function GET(req: Request) {
             .where(eq(workspaces.id, workspaceId));
 
         return NextResponse.redirect(`${appUrl}/workspace?slack=connected`);
-    } catch (err) {
-        console.error("Slack OAuth exchange failed:", err);
+    } catch {
         return NextResponse.redirect(`${appUrl}/workspace?slack=error`);
     }
 }

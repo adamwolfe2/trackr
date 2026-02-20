@@ -74,17 +74,12 @@ export async function GET(req: Request) {
                 .where(eq(tools.id, toolId));
         }
 
-        console.log(
-            `[recover-stuck-jobs] Recovered ${stuckJobs.length} stuck jobs for ${stuckToolIds.length} tools`,
-        );
-
         return NextResponse.json({
             success: true,
             recovered: stuckJobs.length,
             toolIds: stuckToolIds,
         });
-    } catch (error) {
-        console.error("[recover-stuck-jobs] Error:", error);
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

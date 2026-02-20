@@ -73,8 +73,8 @@ const fetchSuggestionsFromAI = unstable_cache(
                         }));
                 }
             }
-        } catch (error) {
-            console.error("Discover suggestions parse error:", error);
+        } catch {
+            // Parse failure — return empty suggestions
         }
         return suggestions;
     },

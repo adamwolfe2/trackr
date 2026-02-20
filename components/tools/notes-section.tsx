@@ -17,8 +17,8 @@ export function NotesSection({ toolId, notes = [] }: { toolId: string, notes?: {
             try {
                 await addNote(toolId, content);
                 setContent("");
-            } catch (error) {
-                console.error("Failed to add note:", error);
+            } catch {
+                // Note addition failed — server action throws user-facing error
             }
         });
     }

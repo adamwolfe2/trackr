@@ -14,6 +14,7 @@ export async function updateWorkspaceName(formData: FormData) {
 
     const name = (formData.get("name") as string)?.trim();
     if (!name) throw new Error("Workspace name is required");
+    if (name.length > 200) throw new Error("Workspace name too long (max 200 characters)");
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
@@ -119,6 +120,18 @@ export async function updateCompanyContext(formData: FormData) {
     if (!workspaceId) throw new Error("No workspace found");
 
     const companyContext = (formData.get("companyContext") as string)?.trim() || null;
+    if (companyContext && companyContext.length > 5000) throw new Error("Company context too long (max 5000 characters)");
+
+    // Only owner/admin can update company context
+    const member = await db.query.workspaceMembers.findFirst({
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId)
+        ),
+    });
+    if (!member || (member.role !== "owner" && member.role !== "admin")) {
+        throw new Error("Only workspace owners or admins can update company context");
+    }
 
     await db.update(workspaces)
         .set({ companyContext })

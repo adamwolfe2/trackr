@@ -34,8 +34,7 @@ export function UpgradeButton({
             } else {
                 toast.error("Failed to start checkout");
             }
-        } catch (error) {
-            console.error(error);
+        } catch {
             toast.error("Something went wrong");
         } finally {
             setIsLoading(false);

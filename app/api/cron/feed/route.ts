@@ -51,8 +51,8 @@ export async function GET(req: Request) {
                     const suggestions = await generateSuggestions(wsId);
                     totalSuggestions += suggestions;
                 }
-            } catch (error) {
-                console.error(`Feed cron failed for workspace ${wsId}:`, error);
+            } catch {
+                // Skip failing workspace and continue
             }
         }
 
@@ -64,8 +64,7 @@ export async function GET(req: Request) {
             toolsExtracted: totalExtracted,
             suggestions: totalSuggestions,
         });
-    } catch (error) {
-        console.error("Feed cron error:", error);
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

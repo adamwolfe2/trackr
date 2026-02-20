@@ -191,8 +191,7 @@ ${toolContext ? `## Researched Tool Reports\n${toolContext}\n` : ""}
         });
 
         return result.toUIMessageStreamResponse();
-    } catch (error) {
-        console.error("Chat API error:", error);
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

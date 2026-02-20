@@ -9,7 +9,7 @@ import { eq } from "drizzle-orm";
 
 const addNoteSchema = z.object({
     toolId: z.string().uuid(),
-    content: z.string().min(1, "Note content cannot be empty"),
+    content: z.string().min(1, "Note content cannot be empty").max(10000, "Note too long (max 10,000 characters)"),
 });
 
 export async function addNote(toolId: string, content: string) {
