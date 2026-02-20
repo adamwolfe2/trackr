@@ -6,6 +6,19 @@ All notable changes to Trackr are documented here.
 
 ## February 2026
 
+### 2026-02-20 — Reliability & Research Intelligence
+
+**New Features**
+- **Auto-retry failed research** — Research jobs that fail are automatically retried once after 5 minutes. Eliminates the most common user support request ("my research failed, what do I do?").
+- **Our Process page** — `/process` shows the full 7-step research pipeline with animated demos at each stage. Maps site → scrape pages → review sites → trust signals → Reddit → competitive intel → AI synthesis.
+
+**Improvements**
+- **Invitation deduplication fix** — Inviting the same email address twice no longer creates duplicate invitation rows. The system now detects and reuses the existing active invite.
+- **Perplexity visibility** — Missing `PERPLEXITY_API_KEY` now emits a visible warning in server logs and surfaces in the research progress stream, instead of silently skipping.
+- **Research retry UX** — The "Retry Research" button on failed tool cards is now more prominent with clear troubleshooting guidance.
+
+---
+
 ### 2026-02-20 — Public Tool Library
 
 **New Features**
