@@ -168,8 +168,13 @@ export default async function DashboardPage() {
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
                 {/* Recent Tools */}
                 <div className="lg:col-span-4 border border-black">
-                    <div className="border-b border-black px-5 py-3">
+                    <div className="border-b border-black px-5 py-3 flex items-center justify-between">
                         <h2 className="font-mono text-xs uppercase tracking-widest">Recent Tools</h2>
+                        {recentTools.length > 0 && (
+                            <Link href="/tools" className="font-mono text-[10px] text-neutral-400 hover:text-black transition-colors">
+                                View all →
+                            </Link>
+                        )}
                     </div>
                     <div className="p-4">
                         {recentTools.length === 0 ? (
@@ -202,8 +207,13 @@ export default async function DashboardPage() {
 
                 {/* Recent Activity */}
                 <div className="lg:col-span-3 border border-black">
-                    <div className="border-b border-black px-5 py-3">
+                    <div className="border-b border-black px-5 py-3 flex items-center justify-between">
                         <h2 className="font-mono text-xs uppercase tracking-widest">Recent Activity</h2>
+                        {workspaceActivity.length > 0 && (
+                            <Link href="/queue" className="font-mono text-[10px] text-neutral-400 hover:text-black transition-colors">
+                                View all →
+                            </Link>
+                        )}
                     </div>
                     <div className="p-4">
                         {workspaceActivity.length === 0 ? (

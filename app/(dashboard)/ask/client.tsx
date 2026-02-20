@@ -50,16 +50,35 @@ export default function AskTrackrPage() {
                 {/* Messages */}
                 <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[#F3F3EF]">
                     {messages.length === 0 && (
-                        <div className="py-12 text-center">
-                            <p className="font-serif text-lg text-neutral-600 mb-2">
-                                Ask anything about your tools.
-                            </p>
-                            <p className="font-mono text-xs text-neutral-400">
-                                Example: &ldquo;What is the cheapest CRM in our stack?&rdquo;
-                            </p>
-                            <p className="font-mono text-xs text-neutral-400 mt-1">
-                                Example: &ldquo;Which tools have the best integration support?&rdquo;
-                            </p>
+                        <div className="py-12 text-center space-y-6">
+                            <div>
+                                <p className="font-serif text-lg text-neutral-600 mb-1">
+                                    Ask anything about your tools.
+                                </p>
+                                <p className="font-mono text-[10px] text-neutral-400">
+                                    Powered by your workspace research data.
+                                </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2 justify-center max-w-md mx-auto">
+                                {[
+                                    "What are the top-rated tools in my stack?",
+                                    "Which tools have the worst reviews on Reddit?",
+                                    "Compare pricing across my CRM tools",
+                                    "What tools have security compliance certifications?",
+                                    "Which tools are missing integrations with Slack?",
+                                    "Summarize the pros and cons of my most recent research",
+                                ].map((prompt) => (
+                                    <button
+                                        key={prompt}
+                                        onClick={() => {
+                                            setInput(prompt);
+                                        }}
+                                        className="border border-black bg-white px-3 py-1.5 font-mono text-[10px] hover:bg-black hover:text-white transition-colors text-left"
+                                    >
+                                        {prompt}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
                     )}
 
