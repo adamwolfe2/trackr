@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, CheckCircle2, XCircle } from "lucide-react";
-import { getNotifications, markNotificationsRead, type Notification } from "@/lib/actions/notifications";
+import { Bell, CheckCircle2, XCircle, CalendarClock, Sparkles } from "lucide-react";
+import { getNotifications, markNotificationsRead, type Notification, type NotificationType } from "@/lib/actions/notifications";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -86,8 +86,14 @@ export function NotificationsPopover() {
                                     <div className="mt-0.5 shrink-0">
                                         {notification.type === "job_complete" ? (
                                             <CheckCircle2 className="h-4 w-4" strokeWidth={1.5} />
-                                        ) : (
+                                        ) : notification.type === "job_failed" ? (
                                             <XCircle className="h-4 w-4 text-neutral-400" strokeWidth={1.5} />
+                                        ) : notification.type === "renewal_soon" ? (
+                                            <CalendarClock className="h-4 w-4 text-neutral-500" strokeWidth={1.5} />
+                                        ) : notification.type === "new_suggestion" ? (
+                                            <Sparkles className="h-4 w-4 text-neutral-500" strokeWidth={1.5} />
+                                        ) : (
+                                            <Bell className="h-4 w-4 text-neutral-400" strokeWidth={1.5} />
                                         )}
                                     </div>
                                     <div className="min-w-0">

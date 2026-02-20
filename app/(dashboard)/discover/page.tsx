@@ -15,7 +15,7 @@ import { painPoints, workspaceMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { perplexity } from "@/lib/services/perplexity";
 import { tavily } from "@/lib/services/tavily";
-import { unstable_cache } from "next/cache";
+import { unstable_cache, revalidateTag } from "next/cache";
 
 interface ToolSuggestion {
     name: string;
@@ -62,17 +62,19 @@ const fetchSuggestionsFromAI = unstable_cache(
             if (jsonMatch) {
                 const parsed = JSON.parse(jsonMatch[0]);
                 if (Array.isArray(parsed)) {
-                    suggestions = parsed.map((item: Record<string, string>, i: number) => ({
-                        name: item.name || `Tool ${i + 1}`,
-                        url: item.url || "#",
-                        description: item.description || "",
-                        matchReason: item.matchReason || "Matches your team's pain points",
-                        source: item.source || "AI Discovery",
-                    }));
+                    suggestions = parsed
+                        .filter((item: unknown) => item && typeof item === "object" && typeof (item as Record<string, unknown>).name === "string")
+                        .map((item: Record<string, string>, i: number) => ({
+                            name: item.name || `Tool ${i + 1}`,
+                            url: typeof item.url === "string" && item.url.startsWith("http") ? item.url : "#",
+                            description: typeof item.description === "string" ? item.description : "",
+                            matchReason: typeof item.matchReason === "string" ? item.matchReason : "Matches your team's pain points",
+                            source: typeof item.source === "string" ? item.source : "AI Discovery",
+                        }));
                 }
             }
-        } catch {
-            // Fall through with empty suggestions
+        } catch (error) {
+            console.error("Discover suggestions parse error:", error);
         }
         return suggestions;
     },
@@ -191,7 +193,11 @@ export default async function DiscoverPage() {
                             Tools recommended based on your active pain points. Refreshes every 6 hours.
                         </p>
                     </div>
-                    <form action="/discover" method="GET">
+                    <form action={async () => {
+                        "use server";
+                        revalidateTag("discover-suggestions", { expire: 0 });
+                        revalidateTag("ai-news-feed", { expire: 0 });
+                    }}>
                         <button type="submit" className="border border-black px-4 py-2 font-mono text-xs bg-white hover:bg-black hover:text-white whitespace-nowrap">
                             Refresh
                         </button>
