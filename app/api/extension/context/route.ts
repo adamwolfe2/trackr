@@ -2,15 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { softwareSpend } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { getWorkspaceFromApiKey, corsHeaders } from "@/lib/middleware/extension-auth";
+import { getWorkspaceFromApiKey, corsHeaders, checkExtensionRateLimit } from "@/lib/middleware/extension-auth";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
 
-export async function OPTIONS() {
-    return new NextResponse(null, { status: 204, headers: corsHeaders() });
+export async function OPTIONS(req: NextRequest) {
+    return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
 }
 
 export async function GET(req: NextRequest) {
-    const headers = corsHeaders();
+    const headers = corsHeaders(req);
 
     // Auth via API key
     const workspace = await getWorkspaceFromApiKey(req);
@@ -18,6 +18,13 @@ export async function GET(req: NextRequest) {
         return NextResponse.json(
             { error: "Invalid or missing API key" },
             { status: 401, headers }
+        );
+    }
+
+    if (!checkExtensionRateLimit(workspace.id, 20)) {
+        return NextResponse.json(
+            { error: "Rate limit exceeded" },
+            { status: 429, headers }
         );
     }
 
@@ -50,9 +57,9 @@ export async function GET(req: NextRequest) {
             { status: 200, headers }
         );
     } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "Unknown error";
+        console.error("Extension context error:", error);
         return NextResponse.json(
-            { error: message },
+            { error: "Internal server error" },
             { status: 500, headers }
         );
     }

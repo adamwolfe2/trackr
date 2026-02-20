@@ -8,12 +8,12 @@ import { after } from "next/server";
 import { performDeepResearch } from "@/lib/actions/research";
 import { getPlanLimits } from "@/lib/config/subscriptions";
 
-export async function OPTIONS() {
-    return new NextResponse(null, { status: 204, headers: corsHeaders() });
+export async function OPTIONS(req: NextRequest) {
+    return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
 }
 
 export async function POST(req: NextRequest) {
-    const headers = corsHeaders();
+    const headers = corsHeaders(req);
 
     // Auth via API key
     const workspace = await getWorkspaceFromApiKey(req);

@@ -94,7 +94,7 @@ export async function completeOnboarding({
                 toInsert.map((t) => ({
                     workspaceId,
                     toolName: t.name,
-                    vendorUrl: t.url ? `https://${t.url}` : null,
+                    vendorUrl: t.url ? (t.url.startsWith("http") ? t.url : `https://${t.url}`) : null,
                     status: "active" as const,
                     monthlyCost: "0",
                 }))

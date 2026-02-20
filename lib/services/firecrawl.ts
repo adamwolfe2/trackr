@@ -120,15 +120,6 @@ export class FirecrawlService {
         }
     }
 
-    private getMockData(url: string): ScrapeResult {
-        return {
-            success: true,
-            data: {
-                markdown: `# Mocked content for ${url}\n\nThis tool is a leading solution in its category with robust features and competitive pricing.`,
-                metadata: { title: "Mock Tool", description: "Best tool ever." }
-            }
-        };
-    }
 }
 
 export const firecrawl = new FirecrawlService();

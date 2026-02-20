@@ -65,20 +65,16 @@ export default async function DashboardPage() {
         limit: 5,
     });
 
-    // Filter by workspace tools to avoid loading other workspaces' data
-    const workspaceToolIds = await db.query.tools.findMany({
-        where: eq(tools.workspaceId, workspaceId),
-        columns: { id: true },
+    // Use JOIN to get recent activity scoped to workspace (avoids N+1)
+    const workspaceActivity = await db.query.researchJobs.findMany({
+        with: { tool: { columns: { name: true, id: true } } },
+        where: inArray(
+            researchJobs.toolId,
+            db.select({ id: tools.id }).from(tools).where(eq(tools.workspaceId, workspaceId))
+        ),
+        orderBy: [desc(researchJobs.triggeredAt)],
+        limit: 5,
     });
-    const toolIds = workspaceToolIds.map(t => t.id);
-    const workspaceActivity = toolIds.length > 0
-        ? await db.query.researchJobs.findMany({
-            with: { tool: true },
-            where: inArray(researchJobs.toolId, toolIds),
-            orderBy: [desc(researchJobs.triggeredAt)],
-            limit: 5,
-        })
-        : [];
 
     const reportsCountData = await db
         .select({ count: sql<number>`count(*)` })

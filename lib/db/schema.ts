@@ -88,7 +88,9 @@ export const notes = pgTable('notes', {
     content: text('content').notNull(),
     noteType: text('note_type').default('general').notNull(), // general | test_result | pricing_update | decision
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => [
+    index('notes_tool_id_idx').on(table.toolId),
+]);
 
 // Pain Points
 export const painPoints = pgTable('pain_points', {
@@ -100,7 +102,9 @@ export const painPoints = pgTable('pain_points', {
     active: boolean('active').default(true).notNull(),
     createdBy: uuid('created_by'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => [
+    index('pain_points_workspace_id_idx').on(table.workspaceId),
+]);
 
 // Research Jobs
 export const researchJobs = pgTable('research_jobs', {
@@ -179,6 +183,24 @@ export const adsRelations = relations(ads, ({ one }) => ({
 export const workspaceMembersRelations = relations(workspaceMembers, ({ one }) => ({
     workspace: one(workspaces, {
         fields: [workspaceMembers.workspaceId],
+        references: [workspaces.id],
+    }),
+}));
+
+export const notesRelations = relations(notes, ({ one }) => ({
+    tool: one(tools, {
+        fields: [notes.toolId],
+        references: [tools.id],
+    }),
+    member: one(workspaceMembers, {
+        fields: [notes.workspaceMemberId],
+        references: [workspaceMembers.id],
+    }),
+}));
+
+export const painPointsRelations = relations(painPoints, ({ one }) => ({
+    workspace: one(workspaces, {
+        fields: [painPoints.workspaceId],
         references: [workspaces.id],
     }),
 }));
