@@ -104,7 +104,7 @@ const plans: PlanCard[] = [
             { text: "API access (read + write)", included: true },
             { text: "Dedicated success manager", included: true },
             { text: "Custom integrations", included: true },
-            { text: "SSO / SAML (roadmap)", included: true },
+            { text: "SSO / SAML", included: true },
             { text: "SLA guarantee", included: true },
             { text: "Onboarding call", included: true },
         ],

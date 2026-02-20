@@ -303,14 +303,23 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                                         <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} />
                                     ))}
                                     {colTools.length === 0 && col.id === "backlog" && isEmpty ? (
-                                        <div className="border border-dashed border-neutral-300 p-6 text-center space-y-3">
+                                        <div className="border border-dashed border-neutral-300 p-6 text-center space-y-4">
                                             <p className="font-serif text-xl">Submit your first tool.</p>
                                             <p className="font-mono text-xs text-neutral-500 leading-relaxed">
-                                                Add an AI tool URL and we&apos;ll auto-research it — reviews, pricing, competitors.
+                                                Paste any tool URL. Our research agents will analyze it in under 2 minutes — reviews, pricing, competitors, and a scored report.
                                             </p>
-                                            <Link href="/submit" className="inline-block border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
-                                                Submit Tool →
-                                            </Link>
+                                            <div className="flex flex-col items-center gap-3">
+                                                <div className="flex items-center gap-3 text-[10px] font-mono text-neutral-400">
+                                                    <span className="flex items-center gap-1"><span className="w-4 h-4 bg-black text-white flex items-center justify-center text-[8px] font-bold">1</span> Submit URL</span>
+                                                    <span className="text-neutral-300">&rarr;</span>
+                                                    <span className="flex items-center gap-1"><span className="w-4 h-4 bg-black text-white flex items-center justify-center text-[8px] font-bold">2</span> AI Researches</span>
+                                                    <span className="text-neutral-300">&rarr;</span>
+                                                    <span className="flex items-center gap-1"><span className="w-4 h-4 bg-black text-white flex items-center justify-center text-[8px] font-bold">3</span> Get Report</span>
+                                                </div>
+                                                <Link href="/submit" className="inline-block border border-black px-5 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
+                                                    Submit Tool →
+                                                </Link>
+                                            </div>
                                         </div>
                                     ) : colTools.length === 0 ? (
                                         <div className="border border-dashed border-neutral-300 p-4 text-center text-[10px] font-mono text-neutral-400">

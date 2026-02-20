@@ -319,21 +319,33 @@ function UsageBar({ label, current, limit }: { label: string; current: number; l
     const isUnlimited = limit === Infinity;
     const percentage = isUnlimited ? 0 : limit > 0 ? Math.min((current / limit) * 100, 100) : 0;
     const displayLimit = isUnlimited ? "Unlimited" : limit.toString();
+    const isWarning = !isUnlimited && percentage >= 75 && percentage < 100;
+    const isMaxed = !isUnlimited && percentage >= 100;
 
     return (
         <div>
             <div className="flex items-baseline justify-between mb-1.5">
                 <span className="font-mono text-xs uppercase tracking-widest text-neutral-500">{label}</span>
-                <span className="font-mono text-sm">
+                <span className={`font-mono text-sm ${isMaxed ? "text-red-600 font-bold" : isWarning ? "text-amber-600" : ""}`}>
                     {current} <span className="text-neutral-400">/</span> {displayLimit}
                 </span>
             </div>
             <div className="h-2 bg-neutral-200 w-full">
                 <div
-                    className="h-full bg-black transition-all"
+                    className={`h-full transition-all ${isMaxed ? "bg-red-600" : isWarning ? "bg-amber-500" : "bg-black"}`}
                     style={{ width: isUnlimited ? "0%" : `${percentage}%` }}
                 />
             </div>
+            {isMaxed && (
+                <p className="font-mono text-[10px] text-red-600 mt-1">
+                    Limit reached. Upgrade your plan or buy extra credits to continue.
+                </p>
+            )}
+            {isWarning && (
+                <p className="font-mono text-[10px] text-amber-600 mt-1">
+                    {Math.round(percentage)}% used — consider upgrading before you hit the limit.
+                </p>
+            )}
         </div>
     );
 }
