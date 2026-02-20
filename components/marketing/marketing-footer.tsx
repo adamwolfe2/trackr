@@ -26,6 +26,7 @@ export function MarketingFooter() {
                         <Link href="/#how-it-works" className="text-neutral-600 hover:text-black hover:underline">How It Works</Link>
                         <Link href="/#features" className="text-neutral-600 hover:text-black hover:underline">Features</Link>
                         <Link href="/pricing" className="text-neutral-600 hover:text-black hover:underline">Pricing</Link>
+                        <Link href="/process" className="text-neutral-600 hover:text-black hover:underline">Our Process</Link>
                         <Link href="/audit" className="text-neutral-600 hover:text-black hover:underline">AI Audit</Link>
                     </div>
 

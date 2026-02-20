@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
@@ -169,18 +169,20 @@ function classificationLabel(c: string) {
   return "Traditional";
 }
 
-function StackIntelligenceDemo() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+function StackIntelligenceDemo({ active }: { active: boolean }) {
   const [visibleCount, setVisibleCount] = useState(0);
   const [showScore, setShowScore] = useState(false);
   const [showBenchmark, setShowBenchmark] = useState(false);
   const [showOpportunity, setShowOpportunity] = useState(false);
-  const hasStarted = useRef(false);
 
   useEffect(() => {
-    if (!inView || hasStarted.current) return;
-    hasStarted.current = true;
+    if (!active) {
+      setVisibleCount(0);
+      setShowScore(false);
+      setShowBenchmark(false);
+      setShowOpportunity(false);
+      return;
+    }
 
     // Stagger tool appearance
     let count = 0;
@@ -197,14 +199,14 @@ function StackIntelligenceDemo() {
     }, 250);
 
     return () => clearInterval(toolInterval);
-  }, [inView]);
+  }, [active]);
 
   return (
-    <div ref={ref}>
+    <div>
       <DemoWindow
         title="trackr — stack intelligence"
         statusLabel="Analyzing"
-        showStatus={inView && !showScore}
+        showStatus={active && !showScore}
       >
         <div className="p-4">
           {/* Header row */}
@@ -366,29 +368,31 @@ const SPEND_CATEGORIES = [
   { label: "Analytics", amount: 1200, pct: 10 },
 ];
 
-function SpendTrackerDemo() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+function SpendTrackerDemo({ active }: { active: boolean }) {
   const [showBars, setShowBars] = useState(false);
   const [showRenewal, setShowRenewal] = useState(false);
   const [showFlag, setShowFlag] = useState(false);
-  const hasStarted = useRef(false);
 
   useEffect(() => {
-    if (!inView || hasStarted.current) return;
-    hasStarted.current = true;
+    if (!active) {
+      setShowBars(false);
+      setShowRenewal(false);
+      setShowFlag(false);
+      return;
+    }
 
-    setTimeout(() => setShowBars(true), 600);
-    setTimeout(() => setShowRenewal(true), 2000);
-    setTimeout(() => setShowFlag(true), 3000);
-  }, [inView]);
+    const t1 = setTimeout(() => setShowBars(true), 600);
+    const t2 = setTimeout(() => setShowRenewal(true), 2000);
+    const t3 = setTimeout(() => setShowFlag(true), 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [active]);
 
   return (
-    <div ref={ref}>
+    <div>
       <DemoWindow
         title="trackr — spend tracker"
         statusLabel="Syncing"
-        showStatus={inView && !showBars}
+        showStatus={active && !showBars}
       >
         <div className="p-4">
           {/* Top stats */}
@@ -398,10 +402,10 @@ function SpendTrackerDemo() {
                 Monthly Spend
               </span>
               <div className="font-mono text-2xl font-bold text-black leading-none">
-                {inView ? (
+                {active ? (
                   <AnimatedCounter
                     target={12450}
-                    animate={inView}
+                    animate={active}
                     prefix="$"
                     duration={1200}
                   />
@@ -415,10 +419,10 @@ function SpendTrackerDemo() {
                 Annual Projection
               </span>
               <div className="font-mono text-2xl font-bold text-neutral-500 leading-none">
-                {inView ? (
+                {active ? (
                   <AnimatedCounter
                     target={149400}
-                    animate={inView}
+                    animate={active}
                     prefix="$"
                     duration={1400}
                   />
@@ -542,49 +546,56 @@ const CHAT_RESULTS = [
   },
 ];
 
-function AskDemo() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+function AskDemo({ active }: { active: boolean }) {
   const [typedQuery, setTypedQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [visibleResults, setVisibleResults] = useState(0);
   const [showFooter, setShowFooter] = useState(false);
-  const hasStarted = useRef(false);
-
-  const startTyping = useCallback(() => {
-    let i = 0;
-    const typeNext = () => {
-      if (i <= QUERY_TEXT.length) {
-        setTypedQuery(QUERY_TEXT.slice(0, i));
-        i++;
-        setTimeout(typeNext, 40);
-      } else {
-        // After typing, show results
-        setTimeout(() => {
-          setShowResults(true);
-          let count = 0;
-          const resultInterval = setInterval(() => {
-            count++;
-            setVisibleResults(count);
-            if (count >= CHAT_RESULTS.length) {
-              clearInterval(resultInterval);
-              setTimeout(() => setShowFooter(true), 400);
-            }
-          }, 350);
-        }, 500);
-      }
-    };
-    typeNext();
-  }, []);
 
   useEffect(() => {
-    if (!inView || hasStarted.current) return;
-    hasStarted.current = true;
-    setTimeout(startTyping, 400);
-  }, [inView, startTyping]);
+    if (!active) {
+      setTypedQuery("");
+      setShowResults(false);
+      setVisibleResults(0);
+      setShowFooter(false);
+      return;
+    }
+
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    const startTyping = () => {
+      let i = 0;
+      const typeNext = () => {
+        if (i <= QUERY_TEXT.length) {
+          setTypedQuery(QUERY_TEXT.slice(0, i));
+          i++;
+          timeouts.push(setTimeout(typeNext, 40));
+        } else {
+          // After typing, show results
+          timeouts.push(setTimeout(() => {
+            setShowResults(true);
+            let count = 0;
+            const resultInterval = setInterval(() => {
+              count++;
+              setVisibleResults(count);
+              if (count >= CHAT_RESULTS.length) {
+                clearInterval(resultInterval);
+                timeouts.push(setTimeout(() => setShowFooter(true), 400));
+              }
+            }, 350);
+            timeouts.push(resultInterval as unknown as ReturnType<typeof setTimeout>);
+          }, 500));
+        }
+      };
+      typeNext();
+    };
+
+    timeouts.push(setTimeout(startTyping, 400));
+    return () => timeouts.forEach(clearTimeout);
+  }, [active]);
 
   return (
-    <div ref={ref}>
+    <div>
       <DemoWindow
         title="trackr — ask your workspace"
         statusLabel="Searching"
@@ -596,10 +607,10 @@ function AskDemo() {
             <Search className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" />
             <span className="font-mono text-[11px] text-neutral-700 flex-1 min-h-[18px]">
               {typedQuery}
-              {!showResults && inView && (
+              {!showResults && active && (
                 <span className="inline-block w-0.5 h-3.5 bg-black ml-0.5 animate-pulse align-middle" />
               )}
-              {!inView && (
+              {!active && (
                 <span className="text-neutral-400">
                   Ask anything about your tools...
                 </span>
@@ -705,43 +716,58 @@ function AskDemo() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   MAIN SECTION
+   MAIN SECTION — Tabbed demo picker
    ═══════════════════════════════════════════════════════════════════════ */
 
 const DEMOS = [
   {
+    key: "stack",
+    icon: BarChart3,
     label: "Stack Intelligence",
     description:
       "See your AI nativeness score update in real time as tools are classified.",
-    Component: StackIntelligenceDemo,
   },
   {
+    key: "spend",
+    icon: TrendingUp,
     label: "Spend Tracker",
     description:
       "Track every dollar across your AI stack with renewal alerts and flags.",
-    Component: SpendTrackerDemo,
   },
   {
-    label: "Ask Your Workspace",
+    key: "ask",
+    icon: Search,
+    label: "Ask Workspace",
     description:
       "Semantic search across every research report your team has generated.",
-    Component: AskDemo,
   },
-];
+] as const;
+
+type DemoKey = (typeof DEMOS)[number]["key"];
 
 export function MarketingInteractiveDemos() {
   const headingRef = useRef(null);
   const headingInView = useInView(headingRef, { once: true, margin: "-40px" });
+  const [activeDemo, setActiveDemo] = useState<DemoKey>("stack");
+  const sectionRef = useRef(null);
+  const sectionInView = useInView(sectionRef, { once: true, margin: "-80px" });
+  const [hasBeenVisible, setHasBeenVisible] = useState(false);
+
+  useEffect(() => {
+    if (sectionInView && !hasBeenVisible) setHasBeenVisible(true);
+  }, [sectionInView, hasBeenVisible]);
+
+  const activeMeta = DEMOS.find((d) => d.key === activeDemo)!;
 
   return (
-    <section className="mb-24 md:mb-32">
+    <section ref={sectionRef} className="mb-24 md:mb-32">
       {/* Section heading */}
       <motion.div
         ref={headingRef}
         initial={{ opacity: 0, y: 16 }}
         animate={headingInView ? { opacity: 1, y: 0 } : {}}
         transition={{ duration: 0.45, ease: "easeOut" }}
-        className="text-center mb-16"
+        className="text-center mb-10"
       >
         <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-4">
           Interactive Demos
@@ -750,26 +776,60 @@ export function MarketingInteractiveDemos() {
           See It In Action
         </h2>
         <p className="font-mono text-sm text-neutral-500 max-w-lg mx-auto leading-relaxed">
-          Each feature auto-animates below. No clicks needed — just scroll and watch your AI tool stack come to life.
+          Click a feature to watch it come to life.
         </p>
       </motion.div>
 
-      {/* Demos stacked */}
-      <div className="space-y-16 max-w-xl mx-auto">
-        {DEMOS.map((demo) => (
-          <div key={demo.label}>
-            <div className="mb-4 flex items-center gap-2">
-              <div className="w-2 h-2 bg-black" />
-              <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">
-                {demo.label}
-              </span>
-            </div>
-            <p className="font-mono text-xs text-neutral-500 mb-4 max-w-md">
-              {demo.description}
-            </p>
-            <demo.Component />
-          </div>
-        ))}
+      {/* Tab pills */}
+      <div className="flex flex-wrap justify-center gap-3 mb-8 max-w-2xl mx-auto">
+        {DEMOS.map((demo) => {
+          const Icon = demo.icon;
+          const isActive = activeDemo === demo.key;
+          return (
+            <button
+              key={demo.key}
+              onClick={() => setActiveDemo(demo.key)}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 font-mono text-xs uppercase tracking-wide border transition-all ${
+                isActive
+                  ? "bg-black text-white border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                  : "bg-white text-neutral-600 border-black/20 hover:border-black hover:bg-neutral-50"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              {demo.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Active demo description */}
+      <div className="text-center mb-6">
+        <p className="font-mono text-xs text-neutral-500 max-w-md mx-auto">
+          {activeMeta.description}
+        </p>
+      </div>
+
+      {/* Demo window — single block, swaps content */}
+      <div className="max-w-xl mx-auto">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeDemo}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+          >
+            {activeDemo === "stack" && (
+              <StackIntelligenceDemo active={hasBeenVisible && activeDemo === "stack"} />
+            )}
+            {activeDemo === "spend" && (
+              <SpendTrackerDemo active={hasBeenVisible && activeDemo === "spend"} />
+            )}
+            {activeDemo === "ask" && (
+              <AskDemo active={hasBeenVisible && activeDemo === "ask"} />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );
