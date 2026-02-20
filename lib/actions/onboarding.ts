@@ -131,7 +131,7 @@ export async function completeOnboarding(input: {
 
     // Track referral signup if this is a new workspace creation
     if (created && refCode) {
-        trackReferralSignup(refCode).catch(() => {});
+        trackReferralSignup(refCode).catch((err) => console.warn("[onboarding] trackReferralSignup failed:", err));
     }
 
     // If already completed, still allow re-run (idempotent)
