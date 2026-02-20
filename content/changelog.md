@@ -6,6 +6,17 @@ All notable changes to Trackr are documented here.
 
 ## February 2026
 
+### 2026-02-20 — Referral Credits & Production Fix
+
+**Bug Fixes**
+- **Onboarding 500 error fixed** — A missing database migration was causing all new workspace creation to fail with a generic "An error occurred" message in production. Applied migration 0009 (adds `webhook_events`, `drip_emails`, `reports.is_public`, `tools.public_slug`, and workspace member unique index).
+- **ensureWorkspace reliability** — Rewrote workspace creation to use `INSERT...onConflictDoNothing` instead of `db.transaction()`. More reliable with Neon HTTP driver and handles race conditions at signup correctly.
+
+**New Features**
+- **Referral credits** — Referring a new user now awards 5 research credits to your account automatically. Credits appear on the billing page and carry over month to month.
+
+---
+
 ### 2026-02-20 — Reliability & Research Intelligence
 
 **New Features**
