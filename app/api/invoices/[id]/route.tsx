@@ -61,7 +61,7 @@ export async function GET(
             },
         });
     } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to generate PDF";
-        return new NextResponse(message, { status: 500 });
+        console.error("Invoice PDF error:", error instanceof Error ? error.message : error);
+        return new NextResponse("Failed to generate invoice", { status: 500 });
     }
 }

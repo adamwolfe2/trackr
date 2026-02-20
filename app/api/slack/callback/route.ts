@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
 import { workspaces } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -24,7 +24,14 @@ function verifyState(state: string): string | null {
         .digest("hex")
         .slice(0, 16);
 
-    if (signature !== expectedSignature) return null;
+    // Timing-safe comparison to prevent signature brute-forcing
+    try {
+        const sigBuf = Buffer.from(signature, "utf8");
+        const expectedBuf = Buffer.from(expectedSignature, "utf8");
+        if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) return null;
+    } catch {
+        return null;
+    }
 
     return workspaceId;
 }

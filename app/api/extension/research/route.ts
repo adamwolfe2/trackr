@@ -89,9 +89,9 @@ export async function POST(req: NextRequest) {
             { status: 200, headers }
         );
     } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "Unknown error";
+        console.error("Extension research error:", error instanceof Error ? error.message : error);
         return NextResponse.json(
-            { error: message },
+            { error: "Internal server error" },
             { status: 500, headers }
         );
     }

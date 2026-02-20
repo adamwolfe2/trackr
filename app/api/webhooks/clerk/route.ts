@@ -1,7 +1,7 @@
 import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
-import { ensureWorkspace } from '@/lib/actions/workspace'
+import { ensureWorkspace } from '@/lib/db/ensure-workspace'
 import { sendWelcomeEmail } from '@/lib/email/resend'
 
 export async function POST(req: Request) {

@@ -1,5 +1,10 @@
 import Stripe from 'stripe';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_mock_key_for_build", {
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+if (!stripeKey && process.env.NEXT_PHASE !== "phase-production-build") {
+    console.warn("STRIPE_SECRET_KEY is not set — Stripe operations will fail at runtime");
+}
+
+export const stripe = new Stripe(stripeKey || "sk_placeholder_build_only", {
     typescript: true,
 });

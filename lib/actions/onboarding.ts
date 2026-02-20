@@ -9,7 +9,7 @@ import { revalidatePath } from "next/cache";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { ensureWorkspace } from "@/lib/actions/workspace";
+import { ensureWorkspace } from "@/lib/db/ensure-workspace";
 
 /** Scrape company website and auto-generate a context description */
 export async function generateCompanyContext(websiteUrl: string): Promise<{ context: string; error?: string }> {

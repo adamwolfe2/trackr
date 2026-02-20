@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true });
     } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : "Unknown error";
+        console.error("Research API error:", error instanceof Error ? error.message : error);
 
         // Reset tool status so user can retry
         await db
@@ -116,6 +116,6 @@ export async function POST(req: NextRequest) {
             .set({ status: "failed" })
             .where(eq(tools.id, toolId));
 
-        return NextResponse.json({ error: message }, { status: 500 });
+        return NextResponse.json({ error: "Research failed. Please try again." }, { status: 500 });
     }
 }

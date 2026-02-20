@@ -8,7 +8,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
 import { performDeepResearch } from "@/lib/actions/research";
-import { ensureWorkspace } from "@/lib/actions/workspace";
+import { ensureWorkspace } from "@/lib/db/ensure-workspace";
 
 export async function getWorkspaceId(userId: string) {
     const member = await db.query.workspaceMembers.findFirst({
@@ -102,9 +102,15 @@ export async function deleteTool(toolId: string) {
     return { success: true };
 }
 
+const VALID_TOOL_STATUSES = ["queued", "researching", "active", "failed", "paused", "archived"] as const;
+
 export async function updateToolStatus(toolId: string, status: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
+
+    if (!VALID_TOOL_STATUSES.includes(status as typeof VALID_TOOL_STATUSES[number])) {
+        throw new Error("Invalid status");
+    }
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
