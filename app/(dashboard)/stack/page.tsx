@@ -9,10 +9,12 @@ export const metadata: Metadata = {
 };
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { softwareSpend, workspaceMembers, tools } from "@/lib/db/schema";
+import { softwareSpend, workspaceMembers, tools, subscriptions } from "@/lib/db/schema";
 import { eq, desc, and, isNotNull, sql } from "drizzle-orm";
 import { StackClient } from "./client";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
+import { PlanGate } from "@/components/billing/plan-gate";
+import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 
 export default async function StackPage() {
     const user = await currentUser();
@@ -23,6 +25,21 @@ export default async function StackPage() {
     });
 
     if (!member) redirect("/onboarding");
+
+    // Feature gate: spend tracking requires Team+
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, member.workspaceId),
+    });
+    const planData = getPlanLimits(subscription);
+    if (!hasFeature(planData, "spendTracking")) {
+        return (
+            <PlanGate
+                featureName="Software Spend Tracking"
+                description="Track your software stack, monitor costs, manage contracts, and get renewal alerts."
+                requiredPlan="Team"
+            />
+        );
+    }
 
     const [entries, scoredTools] = await Promise.all([
         db.query.softwareSpend.findMany({

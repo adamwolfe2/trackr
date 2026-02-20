@@ -4,9 +4,11 @@ import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { workspaceMembers, workspaces } from "@/lib/db/schema";
+import { workspaceMembers, workspaces, subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { ScorecardClient, type ScorecardRecipe } from "@/components/scorecard/scorecard-client";
+import { PlanGate } from "@/components/billing/plan-gate";
+import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 
 export const metadata: Metadata = {
     title: "Scorecard — Trackr",
@@ -23,6 +25,21 @@ export default async function ScorecardPage() {
 
     if (!member) {
         redirect("/onboarding");
+    }
+
+    // Feature gate: scorecard recipe requires Startup+
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, member.workspaceId),
+    });
+    const plan = getPlanLimits(subscription);
+    if (!hasFeature(plan, "scorecardRecipe")) {
+        return (
+            <PlanGate
+                featureName="Scorecard Recipe"
+                description="Create a custom evaluation framework with weighted dimensions tailored to your company's priorities."
+                requiredPlan="Startup"
+            />
+        );
     }
 
     const workspace = await db.query.workspaces.findFirst({

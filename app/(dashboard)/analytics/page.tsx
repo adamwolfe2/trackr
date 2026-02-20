@@ -7,12 +7,14 @@ export const metadata: Metadata = {
     title: "Analytics — Trackr",
     description: "Workspace usage analytics and research activity.",
 };
-import { tools, reports, researchJobs, workspaceMembers, painPoints } from "@/lib/db/schema";
+import { tools, reports, researchJobs, workspaceMembers, painPoints, subscriptions } from "@/lib/db/schema";
 import { eq, sql, desc, gte, inArray, and } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getWorkspaceId } from "@/lib/db/queries";
 import AnalyticsClient from "./client";
+import { PlanGate } from "@/components/billing/plan-gate";
+import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 
 export default async function AnalyticsPage() {
     const user = await currentUser();
@@ -20,6 +22,21 @@ export default async function AnalyticsPage() {
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) redirect("/onboarding");
+
+    // Feature gate: analytics requires Startup+
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspaceId),
+    });
+    const plan = getPlanLimits(subscription);
+    if (!hasFeature(plan, "analytics")) {
+        return (
+            <PlanGate
+                featureName="Analytics Dashboard"
+                description="Get insights into your tool evaluation pipeline, research activity, and team usage patterns."
+                requiredPlan="Startup"
+            />
+        );
+    }
 
     // ── All tools ───────────────────────────────────────────────────
     const allTools = await db.query.tools.findMany({

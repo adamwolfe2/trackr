@@ -4,12 +4,14 @@ import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { workspaceMembers, workspaces } from "@/lib/db/schema";
+import { workspaceMembers, workspaces, subscriptions } from "@/lib/db/schema";
 import { asc, eq } from "drizzle-orm";
-import { Shield, UserX, Building2 } from "lucide-react";
+import { Shield, UserX, Building2, Lock } from "lucide-react";
 import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext } from "@/lib/actions/workspace";
 import { ApiKeySection } from "@/components/workspace/api-key-section";
 import { SlackSection } from "@/components/workspace/slack-section";
+import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
+import Link from "next/link";
 
 export const metadata: Metadata = {
     title: "Workspace Settings — Trackr",
@@ -43,6 +45,14 @@ export default async function WorkspacePage() {
     });
 
     const isOwnerOrAdmin = currentMember.role === "owner" || currentMember.role === "admin";
+
+    // Plan check for feature gating
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, currentMember.workspaceId),
+    });
+    const plan = getPlanLimits(subscription);
+    const canUseSlack = hasFeature(plan, "slackIntegration");
+    const canUseChromeExtension = hasFeature(plan, "chromeExtension");
 
     const roleLabel = (role: string) => {
         if (role === "owner") return <span className="font-mono text-[10px] uppercase tracking-widest border border-black px-2 py-0.5 flex items-center gap-1"><Shield className="h-2.5 w-2.5" /> Owner</span>;
@@ -196,20 +206,54 @@ export default async function WorkspacePage() {
                 </div>
 
                 {/* Slack Integration */}
-                <SlackSection
-                    currentChannelId={workspace?.slackChannelId ?? null}
-                    currentEnabled={workspace?.slackEnabled ?? false}
-                    isOwnerOrAdmin={isOwnerOrAdmin}
-                    slackTeamName={workspace?.slackTeamName ?? null}
-                    isConnected={!!workspace?.slackBotToken}
-                />
+                {canUseSlack ? (
+                    <SlackSection
+                        currentChannelId={workspace?.slackChannelId ?? null}
+                        currentEnabled={workspace?.slackEnabled ?? false}
+                        isOwnerOrAdmin={isOwnerOrAdmin}
+                        slackTeamName={workspace?.slackTeamName ?? null}
+                        isConnected={!!workspace?.slackBotToken}
+                    />
+                ) : (
+                    <FeatureLockedSection
+                        title="Slack Integration"
+                        description="Get research notifications and use slash commands in Slack."
+                        requiredPlan="Team"
+                    />
+                )}
 
-                {/* API Key & Integrations */}
-                <ApiKeySection
-                    currentApiKey={workspace?.apiKey ?? null}
-                    isOwnerOrAdmin={isOwnerOrAdmin}
-                />
+                {/* API Key & Chrome Extension */}
+                {canUseChromeExtension ? (
+                    <ApiKeySection
+                        currentApiKey={workspace?.apiKey ?? null}
+                        isOwnerOrAdmin={isOwnerOrAdmin}
+                    />
+                ) : (
+                    <FeatureLockedSection
+                        title="Chrome Extension & API"
+                        description="Research tools directly from your browser with the Chrome extension."
+                        requiredPlan="Team"
+                    />
+                )}
             </div>
+        </div>
+    );
+}
+
+function FeatureLockedSection({ title, description, requiredPlan }: { title: string; description: string; requiredPlan: string }) {
+    return (
+        <div className="border border-neutral-300 bg-neutral-50 p-6">
+            <div className="flex items-center gap-3 mb-2">
+                <Lock className="h-4 w-4 text-neutral-400" />
+                <h2 className="font-mono text-xs uppercase tracking-widest text-neutral-500">{title}</h2>
+            </div>
+            <p className="font-mono text-xs text-neutral-400 mb-4">{description}</p>
+            <Link
+                href="/settings/billing"
+                className="inline-block border border-black bg-black text-white px-4 py-2 font-mono text-[10px] uppercase tracking-widest hover:bg-neutral-800 transition-colors"
+            >
+                Upgrade to {requiredPlan} →
+            </Link>
         </div>
     );
 }

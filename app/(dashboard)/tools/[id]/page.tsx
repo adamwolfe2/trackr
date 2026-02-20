@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { tools, reports, researchJobs, notes, workspaceMembers } from "@/lib/db/schema";
+import { tools, reports, researchJobs, notes, workspaceMembers, subscriptions } from "@/lib/db/schema";
 import { eq, desc, inArray } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ExternalLink, ChevronLeft } from "lucide-react";
@@ -12,6 +12,7 @@ import { ShareReportButton } from "@/components/tools/share-report-button";
 import { ToolDetailTabs } from "@/components/tools/tool-detail-tabs";
 import { clerkClient } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
+import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,13 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         where: eq(reports.toolId, id),
         orderBy: [desc(reports.createdAt)],
     });
+
+    // Plan check for feature gating
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, tool.workspaceId),
+    });
+    const plan = getPlanLimits(subscription);
+    const canExport = hasFeature(plan, "reportExport");
 
     const workspaceTools = await db.query.tools.findMany({
         where: eq(tools.workspaceId, tool.workspaceId),
@@ -195,16 +203,18 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
 
                 <div className="flex items-center gap-3 flex-shrink-0">
                     {report && <ShareReportButton reportId={report.id} />}
-                    <ExportButton
-                        toolName={tool.name}
-                        report={serializedReport ? {
-                            summary: serializedReport.summary,
-                            scorecardSnapshot: serializedReport.scorecardSnapshot ?? undefined,
-                            pros: serializedReport.pros ?? undefined,
-                            cons: serializedReport.cons ?? undefined,
-                            pricingTiers: serializedReport.pricingTiers,
-                        } : null}
-                    />
+                    {canExport && (
+                        <ExportButton
+                            toolName={tool.name}
+                            report={serializedReport ? {
+                                summary: serializedReport.summary,
+                                scorecardSnapshot: serializedReport.scorecardSnapshot ?? undefined,
+                                pros: serializedReport.pros ?? undefined,
+                                cons: serializedReport.cons ?? undefined,
+                                pricingTiers: serializedReport.pricingTiers,
+                            } : null}
+                        />
+                    )}
                     <ResearchButton
                         toolId={tool.id}
                         isResearching={isResearching}
