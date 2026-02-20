@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 import withBundleAnalyzer from "@next/bundle-analyzer";
+import { SECURITY_HEADERS, HSTS_HEADER } from "./lib/config/security-headers";
 
 const withAnalyzer = withBundleAnalyzer({
   enabled: process.env.ANALYZE === "true",
@@ -8,6 +9,13 @@ const withAnalyzer = withBundleAnalyzer({
 
 const nextConfig: NextConfig = {
   compress: true,
+  async headers() {
+    const headers = [
+      ...SECURITY_HEADERS,
+      ...(process.env.NODE_ENV === "production" ? [HSTS_HEADER] : []),
+    ];
+    return [{ source: "/(.*)", headers }];
+  },
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [

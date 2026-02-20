@@ -9,11 +9,20 @@ vi.mock("@/lib/actions/notifications", () => ({
     markNotificationsRead: vi.fn(),
 }));
 
+vi.mock("@/lib/middleware/rate-limit", () => ({
+    rateLimit: vi.fn(),
+    getRateLimitHeaders: vi.fn().mockReturnValue({}),
+}));
+
 import { currentUser } from "@clerk/nextjs/server";
 import { getNotifications, markNotificationsRead } from "@/lib/actions/notifications";
+import { rateLimit } from "@/lib/middleware/rate-limit";
 import { GET } from "../route";
 
 const MOCK_USER = { id: "user_1" };
+
+const RATE_LIMIT_OK = { success: true, limit: 60, remaining: 59, resetAt: Date.now() + 60000 };
+const RATE_LIMIT_EXCEEDED = { success: false, limit: 60, remaining: 0, resetAt: Date.now() + 60000 };
 
 const MOCK_NOTIFICATIONS = [
     {
@@ -39,6 +48,7 @@ const MOCK_NOTIFICATIONS = [
 describe("GET /api/notifications", () => {
     beforeEach(() => {
         vi.resetAllMocks();
+        (rateLimit as ReturnType<typeof vi.fn>).mockReturnValue(RATE_LIMIT_OK);
     });
 
     it("returns 401 when not authenticated", async () => {
@@ -47,6 +57,15 @@ describe("GET /api/notifications", () => {
         expect(res.status).toBe(401);
         const body = await res.json();
         expect(body.error).toBe("Unauthorized");
+    });
+
+    it("returns 429 when rate limit exceeded", async () => {
+        (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (rateLimit as ReturnType<typeof vi.fn>).mockReturnValue(RATE_LIMIT_EXCEEDED);
+        const res = await GET();
+        expect(res.status).toBe(429);
+        const body = await res.json();
+        expect(body.error).toBe("Too many requests");
     });
 
     it("returns 200 with notifications array for authenticated user", async () => {
@@ -90,14 +109,24 @@ describe("GET /api/notifications", () => {
 describe("POST /api/notifications/mark-all-read", () => {
     beforeEach(() => {
         vi.resetAllMocks();
+        (rateLimit as ReturnType<typeof vi.fn>).mockReturnValue(RATE_LIMIT_OK);
     });
 
     it("returns 401 when not authenticated", async () => {
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        // Import mark-all-read route dynamically to avoid top-level import issues
         const { POST } = await import("../mark-all-read/route");
         const res = await POST();
         expect(res.status).toBe(401);
+    });
+
+    it("returns 429 when rate limit exceeded", async () => {
+        (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (rateLimit as ReturnType<typeof vi.fn>).mockReturnValue(RATE_LIMIT_EXCEEDED);
+        const { POST } = await import("../mark-all-read/route");
+        const res = await POST();
+        expect(res.status).toBe(429);
+        const body = await res.json();
+        expect(body.error).toBe("Too many requests");
     });
 
     it("marks all unread notifications and returns count", async () => {
@@ -110,7 +139,7 @@ describe("POST /api/notifications/mark-all-read", () => {
         expect(res.status).toBe(200);
         const body = await res.json();
         expect(body.success).toBe(true);
-        expect(body.marked).toBe(2); // 2 notifications
+        expect(body.marked).toBe(2);
         expect(markNotificationsRead).toHaveBeenCalledWith(["job_1", "job_2"]);
     });
 
@@ -129,6 +158,7 @@ describe("POST /api/notifications/mark-all-read", () => {
 describe("PATCH /api/notifications/[id]/read", () => {
     beforeEach(() => {
         vi.resetAllMocks();
+        (rateLimit as ReturnType<typeof vi.fn>).mockReturnValue(RATE_LIMIT_OK);
     });
 
     it("returns 401 when not authenticated", async () => {
@@ -140,11 +170,32 @@ describe("PATCH /api/notifications/[id]/read", () => {
         expect(res.status).toBe(401);
     });
 
+    it("returns 429 when rate limit exceeded", async () => {
+        (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (rateLimit as ReturnType<typeof vi.fn>).mockReturnValue(RATE_LIMIT_EXCEEDED);
+        const { PATCH } = await import("../[id]/read/route");
+        const res = await PATCH(new Request("http://localhost"), {
+            params: Promise.resolve({ id: "job_1" }),
+        });
+        expect(res.status).toBe(429);
+        const body = await res.json();
+        expect(body.error).toBe("Too many requests");
+    });
+
     it("returns 400 for empty notification ID", async () => {
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         const { PATCH } = await import("../[id]/read/route");
         const res = await PATCH(new Request("http://localhost"), {
             params: Promise.resolve({ id: "" }),
+        });
+        expect(res.status).toBe(400);
+    });
+
+    it("returns 400 for notification ID exceeding max length", async () => {
+        (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        const { PATCH } = await import("../[id]/read/route");
+        const res = await PATCH(new Request("http://localhost"), {
+            params: Promise.resolve({ id: "a".repeat(201) }),
         });
         expect(res.status).toBe(400);
     });
