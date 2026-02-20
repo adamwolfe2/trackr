@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { TrackrLogo } from "@/components/common/trackr-logo";
 
 export function Header() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,9 +12,7 @@ export function Header() {
         <header className="fixed top-0 left-0 right-0 z-50 border-b border-black bg-white">
             <div className="container mx-auto px-4 h-14 flex items-center justify-between">
                 <Link href="/" className="flex items-center gap-2 font-serif text-lg font-medium">
-                    <div className="w-7 h-7 bg-black flex items-center justify-center text-white text-xs font-mono font-bold">
-                        T
-                    </div>
+                    <TrackrLogo size={24} />
                     Trackr
                 </Link>
                 <nav className="hidden md:flex items-center gap-8 font-mono text-xs uppercase tracking-widest">
@@ -47,10 +46,10 @@ export function Header() {
             {isMenuOpen && (
                 <div className="md:hidden bg-white border-b border-black">
                     <nav className="flex flex-col divide-y divide-black/10">
-                        <Link href="/#features" className="px-4 py-3 font-mono text-sm hover:bg-neutral-50" onClick={() => setIsMenuOpen(false)}>Features</Link>
-                        <Link href="/pricing" className="px-4 py-3 font-mono text-sm hover:bg-neutral-50" onClick={() => setIsMenuOpen(false)}>Pricing</Link>
-                        <Link href="/audit" className="px-4 py-3 font-mono text-sm hover:bg-neutral-50" onClick={() => setIsMenuOpen(false)}>Book Audit</Link>
-                        <Link href="/blog" className="px-4 py-3 font-mono text-sm hover:bg-neutral-50" onClick={() => setIsMenuOpen(false)}>Blog</Link>
+                        <Link href="/#features" className="px-4 py-3 font-mono text-sm hover:bg-neutral-100" onClick={() => setIsMenuOpen(false)}>Features</Link>
+                        <Link href="/pricing" className="px-4 py-3 font-mono text-sm hover:bg-neutral-100" onClick={() => setIsMenuOpen(false)}>Pricing</Link>
+                        <Link href="/audit" className="px-4 py-3 font-mono text-sm hover:bg-neutral-100" onClick={() => setIsMenuOpen(false)}>Book Audit</Link>
+                        <Link href="/blog" className="px-4 py-3 font-mono text-sm hover:bg-neutral-100" onClick={() => setIsMenuOpen(false)}>Blog</Link>
                         <div className="p-4 flex flex-col gap-2">
                             <Link href="/sign-in" onClick={() => setIsMenuOpen(false)} className="border border-black px-4 py-2.5 font-mono text-xs text-center hover:bg-neutral-100">
                                 Log in

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
 import { Newsreader, Geist_Mono } from "next/font/google";
 import { AnalyticsProvider } from "@/components/analytics-provider";
@@ -68,21 +67,14 @@ export default function RootLayout({
           <script src="https://cdn.idpixel.app/v1/idp-analytics-699619edfcc4a49a660c15bb.min.js" defer />
         </head>
         <body className={cn(newsreader.variable, geistMono.variable, "font-serif antialiased min-h-screen bg-background text-foreground selection:bg-black selection:text-white")}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem={false}
-            disableTransitionOnChange
-            forcedTheme="light"
-          >
-            <AnalyticsProvider>
+          <AnalyticsProvider>
               {children}
               <Toaster
                 position="bottom-right"
                 toastOptions={{
                   duration: 4000,
                   classNames: {
-                    toast: "font-mono text-sm border border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] rounded-none",
+                    toast: "font-mono text-sm border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-none",
                     success: "bg-white text-black border-black",
                     error: "bg-white text-red-600 border-red-600",
                     info: "bg-white text-black border-black",
@@ -90,7 +82,6 @@ export default function RootLayout({
                 }}
               />
             </AnalyticsProvider>
-          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

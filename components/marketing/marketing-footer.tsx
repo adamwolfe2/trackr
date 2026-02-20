@@ -34,14 +34,14 @@ export function MarketingFooter() {
                         <Link href="/about" className="text-neutral-600 hover:text-black hover:underline">About</Link>
                         <Link href="/blog" className="text-neutral-600 hover:text-black hover:underline">Blog</Link>
                         <Link href="/contact" className="text-neutral-600 hover:text-black hover:underline">Contact</Link>
-                        <span className="text-neutral-400 cursor-not-allowed">API (Coming Soon)</span>
+                        <span className="text-neutral-400 cursor-not-allowed pointer-events-none">API (Coming Soon)</span>
                     </div>
 
                     <div className="flex flex-col gap-4">
                         <span className="font-bold text-black uppercase tracking-wider">Resources</span>
-                        <span className="text-neutral-400 cursor-not-allowed">Docs (Coming Soon)</span>
-                        <span className="text-neutral-400 cursor-not-allowed">Changelog (Coming Soon)</span>
-                        <span className="text-neutral-400 cursor-not-allowed">Status (Coming Soon)</span>
+                        <span className="text-neutral-400 cursor-not-allowed pointer-events-none">Docs (Coming Soon)</span>
+                        <span className="text-neutral-400 cursor-not-allowed pointer-events-none">Changelog (Coming Soon)</span>
+                        <span className="text-neutral-400 cursor-not-allowed pointer-events-none">Status (Coming Soon)</span>
                     </div>
 
                 </div>

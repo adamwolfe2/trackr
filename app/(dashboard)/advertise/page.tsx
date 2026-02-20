@@ -94,7 +94,7 @@ export default async function AdvertisePage() {
                             </thead>
                             <tbody className="divide-y divide-neutral-100">
                                 {myAds.map((ad) => (
-                                    <tr key={ad.id} className="hover:bg-[#F8F8F5] transition-colors">
+                                    <tr key={ad.id} className="hover:bg-neutral-100 transition-colors">
                                         <td className="px-4 py-3 font-mono text-sm font-medium">{ad.tool.name}</td>
                                         <td className="px-4 py-3">
                                             <span className={`font-mono text-[10px] uppercase border px-2 py-0.5 ${ad.status === "active" ? "border-black bg-black text-white" : "border-neutral-300 text-neutral-400"}`}>

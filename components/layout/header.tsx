@@ -24,7 +24,7 @@ export function Header() {
 
             <button
                 onClick={openCommandPalette}
-                className="flex items-center gap-2 px-3 py-1.5 border border-neutral-300 hover:border-black transition-colors cursor-pointer bg-[#F8F8F5]"
+                className="flex items-center gap-2 px-3 py-1.5 border border-neutral-300 hover:border-black transition-colors cursor-pointer bg-white"
                 aria-label="Search"
             >
                 <Search className="h-4 w-4 text-neutral-400 md:h-3.5 md:w-3.5" />

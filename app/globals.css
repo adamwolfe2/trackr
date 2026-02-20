@@ -218,7 +218,7 @@
   width: 3px;
   height: 20px;
   background: #000000;
-  border-radius: 0 2px 2px 0;
+  border-radius: 0;
 }
 
 /* Keyframe Animations */

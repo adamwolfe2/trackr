@@ -170,7 +170,7 @@ export default async function DashboardPage() {
                     </div>
                     <div className="divide-y divide-neutral-100">
                         {quickActions.map((action, i) => (
-                            <Link key={i} href={action.href} className="flex items-center gap-3 px-5 py-3 hover:bg-[#F8F8F5] transition-colors group">
+                            <Link key={i} href={action.href} className="flex items-center gap-3 px-5 py-3 hover:bg-neutral-100 transition-colors group">
                                 <action.icon className="h-4 w-4 text-neutral-400 group-hover:text-black shrink-0" strokeWidth={1.5} />
                                 <span className="font-mono text-sm flex-1">{action.label}</span>
                                 <span className="font-mono text-[9px] border border-neutral-300 px-1.5 py-0.5 text-neutral-400 uppercase tracking-wide">{action.badge}</span>
@@ -251,7 +251,7 @@ export default async function DashboardPage() {
                         ) : (
                             <div className="divide-y divide-neutral-100">
                                 {recentTools.map(tool => (
-                                    <Link key={tool.id} href={`/tools/${tool.id}`} className="flex items-center justify-between py-3 hover:bg-[#F8F8F5] -mx-2 px-2 transition-colors">
+                                    <Link key={tool.id} href={`/tools/${tool.id}`} className="flex items-center justify-between py-3 hover:bg-neutral-100 -mx-2 px-2 transition-colors">
                                         <div className="flex items-center gap-3">
                                             <div className="h-7 w-7 border border-black flex items-center justify-center font-mono text-xs font-bold flex-shrink-0">
                                                 {tool.name.charAt(0)}
