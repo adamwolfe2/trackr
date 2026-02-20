@@ -31,22 +31,26 @@ export async function ensureWorkspace(userId: string, hints?: {
     const displayName = hints?.displayName || hints?.email?.split("@")[0] || "User";
     const slug = `ws-${userId.slice(0, 8).toLowerCase()}`;
 
-    // Use upsert-style insert to handle rare race between webhook + onboarding
-    // If slug already exists (another request won the race), look up and return instead
+    // Use transaction to atomically create workspace + membership
+    // Handles race between webhook + onboarding
     try {
-        const [newWorkspace] = await db.insert(workspaces).values({
-            name: `${displayName}'s Workspace`,
-            slug,
-            companyContext: hints?.email ? `Personal workspace for ${hints.email}` : null,
-        }).returning();
+        const result = await db.transaction(async (tx) => {
+            const [newWorkspace] = await tx.insert(workspaces).values({
+                name: `${displayName}'s Workspace`,
+                slug,
+                companyContext: hints?.email ? `Personal workspace for ${hints.email}` : null,
+            }).returning();
 
-        await db.insert(workspaceMembers).values({
-            userId,
-            workspaceId: newWorkspace.id,
-            role: "owner",
+            await tx.insert(workspaceMembers).values({
+                userId,
+                workspaceId: newWorkspace.id,
+                role: "owner",
+            });
+
+            return { workspaceId: newWorkspace.id, workspace: newWorkspace, created: true };
         });
 
-        return { workspaceId: newWorkspace.id, workspace: newWorkspace, created: true };
+        return result;
     } catch (err) {
         // Unique constraint on slug — another request won the race
         // Re-query and return existing workspace

@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { workspaces, workspaceMembers, subscriptions } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq, and, count } from "drizzle-orm";
-import { getWorkspaceId } from "./tools";
+import { getWorkspaceId } from "@/lib/db/queries";
 import { getPlanLimits } from "@/lib/config/subscriptions";
 
 export async function updateWorkspaceName(formData: FormData) {

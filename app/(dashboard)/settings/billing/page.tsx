@@ -162,6 +162,16 @@ export default async function BillingPage({
                 </div>
             )}
 
+            {subscription?.status === "past_due" && (
+                <div className="border-2 border-red-600 bg-red-50 p-4 font-mono text-sm text-red-800 space-y-1">
+                    <p className="font-semibold">Payment past due</p>
+                    <p>Your subscription payment failed. Your account has been downgraded to Free plan limits until payment is resolved. Please update your payment method to restore full access.</p>
+                    {subscription.stripeCustomerId && (
+                        <ManageSubscriptionButton workspaceId={workspaceId} />
+                    )}
+                </div>
+            )}
+
             {/* Plan Cards with monthly/annual toggle */}
             <BillingPlanCards
                 planCards={planCards}

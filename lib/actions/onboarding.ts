@@ -10,11 +10,37 @@ import { firecrawl } from "@/lib/services/firecrawl";
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { ensureWorkspace } from "@/lib/db/ensure-workspace";
+import { z } from "zod";
 
 /** Scrape company website and auto-generate a context description */
 export async function generateCompanyContext(websiteUrl: string): Promise<{ context: string; error?: string }> {
+    // Auth check — this triggers Firecrawl + GPT-4o-mini calls, must not be anonymous
+    const user = await currentUser();
+    if (!user) return { context: "", error: "Unauthorized" };
+
+    // Validate URL format
+    if (!websiteUrl || typeof websiteUrl !== "string" || websiteUrl.trim().length === 0) {
+        return { context: "", error: "Website URL is required" };
+    }
+    if (websiteUrl.length > 2000) {
+        return { context: "", error: "URL too long" };
+    }
+
     try {
         if (!websiteUrl.startsWith("http")) websiteUrl = `https://${websiteUrl}`;
+
+        // Block private/internal URLs
+        try {
+            const parsed = new URL(websiteUrl);
+            const hostname = parsed.hostname.toLowerCase();
+            if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "0.0.0.0" ||
+                hostname === "[::1]" || hostname.endsWith(".local") || hostname.endsWith(".internal") ||
+                hostname === "metadata.google.internal") {
+                return { context: "", error: "Invalid URL" };
+            }
+        } catch {
+            return { context: "", error: "Invalid URL format" };
+        }
 
         const scrape = await firecrawl.scrapeUrl(websiteUrl);
         const content = scrape.data?.markdown?.slice(0, 4000) ?? "";
@@ -40,13 +66,22 @@ Write only the description, no preamble or label.`,
     }
 }
 
-export async function completeOnboarding({
-    companyName,
-    companyContext,
-    selectedTools,
-    scorecardDimensions,
-    plan,
-}: {
+const OnboardingSchema = z.object({
+    companyName: z.string().min(1).max(200),
+    companyContext: z.string().max(5000).default(""),
+    selectedTools: z.array(z.object({
+        name: z.string().min(1).max(200),
+        url: z.string().max(2000).optional(),
+    })).max(50),
+    scorecardDimensions: z.array(z.object({
+        key: z.string().min(1).max(50),
+        label: z.string().min(1).max(100),
+        weight: z.number().min(0).max(100),
+    })).max(20),
+    plan: z.string().max(50).optional(),
+});
+
+export async function completeOnboarding(input: {
     companyName: string;
     companyContext: string;
     selectedTools: Array<{ name: string; url?: string }>;
@@ -55,6 +90,12 @@ export async function completeOnboarding({
 }) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
+
+    const parsed = OnboardingSchema.safeParse(input);
+    if (!parsed.success) {
+        throw new Error(`Invalid onboarding data: ${parsed.error.issues[0]?.message ?? "validation failed"}`);
+    }
+    const { companyName, companyContext, selectedTools, scorecardDimensions, plan } = parsed.data;
 
     // Ensure workspace exists — creates one if Clerk webhook was delayed/failed
     const { workspaceId, workspace: existingWorkspace } = await ensureWorkspace(user.id, {
@@ -106,8 +147,9 @@ export async function completeOnboarding({
     revalidatePath("/workspace");
     revalidatePath("/stack");
 
-    if (plan === "team" || plan === "agency") {
-        redirect(`/settings/billing?upgrade=${plan}`);
+    // Redirect to billing if user selected a paid plan during onboarding
+    if (plan && ["team", "startup", "enterprise"].includes(plan)) {
+        redirect("/settings/billing");
     }
     redirect("/tools");
 }

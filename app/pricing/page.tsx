@@ -1,73 +1,88 @@
-import { Check } from "lucide-react";
+import { Check, Minus } from "lucide-react";
 import Link from "next/link";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
+import { PLANS, PAYMENT_LINKS, type PlanSlug } from "@/lib/config/subscriptions";
 
 export const metadata: Metadata = {
     title: "Pricing — Trackr",
-    description: "Free for getting started. Team at $29/mo. Agency at $99/mo. No hidden fees.",
+    description: `Free to start. Team at $${PLANS.TEAM.price}/mo. Startup at $${PLANS.STARTUP.price}/mo. Enterprise at $${PLANS.ENTERPRISE.price}/mo.`,
     openGraph: {
         title: "Pricing — Trackr",
-        description: "Free for getting started. Team at $29/mo. Agency at $99/mo. No hidden fees.",
+        description: `Free to start. Team at $${PLANS.TEAM.price}/mo. Startup at $${PLANS.STARTUP.price}/mo. Enterprise at $${PLANS.ENTERPRISE.price}/mo.`,
         type: "website",
         url: "https://trytrackr.com/pricing",
     },
 };
 
-const plans = [
+function formatLimit(n: number): string {
+    return n === Infinity ? "Unlimited" : n.toString();
+}
+
+const planCards = [
     {
-        name: "Free",
-        price: "$0",
-        period: "/mo",
+        plan: PLANS.FREE,
         description: "Explore Trackr and evaluate your first tools.",
         features: [
-            "25 tools",
-            "5 research runs/month",
-            "1 workspace member",
-            "Kanban board",
-            "AI News Digest",
-            "Spend tracking",
+            `${formatLimit(PLANS.FREE.limits.tools)} tools`,
+            `${formatLimit(PLANS.FREE.limits.research)} research credits/mo`,
+            `${formatLimit(PLANS.FREE.limits.members)} member`,
+            "Basic reports",
+            "Limited tool comparison",
         ],
         cta: "Get started free",
         href: "/sign-up",
         highlight: false,
     },
     {
-        name: "Team",
-        price: "$29",
-        period: "/mo",
+        plan: PLANS.TEAM,
         description: "For ops teams that evaluate tools regularly and track software spend.",
         features: [
-            "Unlimited tools",
-            "50 research runs/month",
-            "10 workspace members",
-            "Ask Trackr AI",
-            "Tool comparison",
-            "Spend tracking + alerts",
-            "Priority support",
+            `${formatLimit(PLANS.TEAM.limits.tools)} tools`,
+            `${formatLimit(PLANS.TEAM.limits.research)} research credits/mo`,
+            `${formatLimit(PLANS.TEAM.limits.members)} members`,
+            "Slack integration",
+            "Chrome extension",
+            "Spend tracking + exports",
+            "Full tool comparison",
+            `Extra credits: $${PLANS.TEAM.extraCreditPrice}/each`,
         ],
         cta: "Start with Team",
         href: "/sign-up?plan=team",
         highlight: true,
     },
     {
-        name: "Agency",
-        price: "$99",
-        period: "/mo",
-        description: "For agencies researching tools across multiple client accounts.",
+        plan: PLANS.STARTUP,
+        description: "For growing teams that want AI intelligence and custom scoring.",
         features: [
-            "Unlimited tools",
-            "Unlimited research runs",
-            "Unlimited workspace members",
+            "Everything in Team",
+            `${formatLimit(PLANS.STARTUP.limits.research)} research credits/mo`,
+            `${formatLimit(PLANS.STARTUP.limits.members)} members`,
             "Ask Trackr AI",
-            "Tool comparison",
-            "Advertise system access",
-            "Priority support",
+            "Analytics dashboard",
+            "Scorecard recipe",
+            "Renewal alerts",
+            `Extra credits: $${PLANS.STARTUP.extraCreditPrice}/each`,
         ],
-        cta: "Start with Agency",
-        href: "/sign-up?plan=agency",
+        cta: "Start with Startup",
+        href: "/sign-up?plan=startup",
+        highlight: false,
+    },
+    {
+        plan: PLANS.ENTERPRISE,
+        description: "For large teams with unlimited needs and API access.",
+        features: [
+            "Everything in Startup",
+            `${formatLimit(PLANS.ENTERPRISE.limits.research)} research credits/mo`,
+            `${formatLimit(PLANS.ENTERPRISE.limits.members)} members`,
+            "API access",
+            "Dedicated success manager",
+            `Extra credits: $${PLANS.ENTERPRISE.extraCreditPrice}/each`,
+        ],
+        cta: "Start with Enterprise",
+        href: "/sign-up?plan=enterprise",
         highlight: false,
     },
 ];
@@ -78,16 +93,16 @@ const faqs = [
         a: "Yes. Cancel from the billing portal at any time. You retain access until the end of your billing period — no questions asked.",
     },
     {
-        q: "What counts as a research run?",
-        a: "Each time Trackr's agents research a tool — scraping the site, pulling reviews, running competitive analysis, and generating a scored report — that counts as one run.",
+        q: "What counts as a research credit?",
+        a: "Each time Trackr's agents research a tool — scraping the site, pulling reviews from G2/Reddit/Trustpilot, running competitive analysis, and generating a scored report — that counts as one credit.",
     },
     {
         q: "What if I hit the free plan limit?",
-        a: "You'll see an upgrade prompt when you try to add more than 25 tools or run more than 5 research jobs per month. Existing data stays intact.",
+        a: `You'll see an upgrade prompt when you try to add more than ${PLANS.FREE.limits.tools} tools or run more than ${PLANS.FREE.limits.research} research jobs per month. Existing data stays intact.`,
     },
     {
         q: "Do you offer annual billing?",
-        a: "Annual billing with a 2-month discount is coming soon. Email us to get on the early list.",
+        a: "Yes — annual billing saves you roughly 20%. You can toggle between monthly and annual on the billing page.",
     },
 ];
 
@@ -109,42 +124,49 @@ export default async function PricingPage() {
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-0 border border-black mb-24">
-                    {plans.map((plan, i) => (
+                <div className="grid md:grid-cols-4 gap-0 border border-black mb-24">
+                    {planCards.map((card, i) => (
                         <div
-                            key={plan.name}
-                            className={`p-8 flex flex-col ${i < plans.length - 1 ? "border-r border-black" : ""} ${plan.highlight ? "bg-black text-white" : "bg-white"}`}
+                            key={card.plan.slug}
+                            className={`p-8 flex flex-col ${i < planCards.length - 1 ? "border-r border-black" : ""} ${card.highlight ? "bg-black text-white" : "bg-white"}`}
                         >
-                            {plan.highlight && (
+                            {card.highlight && (
                                 <span className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-3 block">Most Popular</span>
                             )}
                             <div className="mb-1">
-                                <span className={`font-mono text-xs uppercase tracking-widest ${plan.highlight ? "text-neutral-400" : "text-neutral-500"}`}>{plan.name}</span>
+                                <span className={`font-mono text-xs uppercase tracking-widest ${card.highlight ? "text-neutral-400" : "text-neutral-500"}`}>{card.plan.name}</span>
                             </div>
-                            <div className="flex items-baseline gap-1 mb-2">
-                                <span className="text-5xl font-serif">{plan.price}</span>
-                                <span className={`font-mono text-sm ${plan.highlight ? "text-neutral-400" : "text-neutral-500"}`}>{plan.period}</span>
+                            <div className="flex items-baseline gap-1 mb-1">
+                                <span className="text-4xl font-serif">
+                                    {card.plan.price === 0 ? "$0" : `$${card.plan.price}`}
+                                </span>
+                                <span className={`font-mono text-sm ${card.highlight ? "text-neutral-400" : "text-neutral-500"}`}>/mo</span>
                             </div>
-                            <p className={`font-mono text-xs mb-8 leading-relaxed ${plan.highlight ? "text-neutral-300" : "text-neutral-500"}`}>
-                                {plan.description}
+                            {card.plan.annualPrice > 0 && (
+                                <span className={`font-mono text-xs mb-2 ${card.highlight ? "text-neutral-400" : "text-neutral-500"}`}>
+                                    or ${Math.round(card.plan.annualPrice / 12)}/mo billed annually
+                                </span>
+                            )}
+                            <p className={`font-mono text-xs mb-8 leading-relaxed ${card.highlight ? "text-neutral-300" : "text-neutral-500"}`}>
+                                {card.description}
                             </p>
                             <ul className="space-y-2.5 mb-10 flex-1">
-                                {plan.features.map((feature) => (
-                                    <li key={feature} className={`flex items-center gap-2 font-mono text-xs ${plan.highlight ? "text-neutral-200" : "text-neutral-700"}`}>
+                                {card.features.map((feature) => (
+                                    <li key={feature} className={`flex items-center gap-2 font-mono text-xs ${card.highlight ? "text-neutral-200" : "text-neutral-700"}`}>
                                         <Check className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={2.5} />
                                         {feature}
                                     </li>
                                 ))}
                             </ul>
                             <Link
-                                href={plan.href}
+                                href={user ? "/settings/billing" : card.href}
                                 className={`block text-center px-4 py-3 font-mono text-xs uppercase tracking-widest border transition-colors ${
-                                    plan.highlight
+                                    card.highlight
                                         ? "border-white text-white hover:bg-white hover:text-black"
                                         : "border-black text-black hover:bg-black hover:text-white"
                                 }`}
                             >
-                                {plan.cta}
+                                {user ? (card.plan.price === 0 ? "Current Plan" : "Upgrade") : card.cta}
                             </Link>
                         </div>
                     ))}

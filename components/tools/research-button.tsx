@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Loader2, Sparkles, RefreshCw } from "lucide-react";
-import { performDeepResearch } from "@/lib/actions/research";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface ResearchButtonProps {
     toolId: string;
@@ -14,17 +14,27 @@ interface ResearchButtonProps {
 
 export function ResearchButton({ toolId, isResearching, hasReport, isFailed }: ResearchButtonProps) {
     const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
 
     const handleResearch = async () => {
         setIsLoading(true);
-        const toastId = toast.loading("Starting research — scraping site...");
+        const toastId = toast.loading("Starting research...");
 
         try {
-            const result = await performDeepResearch(toolId);
-            if (!result.success) {
-                throw new Error(result.error ?? "Research failed");
+            const res = await fetch("/api/research/start", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ toolId }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({ error: "Research failed" }));
+                throw new Error(data.error ?? "Research failed");
             }
-            toast.success("Research complete. Report generated.", { id: toastId });
+
+            toast.success("Research started — this takes 1-2 minutes. The page will update automatically.", { id: toastId });
+            // Refresh the page data to show "researching" status
+            router.refresh();
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Research failed";
             toast.error(message, { id: toastId });

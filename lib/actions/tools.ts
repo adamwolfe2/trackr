@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { db } from "@/lib/db";
-import { tools, reports, researchJobs, notes, subscriptions } from "@/lib/db/schema";
+import { tools, reports, researchJobs, notes, subscriptions, ads, apiLogs } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { eq, and, count } from "drizzle-orm";
@@ -99,6 +99,8 @@ export async function deleteTool(toolId: string) {
 
     // Atomic deletion — all related records in a single transaction
     await db.transaction(async (tx) => {
+        await tx.delete(apiLogs).where(eq(apiLogs.toolId, toolId));
+        await tx.delete(ads).where(eq(ads.toolId, toolId));
         await tx.delete(notes).where(eq(notes.toolId, toolId));
         await tx.delete(reports).where(eq(reports.toolId, toolId));
         await tx.delete(researchJobs).where(eq(researchJobs.toolId, toolId));

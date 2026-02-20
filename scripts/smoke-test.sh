@@ -70,7 +70,7 @@ check "Dashboard redirects to sign-in (unauthed)" "$APP_URL/tools" "307"
 echo ""
 echo "[ API Endpoints ]"
 check_json "Search API responds" "$APP_URL/api/search" "POST" '{"query":"CRM"}'
-check_json "Research API validates input" "$APP_URL/api/research" "POST" '{"toolId":"not-a-uuid"}'
+check_json "Research API validates input" "$APP_URL/api/research/start" "POST" '{"toolId":"not-a-uuid"}'
 check_json "Chat API responds" "$APP_URL/api/chat" "POST" '{"messages":[{"role":"user","content":"What tools do I have?"}]}'
 
 echo ""

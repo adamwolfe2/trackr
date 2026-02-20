@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { tools, reports, workspaces, researchJobs, subscriptions } from "@/lib/db/schema";
-import { eq, sql, and, gte, ne } from "drizzle-orm";
+import { eq, sql, and, gte, ne, inArray, count } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { tavily } from "@/lib/services/tavily";
 import { openai } from "@ai-sdk/openai";
@@ -107,30 +107,27 @@ export async function performDeepResearch(toolId: string) {
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);
 
-        // Count completed research jobs for workspace tools this month
-        const workspaceToolIds = await db.query.tools.findMany({
-            where: eq(tools.workspaceId, tool.workspaceId),
-            columns: { id: true },
-        });
-        const toolIds = workspaceToolIds.map((t) => t.id);
+        // Count non-failed research jobs for this workspace's tools this month (single SQL query)
+        const workspaceToolSubquery = db
+            .select({ id: tools.id })
+            .from(tools)
+            .where(eq(tools.workspaceId, tool.workspaceId));
 
-        if (toolIds.length > 0) {
-            // Count all non-failed jobs (running + complete) this month — not just completed
-            const jobsThisMonth = await db.query.researchJobs.findMany({
-                where: and(
-                    gte(researchJobs.triggeredAt, startOfMonth),
-                    ne(researchJobs.status, "failed"),
-                ),
-                columns: { id: true, toolId: true },
-            }).then((jobs) => jobs.filter((j) => toolIds.includes(j.toolId)));
+        const [{ value: jobCount }] = await db
+            .select({ value: count() })
+            .from(researchJobs)
+            .where(and(
+                inArray(researchJobs.toolId, workspaceToolSubquery),
+                gte(researchJobs.triggeredAt, startOfMonth),
+                ne(researchJobs.status, "failed"),
+            ));
 
-            if (jobsThisMonth.length >= limits.limits.research) {
-                await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
-                return {
-                    success: false,
-                    error: `Monthly research limit reached (${limits.limits.research} runs on ${limits.name} plan). Upgrade to run more research this month.`,
-                };
-            }
+        if (jobCount >= limits.limits.research) {
+            await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+            return {
+                success: false,
+                error: `Monthly research limit reached (${limits.limits.research} runs on ${limits.name} plan). Upgrade to run more research this month.`,
+            };
         }
     }
 
@@ -505,8 +502,8 @@ INSTRUCTIONS:
 - Extract ALL integrations mentioned (Slack, Zapier, Salesforce, etc.).
 - For competitors, use their domain name (e.g. notion.so, linear.app).
 - Evaluate through the lens of the company's recipe above: what works for their specific business units, and flag any deal breakers prominently.
-- For sentimentConsensus: cross-reference ALL sources (reviews, trust sites, Reddit, Perplexity). Do sources agree? What's the confidence based on volume of data?
-- For marketIntel: extract company details from the about page, Perplexity analysis, and any other available sources. Use "Unknown" for fields you can't determine.
+- For sentimentConsensus: cross-reference ALL sources (reviews, trust sites, Reddit, competitor analyses). Do sources agree? What's the confidence based on volume of data?
+- For marketIntel: extract company details from the about page, market research, and any other available sources. Use "Unknown" for fields you can't determine.
             `.trim(),
         });
         logApiCall({
