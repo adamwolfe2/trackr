@@ -33,7 +33,7 @@ export default async function ReferralsPage() {
         <div className="space-y-6">
             <div>
                 <h1 className="font-serif text-3xl font-normal">Refer a Friend</h1>
-                <p className="font-mono text-sm text-neutral-500 mt-1">Invite others to Trackr and earn ad credits.</p>
+                <p className="font-mono text-sm text-neutral-500 mt-1">Invite others to Trackr and earn 5 research credits per signup.</p>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
@@ -56,7 +56,7 @@ export default async function ReferralsPage() {
                             </form>
                         )}
                         <p className="font-mono text-[10px] text-neutral-400 leading-relaxed">
-                            You get $10 in ad credits for every workspace that upgrades to Team.
+                            You earn 5 research credits for every new workspace that signs up using your link. Credits are added to your account automatically.
                         </p>
                     </div>
                 </div>

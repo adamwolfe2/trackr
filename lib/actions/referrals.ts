@@ -1,11 +1,13 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { referrals } from "@/lib/db/schema";
+import { referrals, subscriptions } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { getWorkspaceId } from "@/lib/db/queries";
 import { eq, sql } from "drizzle-orm";
+
+const REFERRAL_CREDITS = 5;
 
 export async function createReferralCode() {
     const user = await currentUser();
@@ -44,13 +46,28 @@ export async function trackReferralClick(code: string) {
     }
 }
 
-/** Increment signup count for a referral code (called during onboarding) */
+/** Increment signup count for a referral code and award research credits to the referrer */
 export async function trackReferralSignup(code: string) {
     if (!code || typeof code !== "string" || code.length > 20) return;
     try {
-        await db.update(referrals)
+        const [referral] = await db
+            .update(referrals)
             .set({ signups: sql`${referrals.signups} + 1` })
-            .where(eq(referrals.code, code.toUpperCase()));
+            .where(eq(referrals.code, code.toUpperCase()))
+            .returning({ referrerWorkspaceId: referrals.referrerWorkspaceId });
+
+        // Award REFERRAL_CREDITS research credits to the referrer's subscription.
+        // Uses a silent UPDATE — if the workspace has no subscription row (free tier),
+        // the update affects 0 rows and no error is thrown.
+        if (referral?.referrerWorkspaceId) {
+            await db
+                .update(subscriptions)
+                .set({
+                    creditBalance: sql`${subscriptions.creditBalance} + ${REFERRAL_CREDITS}`,
+                    updatedAt: new Date(),
+                })
+                .where(eq(subscriptions.workspaceId, referral.referrerWorkspaceId));
+        }
     } catch {
         // Non-critical
     }
