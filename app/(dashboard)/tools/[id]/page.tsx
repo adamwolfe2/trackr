@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { tools, reports, researchJobs, notes, workspaceMembers, subscriptions } from "@/lib/db/schema";
 import { eq, desc, inArray, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { ExternalLink, ChevronLeft } from "lucide-react";
+import { ExternalLink, ChevronLeft, GitCompare, RefreshCw, Share2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { ResearchStream } from "@/components/tools/research-stream";
@@ -305,6 +305,46 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                                         </div>
                                     );
                                 })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Next Steps */}
+                    {report && (
+                        <div className="border border-black p-4">
+                            <h3 className="font-mono text-xs uppercase tracking-widest mb-3">Next Steps</h3>
+                            <div className="space-y-2">
+                                <Link
+                                    href={`/compare?tools=${tool.id}`}
+                                    className="flex items-center gap-2.5 p-2.5 border border-neutral-200 hover:border-black transition-colors group"
+                                >
+                                    <GitCompare className="h-3.5 w-3.5 text-neutral-400 group-hover:text-black shrink-0" strokeWidth={1.5} />
+                                    <div className="flex-1 min-w-0">
+                                        <span className="font-mono text-xs block">Compare with another tool</span>
+                                        <span className="font-mono text-[10px] text-neutral-400">Side-by-side analysis</span>
+                                    </div>
+                                    <ArrowRight className="h-3 w-3 text-neutral-300 group-hover:text-black shrink-0" />
+                                </Link>
+                                <Link
+                                    href="/submit"
+                                    className="flex items-center gap-2.5 p-2.5 border border-neutral-200 hover:border-black transition-colors group"
+                                >
+                                    <Share2 className="h-3.5 w-3.5 text-neutral-400 group-hover:text-black shrink-0" strokeWidth={1.5} />
+                                    <div className="flex-1 min-w-0">
+                                        <span className="font-mono text-xs block">Research a competitor</span>
+                                        <span className="font-mono text-[10px] text-neutral-400">Submit their URL for analysis</span>
+                                    </div>
+                                    <ArrowRight className="h-3 w-3 text-neutral-300 group-hover:text-black shrink-0" />
+                                </Link>
+                                {!isResearching && (
+                                    <div className="flex items-center gap-2.5 p-2.5 border border-neutral-200 hover:border-black transition-colors group cursor-default">
+                                        <RefreshCw className="h-3.5 w-3.5 text-neutral-400 shrink-0" strokeWidth={1.5} />
+                                        <div className="flex-1 min-w-0">
+                                            <span className="font-mono text-xs block">Re-run research</span>
+                                            <span className="font-mono text-[10px] text-neutral-400">Use the button above to refresh data</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}

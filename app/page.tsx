@@ -18,6 +18,7 @@ import { MarketingIntegrations } from "@/components/marketing/marketing-integrat
 import { MarketingReportShowcase } from "@/components/marketing/marketing-report-showcase";
 import { MarketingInteractiveDemos } from "@/components/marketing/marketing-interactive-demos";
 import { MarketingEnterprise } from "@/components/marketing/marketing-enterprise";
+import { MarketingFaq } from "@/components/marketing/marketing-faq";
 
 export const metadata: Metadata = {
   title: "Trackr — AI Tool Research for Ops Teams",
@@ -71,6 +72,15 @@ const jsonLd = {
         "@id": "https://trytrackr.com/#organization",
       },
     },
+    {
+      "@type": "FAQPage",
+      mainEntity: [
+        { "@type": "Question", name: "How long does a research report take?", acceptedAnswer: { "@type": "Answer", text: "Under 2 minutes. Our research pipeline maps the tool's site, scrapes key pages, pulls reviews from G2, Capterra, TrustRadius, ProductHunt, Trustpilot, and Reddit, analyzes competitors, and synthesizes everything into a scored report." } },
+        { "@type": "Question", name: "How accurate are the research reports?", acceptedAnswer: { "@type": "Answer", text: "Reports are sourced from 25+ real data points — official sites, review platforms, Reddit threads, and competitive analysis. Every claim is grounded in real data, not hallucinated." } },
+        { "@type": "Question", name: "Is my data private?", acceptedAnswer: { "@type": "Answer", text: "Yes. Your workspace data is isolated and never shared between accounts. Research reports are private to your workspace unless you explicitly create a share link." } },
+        { "@type": "Question", name: "Can I try paid features before committing?", acceptedAnswer: { "@type": "Answer", text: "All paid plans include a 14-day free trial with full access. No credit card required to start. Cancel anytime during the trial." } },
+      ],
+    },
   ],
 };
 
@@ -98,6 +108,7 @@ export default async function Home() {
         <MarketingUseCases />
         <MarketingDiscovery />
         <MarketingEnterprise />
+        <MarketingFaq />
         <MarketingCTA />
         <MarketingFooter />
       </main>

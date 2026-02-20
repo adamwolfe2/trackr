@@ -4,12 +4,40 @@ import { useState, useEffect, useRef } from "react";
 import { Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+const RESEARCH_STEPS = [
+    { id: 1, label: "Mapping Site", pattern: /step 1/i },
+    { id: 2, label: "Scraping Pages", pattern: /step 2/i },
+    { id: 3, label: "Searching Reviews", pattern: /step 3/i },
+    { id: 4, label: "Trust & Reputation", pattern: /step 4/i },
+    { id: 5, label: "Reddit Deep Dive", pattern: /step 5/i },
+    { id: 6, label: "Competitive Intel", pattern: /step 6/i },
+    { id: 7, label: "AI Synthesis", pattern: /step 7/i },
+] as const;
+
+function detectCurrentStep(logs: { message: string }[]): number {
+    let step = 0;
+    for (const log of logs) {
+        for (const s of RESEARCH_STEPS) {
+            if (s.pattern.test(log.message) && s.id > step) step = s.id;
+        }
+    }
+    return step;
+}
+
+function formatElapsed(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m > 0 ? `${m}:${s.toString().padStart(2, "0")}` : `${s}s`;
+}
+
 export function ResearchStream({ toolId }: { toolId: string }) {
     const [logs, setLogs] = useState<{ message: string, timestamp: string }[]>([]);
     const [status, setStatus] = useState("initializing");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [elapsed, setElapsed] = useState(0);
     const router = useRouter();
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
         const fetchLogs = async () => {
@@ -28,6 +56,7 @@ export function ResearchStream({ toolId }: { toolId: string }) {
 
                 if (data.status === "active" || data.status === "failed") {
                     if (intervalRef.current) clearInterval(intervalRef.current);
+                    if (timerRef.current) clearInterval(timerRef.current);
                     if (data.status === "active") router.refresh();
                 }
             } catch {
@@ -39,8 +68,12 @@ export function ResearchStream({ toolId }: { toolId: string }) {
         fetchLogs();
         intervalRef.current = setInterval(fetchLogs, 2500);
 
+        // Elapsed timer
+        timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
+
         return () => {
             if (intervalRef.current) clearInterval(intervalRef.current);
+            if (timerRef.current) clearInterval(timerRef.current);
         };
     }, [toolId, router]);
 
@@ -52,29 +85,69 @@ export function ResearchStream({ toolId }: { toolId: string }) {
 
     if (logs.length === 0 && status !== "researching") return null;
 
+    const currentStep = detectCurrentStep(logs);
+    const isDone = status === "active";
+    const isFailed = status === "failed";
+
     const statusLabel =
         status === "researching" ? "RUNNING" :
-        status === "active" ? "COMPLETE" :
-        status === "failed" ? "FAILED" :
+        isDone ? "COMPLETE" :
+        isFailed ? "FAILED" :
         status.toUpperCase();
 
     return (
         <div className="border border-black">
             {/* Header */}
             <div className="border-b border-black px-5 py-3 flex items-center justify-between">
-                <span className="font-mono text-xs uppercase tracking-widest font-bold">Research Agent Logs</span>
+                <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs uppercase tracking-widest font-bold">Research Agent</span>
+                    {status === "researching" && (
+                        <span className="font-mono text-xs text-neutral-400">{formatElapsed(elapsed)}</span>
+                    )}
+                </div>
                 <span className={`font-mono text-xs uppercase tracking-widest border border-black px-2 py-0.5 ${
                     status === "researching" ? "animate-pulse" :
-                    status === "failed" ? "border-red-600 text-red-600" :
-                    status === "active" ? "bg-black text-white" :
+                    isFailed ? "border-red-600 text-red-600" :
+                    isDone ? "bg-black text-white" :
                     ""
                 }`}>
                     {statusLabel}
                 </span>
             </div>
 
+            {/* Step Progress Bar */}
+            <div className="border-b border-black/10 px-5 py-3">
+                <div className="flex items-center gap-1">
+                    {RESEARCH_STEPS.map((step) => {
+                        const isComplete = isDone || step.id < currentStep;
+                        const isActive = !isDone && !isFailed && step.id === currentStep;
+                        return (
+                            <div key={step.id} className="flex-1 flex flex-col items-center gap-1.5">
+                                <div className={`h-1.5 w-full transition-all duration-500 ${
+                                    isComplete ? "bg-black" :
+                                    isActive ? "bg-black/40 animate-pulse" :
+                                    "bg-neutral-200"
+                                }`} />
+                                <span className={`font-mono text-[9px] uppercase tracking-wide hidden sm:block ${
+                                    isComplete ? "text-black font-medium" :
+                                    isActive ? "text-black" :
+                                    "text-neutral-300"
+                                }`}>
+                                    {step.label}
+                                </span>
+                            </div>
+                        );
+                    })}
+                </div>
+                {status === "researching" && currentStep > 0 && (
+                    <p className="font-mono text-[10px] text-neutral-400 mt-2 text-center">
+                        Step {currentStep} of 7 · Typically completes in under 2 minutes
+                    </p>
+                )}
+            </div>
+
             {/* Log Area */}
-            <div className="h-48 overflow-y-auto p-4 font-mono text-xs space-y-1.5">
+            <div className="h-40 overflow-y-auto p-4 font-mono text-xs space-y-1.5">
                 {logs.map((log, i) => (
                     <div key={i} className="flex gap-2">
                         <span className="text-neutral-400 shrink-0">
@@ -93,14 +166,14 @@ export function ResearchStream({ toolId }: { toolId: string }) {
                     </div>
                 )}
 
-                {status === "active" && (
+                {isDone && (
                     <div className="flex items-center gap-2 text-black font-medium pt-1 border-t border-neutral-200 mt-2">
                         <CheckCircle2 className="h-3 w-3" />
-                        <span>Research complete. Report generated.</span>
+                        <span>Research complete in {formatElapsed(elapsed)}. Report generated.</span>
                     </div>
                 )}
 
-                {status === "failed" && (
+                {isFailed && (
                     <div className="pt-1 border-t border-neutral-200 mt-2 space-y-2">
                         <div className="flex items-center gap-2 text-red-600 font-medium">
                             <AlertTriangle className="h-3 w-3 shrink-0" />

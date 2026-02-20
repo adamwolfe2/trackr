@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { ContactForm } from "@/components/marketing/contact-form";
 import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { ArrowRight, Mail } from "lucide-react";
@@ -41,11 +42,15 @@ export default async function ContactPage() {
                     </p>
                 </div>
 
+                <div className="max-w-2xl mb-12">
+                    <ContactForm />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-0 border border-black max-w-2xl mb-16">
                     <div className="p-8 border-b md:border-b-0 md:border-r border-black">
                         <div className="flex items-center gap-3 mb-3">
                             <Mail className="w-4 h-4" strokeWidth={1.5} />
-                            <span className="font-mono text-xs uppercase tracking-widest">General Inquiries</span>
+                            <span className="font-mono text-xs uppercase tracking-widest">Email Directly</span>
                         </div>
                         <a
                             href="mailto:hello@trytrackr.com"
