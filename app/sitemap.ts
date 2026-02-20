@@ -1,7 +1,10 @@
 import { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/blog';
+import { db } from '@/lib/db';
+import { reports } from '@/lib/db/schema';
+import { isNotNull } from 'drizzle-orm';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://trytrackr.com';
     const posts = getAllPosts();
 
@@ -11,6 +14,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
         changeFrequency: 'weekly' as const,
         priority: 0.7,
     }));
+
+    // Shared reports with public tokens
+    let sharedReports: { url: string; lastModified: Date; changeFrequency: 'weekly'; priority: number }[] = [];
+    try {
+        const publicReports = await db.query.reports.findMany({
+            where: isNotNull(reports.shareToken),
+            columns: { shareToken: true, createdAt: true },
+        });
+        sharedReports = publicReports.map((r) => ({
+            url: `${baseUrl}/share/${r.shareToken}`,
+            lastModified: new Date(r.createdAt),
+            changeFrequency: 'weekly' as const,
+            priority: 0.6,
+        }));
+    } catch {
+        // Non-critical — sitemap still works without shared reports
+    }
 
     return [
         {
@@ -50,5 +70,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
             priority: 0.8,
         },
         ...blogPosts,
+        ...sharedReports,
     ];
 }

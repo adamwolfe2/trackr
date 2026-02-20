@@ -106,11 +106,62 @@ const faqs = [
     },
 ];
 
+function PricingJsonLd() {
+    const offers = planCards
+        .filter((c) => c.plan.price > 0)
+        .map((c) => ({
+            "@type": "Offer",
+            name: c.plan.name,
+            price: c.plan.price,
+            priceCurrency: "USD",
+            description: c.description,
+            url: `https://trytrackr.com${c.href}`,
+        }));
+
+    const softwareApp = {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Trackr",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web",
+        url: "https://trytrackr.com",
+        description: "AI-powered software intelligence platform for evaluating SaaS tools.",
+        offers,
+    };
+
+    const faqPage = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map((faq) => ({
+            "@type": "Question",
+            name: faq.q,
+            acceptedAnswer: {
+                "@type": "Answer",
+                text: faq.a,
+            },
+        })),
+    };
+
+    return (
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApp) }}
+            />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPage) }}
+            />
+        </>
+    );
+}
+
 export default async function PricingPage() {
     const user = await currentUser();
 
     return (
         <main className="flex-grow w-full max-w-6xl mx-auto px-6">
+            <PricingJsonLd />
             <MarketingNavigation isLoggedIn={!!user} />
 
             <section className="py-24 border-t border-black/10">

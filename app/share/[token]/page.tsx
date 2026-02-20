@@ -73,8 +73,40 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
         ? Object.values(scorecardSnapshot).reduce((s, v) => s + v.score, 0) / Object.keys(scorecardSnapshot).length
         : 0;
 
+    const reviewJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Review",
+        itemReviewed: {
+            "@type": "SoftwareApplication",
+            name: tool.name,
+            ...(tool.websiteUrl ? { url: tool.websiteUrl } : {}),
+            applicationCategory: tool.category?.join(", ") || "BusinessApplication",
+        },
+        reviewRating: {
+            "@type": "Rating",
+            ratingValue: avgScore.toFixed(1),
+            bestRating: "10",
+            worstRating: "0",
+        },
+        author: {
+            "@type": "Organization",
+            name: "Trackr",
+            url: "https://trytrackr.com",
+        },
+        reviewBody: report.summary ?? undefined,
+        publisher: {
+            "@type": "Organization",
+            name: "Trackr",
+            url: "https://trytrackr.com",
+        },
+    };
+
     return (
         <div className="min-h-screen bg-[#F3F3EF]">
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }}
+            />
             {/* Header */}
             <div className="border-b border-black bg-[#F3F3EF] px-6 py-4 flex items-center justify-between">
                 <a href="https://trytrackr.com" className="flex items-center gap-2 font-serif text-xl font-medium hover:opacity-70">
