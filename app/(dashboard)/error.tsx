@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 
 export default function DashboardError({
     error,
@@ -11,9 +12,7 @@ export default function DashboardError({
     reset: () => void;
 }) {
     useEffect(() => {
-        if (process.env.NODE_ENV === "production") {
-            // Error reporting service would go here
-        }
+        Sentry.captureException(error);
     }, [error]);
 
     return (

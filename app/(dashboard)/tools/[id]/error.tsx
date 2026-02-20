@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCw, ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 
 export default function ToolDetailError({
     error,
@@ -12,7 +13,7 @@ export default function ToolDetailError({
     reset: () => void;
 }) {
     useEffect(() => {
-        console.error(error);
+        Sentry.captureException(error);
     }, [error]);
 
     return (
@@ -23,7 +24,9 @@ export default function ToolDetailError({
             <div className="space-y-2">
                 <h2 className="font-serif text-2xl font-normal">Something went wrong</h2>
                 <p className="font-mono text-sm text-neutral-500 max-w-sm">
-                    {error.message || "Failed to load this tool's details. Please try again."}
+                    {error.digest
+                        ? `Failed to load this tool. Ref: ${error.digest}`
+                        : "Failed to load this tool's details. Please try again."}
                 </p>
             </div>
             <div className="flex gap-3">
