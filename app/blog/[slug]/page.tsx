@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPostBySlug, getAllSlugs, markdownToHtml } from "@/lib/blog";
+import { getPostBySlug, getAllSlugs, getAllPosts, markdownToHtml } from "@/lib/blog";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
@@ -131,6 +131,38 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                             className="blog-content"
                             dangerouslySetInnerHTML={{ __html: htmlContent }}
                         />
+
+                        {/* Related Posts */}
+                        {(() => {
+                            const allPosts = getAllPosts();
+                            const related = allPosts
+                                .filter(p => p.slug !== slug)
+                                .filter(p => p.tags.some(t => post.tags.includes(t)))
+                                .slice(0, 2);
+                            const fallback = related.length < 2
+                                ? allPosts.filter(p => p.slug !== slug && !related.find(r => r.slug === p.slug)).slice(0, 2 - related.length)
+                                : [];
+                            const posts = [...related, ...fallback];
+                            if (posts.length === 0) return null;
+                            return (
+                                <div className="mt-16 pt-8 border-t border-black/10">
+                                    <h3 className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-6">Related Articles</h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {posts.map(p => (
+                                            <Link
+                                                key={p.slug}
+                                                href={`/blog/${p.slug}`}
+                                                className="group border border-black p-5 hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] transition-all"
+                                            >
+                                                <time className="font-mono text-[10px] text-neutral-400">{new Date(p.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</time>
+                                                <h4 className="font-serif text-base mt-1 group-hover:underline underline-offset-2 leading-snug">{p.title}</h4>
+                                                <p className="font-mono text-xs text-neutral-500 mt-2 line-clamp-2">{p.description}</p>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        })()}
 
                         {/* CTA Banner */}
                         <div className="mt-16 pt-8 border-t border-black/10">
