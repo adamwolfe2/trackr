@@ -24,13 +24,22 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
         columns: { name: true },
     });
 
+    const toolName = tool?.name ?? "Tool";
+    const desc = report.summary?.slice(0, 160) ?? "AI-powered software research report by Trackr.";
     return {
-        title: `${tool?.name ?? "Tool"} Research Report — Trackr`,
-        description: report.summary?.slice(0, 160) ?? "AI-powered software research report by Trackr.",
+        title: `${toolName} Research Report — Trackr`,
+        description: desc,
         openGraph: {
-            title: `${tool?.name ?? "Tool"} — Research Report`,
-            description: report.summary?.slice(0, 160) ?? "AI-powered software research report by Trackr.",
+            title: `${toolName} — Research Report`,
+            description: desc,
             type: "article",
+            images: [{ url: "/og.png", width: 1456, height: 816, alt: `${toolName} Research Report` }],
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: `${toolName} — Research Report`,
+            description: desc,
+            images: ["/og.png"],
         },
     };
 }

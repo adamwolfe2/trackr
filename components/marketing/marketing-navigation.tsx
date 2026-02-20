@@ -1,15 +1,24 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 
 export function MarketingNavigation({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
+
+    useEffect(() => {
+        const onScroll = () => setScrolled(window.scrollY > 20);
+        window.addEventListener("scroll", onScroll, { passive: true });
+        return () => window.removeEventListener("scroll", onScroll);
+    }, []);
 
     return (
-        <header className="w-full flex items-center justify-between py-8 relative z-50">
+        <header className={`w-full flex items-center justify-between py-6 sticky top-0 z-50 transition-all duration-200 -mx-4 sm:-mx-6 px-4 sm:px-6 ${
+            scrolled ? "bg-[#F3F3EF]/90 backdrop-blur-md border-b border-black/5" : ""
+        }`}>
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 z-50 relative">
                 <TrackrLogo size={28} />

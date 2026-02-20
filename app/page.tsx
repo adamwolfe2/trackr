@@ -28,6 +28,13 @@ export const metadata: Metadata = {
     description: "Research agents evaluate any software tool in under 2 minutes. Scored reports. Shared team database. Always up to date.",
     type: "website",
     url: "https://trytrackr.com",
+    images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr — AI Tool Research for Ops Teams" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Trackr — AI Tool Research for Ops Teams",
+    description: "Research agents evaluate any software tool in under 2 minutes. Scored reports. Shared team database.",
+    images: ["/og.png"],
   },
 };
 
