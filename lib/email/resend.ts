@@ -2,6 +2,12 @@ import { Resend } from "resend";
 
 const FROM = "Trackr <noreply@trytrackr.com>";
 
+function escapeHtml(text: string): string {
+    return text.replace(/[&<>"']/g, (ch) =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch] ?? ch
+    );
+}
+
 function getResend() {
     return new Resend(process.env.RESEND_API_KEY!);
 }
@@ -32,7 +38,7 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
         subject: "Welcome to Trackr",
         html: emailWrapper(`
             <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
-                Welcome, ${firstName}.
+                Welcome, ${escapeHtml(firstName)}.
             </h1>
             <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
                 Trackr is ready. Here's how to get the most out of it in the next 10 minutes:
@@ -55,18 +61,18 @@ export async function sendInviteEmail(
 ) {
     if (!process.env.RESEND_API_KEY) return;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
-    const invitedBy = inviterName ? ` by ${inviterName}` : "";
+    const invitedBy = inviterName ? ` by ${escapeHtml(inviterName)}` : "";
     await getResend().emails.send({
         from: FROM,
         to,
-        subject: `You've been invited to ${workspaceName} on Trackr`,
+        subject: `You've been invited to ${escapeHtml(workspaceName)} on Trackr`,
         html: emailWrapper(`
             <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Workspace Invitation</p>
             <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
-                Join ${workspaceName}
+                Join ${escapeHtml(workspaceName)}
             </h1>
             <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 8px;">
-                You've been invited${invitedBy} to collaborate on <strong>${workspaceName}</strong>'s software research workspace.
+                You've been invited${invitedBy} to collaborate on <strong>${escapeHtml(workspaceName)}</strong>'s software research workspace.
             </p>
             <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
                 Trackr helps teams evaluate SaaS tools with AI-powered research, scoring, and spend tracking.
@@ -87,10 +93,10 @@ export async function sendResearchCompleteEmail(
     await getResend().emails.send({
         from: FROM,
         to,
-        subject: `Research complete: ${toolName} (${score.toFixed(1)}/10)`,
+        subject: `Research complete: ${escapeHtml(toolName)} (${score.toFixed(1)}/10)`,
         html: emailWrapper(`
             <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Research Complete</p>
-            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 8px;">${toolName}</h1>
+            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 8px;">${escapeHtml(toolName)}</h1>
             <div style="font-size: 40px; font-family: Georgia, 'Newsreader', serif; margin: 16px 0;">${score.toFixed(1)}<span style="font-size: 18px; color: #999;">/10</span></div>
             <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
                 Your research report is ready. Open it to see the full scorecard, pros/cons, competitor analysis, and pricing breakdown.
@@ -111,12 +117,12 @@ export async function sendResearchFailedEmail(
     await getResend().emails.send({
         from: FROM,
         to,
-        subject: `Research failed: ${toolName}`,
+        subject: `Research failed: ${escapeHtml(toolName)}`,
         html: emailWrapper(`
             <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Research Failed</p>
-            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">${toolName}</h1>
+            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">${escapeHtml(toolName)}</h1>
             <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 8px;">Something went wrong during research:</p>
-            <p style="font-size: 12px; color: #C0392B; background: #fff; padding: 8px 12px; margin: 0 0 24px; border: 1px solid #C0392B;">${errorMessage}</p>
+            <p style="font-size: 12px; color: #C0392B; background: #fff; padding: 8px 12px; margin: 0 0 24px; border: 1px solid #C0392B;">${escapeHtml(errorMessage)}</p>
             ${emailButton(`${appUrl}/tools/${toolId}`, "Retry Research →")}
         `),
     });
@@ -135,7 +141,7 @@ export async function sendRenewalAlertEmail(
             ? `$${parseFloat(t.monthlyCost).toLocaleString("en-US", { minimumFractionDigits: 2 })}/mo`
             : "—";
         return `<tr>
-            <td style="padding: 8px; font-size: 13px; border-bottom: 1px solid #D0D0CC;">${t.name}</td>
+            <td style="padding: 8px; font-size: 13px; border-bottom: 1px solid #D0D0CC;">${escapeHtml(t.name)}</td>
             <td style="padding: 8px; font-size: 13px; text-align: right; border-bottom: 1px solid #D0D0CC;">${date}</td>
             <td style="padding: 8px; font-size: 13px; text-align: right; border-bottom: 1px solid #D0D0CC;">${cost}</td>
         </tr>`;

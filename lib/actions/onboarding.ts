@@ -42,9 +42,10 @@ export async function generateCompanyContext(websiteUrl: string): Promise<{ cont
         }
 
         const scrape = await firecrawl.scrapeUrl(websiteUrl);
+        if (!scrape.success) return { context: "", error: "Could not scrape website" };
         const content = scrape.data?.markdown?.slice(0, 4000) ?? "";
 
-        if (!content) return { context: "", error: "Could not scrape website" };
+        if (!content) return { context: "", error: "No readable content found on website" };
 
         const { text } = await generateText({
             model: openai("gpt-4o-mini"),
