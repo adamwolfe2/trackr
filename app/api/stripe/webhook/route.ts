@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/services/stripe";
 import { db } from "@/lib/db";
-import { subscriptions, ads, workspaceMembers } from "@/lib/db/schema";
+import { subscriptions, ads, workspaceMembers, webhookEvents } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 import { clerkClient } from "@clerk/nextjs/server";
-import { sendTrialEndingEmail } from "@/lib/email/resend";
+import { sendTrialEndingEmail, cancelDripForUser } from "@/lib/email/resend";
 import { getPlanLimits } from "@/lib/config/subscriptions";
 
 export async function POST(req: NextRequest) {
@@ -29,9 +29,19 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
-    // Stripe guarantees event IDs are unique — use as idempotency key
+    // Idempotency: skip if already processed
     const eventId = event.id;
+    const alreadyProcessed = await db.query.webhookEvents.findFirst({
+        where: and(
+            eq(webhookEvents.source, 'stripe'),
+            eq(webhookEvents.eventId, eventId),
+        ),
+    });
+    if (alreadyProcessed) {
+        return NextResponse.json({ received: true });
+    }
 
+    let processingError: string | undefined;
     try {
         switch (event.type) {
             case "checkout.session.completed": {
@@ -63,7 +73,21 @@ export async function POST(req: NextRequest) {
             }
         }
     } catch (err) {
-        console.error(`Stripe webhook error [${event.type}]:`, err instanceof Error ? err.message : err);
+        processingError = err instanceof Error ? err.message : String(err);
+        console.error(`Stripe webhook error [${event.type}]:`, processingError);
+    }
+
+    // Audit log: record event regardless of success/failure for debugging
+    await db.insert(webhookEvents)
+        .values({
+            source: 'stripe',
+            eventId,
+            eventType: event.type,
+            error: processingError ?? null,
+        })
+        .onConflictDoNothing();
+
+    if (processingError) {
         return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
     }
 
@@ -181,6 +205,24 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
             updatedAt: new Date(),
         })
         .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));
+
+    // Cancel drip emails for the workspace owner on upgrade to paid plan
+    if (sub.status === 'active' && existing.status !== 'active') {
+        const owner = await db.query.workspaceMembers.findFirst({
+            where: and(
+                eq(workspaceMembers.workspaceId, existing.workspaceId),
+                eq(workspaceMembers.role, 'owner'),
+            ),
+        });
+        if (owner) {
+            try {
+                const clerk = await clerkClient();
+                const clerkUser = await clerk.users.getUser(owner.userId);
+                const email = clerkUser.emailAddresses[0]?.emailAddress;
+                if (email) cancelDripForUser(email).catch(() => {});
+            } catch { /* non-critical */ }
+        }
+    }
 }
 
 async function handleSubscriptionDeleted(sub: Stripe.Subscription) {

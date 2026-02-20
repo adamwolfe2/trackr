@@ -4,8 +4,24 @@ import { WebhookEvent } from '@clerk/nextjs/server'
 import { ensureWorkspace } from '@/lib/db/ensure-workspace'
 import { sendWelcomeEmail, scheduleDripSequence } from '@/lib/email/resend'
 import { db } from '@/lib/db'
-import { pendingInvitations, workspaceMembers, workspaces } from '@/lib/db/schema'
+import { pendingInvitations, workspaceMembers, workspaces, subscriptions, webhookEvents } from '@/lib/db/schema'
 import { and, eq, gt } from 'drizzle-orm'
+
+async function markProcessed(eventId: string, eventType: string, error?: string) {
+    await db.insert(webhookEvents)
+        .values({ source: 'clerk', eventId, eventType, error: error ?? null })
+        .onConflictDoNothing();
+}
+
+async function isAlreadyProcessed(eventId: string): Promise<boolean> {
+    const existing = await db.query.webhookEvents.findFirst({
+        where: and(
+            eq(webhookEvents.source, 'clerk'),
+            eq(webhookEvents.eventId, eventId),
+        ),
+    });
+    return !!existing;
+}
 
 export async function POST(req: Request) {
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
@@ -37,64 +53,126 @@ export async function POST(req: Request) {
             'svix-signature': svix_signature,
         }) as WebhookEvent
     } catch {
-        return new Response('Error occurred', { status: 400 })
+        return new Response('Error occurred -- invalid signature', { status: 400 })
     }
 
-    const eventType = evt.type
+    const eventType = evt.type;
+    const eventId = svix_id;
 
-    if (eventType === 'user.created') {
-        const { id, email_addresses, username, first_name } = evt.data;
+    // Idempotency: skip if already processed
+    if (await isAlreadyProcessed(eventId)) {
+        return new Response('', { status: 200 })
+    }
 
-        const primaryEmail = email_addresses[0]?.email_address;
-        const displayName = username || primaryEmail?.split('@')[0] || "User";
-        const firstName = first_name || displayName;
-
-        // Check for a pending workspace invitation for this email.
-        // If found, add user to that workspace instead of creating a new one.
-        if (primaryEmail) {
-            const now = new Date();
-            const pendingInvite = await db.query.pendingInvitations.findFirst({
-                where: and(
-                    eq(pendingInvitations.email, primaryEmail),
-                    gt(pendingInvitations.expiresAt, now),
-                ),
-                with: { workspace: true },
-            });
-
-            if (pendingInvite) {
-                // Add user to the inviting workspace as a member
-                await db
-                    .insert(workspaceMembers)
-                    .values({
-                        userId: id,
-                        workspaceId: pendingInvite.workspaceId,
-                        role: 'member',
-                    })
-                    .onConflictDoNothing(); // Safe if somehow already a member
-
-                // Delete the consumed invitation
-                await db
-                    .delete(pendingInvitations)
-                    .where(eq(pendingInvitations.id, pendingInvite.id));
-
-                // Send welcome email mentioning the workspace
-                if (process.env.RESEND_API_KEY) {
-                    sendWelcomeEmail(primaryEmail, firstName).catch(() => {});
-                }
-
-                return new Response('', { status: 200 })
-            }
+    try {
+        if (eventType === 'user.created') {
+            await handleUserCreated(evt);
+        } else if (eventType === 'user.updated') {
+            await handleUserUpdated(evt);
+        } else if (eventType === 'user.deleted') {
+            await handleUserDeleted(evt);
         }
-
-        // No pending invitation — create a fresh workspace for this user
-        const { created } = await ensureWorkspace(id, { displayName, email: primaryEmail });
-
-        // Send welcome email + schedule drip sequence only on first workspace creation
-        if (created && primaryEmail) {
-            sendWelcomeEmail(primaryEmail, firstName).catch(() => {});
-            scheduleDripSequence(primaryEmail, firstName).catch(() => {});
-        }
+        await markProcessed(eventId, eventType);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        await markProcessed(eventId, eventType, message);
+        console.error(`Clerk webhook error [${eventType}]:`, message);
+        return new Response('Webhook handler error', { status: 500 });
     }
 
     return new Response('', { status: 200 })
+}
+
+async function handleUserCreated(evt: WebhookEvent) {
+    if (evt.type !== 'user.created') return;
+    const { id, email_addresses, username, first_name } = evt.data;
+
+    const primaryEmail = email_addresses[0]?.email_address;
+    const displayName = username || primaryEmail?.split('@')[0] || "User";
+    const firstName = first_name || displayName;
+
+    // Check for a pending workspace invitation for this email.
+    if (primaryEmail) {
+        const now = new Date();
+        const pendingInvite = await db.query.pendingInvitations.findFirst({
+            where: and(
+                eq(pendingInvitations.email, primaryEmail),
+                gt(pendingInvitations.expiresAt, now),
+            ),
+            with: { workspace: true },
+        });
+
+        if (pendingInvite) {
+            await db
+                .insert(workspaceMembers)
+                .values({
+                    userId: id,
+                    workspaceId: pendingInvite.workspaceId,
+                    role: 'member',
+                })
+                .onConflictDoNothing();
+
+            await db
+                .delete(pendingInvitations)
+                .where(eq(pendingInvitations.id, pendingInvite.id));
+
+            if (process.env.RESEND_API_KEY) {
+                sendWelcomeEmail(primaryEmail, firstName).catch(() => {});
+            }
+            return;
+        }
+    }
+
+    // No pending invitation — create a fresh workspace
+    const { created } = await ensureWorkspace(id, { displayName, email: primaryEmail });
+
+    if (created && primaryEmail) {
+        sendWelcomeEmail(primaryEmail, firstName).catch(() => {});
+        scheduleDripSequence(primaryEmail, firstName).catch(() => {});
+    }
+}
+
+async function handleUserUpdated(evt: WebhookEvent) {
+    if (evt.type !== 'user.updated') return;
+    // We don't store user profile data locally (it lives in Clerk).
+    // Ensure workspace exists in case it was somehow missed.
+    const { id, email_addresses, username, first_name } = evt.data;
+    const primaryEmail = email_addresses[0]?.email_address;
+    const displayName = username || primaryEmail?.split('@')[0] || "User";
+    await ensureWorkspace(id, { displayName, email: primaryEmail });
+}
+
+async function handleUserDeleted(evt: WebhookEvent) {
+    if (evt.type !== 'user.deleted') return;
+    const { id } = evt.data;
+    if (!id) return;
+
+    // Find all workspace memberships for this user
+    const memberships = await db.query.workspaceMembers.findMany({
+        where: eq(workspaceMembers.userId, id),
+    });
+
+    for (const membership of memberships) {
+        if (membership.role === 'owner') {
+            // Cancel any active Stripe subscription for this workspace
+            const sub = await db.query.subscriptions.findFirst({
+                where: eq(subscriptions.workspaceId, membership.workspaceId),
+            });
+
+            if (sub?.stripeSubscriptionId && sub.status !== 'canceled') {
+                try {
+                    const { stripe } = await import('@/lib/services/stripe');
+                    await stripe.subscriptions.cancel(sub.stripeSubscriptionId);
+                } catch {
+                    // Non-critical — Stripe cancel failure shouldn't block cleanup
+                }
+                await db.update(subscriptions)
+                    .set({ status: 'canceled', updatedAt: new Date() })
+                    .where(eq(subscriptions.workspaceId, membership.workspaceId));
+            }
+        }
+    }
+
+    // Remove user from all workspaces
+    await db.delete(workspaceMembers).where(eq(workspaceMembers.userId, id));
 }

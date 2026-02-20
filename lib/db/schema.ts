@@ -388,4 +388,30 @@ export const apiLogs = pgTable('api_logs', {
     index('api_logs_workspace_id_idx').on(table.workspaceId),
 ]);
 
+// Webhook event idempotency log — prevents duplicate processing
+export const webhookEvents = pgTable('webhook_events', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    source: text('source').notNull(), // 'clerk' | 'stripe'
+    eventId: text('event_id').notNull(), // svix-id or Stripe event.id
+    eventType: text('event_type').notNull(),
+    processedAt: timestamp('processed_at').defaultNow().notNull(),
+    error: text('error'), // non-null if processing failed
+}, (table) => [
+    uniqueIndex('webhook_events_source_event_id_unique').on(table.source, table.eventId),
+    index('webhook_events_processed_at_idx').on(table.processedAt),
+]);
+
+// Drip email state — tracks Resend email IDs so we can cancel on upgrade
+export const dripEmails = pgTable('drip_emails', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    email: text('email').notNull(),
+    emailType: text('email_type').notNull(), // 'd1' | 'd3' | 'd7'
+    resendEmailId: text('resend_email_id').notNull(),
+    scheduledAt: timestamp('scheduled_at').notNull(),
+    canceledAt: timestamp('canceled_at'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+    index('drip_emails_email_idx').on(table.email),
+]);
+
 export * from './referrals-schema';
