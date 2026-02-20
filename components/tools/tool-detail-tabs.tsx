@@ -62,6 +62,7 @@ type Note = {
 
 interface Props {
     toolId: string;
+    toolStatus: string;
     report: SerializedReport | null;
     historyItems: SerializedJob[];
     notes: Note[];
@@ -99,7 +100,48 @@ function SourceLinks({ sources }: { sources: ReviewSource[] }) {
     );
 }
 
-export function ToolDetailTabs({ toolId, report, historyItems, notes }: Props) {
+function EmptyTabState({ toolStatus, tabName }: { toolStatus: string; tabName: string }) {
+    if (toolStatus === "researching") {
+        return (
+            <div className="py-10 text-center space-y-2">
+                <div className="flex items-center justify-center gap-2">
+                    <div className="h-3 w-3 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <span className="font-mono text-sm text-neutral-600">Research in progress...</span>
+                </div>
+                <p className="font-mono text-xs text-neutral-400">
+                    {tabName} data will appear here once research completes (1-2 minutes).
+                </p>
+            </div>
+        );
+    }
+    if (toolStatus === "queued" || toolStatus === "submitted") {
+        return (
+            <div className="py-10 text-center space-y-2">
+                <p className="font-mono text-sm text-neutral-500">Waiting for research to start...</p>
+                <p className="font-mono text-xs text-neutral-400">
+                    Click &ldquo;Run Research&rdquo; above to generate {tabName.toLowerCase()} data.
+                </p>
+            </div>
+        );
+    }
+    if (toolStatus === "failed") {
+        return (
+            <div className="py-10 text-center space-y-2">
+                <p className="font-mono text-sm text-neutral-500">Research failed</p>
+                <p className="font-mono text-xs text-neutral-400">
+                    Click &ldquo;Retry Research&rdquo; above to try again. {tabName} data will appear after a successful run.
+                </p>
+            </div>
+        );
+    }
+    return (
+        <div className="py-10 text-center font-mono text-sm text-neutral-400">
+            No {tabName.toLowerCase()} data available. Run research to generate a report.
+        </div>
+    );
+}
+
+export function ToolDetailTabs({ toolId, toolStatus, report, historyItems, notes }: Props) {
     const [activeTab, setActiveTab] = useState<TabId>("report");
 
     return (
@@ -176,9 +218,7 @@ export function ToolDetailTabs({ toolId, report, historyItems, notes }: Props) {
                             </div>
                         </div>
                     ) : (
-                        <div className="py-10 text-center font-mono text-sm text-neutral-400">
-                            No report generated yet. Run deep research to generate a report.
-                        </div>
+                        <EmptyTabState toolStatus={toolStatus} tabName="Analysis" />
                     )
                 )}
 
@@ -188,29 +228,39 @@ export function ToolDetailTabs({ toolId, report, historyItems, notes }: Props) {
                         <div className="space-y-5">
                             <div>
                                 <h3 className="font-mono text-xs uppercase tracking-widest mb-3">Extracted Features</h3>
-                                <ul className="space-y-1.5">
-                                    {report.featuresList.map((feature, i) => (
-                                        <li key={i} className="font-mono text-xs flex gap-2">
-                                            <span className="text-neutral-400">→</span>
-                                            {feature}
-                                        </li>
-                                    ))}
-                                </ul>
+                                {report.featuresList.length > 0 ? (
+                                    <ul className="space-y-1.5">
+                                        {report.featuresList.map((feature, i) => (
+                                            <li key={i} className="font-mono text-xs flex gap-2">
+                                                <span className="text-neutral-400">→</span>
+                                                {feature}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p className="font-mono text-xs text-neutral-400">No features extracted from the research data.</p>
+                                )}
                             </div>
                             <div>
                                 <h3 className="font-mono text-xs uppercase tracking-widest mb-3">Pricing Structure</h3>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    {report.pricingTiers.map((tier, i) => (
-                                        <div key={i} className="border border-black p-4">
-                                            <div className="font-mono text-xs uppercase tracking-widest text-neutral-500">{tier.tier}</div>
-                                            <div className="font-serif text-2xl mt-1">{tier.price}</div>
-                                        </div>
-                                    ))}
-                                </div>
+                                {report.pricingTiers.length > 0 ? (
+                                    <div className="grid gap-3 sm:grid-cols-2">
+                                        {report.pricingTiers.map((tier, i) => (
+                                            <div key={i} className="border border-black p-4">
+                                                <div className="font-mono text-xs uppercase tracking-widest text-neutral-500">{tier.tier}</div>
+                                                <div className="font-serif text-2xl mt-1">{tier.price}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="font-mono text-xs text-neutral-400">
+                                        No public pricing found. This tool may require contacting sales for a quote.
+                                    </p>
+                                )}
                             </div>
                         </div>
                     ) : (
-                        <div className="py-10 text-center font-mono text-sm text-neutral-400">No data available.</div>
+                        <EmptyTabState toolStatus={toolStatus} tabName="Features & Pricing" />
                     )
                 )}
 
@@ -371,7 +421,7 @@ export function ToolDetailTabs({ toolId, report, historyItems, notes }: Props) {
                             )}
                         </div>
                     ) : (
-                        <div className="py-10 text-center font-mono text-sm text-neutral-400">No sentiment data yet. Run deep research to collect community reviews.</div>
+                        <EmptyTabState toolStatus={toolStatus} tabName="Sentiment" />
                     )
                 )}
 

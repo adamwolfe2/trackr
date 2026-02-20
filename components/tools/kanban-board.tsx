@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Star, Loader2, X } from "lucide-react";
+import { Star, Loader2, X, Search } from "lucide-react";
 import {
     DndContext,
     DragEndEvent,
@@ -184,6 +184,7 @@ function DroppableColumn({
 export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { tools: KanbanTool[]; stats: Stats; isEmpty?: boolean }) {
     const [tools, setTools] = useState(initialTools);
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -229,6 +230,14 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
 
     const activeTool = activeId ? tools.find(t => t.id === activeId) : null;
 
+    // Filter tools by search query
+    const filteredTools = searchQuery.trim()
+        ? tools.filter(t =>
+            t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            t.category?.some(c => c.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+        : tools;
+
     return (
         <DndContext
             sensors={sensors}
@@ -261,10 +270,32 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                     </div>
                 </div>
 
+                {/* Search Filter */}
+                {tools.length > 5 && (
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Filter tools by name or category..."
+                            className="w-full sm:w-80 border border-black pl-9 pr-8 py-2 font-mono text-xs bg-white focus:outline-none"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery("")}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 hover:bg-neutral-100"
+                            >
+                                <X className="h-3 w-3 text-neutral-400" />
+                            </button>
+                        )}
+                    </div>
+                )}
+
                 {/* Kanban Columns — horizontal scroll on mobile, grid on lg */}
                 <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
                     {COLUMNS.map((col) => {
-                        const colTools = tools.filter(t => (col.statuses as readonly string[]).includes(t.status));
+                        const colTools = filteredTools.filter(t => (col.statuses as readonly string[]).includes(t.status));
                         return (
                             <div key={col.id} className="flex-shrink-0 w-[260px] sm:w-[280px] lg:w-auto min-w-0 flex flex-col">
                                 <DroppableColumn col={col} toolCount={colTools.length}>

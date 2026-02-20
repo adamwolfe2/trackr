@@ -6,10 +6,10 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { workspaceMembers, workspaces, subscriptions } from "@/lib/db/schema";
 import { asc, eq } from "drizzle-orm";
-import { Shield, UserX, Building2, Lock } from "lucide-react";
-import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext } from "@/lib/actions/workspace";
+import { Shield, Building2, Lock } from "lucide-react";
 import { ApiKeySection } from "@/components/workspace/api-key-section";
 import { SlackSection } from "@/components/workspace/slack-section";
+import { InviteMemberForm, RemoveMemberButton, UpdateWorkspaceNameForm, UpdateCompanyContextForm } from "@/components/workspace/workspace-forms";
 import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 import Link from "next/link";
 
@@ -75,23 +75,7 @@ export default async function WorkspacePage() {
                         <span className="font-mono text-[10px] text-neutral-400">{members.length} member{members.length !== 1 ? "s" : ""}</span>
                     </div>
                     <div className="p-5 space-y-5">
-                        {isOwnerOrAdmin && (
-                            <form action={async (fd: FormData) => {
-                                "use server";
-                                await inviteMember(fd);
-                            }} className="flex flex-col sm:flex-row gap-0">
-                                <input
-                                    name="email"
-                                    type="email"
-                                    placeholder="colleague@company.com"
-                                    required
-                                    className="flex-1 sm:max-w-sm border border-black px-4 py-2 font-mono text-sm bg-white focus:outline-none"
-                                />
-                                <button type="submit" className="border sm:border-l-0 border-t-0 sm:border-t border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800 whitespace-nowrap">
-                                    Send Invite
-                                </button>
-                            </form>
-                        )}
+                        {isOwnerOrAdmin && <InviteMemberForm />}
 
                         <div className="divide-y divide-neutral-100">
                             {members.map((member) => {
@@ -120,14 +104,7 @@ export default async function WorkspacePage() {
                                         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                                             {roleLabel(member.role)}
                                             {isOwnerOrAdmin && !isCurrentUser && !isThisOwner && (
-                                                <form action={async () => {
-                                                    "use server";
-                                                    await removeMember(member.id);
-                                                }}>
-                                                    <button type="submit" className="font-mono text-[10px] uppercase tracking-widest border border-red-300 text-red-500 px-2 py-0.5 hover:bg-red-50 flex items-center gap-1">
-                                                        <UserX className="h-2.5 w-2.5" /> Remove
-                                                    </button>
-                                                </form>
+                                                <RemoveMemberButton memberId={member.id} />
                                             )}
                                         </div>
                                     </div>
@@ -143,26 +120,10 @@ export default async function WorkspacePage() {
                         <h2 className="font-mono text-xs uppercase tracking-widest">General Preferences</h2>
                     </div>
                     <div className="p-5">
-                        <form action={async (fd: FormData) => {
-                            "use server";
-                            await updateWorkspaceName(fd);
-                        }} className="space-y-4 max-w-md">
-                            <div>
-                                <label className="font-mono text-xs uppercase tracking-widest block mb-2" htmlFor="workspace-name">Workspace Name</label>
-                                <input
-                                    id="workspace-name"
-                                    name="name"
-                                    defaultValue={workspace?.name ?? "My Workspace"}
-                                    disabled={!isOwnerOrAdmin}
-                                    className="w-full border border-black px-4 py-2 font-mono text-sm bg-white focus:outline-none disabled:opacity-40"
-                                />
-                            </div>
-                            {isOwnerOrAdmin && (
-                                <button type="submit" className="border border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-white hover:bg-black hover:text-white">
-                                    Save Changes
-                                </button>
-                            )}
-                        </form>
+                        <UpdateWorkspaceNameForm
+                            defaultName={workspace?.name ?? "My Workspace"}
+                            disabled={!isOwnerOrAdmin}
+                        />
                     </div>
                 </div>
 
@@ -177,31 +138,10 @@ export default async function WorkspacePage() {
                             This context is used by AI research agents to evaluate tools specifically for your company.
                             It was captured from your website during onboarding and can be edited manually.
                         </p>
-                        <form action={async (fd: FormData) => {
-                            "use server";
-                            await updateCompanyContext(fd);
-                        }} className="space-y-4">
-                            <div>
-                                <label className="font-mono text-xs uppercase tracking-widest block mb-2" htmlFor="company-context">Company Context</label>
-                                <textarea
-                                    id="company-context"
-                                    name="companyContext"
-                                    rows={6}
-                                    defaultValue={workspace?.companyContext ?? ""}
-                                    disabled={!isOwnerOrAdmin}
-                                    placeholder="Describe your company: industry, business model, team size, main goals, tech stack, and what kind of tools would be most valuable..."
-                                    className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none resize-none disabled:opacity-40"
-                                />
-                                <p className="font-mono text-[10px] text-neutral-400 mt-1">
-                                    The more specific you are, the better the AI can tailor research to your actual needs.
-                                </p>
-                            </div>
-                            {isOwnerOrAdmin && (
-                                <button type="submit" className="border border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-white hover:bg-black hover:text-white">
-                                    Save Company Profile
-                                </button>
-                            )}
-                        </form>
+                        <UpdateCompanyContextForm
+                            defaultContext={workspace?.companyContext ?? ""}
+                            disabled={!isOwnerOrAdmin}
+                        />
                     </div>
                 </div>
 

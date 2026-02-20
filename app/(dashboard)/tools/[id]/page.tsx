@@ -248,6 +248,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                     {/* Tabs */}
                     <ToolDetailTabs
                         toolId={tool.id}
+                        toolStatus={tool.status}
                         report={serializedReport}
                         historyItems={historyItems}
                         notes={serializedNotes}
