@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { db } from "@/lib/db";
-import { tools, workspaceMembers, reports, researchJobs, subscriptions } from "@/lib/db/schema";
+import { tools, workspaceMembers, reports, researchJobs, notes, subscriptions } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { eq, and } from "drizzle-orm";
@@ -90,7 +90,8 @@ export async function deleteTool(toolId: string) {
 
     if (!tool) throw new Error("Tool not found or unauthorized");
 
-    // Delete related records first (cascade should handle this if configured, but let's be safe)
+    // Delete related records first
+    await db.delete(notes).where(eq(notes.toolId, toolId));
     await db.delete(reports).where(eq(reports.toolId, toolId));
     await db.delete(researchJobs).where(eq(researchJobs.toolId, toolId));
 

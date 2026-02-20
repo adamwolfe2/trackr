@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { tools } from "@/lib/db/schema";
+import { tools, subscriptions } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { getWorkspaceFromApiKey, corsHeaders } from "@/lib/middleware/extension-auth";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { after } from "next/server";
 import { performDeepResearch } from "@/lib/actions/research";
+import { getPlanLimits } from "@/lib/config/subscriptions";
 
 export async function OPTIONS() {
     return new NextResponse(null, { status: 204, headers: corsHeaders() });
@@ -52,6 +54,22 @@ export async function POST(req: NextRequest) {
 
     // Derive a tool name from the title or URL domain
     const toolName = title?.trim() || new URL(url).hostname.replace("www.", "");
+
+    // Check tool count limit
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspace.id),
+    });
+    const limits = getPlanLimits(subscription);
+    const toolCount = await db.query.tools.findMany({
+        where: eq(tools.workspaceId, workspace.id),
+        columns: { id: true },
+    });
+    if (limits.limits.tools !== Infinity && toolCount.length >= limits.limits.tools) {
+        return NextResponse.json(
+            { error: `Tool limit reached (${limits.limits.tools} on ${limits.name} plan)` },
+            { status: 403, headers }
+        );
+    }
 
     try {
         // Generate embedding in parallel with logo preview if available

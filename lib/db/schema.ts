@@ -10,13 +10,15 @@ export const workspaces = pgTable('workspaces', {
     companyContext: text('company_context'),
     onboardingCompleted: boolean('onboarding_completed').default(false).notNull(),
     apiKey: text('api_key').unique(), // For Chrome extension + external integrations
-    slackChannelId: text('slack_channel_id'), // Channel to post notifications to
+    slackChannelId: text('slack_channel_id'), // Channel to post notifications to (indexed for Slack command lookup)
     slackEnabled: boolean('slack_enabled').default(false).notNull(),
     slackBotToken: text('slack_bot_token'),     // Per-workspace OAuth bot token
     slackTeamId: text('slack_team_id'),         // Slack workspace ID
     slackTeamName: text('slack_team_name'),     // Slack workspace name for display
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => [
+    index('workspaces_slack_channel_id_idx').on(table.slackChannelId),
+]);
 
 export const workspaceMembers = pgTable('workspace_members', {
     id: uuid('id').defaultRandom().primaryKey(),

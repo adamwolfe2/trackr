@@ -1,11 +1,11 @@
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
-
+/**
+ * Fetch URL metadata (title, description, OG image) for a tool preview.
+ * Used by both authenticated server actions (submitTool) and API-key-authed
+ * extension routes. Auth is enforced by the caller, not here.
+ */
 export async function previewTool(url: string) {
-    const user = await currentUser();
-    if (!user) return { error: "Unauthorized" };
-
     if (!url) return { error: "URL is required" };
 
     try {

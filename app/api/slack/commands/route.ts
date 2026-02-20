@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { workspaces, tools } from "@/lib/db/schema";
+import { workspaces, tools, subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { createHmac, timingSafeEqual } from "crypto";
 import { after } from "next/server";
 import { performDeepResearch } from "@/lib/actions/research";
+import { getPlanLimits } from "@/lib/config/subscriptions";
 
 export const dynamic = "force-dynamic";
 
@@ -99,6 +100,22 @@ async function handleResearch(urlArg: string, channelId: string) {
         toolName = toolName.charAt(0).toUpperCase() + toolName.slice(1);
     } catch {
         toolName = urlArg;
+    }
+
+    // Check tool count limit
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspace.id),
+    });
+    const limits = getPlanLimits(subscription);
+    const toolCount = await db.query.tools.findMany({
+        where: eq(tools.workspaceId, workspace.id),
+        columns: { id: true },
+    });
+    if (limits.limits.tools !== Infinity && toolCount.length >= limits.limits.tools) {
+        return NextResponse.json({
+            response_type: "ephemeral",
+            text: `Tool limit reached (${limits.limits.tools} on ${limits.name} plan). Upgrade at trytrackr.com to add more.`,
+        });
     }
 
     // Create tool and kick off research

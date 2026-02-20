@@ -6,10 +6,11 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**',
-      }
+      { protocol: 'https', hostname: 'logo.clearbit.com' },
+      { protocol: 'https', hostname: 'cdn.brandfetch.io' },
+      { protocol: 'https', hostname: 'www.google.com' },
+      { protocol: 'https', hostname: 'img.clerk.com' },
+      { protocol: 'https', hostname: '*.googleusercontent.com' },
     ]
   },
   experimental: {
