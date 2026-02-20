@@ -1,7 +1,13 @@
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Header } from "@/components/layout/header"
-import { CommandPalette } from "@/components/command-palette"
+import dynamic from "next/dynamic"
 import { currentUser } from "@clerk/nextjs/server"
+
+// Lazy-load command palette — only needed on Cmd+K, not on initial paint
+const CommandPalette = dynamic(
+    () => import("@/components/command-palette").then(m => ({ default: m.CommandPalette })),
+    { ssr: false }
+)
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
 import { workspaceMembers, workspaces } from "@/lib/db/schema"

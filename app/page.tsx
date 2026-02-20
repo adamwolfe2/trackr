@@ -2,23 +2,28 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
+import lazy from "next/dynamic";
+
+// Above-fold: eager imports for first paint
 import { OffsetHero } from "@/components/marketing/offset-hero";
-import { OffsetFeatures } from "@/components/marketing/offset-features";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
-import { MarketingProblem } from "@/components/marketing/marketing-problem";
-import { MarketingHowItWorks } from "@/components/marketing/marketing-how-it-works";
 import { MarketingSocialProof } from "@/components/marketing/marketing-social-proof";
-import { MarketingComparison } from "@/components/marketing/marketing-comparison";
-import { MarketingPricing } from "@/components/marketing/marketing-pricing";
-import { MarketingUseCases } from "@/components/marketing/marketing-use-cases";
-import { MarketingDiscovery } from "@/components/marketing/marketing-discovery";
-import { MarketingCTA } from "@/components/marketing/marketing-cta";
-import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingIntegrations } from "@/components/marketing/marketing-integrations";
-import { MarketingReportShowcase } from "@/components/marketing/marketing-report-showcase";
-import { MarketingInteractiveDemos } from "@/components/marketing/marketing-interactive-demos";
-import { MarketingEnterprise } from "@/components/marketing/marketing-enterprise";
-import { MarketingFaq } from "@/components/marketing/marketing-faq";
+
+// Below-fold: code-split to reduce initial JS bundle
+const MarketingProblem = lazy(() => import("@/components/marketing/marketing-problem").then(m => ({ default: m.MarketingProblem })));
+const MarketingHowItWorks = lazy(() => import("@/components/marketing/marketing-how-it-works").then(m => ({ default: m.MarketingHowItWorks })));
+const OffsetFeatures = lazy(() => import("@/components/marketing/offset-features").then(m => ({ default: m.OffsetFeatures })));
+const MarketingReportShowcase = lazy(() => import("@/components/marketing/marketing-report-showcase").then(m => ({ default: m.MarketingReportShowcase })));
+const MarketingInteractiveDemos = lazy(() => import("@/components/marketing/marketing-interactive-demos").then(m => ({ default: m.MarketingInteractiveDemos })));
+const MarketingComparison = lazy(() => import("@/components/marketing/marketing-comparison").then(m => ({ default: m.MarketingComparison })));
+const MarketingPricing = lazy(() => import("@/components/marketing/marketing-pricing").then(m => ({ default: m.MarketingPricing })));
+const MarketingUseCases = lazy(() => import("@/components/marketing/marketing-use-cases").then(m => ({ default: m.MarketingUseCases })));
+const MarketingDiscovery = lazy(() => import("@/components/marketing/marketing-discovery").then(m => ({ default: m.MarketingDiscovery })));
+const MarketingEnterprise = lazy(() => import("@/components/marketing/marketing-enterprise").then(m => ({ default: m.MarketingEnterprise })));
+const MarketingFaq = lazy(() => import("@/components/marketing/marketing-faq").then(m => ({ default: m.MarketingFaq })));
+const MarketingCTA = lazy(() => import("@/components/marketing/marketing-cta").then(m => ({ default: m.MarketingCTA })));
+const MarketingFooter = lazy(() => import("@/components/marketing/marketing-footer").then(m => ({ default: m.MarketingFooter })));
 
 export const metadata: Metadata = {
   title: "Trackr — AI Tool Research for Ops Teams",
