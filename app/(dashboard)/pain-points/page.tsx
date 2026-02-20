@@ -19,9 +19,7 @@ export default async function PainPointsPage() {
     if (!user) redirect("/sign-in");
 
     const workspaceId = await getWorkspaceId(user.id);
-    if (!workspaceId) {
-        return <div>No workspace found</div>;
-    }
+    if (!workspaceId) redirect("/onboarding");
 
     const points = await db.query.painPoints.findMany({
         where: eq(painPoints.workspaceId, workspaceId),

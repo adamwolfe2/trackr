@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 import { getWorkspaceId } from "@/lib/db/queries";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq, and, gte, inArray, count } from "drizzle-orm";
+import { subDays } from "date-fns";
 import { getPlanLimits, PLANS } from "@/lib/config/subscriptions";
 import type { Plan } from "@/lib/config/subscriptions";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
@@ -53,8 +54,8 @@ export default async function BillingPage({
     const toolCount = toolCountResult[0]?.count ?? 0;
 
     const periodStart = subscription?.currentPeriodEnd
-        ? new Date(new Date(subscription.currentPeriodEnd).getTime() - 30 * 24 * 60 * 60 * 1000)
-        : new Date(new Date().setDate(new Date().getDate() - 30));
+        ? subDays(new Date(subscription.currentPeriodEnd), 30)
+        : subDays(new Date(), 30);
 
     const workspaceToolIds = db
         .select({ id: tools.id })

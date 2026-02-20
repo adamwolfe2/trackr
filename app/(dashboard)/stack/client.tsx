@@ -6,6 +6,7 @@ import { PlusCircle, Trash2, ExternalLink, DollarSign, Users, Pencil, Check, X, 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { StackInsights } from "@/lib/utils/stack-insights";
+import { parseStackJson, type ParsedStackItem } from "@/lib/utils/parse-stack";
 
 const STACK_PROMPT = `You are a software asset inventory specialist. I need you to help me document my company's complete software and SaaS stack.
 
@@ -71,15 +72,6 @@ type SpendEntry = {
 
 const STATUS_OPTIONS = ["active", "evaluating", "canceling", "canceled"] as const;
 
-type ParsedStackItem = {
-    toolName: string;
-    category?: string | null;
-    vendorUrl?: string | null;
-    estimatedSeats?: number | null;
-    billingCycle?: string | null;
-    notes?: string | null;
-};
-
 export function StackClient({ initialData = [], lowScoredNames = [], insights }: { initialData?: SpendEntry[]; lowScoredNames?: string[]; insights?: StackInsights }) {
     const [showForm, setShowForm] = useState(false);
     const [toDelete, setToDelete] = useState<string | null>(null);
@@ -98,6 +90,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
     const [parseError, setParseError] = useState<string | null>(null);
     const [parsedItems, setParsedItems] = useState<ParsedStackItem[] | null>(null);
     const [isImporting, startImportTransition] = useTransition();
+    const [showOptBanner, setShowOptBanner] = useState(true);
 
     const copyPrompt = async () => {
         await navigator.clipboard.writeText(STACK_PROMPT);
@@ -105,27 +98,14 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
         setTimeout(() => setCopied(false), 2500);
     };
 
-    const parseStackJson = () => {
+    const handleParseStack = () => {
         setParseError(null);
         setParsedItems(null);
-        const cleaned = pasteText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
-        try {
-            const parsed = JSON.parse(cleaned);
-            if (!Array.isArray(parsed)) { setParseError("Expected a JSON array. Make sure the AI returned a list of tools."); return; }
-            const items: ParsedStackItem[] = parsed
-                .filter((i: unknown) => i && typeof i === "object" && typeof (i as Record<string, unknown>).toolName === "string")
-                .map((i: Record<string, unknown>) => ({
-                    toolName: String(i.toolName),
-                    category: typeof i.category === "string" ? i.category : null,
-                    vendorUrl: typeof i.vendorUrl === "string" ? i.vendorUrl : null,
-                    estimatedSeats: typeof i.estimatedSeats === "number" ? i.estimatedSeats : null,
-                    billingCycle: typeof i.billingCycle === "string" ? i.billingCycle : "monthly",
-                    notes: typeof i.notes === "string" ? i.notes : null,
-                }));
-            if (items.length === 0) { setParseError("No valid tools found. Each item needs a 'toolName' field."); return; }
-            setParsedItems(items);
-        } catch {
-            setParseError("Invalid JSON. Make sure to copy just the raw JSON array from the AI response.");
+        const result = parseStackJson(pasteText);
+        if ("error" in result && result.error) {
+            setParseError(result.error);
+        } else if ("items" in result && result.items) {
+            setParsedItems(result.items);
         }
     };
 
@@ -270,7 +250,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                 </p>
                             )}
                             <button
-                                onClick={parseStackJson}
+                                onClick={handleParseStack}
                                 disabled={!pasteText.trim()}
                                 className="border border-black px-4 py-2 font-mono text-xs hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
                             >
@@ -555,7 +535,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
             </div>
 
             {/* Optimization Banner */}
-            {flaggedCount > 0 && (
+            {flaggedCount > 0 && showOptBanner && (
                 <div className="border border-black p-4 flex items-start gap-3">
                     <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" strokeWidth={1.5} />
                     <div>
@@ -566,6 +546,9 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                             These tools have AI scores under 6 and are costing your team money. Review the flagged rows below.
                         </p>
                     </div>
+                    <button onClick={() => setShowOptBanner(false)} className="ml-auto p-1 hover:bg-neutral-100" aria-label="Dismiss">
+                        <X className="w-4 h-4" />
+                    </button>
                 </div>
             )}
 

@@ -38,24 +38,10 @@ export async function submitTool(formData: FormData) {
         email: user.primaryEmailAddress?.emailAddress,
     });
 
-    // 1.5 Check Limits
-    const subscription = await db.query.subscriptions.findFirst({
-        where: eq(subscriptions.workspaceId, workspaceId)
-    });
-
+    // 1.5 Check Limits + Insert inside a transaction to prevent TOCTOU races
     const { getPlanLimits } = await import("@/lib/config/subscriptions");
-    const limits = getPlanLimits(subscription);
 
-    // Count existing tools
-    const [{ value: toolCount }] = await db.select({ value: count() })
-        .from(tools)
-        .where(eq(tools.workspaceId, workspaceId));
-
-    if (limits.limits.tools !== Infinity && toolCount >= limits.limits.tools) {
-        throw new Error(`Tool limit reached (${limits.limits.tools} tools on ${limits.name} plan). Upgrade to Team for unlimited tools.`);
-    }
-
-    // 2. Generate Embedding + Fetch logo preview in parallel
+    // 2. Generate Embedding + Fetch logo preview in parallel (outside txn — no DB writes)
     const { generateEmbedding } = await import("@/lib/ai/embedding");
     const { previewToolInternal } = await import("@/lib/actions/preview");
 
@@ -65,16 +51,34 @@ export async function submitTool(formData: FormData) {
     ]);
     const logoUrl = (preview && "image" in preview && preview.image) ? preview.image : null;
 
-    // 3. Insert Tool
-    const [newTool] = await db.insert(tools).values({
-        workspaceId,
-        name,
-        websiteUrl,
-        logoUrl,
-        status: "queued", // Initial status
-        submittedBy: user.id,
-        embedding,
-    }).returning();
+    // 3. Check limit + insert atomically
+    const newTool = await db.transaction(async (tx) => {
+        const subscription = await tx.query.subscriptions.findFirst({
+            where: eq(subscriptions.workspaceId, workspaceId)
+        });
+
+        const limits = getPlanLimits(subscription);
+
+        const [{ value: toolCount }] = await tx.select({ value: count() })
+            .from(tools)
+            .where(eq(tools.workspaceId, workspaceId));
+
+        if (limits.limits.tools !== Infinity && toolCount >= limits.limits.tools) {
+            throw new Error(`Tool limit reached (${limits.limits.tools} tools on ${limits.name} plan). Upgrade to Team for unlimited tools.`);
+        }
+
+        const [inserted] = await tx.insert(tools).values({
+            workspaceId,
+            name,
+            websiteUrl,
+            logoUrl,
+            status: "queued",
+            submittedBy: user.id,
+            embedding,
+        }).returning();
+
+        return inserted;
+    });
 
     // 4. Kick off research in the background (runs after redirect is sent)
     after(() => performDeepResearch(newTool.id));

@@ -33,9 +33,9 @@ export async function GET() {
     }
 
     const clientId = process.env.SLACK_CLIENT_ID;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-    if (!clientId) {
+    if (!clientId || !appUrl) {
         return NextResponse.json({ error: "Slack OAuth not configured" }, { status: 500 });
     }
 

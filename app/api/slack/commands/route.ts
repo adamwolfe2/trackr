@@ -29,6 +29,11 @@ function verifySlackSignature(body: string, timestamp: string, signature: string
 }
 
 export async function POST(req: Request) {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) {
+        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    }
+
     const body = await req.text();
     const timestamp = req.headers.get("x-slack-request-timestamp") || "";
     const signature = req.headers.get("x-slack-signature") || "";
@@ -50,7 +55,7 @@ export async function POST(req: Request) {
             case "research":
                 return handleResearch(arg, channelId);
             case "status":
-                return handleStatus(channelId);
+                return handleStatus(appUrl, channelId);
             case "help":
             default:
                 return handleHelp();
@@ -149,7 +154,7 @@ async function handleResearch(urlArg: string, channelId: string) {
     });
 }
 
-async function handleStatus(channelId: string) {
+async function handleStatus(appUrl: string, channelId: string) {
     const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.slackChannelId, channelId),
     });
@@ -186,7 +191,7 @@ async function handleStatus(channelId: string) {
                     {
                         type: "button",
                         text: { type: "plain_text", text: "Open Trackr" },
-                        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com"}/tools`,
+                        url: `${appUrl}/tools`,
                     },
                 ],
             },

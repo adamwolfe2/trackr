@@ -62,6 +62,8 @@ const ReportSchema = z.object({
 
 type ResearchLog = { message: string; timestamp: string };
 
+const MAX_RESEARCH_LOGS = 50;
+
 async function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
     return Promise.race([
         promise,
@@ -72,13 +74,20 @@ async function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Pro
 async function logProgress(toolId: string, message: string) {
     const newLog: ResearchLog = { message, timestamp: new Date().toISOString() };
 
+    // Append the new log and trim to keep only the most recent entries
     await db.update(tools)
         .set({
             researchLogs: sql`
-                CASE
+                (CASE
                     WHEN research_logs IS NULL THEN jsonb_build_array(${JSON.stringify(newLog)}::jsonb)
+                    WHEN jsonb_array_length(research_logs) >= ${MAX_RESEARCH_LOGS}
+                        THEN (SELECT jsonb_agg(elem) FROM (
+                            SELECT elem FROM jsonb_array_elements(research_logs || ${JSON.stringify(newLog)}::jsonb) AS elem
+                            ORDER BY elem->>'timestamp' DESC
+                            LIMIT ${MAX_RESEARCH_LOGS}
+                        ) sub)
                     ELSE research_logs || ${JSON.stringify(newLog)}::jsonb
-                END
+                END)
             ` as unknown as ResearchLog[],
         })
         .where(eq(tools.id, toolId));

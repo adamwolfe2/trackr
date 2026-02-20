@@ -24,11 +24,13 @@ function isPrivateUrl(urlString: string): boolean {
         // Block private IP ranges (10.x, 172.16-31.x, 192.168.x, 169.254.x)
         const parts = hostname.split(".").map(Number);
         if (parts.length === 4 && parts.every(p => !isNaN(p))) {
-            if (parts[0] === 10) return true;
-            if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
-            if (parts[0] === 192 && parts[1] === 168) return true;
-            if (parts[0] === 169 && parts[1] === 254) return true; // AWS metadata
-            if (parts[0] === 0) return true;
+            const firstOctet = parts[0];
+            if (firstOctet === 10) return true;
+            if (firstOctet === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+            if (firstOctet === 192 && parts[1] === 168) return true;
+            if (firstOctet === 169 && parts[1] === 254) return true; // AWS metadata
+            if (firstOctet === 0) return true;
+            if (firstOctet >= 224) return true; // Multicast (224-239) + Reserved (240-255)
         }
 
         // Block non-http(s) protocols

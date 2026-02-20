@@ -42,7 +42,10 @@ export async function GET(req: Request) {
     const state = url.searchParams.get("state");
     const error = url.searchParams.get("error");
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) {
+        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    }
 
     // Handle user denying the OAuth request
     if (error) {
