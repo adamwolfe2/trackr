@@ -9,9 +9,9 @@ import { eq, and } from "drizzle-orm";
 import { getWorkspaceId } from "@/lib/db/queries";
 
 const addPainPointSchema = z.object({
-    title: z.string().min(1, "Title is required"),
-    description: z.string().optional(),
-    category: z.string().optional(),
+    title: z.string().min(1, "Title is required").max(200, "Title too long (max 200 characters)"),
+    description: z.string().max(2000, "Description too long").optional(),
+    category: z.string().max(100, "Category too long").optional(),
 });
 
 export async function addPainPoint(formData: FormData) {
