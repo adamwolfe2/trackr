@@ -1,4 +1,5 @@
-"use server";
+// NOT "use server" — enrichFeedItems is an internal function called only
+// from the /api/cron/feed route (CRON_SECRET auth). Must not be a server action.
 
 import { db } from "@/lib/db";
 import { feedItems, workspaces } from "@/lib/db/schema";

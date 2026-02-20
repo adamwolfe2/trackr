@@ -1,5 +1,7 @@
 "use server";
 
+import { currentUser } from "@clerk/nextjs/server";
+
 /**
  * Validate a URL is not targeting internal/private network addresses (SSRF protection).
  */
@@ -39,11 +41,10 @@ function isPrivateUrl(urlString: string): boolean {
 }
 
 /**
- * Fetch URL metadata (title, description, OG image) for a tool preview.
- * Used by both authenticated server actions (submitTool) and API-key-authed
- * extension routes. Auth is enforced by the caller, not here.
+ * Internal preview implementation — no auth check.
+ * Called by previewTool (client-facing server action) and server-side API routes.
  */
-export async function previewTool(url: string) {
+export async function previewToolInternal(url: string) {
     if (!url) return { error: "URL is required" };
 
     try {
@@ -99,4 +100,14 @@ export async function previewTool(url: string) {
         console.error("Preview error:", error);
         return { error: "Failed to preview URL" };
     }
+}
+
+/**
+ * Client-facing server action with auth check.
+ * This is the function that client components should import.
+ */
+export async function previewTool(url: string) {
+    const user = await currentUser();
+    if (!user) return { error: "Unauthorized" };
+    return previewToolInternal(url);
 }

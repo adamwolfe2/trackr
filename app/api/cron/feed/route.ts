@@ -2,9 +2,9 @@ import { db } from "@/lib/db";
 import { feedChannels } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { ingestAllChannels } from "@/lib/actions/feed";
+import { ingestAllChannels } from "@/lib/actions/feed-pipeline";
 import { enrichFeedItems } from "@/lib/actions/feed-enrichment";
-import { extractToolsFromFeedItems, generateSuggestions } from "@/lib/actions/suggestions";
+import { extractToolsFromFeedItems, generateSuggestions } from "@/lib/actions/suggestions-pipeline";
 import { timingSafeEqual } from "crypto";
 
 export const dynamic = "force-dynamic";

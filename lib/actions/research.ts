@@ -1,4 +1,6 @@
-"use server";
+// NOT "use server" — performDeepResearch is an internal function called by
+// API routes and other server actions, NOT directly by clients. Exposing it
+// as a server action would let anyone trigger expensive API calls without auth.
 
 import { db } from "@/lib/db";
 import { tools, reports, workspaces, researchJobs, subscriptions } from "@/lib/db/schema";

@@ -77,10 +77,10 @@ export async function POST(req: NextRequest) {
         let logoUrl = null;
         try {
             const { generateEmbedding } = await import("@/lib/ai/embedding");
-            const { previewTool } = await import("@/lib/actions/preview");
+            const { previewToolInternal } = await import("@/lib/actions/preview");
             const [emb, preview] = await Promise.all([
                 generateEmbedding(`${toolName}: ${url}`).catch(() => null),
-                previewTool(url).catch(() => null),
+                previewToolInternal(url).catch(() => null),
             ]);
             embedding = emb;
             logoUrl = (preview && "image" in preview && preview.image) ? preview.image : null;
