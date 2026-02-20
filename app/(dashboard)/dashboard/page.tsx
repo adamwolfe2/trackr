@@ -1,6 +1,6 @@
-import { Clock } from "lucide-react";
+import { Clock, ArrowRight, PlusCircle, DollarSign, AlertTriangle, CalendarClock, Sparkles } from "lucide-react";
 import { db } from "@/lib/db";
-import { tools, painPoints, workspaceMembers, workspaces, researchJobs, reports, softwareSpend } from "@/lib/db/schema";
+import { tools, painPoints, workspaceMembers, workspaces, researchJobs, reports, softwareSpend, toolSuggestions } from "@/lib/db/schema";
 import { eq, sql, desc, inArray } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
@@ -89,6 +89,52 @@ export default async function DashboardPage() {
         .where(sql`${tools.workspaceId} = ${workspaceId} AND ${tools.overallScore} IS NOT NULL`);
     const avgScore = avgScoreData[0]?.avg ? parseFloat(avgScoreData[0].avg) : 0;
 
+    // Quick actions context
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const [missingCostCount, upcomingRenewalCount, newSuggestionCount, failedToolCount] = await Promise.all([
+        db.select({ count: sql<number>`count(*)` }).from(softwareSpend)
+            .where(sql`${softwareSpend.workspaceId} = ${workspaceId} AND ${softwareSpend.status} = 'active' AND (${softwareSpend.monthlyCost} IS NULL OR ${softwareSpend.monthlyCost}::numeric = 0)`),
+        db.select({ count: sql<number>`count(*)` }).from(softwareSpend)
+            .where(sql`${softwareSpend.workspaceId} = ${workspaceId} AND ${softwareSpend.status} = 'active' AND ${softwareSpend.renewalDate} IS NOT NULL AND ${softwareSpend.renewalDate} >= ${now} AND ${softwareSpend.renewalDate} <= ${sevenDaysFromNow}`),
+        db.select({ count: sql<number>`count(*)` }).from(toolSuggestions)
+            .where(sql`${toolSuggestions.workspaceId} = ${workspaceId} AND ${toolSuggestions.status} = 'new'`),
+        db.select({ count: sql<number>`count(*)` }).from(tools)
+            .where(sql`${tools.workspaceId} = ${workspaceId} AND ${tools.status} = 'failed'`),
+    ]);
+
+    type QuickAction = { icon: typeof ArrowRight; label: string; href: string; badge?: string };
+    const quickActions: QuickAction[] = [];
+
+    const failedCount = Number(failedToolCount[0]?.count || 0);
+    if (failedCount > 0) {
+        quickActions.push({ icon: AlertTriangle, label: `${failedCount} failed research${failedCount > 1 ? "es" : ""} — retry`, href: "/tools", badge: "Action" });
+    }
+
+    const renewalCount = Number(upcomingRenewalCount[0]?.count || 0);
+    if (renewalCount > 0) {
+        quickActions.push({ icon: CalendarClock, label: `${renewalCount} renewal${renewalCount > 1 ? "s" : ""} in next 7 days`, href: "/stack", badge: "Renewal" });
+    }
+
+    const suggestionCount = Number(newSuggestionCount[0]?.count || 0);
+    if (suggestionCount > 0) {
+        quickActions.push({ icon: Sparkles, label: `${suggestionCount} new tool suggestion${suggestionCount > 1 ? "s" : ""}`, href: "/feed", badge: "Feed" });
+    }
+
+    const missingCount = Number(missingCostCount[0]?.count || 0);
+    if (missingCount > 0) {
+        quickActions.push({ icon: DollarSign, label: `${missingCount} tool${missingCount > 1 ? "s" : ""} missing cost data`, href: "/stack", badge: "Stack" });
+    }
+
+    if (toolsCount === 0) {
+        quickActions.push({ icon: PlusCircle, label: "Submit your first tool for research", href: "/submit", badge: "Start" });
+    }
+
+    if (activePainPoints === 0 && toolsCount > 0) {
+        quickActions.push({ icon: PlusCircle, label: "Add pain points to get AI recommendations", href: "/pain-points", badge: "Setup" });
+    }
+
     const statusLabel = (status: string) => {
         const map: Record<string, string> = {
             complete: "DONE",
@@ -114,6 +160,25 @@ export default async function DashboardPage() {
                 researchReports={reportsCount}
                 activePainPoints={activePainPoints}
             />
+
+            {/* Quick Actions */}
+            {quickActions.length > 0 && (
+                <div className="border border-black bg-white">
+                    <div className="border-b border-black px-5 py-3">
+                        <h2 className="font-mono text-xs uppercase tracking-widest">Quick Actions</h2>
+                    </div>
+                    <div className="divide-y divide-neutral-100">
+                        {quickActions.map((action, i) => (
+                            <Link key={i} href={action.href} className="flex items-center gap-3 px-5 py-3 hover:bg-[#F8F8F5] transition-colors group">
+                                <action.icon className="h-4 w-4 text-neutral-400 group-hover:text-black shrink-0" strokeWidth={1.5} />
+                                <span className="font-mono text-sm flex-1">{action.label}</span>
+                                <span className="font-mono text-[9px] border border-neutral-300 px-1.5 py-0.5 text-neutral-400 uppercase tracking-wide">{action.badge}</span>
+                                <ArrowRight className="h-3 w-3 text-neutral-300 group-hover:text-black shrink-0" />
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* AI Nativeness Score Card */}
             {stackEntries.length === 0 ? (
