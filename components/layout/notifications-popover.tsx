@@ -81,7 +81,7 @@ export function NotificationsPopover() {
                                     key={notification.id}
                                     href={notification.link}
                                     onClick={() => setIsOpen(false)}
-                                    className={`flex items-start gap-3 p-4 hover:bg-neutral-50 transition-colors ${notification.read ? "opacity-60" : ""}`}
+                                    className={`flex items-start gap-3 p-4 hover:bg-neutral-100 transition-colors ${notification.read ? "opacity-60" : ""}`}
                                 >
                                     <div className="mt-0.5 shrink-0">
                                         {notification.type === "job_complete" ? (

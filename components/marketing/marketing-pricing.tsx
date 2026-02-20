@@ -199,7 +199,7 @@ export function MarketingPricing() {
                             className={`flex flex-col h-full relative ${
                                 plan.featured
                                     ? "bg-black text-white border border-black p-7 md:-translate-y-3 shadow-[8px_8px_0px_0px_rgba(0,0,0,0.15)]"
-                                    : "bg-white border border-black p-7 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)]"
+                                    : "bg-white border border-black p-7 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.08)]"
                             }`}
                         >
                             {plan.badge && (
@@ -260,7 +260,7 @@ export function MarketingPricing() {
                                 className={`block w-full text-center py-3 font-mono text-xs uppercase tracking-widest transition-colors ${
                                     plan.featured
                                         ? "bg-white text-black border border-white hover:bg-neutral-200"
-                                        : "bg-white border border-black hover:bg-neutral-50 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                                        : "bg-white border border-black hover:bg-neutral-100 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
                                 }`}
                             >
                                 {cta.label}

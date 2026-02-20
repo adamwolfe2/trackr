@@ -74,7 +74,7 @@ export default async function AboutPage() {
                     </Link>
                     <Link
                         href="/audit"
-                        className="inline-flex items-center gap-2 border border-black px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-50 transition-colors"
+                        className="inline-flex items-center gap-2 border border-black px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-100 transition-colors"
                     >
                         Book an AI audit
                     </Link>

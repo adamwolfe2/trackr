@@ -71,7 +71,7 @@ function ToolSelector({
             <button
                 type="button"
                 onClick={() => { setIsOpen(!isOpen); setSearch(""); }}
-                className="w-full flex items-center justify-between border border-black px-3 py-2 font-mono text-xs bg-white text-left hover:bg-neutral-50 transition-colors"
+                className="w-full flex items-center justify-between border border-black px-3 py-2 font-mono text-xs bg-white text-left hover:bg-neutral-100 transition-colors"
             >
                 <span className={selectedTool ? "text-black" : "text-neutral-400"}>
                     {selectedTool
@@ -81,7 +81,7 @@ function ToolSelector({
                 <ChevronDown className="h-3 w-3 text-neutral-400 flex-shrink-0" />
             </button>
             {isOpen && (
-                <div className="absolute z-50 top-full left-0 right-0 mt-1 border border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] max-h-64 flex flex-col">
+                <div className="absolute z-50 top-full left-0 right-0 mt-1 border border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] max-h-64 flex flex-col">
                     <div className="flex items-center gap-2 px-3 py-2 border-b border-black">
                         <Search className="h-3 w-3 text-neutral-400 flex-shrink-0" />
                         <input

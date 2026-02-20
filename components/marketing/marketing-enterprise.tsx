@@ -87,7 +87,7 @@ export function MarketingEnterprise() {
                             </Link>
                             <Link
                                 href="/sign-up"
-                                className="flex items-center justify-center gap-2 border border-black px-6 py-3.5 font-mono text-sm uppercase tracking-wide hover:bg-neutral-50 transition-colors whitespace-nowrap"
+                                className="flex items-center justify-center gap-2 border border-black px-6 py-3.5 font-mono text-sm uppercase tracking-wide hover:bg-neutral-100 transition-colors whitespace-nowrap"
                             >
                                 Start Self-Serve Free
                             </Link>

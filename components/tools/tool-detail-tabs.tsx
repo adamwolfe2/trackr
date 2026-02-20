@@ -86,7 +86,7 @@ function SourceLinks({ sources }: { sources: ReviewSource[] }) {
                 try { hostname = new URL(src.url).hostname.replace("www.", ""); } catch { /* keep raw */ }
                 return (
                     <a key={i} href={src.url} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center justify-between p-2 border border-black hover:bg-neutral-50 transition-colors">
+                        className="flex items-center justify-between p-2 border border-black hover:bg-neutral-100 transition-colors">
                         <div className="flex items-center gap-2 min-w-0">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=16`} alt="" className="w-4 h-4 flex-shrink-0" />
@@ -157,7 +157,7 @@ export function ToolDetailTabs({ toolId, toolStatus, report, historyItems, notes
                         className={`px-4 py-3 font-mono text-xs uppercase tracking-widest whitespace-nowrap transition-colors ${
                             activeTab === tab.id
                                 ? "bg-black text-white"
-                                : "bg-white text-neutral-500 hover:text-black hover:bg-neutral-50"
+                                : "bg-white text-neutral-500 hover:text-black hover:bg-neutral-100"
                         }`}
                     >
                         {tab.label}
@@ -398,7 +398,7 @@ export function ToolDetailTabs({ toolId, toolStatus, report, historyItems, notes
                                     <div className="space-y-1">
                                         {report.sentimentData.redditThreads.map((thread, i) => (
                                             <a key={i} href={thread.url} target="_blank" rel="noopener noreferrer"
-                                                className="block p-2 border border-black hover:bg-neutral-50 transition-colors">
+                                                className="block p-2 border border-black hover:bg-neutral-100 transition-colors">
                                                 <div className="flex items-center justify-between mb-1">
                                                     <span className="font-mono text-xs truncate flex-1">{thread.title}</span>
                                                     <span className="font-mono text-[10px] text-neutral-400 flex-shrink-0 ml-2">r/{thread.subreddit}</span>

@@ -18,7 +18,7 @@ export default function Error({
     return (
         <div className="flex h-screen w-full flex-col items-center justify-center bg-[#F3F3EF] px-6 text-center">
             <div className="max-w-lg">
-                <div className="w-12 h-12 border border-black bg-white flex items-center justify-center mb-8 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] mx-auto">
+                <div className="w-12 h-12 border border-black bg-white flex items-center justify-center mb-8 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mx-auto">
                     <span className="font-mono font-bold text-lg">!</span>
                 </div>
                 <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">
@@ -35,13 +35,13 @@ export default function Error({
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button
                         onClick={reset}
-                        className="bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-800 transition-colors border border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
+                        className="bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-800 transition-colors border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
                     >
                         Try Again
                     </button>
                     <Link
                         href="/"
-                        className="bg-white text-black px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-50 transition-colors border border-black"
+                        className="bg-white text-black px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-100 transition-colors border border-black"
                     >
                         Go Home
                     </Link>

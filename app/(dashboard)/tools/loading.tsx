@@ -21,7 +21,7 @@ export default function ToolsLoading() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="border border-black bg-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+                    <div key={i} className="border border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                         <Skeleton className="h-28 w-full rounded-none" />
                         <div className="p-4 space-y-3">
                             <div className="flex items-center gap-2">

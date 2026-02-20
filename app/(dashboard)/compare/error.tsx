@@ -16,7 +16,7 @@ export default function CompareError({
 
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
-            <div className="w-10 h-10 border border-black bg-white flex items-center justify-center shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            <div className="w-10 h-10 border border-black bg-white flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                 <span className="font-mono font-bold">!</span>
             </div>
             <div className="space-y-2">

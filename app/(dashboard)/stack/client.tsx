@@ -632,7 +632,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                 return (
                                     <tr
                                         key={entry.id}
-                                        className={`border-b border-neutral-100 ${flagged ? "bg-neutral-50" : "hover:bg-neutral-50/50"}`}
+                                        className={`border-b border-neutral-100 ${flagged ? "bg-neutral-50" : "hover:bg-neutral-100/50"}`}
                                     >
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2 flex-wrap">

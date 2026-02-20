@@ -57,7 +57,7 @@ export function MarketingComparison() {
                                 initial={{ opacity: 0 }}
                                 animate={inView ? { opacity: 1 } : {}}
                                 transition={{ delay: 0.1 + i * 0.06, duration: 0.3 }}
-                                className="border-b border-neutral-200 hover:bg-neutral-50 transition-colors"
+                                className="border-b border-neutral-200 hover:bg-neutral-100 transition-colors"
                             >
                                 <td className="py-5 px-6 font-medium text-neutral-700">{row.feature}</td>
                                 <td className="py-5 px-6 bg-neutral-50 border-l border-black font-medium">

@@ -334,7 +334,7 @@ function Step3({ data, onChange }: { data: Step3Data; onChange: (d: Partial<Step
                             <button
                                 type="button"
                                 onClick={() => addCustomTool(toolSearch)}
-                                className="flex items-center gap-2 font-mono text-xs border border-dashed border-black px-4 py-2.5 hover:bg-neutral-50"
+                                className="flex items-center gap-2 font-mono text-xs border border-dashed border-black px-4 py-2.5 hover:bg-neutral-100"
                             >
                                 <PlusCircle className="w-3.5 h-3.5" />
                                 Add &ldquo;{toolSearch.trim()}&rdquo; to my stack

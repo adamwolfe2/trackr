@@ -146,7 +146,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                                 </p>
                                 <Link
                                     href="/sign-up"
-                                    className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 font-mono text-xs uppercase tracking-widest hover:bg-neutral-100 transition-colors border border-white shadow-[3px_3px_0px_0px_rgba(255,255,255,0.25)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
+                                    className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 font-mono text-xs uppercase tracking-widest hover:bg-neutral-100 transition-colors border border-white shadow-[4px_4px_0px_0px_rgba(255,255,255,0.25)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-none"
                                 >
                                     Get Started Free <ArrowRight className="w-3 h-3" />
                                 </Link>

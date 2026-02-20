@@ -47,7 +47,7 @@ export function ShareReportButton({ reportId }: { reportId: string }) {
         return (
             <button
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 px-3 py-2 border border-black font-mono text-xs hover:bg-neutral-50 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-2 border border-black font-mono text-xs hover:bg-neutral-100 transition-colors"
             >
                 {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                 {copied ? "Copied" : "Copy Link"}
@@ -59,7 +59,7 @@ export function ShareReportButton({ reportId }: { reportId: string }) {
         <button
             onClick={handleShare}
             disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-2 border border-black font-mono text-xs hover:bg-neutral-50 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 border border-black font-mono text-xs hover:bg-neutral-100 disabled:opacity-50 transition-colors"
         >
             {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Share2 className="h-3 w-3" />}
             Share

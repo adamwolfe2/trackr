@@ -51,7 +51,7 @@ function StepCard({ step, index }: { step: typeof steps[0]; index: number }) {
             className="relative flex flex-col md:flex-row gap-8 md:gap-16 items-start group"
         >
             {/* Step Number */}
-            <div className={`relative z-10 w-14 h-14 ${step.color} border border-black flex-shrink-0 flex items-center justify-center font-mono font-bold text-xl shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] group-hover:translate-x-[1px] group-hover:translate-y-[1px] group-hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-200`}>
+            <div className={`relative z-10 w-14 h-14 ${step.color} border border-black flex-shrink-0 flex items-center justify-center font-mono font-bold text-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group-hover:translate-x-[1px] group-hover:translate-y-[1px] group-hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-200`}>
                 {step.id}
             </div>
 
