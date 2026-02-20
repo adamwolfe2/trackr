@@ -1,6 +1,44 @@
 "use server";
 
 /**
+ * Validate a URL is not targeting internal/private network addresses (SSRF protection).
+ */
+function isPrivateUrl(urlString: string): boolean {
+    try {
+        const parsed = new URL(urlString);
+        const hostname = parsed.hostname.toLowerCase();
+
+        // Block private/internal hostnames
+        if (
+            hostname === "localhost" ||
+            hostname === "127.0.0.1" ||
+            hostname === "0.0.0.0" ||
+            hostname === "[::1]" ||
+            hostname === "metadata.google.internal" ||
+            hostname.endsWith(".local") ||
+            hostname.endsWith(".internal")
+        ) return true;
+
+        // Block private IP ranges (10.x, 172.16-31.x, 192.168.x, 169.254.x)
+        const parts = hostname.split(".").map(Number);
+        if (parts.length === 4 && parts.every(p => !isNaN(p))) {
+            if (parts[0] === 10) return true;
+            if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) return true;
+            if (parts[0] === 192 && parts[1] === 168) return true;
+            if (parts[0] === 169 && parts[1] === 254) return true; // AWS metadata
+            if (parts[0] === 0) return true;
+        }
+
+        // Block non-http(s) protocols
+        if (!["http:", "https:"].includes(parsed.protocol)) return true;
+
+        return false;
+    } catch {
+        return true; // If URL can't be parsed, block it
+    }
+}
+
+/**
  * Fetch URL metadata (title, description, OG image) for a tool preview.
  * Used by both authenticated server actions (submitTool) and API-key-authed
  * extension routes. Auth is enforced by the caller, not here.
@@ -12,6 +50,11 @@ export async function previewTool(url: string) {
         // Ensure protocol
         if (!url.startsWith("http")) {
             url = `https://${url}`;
+        }
+
+        // SSRF protection: block internal/private URLs
+        if (isPrivateUrl(url)) {
+            return { error: "Invalid URL" };
         }
 
         const controller = new AbortController();

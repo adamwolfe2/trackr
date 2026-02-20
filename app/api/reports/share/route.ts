@@ -3,6 +3,11 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { reports, tools, workspaceMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { z } from "zod";
+
+const ShareSchema = z.object({
+    reportId: z.string().uuid("reportId must be a valid UUID"),
+});
 
 export async function POST(req: NextRequest) {
     const user = await currentUser();
@@ -10,10 +15,18 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { reportId } = await req.json();
-    if (!reportId) {
-        return NextResponse.json({ error: "reportId is required" }, { status: 400 });
+    let body: unknown;
+    try {
+        body = await req.json();
+    } catch {
+        return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
+
+    const parsed = ShareSchema.safeParse(body);
+    if (!parsed.success) {
+        return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
+    const { reportId } = parsed.data;
 
     // Get report and verify user has access
     const report = await db.query.reports.findFirst({

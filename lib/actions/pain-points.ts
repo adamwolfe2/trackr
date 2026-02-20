@@ -6,7 +6,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
-import { getWorkspaceId } from "./tools";
+import { getWorkspaceId } from "@/lib/db/queries";
 
 const addPainPointSchema = z.object({
     title: z.string().min(1, "Title is required"),
@@ -59,6 +59,7 @@ export async function batchAddPainPoints(items: Array<{ title: string; category?
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
 
+    if (items.length > 100) throw new Error("Batch size limit exceeded (max 100)");
     const valid = items.filter(i => i.title?.trim());
     if (valid.length === 0) throw new Error("No valid pain points to add");
 

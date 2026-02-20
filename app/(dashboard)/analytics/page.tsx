@@ -11,7 +11,7 @@ import { tools, reports, researchJobs, workspaceMembers, painPoints } from "@/li
 import { eq, sql, desc, gte, inArray, and } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getWorkspaceId } from "@/lib/actions/tools";
+import { getWorkspaceId } from "@/lib/db/queries";
 import AnalyticsClient from "./client";
 
 export default async function AnalyticsPage() {

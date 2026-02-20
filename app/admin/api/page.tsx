@@ -20,7 +20,13 @@ async function getAdminCookie(): Promise<string | undefined> {
 }
 
 function isAuthenticated(cookieValue: string | undefined): boolean {
-    return !!cookieValue && cookieValue === process.env.ADMIN_PASSWORD;
+    if (!cookieValue || !process.env.ADMIN_PASSWORD) return false;
+    const { timingSafeEqual, createHash } = require("crypto");
+    const expectedToken = createHash("sha256").update(process.env.ADMIN_PASSWORD).digest("hex");
+    const a = Buffer.from(cookieValue);
+    const b = Buffer.from(expectedToken);
+    if (a.length !== b.length) return false;
+    return timingSafeEqual(a, b);
 }
 
 // ── Server actions ──────────────────────────────────────────────────────────
@@ -28,9 +34,17 @@ function isAuthenticated(cookieValue: string | undefined): boolean {
 async function loginAction(formData: FormData) {
     "use server";
     const password = formData.get("password") as string;
-    if (password === process.env.ADMIN_PASSWORD) {
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!password || !adminPassword) return;
+
+    const { timingSafeEqual, createHash } = await import("crypto");
+    const a = Buffer.from(password);
+    const b = Buffer.from(adminPassword);
+    if (a.length === b.length && timingSafeEqual(a, b)) {
+        // Store a derived token in cookie instead of raw password
+        const token = createHash("sha256").update(adminPassword).digest("hex");
         const { cookies } = await import("next/headers");
-        (await cookies()).set("trackr-admin", password, {
+        (await cookies()).set("trackr-admin", token, {
             httpOnly: true,
             secure: true,
             maxAge: 60 * 60 * 24 * 7, // 7 days

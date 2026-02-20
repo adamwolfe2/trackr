@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { createHmac } from "crypto";
-import { getWorkspaceId } from "@/lib/actions/tools";
+import { getWorkspaceId } from "@/lib/db/queries";
 
 export const dynamic = "force-dynamic";
 

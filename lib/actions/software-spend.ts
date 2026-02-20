@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { softwareSpend } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq, and } from "drizzle-orm";
-import { getWorkspaceId } from "./tools";
+import { getWorkspaceId } from "@/lib/db/queries";
 
 export async function addSoftwareSpend(formData: FormData) {
     const user = await currentUser();
@@ -58,9 +58,15 @@ export async function deleteSoftwareSpend(id: string) {
     return { success: true };
 }
 
+const VALID_SPEND_STATUSES = ["active", "evaluating", "canceling", "canceled"] as const;
+
 export async function updateSoftwareSpendStatus(id: string, status: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
+
+    if (!VALID_SPEND_STATUSES.includes(status as typeof VALID_SPEND_STATUSES[number])) {
+        throw new Error("Invalid status");
+    }
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
@@ -88,6 +94,7 @@ export async function batchAddSoftwareSpend(items: Array<{
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
 
+    if (items.length > 100) throw new Error("Batch size limit exceeded (max 100)");
     const valid = items.filter(i => i.toolName?.trim());
     if (valid.length === 0) throw new Error("No valid tools to add");
 

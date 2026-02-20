@@ -3,26 +3,34 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { db } from "@/lib/db";
-import { tools, workspaceMembers, reports, researchJobs, notes, subscriptions } from "@/lib/db/schema";
+import { tools, reports, researchJobs, notes, subscriptions } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { performDeepResearch } from "@/lib/actions/research";
 import { ensureWorkspace } from "@/lib/db/ensure-workspace";
 
-export async function getWorkspaceId(userId: string) {
-    const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, userId),
-    });
-    return member?.workspaceId;
-}
+import { getWorkspaceId } from "@/lib/db/queries";
 
 export async function submitTool(formData: FormData) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
-    const name = formData.get("name") as string;
-    const websiteUrl = formData.get("website_url") as string;
+    const name = (formData.get("name") as string)?.trim();
+    const websiteUrl = (formData.get("website_url") as string)?.trim();
+
+    if (!name || name.length < 1 || name.length > 200) {
+        throw new Error("Tool name must be 1-200 characters");
+    }
+    if (!websiteUrl) {
+        throw new Error("Website URL is required");
+    }
+    // Validate URL format
+    try {
+        new URL(websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`);
+    } catch {
+        throw new Error("Invalid website URL");
+    }
 
     // 1. Get user's workspace (or create one if webhook/onboarding hasn't yet)
     const { workspaceId } = await ensureWorkspace(user.id, {
@@ -39,12 +47,11 @@ export async function submitTool(formData: FormData) {
     const limits = getPlanLimits(subscription);
 
     // Count existing tools
-    const toolCount = await db.query.tools.findMany({
-        where: eq(tools.workspaceId, workspaceId),
-        columns: { id: true }
-    });
+    const [{ value: toolCount }] = await db.select({ value: count() })
+        .from(tools)
+        .where(eq(tools.workspaceId, workspaceId));
 
-    if (limits.limits.tools !== Infinity && toolCount.length >= limits.limits.tools) {
+    if (limits.limits.tools !== Infinity && toolCount >= limits.limits.tools) {
         throw new Error(`Tool limit reached (${limits.limits.tools} tools on ${limits.name} plan). Upgrade to Team for unlimited tools.`);
     }
 
@@ -90,13 +97,13 @@ export async function deleteTool(toolId: string) {
 
     if (!tool) throw new Error("Tool not found or unauthorized");
 
-    // Delete related records first
-    await db.delete(notes).where(eq(notes.toolId, toolId));
-    await db.delete(reports).where(eq(reports.toolId, toolId));
-    await db.delete(researchJobs).where(eq(researchJobs.toolId, toolId));
-
-    // Delete tool
-    await db.delete(tools).where(eq(tools.id, toolId));
+    // Atomic deletion — all related records in a single transaction
+    await db.transaction(async (tx) => {
+        await tx.delete(notes).where(eq(notes.toolId, toolId));
+        await tx.delete(reports).where(eq(reports.toolId, toolId));
+        await tx.delete(researchJobs).where(eq(researchJobs.toolId, toolId));
+        await tx.delete(tools).where(eq(tools.id, toolId));
+    });
 
     revalidatePath("/tools");
     revalidatePath("/dashboard");

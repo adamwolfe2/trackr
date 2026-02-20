@@ -2,7 +2,7 @@ import { PainPointsClient } from "@/components/pain-points/pain-points-client";
 import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getWorkspaceId } from "@/lib/actions/tools";
+import { getWorkspaceId } from "@/lib/db/queries";
 import { painPoints } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import type { Metadata } from "next";

@@ -8,7 +8,7 @@ export const metadata: Metadata = {
     title: "Billing & Plans — Trackr",
     description: "Manage your subscription and view usage.",
 };
-import { getWorkspaceId } from "@/lib/actions/tools";
+import { getWorkspaceId } from "@/lib/db/queries";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq, and, gte, inArray, count } from "drizzle-orm";
 import { getPlanLimits, PLANS } from "@/lib/config/subscriptions";

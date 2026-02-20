@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { listChannels } from "@/lib/services/slack";
-import { getWorkspaceId } from "@/lib/actions/tools";
+import { getWorkspaceId } from "@/lib/db/queries";
 import { db } from "@/lib/db";
 import { workspaces } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";

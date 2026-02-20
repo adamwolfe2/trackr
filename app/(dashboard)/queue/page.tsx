@@ -13,7 +13,7 @@ import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getWorkspaceId } from "@/lib/actions/tools";
+import { getWorkspaceId } from "@/lib/db/queries";
 import Link from "next/link";
 import { QueueAutoRefresh } from "@/components/queue/queue-auto-refresh";
 

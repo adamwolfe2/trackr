@@ -10,6 +10,11 @@ export async function createAdCampaign(workspaceId: string, toolId: string, budg
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
+    // Budget validation
+    if (typeof budget !== "number" || isNaN(budget) || budget < 5 || budget > 100000) {
+        throw new Error("Budget must be between $5 and $100,000");
+    }
+
     // Verify workspace membership
     const member = await db.query.workspaceMembers.findFirst({
         where: and(
