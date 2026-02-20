@@ -35,7 +35,7 @@ vi.mock("@/lib/utils/stack-insights", () => ({
 
 import { getWorkspaceFromApiKey, checkExtensionRateLimit } from "@/lib/middleware/extension-auth";
 import { db } from "@/lib/db";
-import { GET } from "../route";
+import { GET, OPTIONS } from "../route";
 
 function makeRequest(apiKey?: string) {
     return {
@@ -86,5 +86,29 @@ describe("GET /api/extension/context", () => {
         expect(res.status).toBe(200);
         const body = await res.json();
         expect(body.stackCount).toBe(0);
+    });
+
+    it("only counts active entries in stackCount (ignores inactive/cancelled)", async () => {
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { id: "spend_1", toolName: "Notion", status: "active", monthlyCost: "50", seatCount: 10, category: "productivity", workspaceId: "ws_1" },
+            { id: "spend_2", toolName: "Slack", status: "cancelled", monthlyCost: "100", seatCount: 50, category: "communication", workspaceId: "ws_1" },
+            { id: "spend_3", toolName: "Zoom", status: "inactive", monthlyCost: "30", seatCount: 5, category: "communication", workspaceId: "ws_1" },
+        ]);
+        const res = await GET(makeRequest("valid_key"));
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.stackCount).toBe(1); // only the active one
+    });
+
+    it("returns 500 when the database throws", async () => {
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("DB down"));
+        const res = await GET(makeRequest("valid_key"));
+        expect(res.status).toBe(500);
+    });
+
+    it("OPTIONS returns 204 for CORS preflight", async () => {
+        const req = makeRequest();
+        const res = await OPTIONS(req as unknown as import("next/server").NextRequest);
+        expect(res.status).toBe(204);
     });
 });

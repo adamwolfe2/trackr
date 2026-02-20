@@ -88,4 +88,25 @@ describe("GET /api/cron/recover-stuck-jobs", () => {
         const body = await res.json();
         expect(body.recovered).toBe(1);
     });
+
+    it("deduplicates toolIds when multiple jobs share the same tool", async () => {
+        const stuckJobs = [
+            { id: "job_3", toolId: "tool_3", triggeredAt: new Date(Date.now() - 15 * 60_000) },
+            { id: "job_4", toolId: "tool_3", triggeredAt: new Date(Date.now() - 12 * 60_000) },
+        ];
+        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(stuckJobs);
+        (db.query.reports.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+
+        const res = await GET(makeRequest(VALID_AUTH));
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.recovered).toBe(2); // 2 jobs
+        expect(body.toolIds).toEqual(["tool_3"]); // deduplicated to 1 unique tool
+    });
+
+    it("returns 500 on internal database error", async () => {
+        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("DB unavailable"));
+        const res = await GET(makeRequest(VALID_AUTH));
+        expect(res.status).toBe(500);
+    });
 });
