@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { workspaceMembers, workspaces, subscriptions, pendingInvitations } from "@/lib/db/schema";
 import { and, asc, eq, gt } from "drizzle-orm";
 import { Shield, Building2, Lock } from "lucide-react";
+import { clerkClient } from "@clerk/nextjs/server";
 import { ApiKeySection } from "@/components/workspace/api-key-section";
 import { SlackSection } from "@/components/workspace/slack-section";
 import { InviteMemberForm, RemoveMemberButton, CancelInvitationButton, UpdateWorkspaceNameForm, UpdateCompanyContextForm } from "@/components/workspace/workspace-forms";
@@ -53,6 +54,28 @@ export default async function WorkspacePage() {
         orderBy: [asc(pendingInvitations.createdAt)],
     });
 
+    // Resolve Clerk user data for all members (names, emails)
+    const clerk = await clerkClient();
+    const memberUserData = await Promise.all(
+        members.map(async (member) => {
+            if (member.userId === user.id) {
+                return { userId: member.userId, firstName: user.firstName, lastName: user.lastName, email: user.emailAddresses[0]?.emailAddress };
+            }
+            try {
+                const clerkUser = await clerk.users.getUser(member.userId);
+                return {
+                    userId: member.userId,
+                    firstName: clerkUser.firstName,
+                    lastName: clerkUser.lastName,
+                    email: clerkUser.emailAddresses[0]?.emailAddress ?? null,
+                };
+            } catch {
+                return { userId: member.userId, firstName: null, lastName: null, email: null };
+            }
+        })
+    );
+    const memberUserMap = new Map(memberUserData.map((u) => [u.userId, u]));
+
     const isOwnerOrAdmin = currentMember.role === "owner" || currentMember.role === "admin";
 
     // Plan check for feature gating
@@ -91,25 +114,25 @@ export default async function WorkspacePage() {
 
                         <div className="divide-y divide-neutral-100">
                             {members.map((member) => {
-                                const initials = member.userId.slice(5, 7).toUpperCase();
                                 const isCurrentUser = member.userId === user.id;
                                 const isThisOwner = member.role === "owner";
+                                const userData = memberUserMap.get(member.userId);
+                                const displayName = `${userData?.firstName ?? ""} ${userData?.lastName ?? ""}`.trim() || (isCurrentUser ? "You" : "Team Member");
+                                const avatarLetter = (userData?.firstName?.[0] ?? userData?.email?.[0] ?? "?").toUpperCase();
 
                                 return (
                                     <div key={member.id} className="flex items-center justify-between py-3 gap-2">
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div className="h-8 w-8 border border-black flex items-center justify-center font-mono text-xs font-bold flex-shrink-0">
-                                                {isCurrentUser ? (user.firstName?.[0] ?? "U") : initials.charAt(0)}
+                                                {avatarLetter}
                                             </div>
                                             <div className="min-w-0">
                                                 <div className="font-mono text-sm font-medium truncate">
-                                                    {isCurrentUser ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || "You" : `Member ${initials}`}
+                                                    {displayName}
                                                     {isCurrentUser && <span className="font-mono text-[10px] text-neutral-400 ml-2">(you)</span>}
                                                 </div>
                                                 <div className="font-mono text-[10px] text-neutral-400 truncate">
-                                                    {isCurrentUser && user.emailAddresses[0]?.emailAddress
-                                                        ? user.emailAddresses[0].emailAddress
-                                                        : `Joined ${new Date(member.joinedAt).toLocaleDateString()}`}
+                                                    {userData?.email ?? `Joined ${new Date(member.joinedAt).toLocaleDateString()}`}
                                                 </div>
                                             </div>
                                         </div>
