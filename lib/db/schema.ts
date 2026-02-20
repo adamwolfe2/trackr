@@ -223,6 +223,26 @@ export const subscriptions = pgTable('subscriptions', {
     index('subscriptions_status_idx').on(table.status),
 ]);
 
+// Pending workspace invitations — used to onboard invited users to the right workspace on sign-up
+export const pendingInvitations = pgTable('pending_invitations', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
+    email: text('email').notNull(),
+    invitedByUserId: text('invited_by_user_id').notNull(),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    expiresAt: timestamp('expires_at').notNull(),
+}, (table) => [
+    index('pending_invitations_email_idx').on(table.email),
+    index('pending_invitations_workspace_id_idx').on(table.workspaceId),
+]);
+
+export const pendingInvitationsRelations = relations(pendingInvitations, ({ one }) => ({
+    workspace: one(workspaces, {
+        fields: [pendingInvitations.workspaceId],
+        references: [workspaces.id],
+    }),
+}));
+
 export const subscriptionsRelations = relations(subscriptions, ({ one }) => ({
     workspace: one(workspaces, {
         fields: [subscriptions.workspaceId],

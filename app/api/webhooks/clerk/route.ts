@@ -2,39 +2,34 @@ import { Webhook } from 'svix'
 import { headers } from 'next/headers'
 import { WebhookEvent } from '@clerk/nextjs/server'
 import { ensureWorkspace } from '@/lib/db/ensure-workspace'
-import { sendWelcomeEmail } from '@/lib/email/resend'
+import { sendWelcomeEmail, scheduleDripSequence } from '@/lib/email/resend'
+import { db } from '@/lib/db'
+import { pendingInvitations, workspaceMembers, workspaces } from '@/lib/db/schema'
+import { and, eq, gt } from 'drizzle-orm'
 
 export async function POST(req: Request) {
-    // You can find this in the Clerk Dashboard -> Webhooks -> choose the webhook
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
 
     if (!WEBHOOK_SECRET) {
         throw new Error('Please add CLERK_WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local')
     }
 
-    // Get the headers
     const headerPayload = await headers();
     const svix_id = headerPayload.get("svix-id");
     const svix_timestamp = headerPayload.get("svix-timestamp");
     const svix_signature = headerPayload.get("svix-signature");
 
-    // If there are no headers, error out
     if (!svix_id || !svix_timestamp || !svix_signature) {
-        return new Response('Error occured -- no svix headers', {
-            status: 400
-        })
+        return new Response('Error occurred -- no svix headers', { status: 400 })
     }
 
-    // Get the body
     const payload = await req.json()
     const body = JSON.stringify(payload)
 
-    // Create a new Svix instance with your secret.
     const wh = new Webhook(WEBHOOK_SECRET)
 
     let evt: WebhookEvent
 
-    // Verify the payload with the headers
     try {
         evt = wh.verify(body, {
             'svix-id': svix_id,
@@ -42,27 +37,62 @@ export async function POST(req: Request) {
             'svix-signature': svix_signature,
         }) as WebhookEvent
     } catch {
-        return new Response('Error occured', {
-            status: 400
-        })
+        return new Response('Error occurred', { status: 400 })
     }
 
-    // Handle the event
     const eventType = evt.type
 
     if (eventType === 'user.created') {
-        const { id, email_addresses, username } = evt.data;
+        const { id, email_addresses, username, first_name } = evt.data;
 
         const primaryEmail = email_addresses[0]?.email_address;
         const displayName = username || primaryEmail?.split('@')[0] || "User";
+        const firstName = first_name || displayName;
 
-        // Create workspace (idempotent — safe if onboarding already created one)
+        // Check for a pending workspace invitation for this email.
+        // If found, add user to that workspace instead of creating a new one.
+        if (primaryEmail) {
+            const now = new Date();
+            const pendingInvite = await db.query.pendingInvitations.findFirst({
+                where: and(
+                    eq(pendingInvitations.email, primaryEmail),
+                    gt(pendingInvitations.expiresAt, now),
+                ),
+                with: { workspace: true },
+            });
+
+            if (pendingInvite) {
+                // Add user to the inviting workspace as a member
+                await db
+                    .insert(workspaceMembers)
+                    .values({
+                        userId: id,
+                        workspaceId: pendingInvite.workspaceId,
+                        role: 'member',
+                    })
+                    .onConflictDoNothing(); // Safe if somehow already a member
+
+                // Delete the consumed invitation
+                await db
+                    .delete(pendingInvitations)
+                    .where(eq(pendingInvitations.id, pendingInvite.id));
+
+                // Send welcome email mentioning the workspace
+                if (process.env.RESEND_API_KEY) {
+                    sendWelcomeEmail(primaryEmail, firstName).catch(() => {});
+                }
+
+                return new Response('', { status: 200 })
+            }
+        }
+
+        // No pending invitation — create a fresh workspace for this user
         const { created } = await ensureWorkspace(id, { displayName, email: primaryEmail });
 
-        // Send welcome email only on first workspace creation
+        // Send welcome email + schedule drip sequence only on first workspace creation
         if (created && primaryEmail) {
-            const firstName = evt.data.first_name || displayName;
             sendWelcomeEmail(primaryEmail, firstName).catch(() => {});
+            scheduleDripSequence(primaryEmail, firstName).catch(() => {});
         }
     }
 

@@ -438,7 +438,9 @@ export async function performDeepResearch(toolId: string) {
 
         // ── Step 6.5: Perplexity deep analysis (conditional) ────────────────
         let perplexityAnalysis = "";
-        if (process.env.PERPLEXITY_API_KEY) {
+        if (!process.env.PERPLEXITY_API_KEY) {
+            await logProgress(toolId, `Perplexity: Skipped (PERPLEXITY_API_KEY not set — set this env var for deeper competitive analysis)`);
+        } else if (process.env.PERPLEXITY_API_KEY) {
             await logProgress(toolId, `Perplexity: Running deep competitive analysis...`);
             const perplexityStart = Date.now();
             try {

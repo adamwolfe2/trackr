@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    name: Lint, Typecheck & Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Run unit tests
+        run: npm run test
+        env:
+          # Stub env vars so modules don't crash on import in test environment
+          DATABASE_URL: postgresql://test:test@localhost:5432/test
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_stub
+          CLERK_SECRET_KEY: sk_test_stub
+          CLERK_WEBHOOK_SECRET: whsec_stub
+          RESEND_API_KEY: re_stub
+          OPENAI_API_KEY: sk-stub
+          STRIPE_SECRET_KEY: sk_test_stub
+          STRIPE_WEBHOOK_SECRET: whsec_stub
+          FIRECRAWL_API_KEY: fc_stub
+          TAVILY_API_KEY: tvly_stub
+          NEXT_PUBLIC_APP_URL: https://trytrackr.com
+          CRON_SECRET: cron_stub

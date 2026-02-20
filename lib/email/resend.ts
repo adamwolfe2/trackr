@@ -156,6 +156,97 @@ export async function sendTrialEndingEmail(
     });
 }
 
+// ── Drip Email Sequence ──────────────────────────────────────────────────────
+
+/**
+ * Schedule the full 3-email post-signup drip sequence using Resend's scheduledAt.
+ * D+1: Re-engagement (check first report), D+3: Credits nudge, D+7: Upgrade CTA.
+ * All three emails are queued at sign-up time — no cron job needed.
+ */
+export async function scheduleDripSequence(to: string, firstName: string) {
+    if (!process.env.RESEND_API_KEY) return;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+    const resend = getResend();
+    const name = escapeHtml(firstName);
+
+    const d1 = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString();
+    const d3 = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+    const d7 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // D+1: Have you seen your first report?
+    resend.emails.send({
+        from: FROM,
+        to,
+        subject: `${firstName}, your first Trackr report is waiting`,
+        scheduledAt: d1,
+        html: emailWrapper(`
+            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Day 1 — Getting Started</p>
+            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                ${name}, ready to research your first tool?
+            </h1>
+            <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">
+                It takes under 2 minutes. Paste any SaaS tool URL and Trackr's research agents will:
+            </p>
+            <ul style="font-size: 13px; color: #333; line-height: 2; padding-left: 20px; margin: 0 0 24px;">
+                <li>Scrape the official site for features and pricing</li>
+                <li>Pull reviews from G2, Capterra, TrustRadius, and Reddit</li>
+                <li>Analyze competitors and market position</li>
+                <li>Score the tool across 7 dimensions</li>
+            </ul>
+            ${emailButton(`${appUrl}/submit`, "Research a Tool Now →")}
+        `),
+    }).catch(() => {});
+
+    // D+3: Credits awareness
+    resend.emails.send({
+        from: FROM,
+        to,
+        subject: "Here's how Trackr teams save hours every week",
+        scheduledAt: d3,
+        html: emailWrapper(`
+            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Day 3 — Team Tip</p>
+            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                The typical team evaluates 10-15 tools per quarter.
+            </h1>
+            <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">
+                That's 40-60 hours of research time — reading landing pages, comparing G2 reviews, building spreadsheets. Trackr reduces it to <strong>under 2 minutes per tool</strong>.
+            </p>
+            <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
+                Your free plan includes 3 research runs per month. If you need more, each extra credit costs $2 — or upgrade to Pro for 20 runs/month.
+            </p>
+            ${emailButton(`${appUrl}/tools`, "View Your Research →")}
+        `),
+    }).catch(() => {});
+
+    // D+7: Upgrade CTA with specific value props
+    resend.emails.send({
+        from: FROM,
+        to,
+        subject: "Is Trackr saving you time?",
+        scheduledAt: d7,
+        html: emailWrapper(`
+            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Day 7 — Check-in</p>
+            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                A week in — how's it going?
+            </h1>
+            <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">
+                Teams that use Trackr Pro can:
+            </p>
+            <ul style="font-size: 13px; color: #333; line-height: 2; padding-left: 20px; margin: 0 0 24px;">
+                <li>Run 20 research reports per month</li>
+                <li>Invite teammates to share a workspace</li>
+                <li>Get Slack notifications when research completes</li>
+                <li>Export reports to PDF for stakeholder reviews</li>
+                <li>Track monthly SaaS spend across all tools</li>
+            </ul>
+            <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
+                Pro is $49/month. That's less than the cost of one hour of manual research time.
+            </p>
+            ${emailButton(`${appUrl}/pricing`, "Upgrade to Pro →")}
+        `),
+    }).catch(() => {});
+}
+
 export async function sendRenewalAlertEmail(
     to: string,
     tools: Array<{ name: string; renewalDate: Date; monthlyCost: string | null }>
