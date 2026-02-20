@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Check, Loader2, Sparkles, ArrowRight, Search, X, PlusCircle } from "lucide-react";
 import { generateCompanyContext, completeOnboarding } from "@/lib/actions/onboarding";
 import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS, getLogoUrl } from "@/lib/constants/integrations";
@@ -16,6 +16,7 @@ export default function OnboardingPage() {
     const [step, setStep] = useState<Step>(1);
     const [isPending, startTransition] = useTransition();
     const searchParams = useSearchParams();
+    const router = useRouter();
     const plan = searchParams.get("plan") ?? "";
 
     // Step 1
@@ -23,6 +24,7 @@ export default function OnboardingPage() {
     const [websiteUrl, setWebsiteUrl] = useState("");
     const [companyContext, setCompanyContext] = useState("");
     const [isGenerating, setIsGenerating] = useState(false);
+    const [contextWasAiGenerated, setContextWasAiGenerated] = useState(false);
 
     // Step 2
     const [selectedTools, setSelectedTools] = useState<Set<string>>(new Set());
@@ -109,13 +111,14 @@ export default function OnboardingPage() {
             const url = websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`;
             const result = await generateCompanyContext(url);
             if (result.error) {
-                toast.error("Could not scrape site — enter context manually.");
+                toast.error("We couldn't access this site — it may be blocking automated requests. Try entering your company description manually.");
             } else {
                 setCompanyContext(result.context);
+                setContextWasAiGenerated(true);
                 toast.success("Company context generated.");
             }
         } catch {
-            toast.error("Failed to generate context.");
+            toast.error("Something went wrong generating context. Please describe your company manually.");
         } finally {
             setIsGenerating(false);
         }
@@ -133,17 +136,25 @@ export default function OnboardingPage() {
                     .map((name) => ({ name, url: "" }));
                 const toolsArray = [...catalogTools, ...customSelected];
 
-                await completeOnboarding({
+                const result = await completeOnboarding({
                     companyName,
                     companyContext,
                     selectedTools: toolsArray,
                     scorecardDimensions: dimensions,
                     plan: plan || undefined,
                 });
-                // Clear draft on success (redirect happens server-side)
+
+                // Clear draft on success
                 localStorage.removeItem("trackr_onboarding_draft");
-            } catch {
-                toast.error("Failed to save workspace. Please try again.");
+
+                // Navigate client-side (server action returns URL instead of calling redirect)
+                router.push(result.redirectTo);
+            } catch (error: unknown) {
+                const message = error instanceof Error ? error.message : "Unknown error";
+                toast.error(message.includes("Scorecard weights")
+                    ? message
+                    : `Failed to save workspace: ${message}`
+                );
             }
         });
     };
@@ -175,9 +186,9 @@ export default function OnboardingPage() {
                 </div>
             </div>
 
-            {(plan === "team" || plan === "agency") && (
+            {plan && ["team", "startup", "enterprise"].includes(plan) && (
                 <div className="border-b border-black bg-black text-white px-6 py-2.5 text-center font-mono text-xs">
-                    You&apos;re signing up for the <span className="font-bold uppercase">{plan === "team" ? "Team" : "Agency"}</span> plan.
+                    You&apos;re signing up for the <span className="font-bold uppercase">{plan}</span> plan.
                     Complete onboarding to activate your subscription.
                 </div>
             )}
@@ -231,12 +242,12 @@ export default function OnboardingPage() {
                             <div>
                                 <label className="text-xs font-mono uppercase tracking-wide text-neutral-500 block mb-1">
                                     Company Context
-                                    {companyContext && <span className="text-black ml-2">✓ Generated</span>}
+                                    {contextWasAiGenerated && companyContext && <span className="text-black ml-2">✓ AI Generated</span>}
                                 </label>
                                 <textarea
                                     placeholder="Describe your company, industry, and what you're looking for in tools. This context is used by research agents to tailor every report."
                                     value={companyContext}
-                                    onChange={(e) => setCompanyContext(e.target.value)}
+                                    onChange={(e) => { setCompanyContext(e.target.value); setContextWasAiGenerated(false); }}
                                     rows={4}
                                     className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black placeholder:text-neutral-400 resize-none"
                                 />
@@ -330,15 +341,24 @@ export default function OnboardingPage() {
                                             </div>
                                         )}
                                         <div className="w-8 h-8 flex items-center justify-center">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
-                                                src={getLogoUrl(integration)}
-                                                alt={integration.name}
-                                                width={32}
-                                                height={32}
-                                                className="object-contain w-8 h-8"
-                                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                                            />
+                                            {getLogoUrl(integration) ? (
+                                                /* eslint-disable-next-line @next/next/no-img-element */
+                                                <img
+                                                    src={getLogoUrl(integration)}
+                                                    alt={integration.name}
+                                                    width={32}
+                                                    height={32}
+                                                    className="object-contain w-8 h-8"
+                                                    onError={(e) => {
+                                                        const el = e.target as HTMLImageElement;
+                                                        // Replace broken image with letter fallback
+                                                        el.style.display = "none";
+                                                        el.parentElement!.innerHTML = `<span class="font-mono text-sm font-bold text-neutral-400">${integration.name.charAt(0).toUpperCase()}</span>`;
+                                                    }}
+                                                />
+                                            ) : (
+                                                <span className="font-mono text-sm font-bold text-neutral-400">{integration.name.charAt(0).toUpperCase()}</span>
+                                            )}
                                         </div>
                                         <span className="text-[9px] font-mono text-neutral-600 leading-tight text-center line-clamp-2 max-w-[60px]">
                                             {integration.name}
@@ -500,11 +520,13 @@ export default function OnboardingPage() {
                             </button>
                             <button
                                 onClick={handleComplete}
-                                disabled={isPending}
+                                disabled={isPending || totalWeight !== 100}
                                 className="flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-60 disabled:cursor-not-allowed transition-all"
                             >
                                 {isPending ? (
                                     <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+                                ) : totalWeight !== 100 ? (
+                                    <>Weights must equal 100%</>
                                 ) : (
                                     <><Check className="w-4 h-4" /> Launch Workspace</>
                                 )}

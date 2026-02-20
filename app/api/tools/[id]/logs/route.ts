@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { tools, workspaceMembers } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
+import { tools, researchJobs, workspaceMembers } from "@/lib/db/schema";
+import { and, eq, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -32,7 +32,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
         const logs = (tool as Record<string, unknown>).researchLogs || [];
 
-        return NextResponse.json({ logs, status: tool.status });
+        // Include error message from the latest failed job
+        let errorMessage: string | null = null;
+        if (tool.status === "failed") {
+            const latestJob = await db.query.researchJobs.findFirst({
+                where: and(eq(researchJobs.toolId, id), eq(researchJobs.status, "failed")),
+                orderBy: [desc(researchJobs.triggeredAt)],
+                columns: { errorMessage: true },
+            });
+            errorMessage = latestJob?.errorMessage ?? null;
+        }
+
+        return NextResponse.json({ logs, status: tool.status, errorMessage });
     } catch (error) {
         console.error("Failed to fetch logs:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

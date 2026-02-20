@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { workspaces, softwareSpend } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { openai } from "@ai-sdk/openai";
@@ -81,13 +80,21 @@ const OnboardingSchema = z.object({
     plan: z.string().max(50).optional(),
 });
 
+/**
+ * Complete onboarding — saves workspace config, selected tools, and scorecard.
+ *
+ * IMPORTANT: Returns { success, redirectTo } instead of calling redirect().
+ * In Next.js 15, redirect() throws a NEXT_REDIRECT error that gets caught by
+ * client-side try/catch blocks, causing "Failed to save" toast even though the
+ * save actually succeeded. The client must handle navigation via router.push().
+ */
 export async function completeOnboarding(input: {
     companyName: string;
     companyContext: string;
     selectedTools: Array<{ name: string; url?: string }>;
     scorecardDimensions: Array<{ key: string; label: string; weight: number }>;
     plan?: string;
-}) {
+}): Promise<{ success: true; redirectTo: string }> {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
@@ -96,6 +103,14 @@ export async function completeOnboarding(input: {
         throw new Error(`Invalid onboarding data: ${parsed.error.issues[0]?.message ?? "validation failed"}`);
     }
     const { companyName, companyContext, selectedTools, scorecardDimensions, plan } = parsed.data;
+
+    // Validate scorecard weights sum to 100%
+    if (scorecardDimensions.length > 0) {
+        const totalWeight = scorecardDimensions.reduce((sum, d) => sum + d.weight, 0);
+        if (totalWeight !== 100) {
+            throw new Error(`Scorecard weights must sum to 100% (currently ${totalWeight}%)`);
+        }
+    }
 
     // Ensure workspace exists — creates one if Clerk webhook was delayed/failed
     const { workspaceId, workspace: existingWorkspace } = await ensureWorkspace(user.id, {
@@ -147,10 +162,11 @@ export async function completeOnboarding(input: {
     revalidatePath("/workspace");
     revalidatePath("/stack");
 
-    // Redirect to billing if user selected a paid plan during onboarding
-    if (plan && ["team", "startup", "enterprise"].includes(plan)) {
-        redirect("/settings/billing");
-    }
-    redirect("/tools");
+    // Return redirect URL — client handles navigation via router.push()
+    const redirectTo = (plan && ["team", "startup", "enterprise"].includes(plan))
+        ? "/settings/billing"
+        : "/tools";
+
+    return { success: true, redirectTo };
 }
 

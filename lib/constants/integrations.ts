@@ -7,20 +7,16 @@ export interface Integration {
 
 /**
  * Returns the best available logo URL for an integration.
- * - If a local file is defined, uses /integrations/{file}
- * - Otherwise fetches via Clearbit Logo API using the integration's domain
+ * Priority: local file → Google favicon API (most reliable)
  */
 export function getLogoUrl(integration: Integration): string {
     if (integration.file) return `/integrations/${integration.file}`;
     if (integration.url) {
-        // Strip protocol + path, extract root domain (last 2 parts) for Clearbit
-        const full = integration.url.replace(/^https?:\/\//, "").split("/")[0];
-        const parts = full.split(".");
-        // Use root domain (e.g., google.com from meet.google.com) for better Clearbit results
-        const domain = parts.length > 2 ? parts.slice(-2).join(".") : full;
-        return `https://logo.clearbit.com/${domain}`;
+        // Extract domain for Google's favicon service (highly reliable, no rate limits)
+        const domain = integration.url.replace(/^https?:\/\//, "").split("/")[0];
+        return `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
     }
-    // Fallback: use first letter of name (handled by UI onError)
+    // Fallback: empty string — UI shows first letter of name
     return "";
 }
 

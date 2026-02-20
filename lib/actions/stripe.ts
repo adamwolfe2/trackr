@@ -38,11 +38,21 @@ export async function createCheckoutSession(
 
     const priceId = getPriceId(plan, interval);
 
+    // Reuse existing Stripe customer if workspace already has one (prevents duplicates on re-subscribe)
+    const existingSub = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspaceId),
+        columns: { stripeCustomerId: true },
+    });
+
+    const customerIdentifier = existingSub?.stripeCustomerId
+        ? { customer: existingSub.stripeCustomerId }
+        : { customer_email: user.emailAddresses[0].emailAddress };
+
     const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
         payment_method_types: ['card'],
         line_items: [{ price: priceId, quantity: 1 }],
-        customer_email: user.emailAddresses[0].emailAddress,
+        ...customerIdentifier,
         metadata: { workspaceId, userId: user.id, plan, interval },
         subscription_data: { trial_period_days: 14 },
         success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?success=true`,

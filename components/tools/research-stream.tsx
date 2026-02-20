@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 export function ResearchStream({ toolId }: { toolId: string }) {
     const [logs, setLogs] = useState<{ message: string, timestamp: string }[]>([]);
     const [status, setStatus] = useState("initializing");
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const router = useRouter();
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -18,10 +19,12 @@ export function ResearchStream({ toolId }: { toolId: string }) {
                 const data = await res.json() as {
                     logs?: { message: string; timestamp: string }[];
                     status?: string;
+                    errorMessage?: string | null;
                 };
 
                 if (data.logs) setLogs(data.logs);
                 if (data.status) setStatus(data.status);
+                if (data.errorMessage) setErrorMessage(data.errorMessage);
 
                 if (data.status === "active" || data.status === "failed") {
                     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -98,9 +101,20 @@ export function ResearchStream({ toolId }: { toolId: string }) {
                 )}
 
                 {status === "failed" && (
-                    <div className="flex items-center gap-2 text-red-600 font-medium pt-1 border-t border-neutral-200 mt-2">
-                        <AlertTriangle className="h-3 w-3" />
-                        <span>Research failed. Please retry.</span>
+                    <div className="pt-1 border-t border-neutral-200 mt-2 space-y-2">
+                        <div className="flex items-center gap-2 text-red-600 font-medium">
+                            <AlertTriangle className="h-3 w-3 shrink-0" />
+                            <span>Research failed{errorMessage ? `: ${errorMessage}` : ". Please retry."}</span>
+                        </div>
+                        <div className="bg-neutral-50 border border-neutral-200 p-3 space-y-1.5">
+                            <span className="font-bold text-neutral-600 block">Troubleshooting</span>
+                            <ul className="list-disc list-inside text-neutral-500 space-y-0.5">
+                                <li>Verify the tool&apos;s website URL is correct and publicly accessible</li>
+                                <li>Some sites block automated scraping — try a different URL or the tool&apos;s documentation page</li>
+                                <li>If this is a timeout, the tool&apos;s site may be slow — retrying usually works</li>
+                                <li>Click <strong className="text-black">Retry Research</strong> above to try again</li>
+                            </ul>
+                        </div>
                     </div>
                 )}
 
