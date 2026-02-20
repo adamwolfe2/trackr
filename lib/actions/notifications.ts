@@ -1,12 +1,19 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { researchJobs, workspaceMembers, softwareSpend, toolSuggestions } from "@/lib/db/schema";
-import { eq, desc, and, ne, gte, lte, sql } from "drizzle-orm";
+import { researchJobs, workspaceMembers, softwareSpend, toolSuggestions, subscriptions } from "@/lib/db/schema";
+import { referrals } from "@/lib/db/referrals-schema";
+import { eq, desc, and, ne, gte, lte } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
-export type NotificationType = 'job_complete' | 'job_failed' | 'renewal_soon' | 'new_suggestion';
+export type NotificationType =
+    | 'job_complete'
+    | 'job_failed'
+    | 'renewal_soon'
+    | 'new_suggestion'
+    | 'referral_signup'
+    | 'subscription_change';
 
 export type Notification = {
     id: string;
@@ -100,8 +107,77 @@ export async function getNotifications(): Promise<Notification[]> {
         link: '/feed',
     }));
 
+    // 4. Referral signups
+    const referral = await db.query.referrals.findFirst({
+        where: eq(referrals.referrerWorkspaceId, member.workspaceId),
+    });
+
+    const referralNotifications: Notification[] = [];
+    if (referral && referral.signups > 0) {
+        const id = `referral-${referral.id}`;
+        referralNotifications.push({
+            id,
+            type: 'referral_signup',
+            title: 'Referral Signups',
+            message: `${referral.signups} workspace${referral.signups > 1 ? 's' : ''} signed up with your link. You've earned ${referral.signups * 5} research credits.`,
+            createdAt: referral.createdAt,
+            read: seenIds.includes(id),
+            link: '/referrals',
+        });
+    }
+
+    // 5. Subscription status changes
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, member.workspaceId),
+    });
+
+    const subscriptionNotifications: Notification[] = [];
+    if (subscription) {
+        const subId = `sub-${subscription.id}`;
+        if (subscription.status === 'past_due') {
+            subscriptionNotifications.push({
+                id: subId,
+                type: 'subscription_change',
+                title: 'Payment Due',
+                message: 'Your subscription payment failed. Update your billing info to keep your plan active.',
+                createdAt: subscription.updatedAt,
+                read: seenIds.includes(subId),
+                link: '/settings/billing',
+            });
+        } else if (subscription.status === 'canceled') {
+            subscriptionNotifications.push({
+                id: subId,
+                type: 'subscription_change',
+                title: 'Subscription Cancelled',
+                message: 'Your subscription has been cancelled. Upgrade anytime to restore full access.',
+                createdAt: subscription.updatedAt,
+                read: seenIds.includes(subId),
+                link: '/settings/billing',
+            });
+        } else if (subscription.status === 'trialing' && subscription.currentPeriodEnd) {
+            const daysLeft = Math.ceil((new Date(subscription.currentPeriodEnd).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            if (daysLeft <= 3 && daysLeft >= 0) {
+                subscriptionNotifications.push({
+                    id: subId,
+                    type: 'subscription_change',
+                    title: 'Trial Ending Soon',
+                    message: `Your trial ends ${daysLeft === 0 ? 'today' : daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`}. Add payment to continue.`,
+                    createdAt: subscription.updatedAt,
+                    read: seenIds.includes(subId),
+                    link: '/settings/billing',
+                });
+            }
+        }
+    }
+
     // Merge and sort by date (newest first)
-    const all = [...jobNotifications, ...renewalNotifications, ...suggestionNotifications]
+    const all = [
+        ...jobNotifications,
+        ...renewalNotifications,
+        ...suggestionNotifications,
+        ...referralNotifications,
+        ...subscriptionNotifications,
+    ]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 15);
 

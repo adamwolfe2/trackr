@@ -15,6 +15,8 @@ vi.mock("@/lib/db", () => ({
             researchJobs: { findMany: vi.fn() },
             softwareSpend: { findMany: vi.fn() },
             toolSuggestions: { findMany: vi.fn() },
+            referrals: { findFirst: vi.fn() },
+            subscriptions: { findFirst: vi.fn() },
         },
         update: vi.fn(),
     },
@@ -37,6 +39,10 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { getNotifications, markNotificationsRead } from "../notifications";
 
+vi.mock("@/lib/db/referrals-schema", () => ({
+    referrals: {},
+}));
+
 const MOCK_USER = { id: "user_1" };
 const MOCK_MEMBER = {
     id: "mem_1",
@@ -53,6 +59,8 @@ describe("getNotifications", () => {
         (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         (db.query.toolSuggestions.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.referrals.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     });
 
     it("returns empty array when not logged in", async () => {
@@ -253,6 +261,15 @@ describe("markNotificationsRead", () => {
         expect(setArgs.seenJobIds.filter((id: string) => id === "job_old")).toHaveLength(1);
     });
 
+    it("persists updated seenJobIds to database", async () => {
+        await markNotificationsRead(["job_new"]);
+        expect(db.update).toHaveBeenCalledTimes(1);
+        const setArgs = (
+            (db.update as ReturnType<typeof vi.fn>).mock.results[0].value.set as ReturnType<typeof vi.fn>
+        ).mock.calls[0][0];
+        expect(setArgs.seenJobIds).toContain("job_new");
+    });
+
     it("caps seenJobIds at 200 entries to prevent unbounded growth", async () => {
         // Start with 195 existing IDs
         const existing = Array.from({ length: 195 }, (_, i) => `old_${i}`);
@@ -267,5 +284,169 @@ describe("markNotificationsRead", () => {
             (db.update as ReturnType<typeof vi.fn>).mock.results[0].value.set as ReturnType<typeof vi.fn>
         ).mock.calls[0][0];
         expect(setArgs.seenJobIds).toHaveLength(200);
+    });
+});
+
+describe("getNotifications — referral_signup type", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+        (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
+        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.toolSuggestions.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.referrals.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    });
+
+    it("returns no referral notification when referral row is null", async () => {
+        const result = await getNotifications();
+        expect(result.some(n => n.type === "referral_signup")).toBe(false);
+    });
+
+    it("returns no referral notification when signups is 0", async () => {
+        (db.query.referrals.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: "ref_1",
+            referrerWorkspaceId: "ws_1",
+            code: "ABC123",
+            signups: 0,
+            clicks: 5,
+            createdAt: new Date(),
+        });
+        const result = await getNotifications();
+        expect(result.some(n => n.type === "referral_signup")).toBe(false);
+    });
+
+    it("returns referral_signup notification when signups > 0", async () => {
+        (db.query.referrals.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: "ref_1",
+            referrerWorkspaceId: "ws_1",
+            code: "ABC123",
+            signups: 3,
+            clicks: 10,
+            createdAt: new Date(),
+        });
+        const result = await getNotifications();
+        const notification = result.find(n => n.type === "referral_signup");
+        expect(notification).toBeDefined();
+        expect(notification?.title).toBe("Referral Signups");
+        expect(notification?.message).toContain("3 workspaces");
+        expect(notification?.message).toContain("15 research credits");
+        expect(notification?.link).toBe("/referrals");
+    });
+
+    it("uses singular 'workspace' when signups is 1", async () => {
+        (db.query.referrals.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: "ref_1",
+            referrerWorkspaceId: "ws_1",
+            code: "ABC123",
+            signups: 1,
+            clicks: 2,
+            createdAt: new Date(),
+        });
+        const result = await getNotifications();
+        const notification = result.find(n => n.type === "referral_signup");
+        expect(notification?.message).toContain("1 workspace signed up");
+    });
+});
+
+describe("getNotifications — subscription_change type", () => {
+    beforeEach(() => {
+        vi.resetAllMocks();
+        (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
+        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.toolSuggestions.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.referrals.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+    });
+
+    it("returns no subscription notification when no subscription exists", async () => {
+        const result = await getNotifications();
+        expect(result.some(n => n.type === "subscription_change")).toBe(false);
+    });
+
+    it("returns subscription_change notification for past_due status", async () => {
+        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: "sub_1",
+            workspaceId: "ws_1",
+            status: "past_due",
+            planId: "price_team",
+            currentPeriodEnd: null,
+            updatedAt: new Date(),
+            creditBalance: 0,
+        });
+        const result = await getNotifications();
+        const notification = result.find(n => n.type === "subscription_change");
+        expect(notification).toBeDefined();
+        expect(notification?.title).toBe("Payment Due");
+        expect(notification?.link).toBe("/settings/billing");
+    });
+
+    it("returns subscription_change notification for canceled status", async () => {
+        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: "sub_1",
+            workspaceId: "ws_1",
+            status: "canceled",
+            planId: "price_team",
+            currentPeriodEnd: null,
+            updatedAt: new Date(),
+            creditBalance: 0,
+        });
+        const result = await getNotifications();
+        const notification = result.find(n => n.type === "subscription_change");
+        expect(notification?.title).toBe("Subscription Cancelled");
+    });
+
+    it("returns trial ending notification when trialing with < 3 days left", async () => {
+        const soonEnd = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000); // 2 days from now
+        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: "sub_1",
+            workspaceId: "ws_1",
+            status: "trialing",
+            planId: "price_team",
+            currentPeriodEnd: soonEnd,
+            updatedAt: new Date(),
+            creditBalance: 0,
+        });
+        const result = await getNotifications();
+        const notification = result.find(n => n.type === "subscription_change");
+        expect(notification?.title).toBe("Trial Ending Soon");
+        expect(notification?.link).toBe("/settings/billing");
+    });
+
+    it("returns no trial notification when trialing with > 3 days left", async () => {
+        const farEnd = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000); // 10 days from now
+        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: "sub_1",
+            workspaceId: "ws_1",
+            status: "trialing",
+            planId: "price_team",
+            currentPeriodEnd: farEnd,
+            updatedAt: new Date(),
+            creditBalance: 0,
+        });
+        const result = await getNotifications();
+        expect(result.some(n => n.type === "subscription_change")).toBe(false);
+    });
+
+    it("marks subscription notification as read when id is in seenJobIds", async () => {
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            ...MOCK_MEMBER,
+            seenJobIds: ["sub-sub_1"],
+        });
+        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: "sub_1",
+            workspaceId: "ws_1",
+            status: "past_due",
+            planId: "price_team",
+            currentPeriodEnd: null,
+            updatedAt: new Date(),
+            creditBalance: 0,
+        });
+        const result = await getNotifications();
+        const notification = result.find(n => n.type === "subscription_change");
+        expect(notification?.read).toBe(true);
     });
 });

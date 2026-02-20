@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, CheckCircle2, XCircle, CalendarClock, Sparkles } from "lucide-react";
+import { Bell, CheckCircle2, XCircle, CalendarClock, Sparkles, Gift, CreditCard, CheckCheck } from "lucide-react";
 import { getNotifications, markNotificationsRead, type Notification, type NotificationType } from "@/lib/actions/notifications";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -12,6 +12,13 @@ export function NotificationsPopover() {
     const ref = useRef<HTMLDivElement>(null);
 
     const unreadCount = notifications.filter(n => !n.read).length;
+
+    const handleMarkAllRead = async () => {
+        const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+        if (unreadIds.length === 0) return;
+        await markNotificationsRead(unreadIds);
+        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    };
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -67,7 +74,14 @@ export function NotificationsPopover() {
                     <div className="border-b border-black px-4 py-3 flex items-center justify-between">
                         <span className="font-mono text-xs uppercase tracking-widest">Notifications</span>
                         {unreadCount > 0 && (
-                            <span className="font-mono text-xs border border-black px-1.5 py-0.5">{unreadCount} new</span>
+                            <button
+                                onClick={handleMarkAllRead}
+                                className="flex items-center gap-1 font-mono text-xs border border-black px-1.5 py-0.5 hover:bg-black hover:text-white transition-colors"
+                                title="Mark all as read"
+                            >
+                                <CheckCheck className="h-3 w-3" strokeWidth={1.5} />
+                                <span>Mark all read</span>
+                            </button>
                         )}
                     </div>
                     <div className="max-h-[300px] overflow-y-auto divide-y divide-neutral-100">
@@ -90,8 +104,12 @@ export function NotificationsPopover() {
                                             <XCircle className="h-4 w-4 text-neutral-400" strokeWidth={1.5} />
                                         ) : notification.type === "renewal_soon" ? (
                                             <CalendarClock className="h-4 w-4 text-neutral-500" strokeWidth={1.5} />
-                                        ) : notification.type === "new_suggestion" ? (
+                                                        ) : notification.type === "new_suggestion" ? (
                                             <Sparkles className="h-4 w-4 text-neutral-500" strokeWidth={1.5} />
+                                        ) : notification.type === "referral_signup" ? (
+                                            <Gift className="h-4 w-4 text-neutral-500" strokeWidth={1.5} />
+                                        ) : notification.type === "subscription_change" ? (
+                                            <CreditCard className="h-4 w-4 text-neutral-500" strokeWidth={1.5} />
                                         ) : (
                                             <Bell className="h-4 w-4 text-neutral-400" strokeWidth={1.5} />
                                         )}
