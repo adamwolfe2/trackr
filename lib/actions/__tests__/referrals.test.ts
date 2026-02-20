@@ -31,19 +31,30 @@ import { createReferralCode, trackReferralClick, trackReferralSignup } from "../
 
 const MOCK_USER = { id: "user_1" };
 
-function setupDbChains() {
+function setupDbChains({ referralReturn }: { referralReturn?: { referrerWorkspaceId: string } | null } = {}) {
     const insertValues = vi.fn().mockResolvedValue({});
     (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values: insertValues });
 
-    const updateWhere = vi.fn().mockResolvedValue({});
-    const updateSet = vi.fn().mockReturnValue({ where: updateWhere });
-    (db.update as ReturnType<typeof vi.fn>).mockReturnValue({ set: updateSet });
+    // First update (referrals): supports .returning()
+    const referralReturning = vi.fn().mockResolvedValue(
+        referralReturn !== undefined ? [referralReturn].filter(Boolean) : []
+    );
+    const referralWhere = vi.fn().mockReturnValue({ returning: referralReturning });
+    const referralSet = vi.fn().mockReturnValue({ where: referralWhere });
+
+    // Second update (subscriptions): simple set().where()
+    const subscriptionWhere = vi.fn().mockResolvedValue({});
+    const subscriptionSet = vi.fn().mockReturnValue({ where: subscriptionWhere });
+
+    (db.update as ReturnType<typeof vi.fn>)
+        .mockReturnValueOnce({ set: referralSet })
+        .mockReturnValue({ set: subscriptionSet });
 }
 
 describe("createReferralCode", () => {
     beforeEach(() => {
         vi.resetAllMocks();
-        setupDbChains();
+        setupDbChains({ referralReturn: null });
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
     });
@@ -76,7 +87,7 @@ describe("createReferralCode", () => {
 describe("trackReferralClick", () => {
     beforeEach(() => {
         vi.resetAllMocks();
-        setupDbChains();
+        setupDbChains({ referralReturn: null });
     });
 
     it("does nothing for empty code", async () => {
@@ -113,29 +124,40 @@ describe("trackReferralClick", () => {
 describe("trackReferralSignup", () => {
     beforeEach(() => {
         vi.resetAllMocks();
-        setupDbChains();
     });
 
     it("does nothing for empty code", async () => {
+        setupDbChains({ referralReturn: null });
         await trackReferralSignup("");
         expect(db.update).not.toHaveBeenCalled();
     });
 
     it("does nothing for code exceeding 20 chars", async () => {
+        setupDbChains({ referralReturn: null });
         await trackReferralSignup("Z".repeat(21));
         expect(db.update).not.toHaveBeenCalled();
     });
 
-    it("updates signups for a valid code", async () => {
+    it("updates signups for a valid code (no referrer found)", async () => {
+        setupDbChains({ referralReturn: null });
         await trackReferralSignup("REF_ABCD");
+        // Only the referrals update is called — no subscription update when no referrer returned
         expect(db.update).toHaveBeenCalledTimes(1);
     });
 
+    it("awards credits to referrer when referral resolves to a workspace", async () => {
+        setupDbChains({ referralReturn: { referrerWorkspaceId: "ws_referrer" } });
+        await trackReferralSignup("REF_ABCD");
+        // Both referrals update AND subscriptions update called
+        expect(db.update).toHaveBeenCalledTimes(2);
+    });
+
     it("silently ignores db errors", async () => {
-        const updateSet = vi.fn().mockReturnValue({
-            where: vi.fn().mockRejectedValue(new Error("DB error")),
-        });
-        (db.update as ReturnType<typeof vi.fn>).mockReturnValue({ set: updateSet });
+        // Make the first update throw
+        const returning = vi.fn().mockRejectedValue(new Error("DB error"));
+        const where = vi.fn().mockReturnValue({ returning });
+        const set = vi.fn().mockReturnValue({ where });
+        (db.update as ReturnType<typeof vi.fn>).mockReturnValue({ set });
         await expect(trackReferralSignup("VALID")).resolves.toBeUndefined();
     });
 });
