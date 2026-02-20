@@ -10,6 +10,7 @@ const BYPASS_CLERK = [
     "/api/slack/callback",   // Slack OAuth flow (state HMAC)
     "/api/cron/",            // CRON_SECRET verification
     "/api/stripe/webhook",   // Stripe webhook signature (exact path, not prefix)
+    "/api/webhooks/clerk",   // Svix signature verification (Clerk user.created etc.)
 ];
 
 // Fail closed: if Clerk key is missing in production, block all protected routes
