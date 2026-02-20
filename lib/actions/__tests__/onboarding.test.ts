@@ -175,6 +175,37 @@ describe("completeOnboarding", () => {
         expect(db.insert).not.toHaveBeenCalled();
     });
 
+    it("trims tool names before insert and deduplication", async () => {
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { toolName: "Slack" },
+        ]);
+        // "  Slack  " should be treated as duplicate of "Slack" after trimming
+        await completeOnboarding({
+            ...VALID_ONBOARDING_INPUT,
+            selectedTools: [{ name: "  Slack  " }, { name: "  Linear  " }],
+        });
+        // Only "Linear" (trimmed) should be inserted; "Slack" is a duplicate
+        expect(db.insert).toHaveBeenCalledTimes(1);
+        const insertedValues = (
+            (db.insert as ReturnType<typeof vi.fn>).mock.results[0].value.values as ReturnType<typeof vi.fn>
+        ).mock.calls[0][0];
+        expect(insertedValues[0].toolName).toBe("Linear");
+    });
+
+    it("filters out tools whose names are only whitespace", async () => {
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        await completeOnboarding({
+            ...VALID_ONBOARDING_INPUT,
+            selectedTools: [{ name: "Linear" }, { name: "   " }],
+        });
+        // Only "Linear" should be inserted; "   " is empty after trim
+        const insertedValues = (
+            (db.insert as ReturnType<typeof vi.fn>).mock.results[0].value.values as ReturnType<typeof vi.fn>
+        ).mock.calls[0][0];
+        expect(insertedValues).toHaveLength(1);
+        expect(insertedValues[0].toolName).toBe("Linear");
+    });
+
     it("always calls db.update to set workspace config", async () => {
         await completeOnboarding(VALID_ONBOARDING_INPUT);
         expect(db.update).toHaveBeenCalledTimes(1);

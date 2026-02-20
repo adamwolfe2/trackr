@@ -229,6 +229,23 @@ describe("POST /api/stripe/webhook", () => {
         expect(db.update).toHaveBeenCalled();
     });
 
+    it("handles invoice.payment_succeeded → restores active if was incomplete", async () => {
+        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: "dbsub_inc",
+            stripeSubscriptionId: "sub_inc",
+            workspaceId: "ws_inc",
+            status: "incomplete",
+        });
+
+        mockStripeEvent("invoice.payment_succeeded", {
+            parent: { subscription_details: { subscription: "sub_inc" } },
+        });
+
+        const res = await POST(makeStripeRequest());
+        expect(res.status).toBe(200);
+        expect(db.update).toHaveBeenCalled();
+    });
+
     it("handles customer.subscription.trial_will_end", async () => {
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
             id: "dbsub_trial",

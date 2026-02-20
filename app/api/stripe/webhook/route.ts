@@ -260,8 +260,9 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         where: eq(subscriptions.stripeSubscriptionId, subscriptionId),
     });
 
-    // Only flip back to active if the subscription was past_due
-    if (existing?.status === "past_due") {
+    // Restore active status from past_due (failed payment recovered) or
+    // incomplete (initial payment completed after delayed confirmation)
+    if (existing?.status === "past_due" || existing?.status === "incomplete") {
         await db.update(subscriptions)
             .set({ status: "active", updatedAt: new Date() })
             .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));

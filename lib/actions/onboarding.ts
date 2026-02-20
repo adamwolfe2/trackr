@@ -152,13 +152,15 @@ export async function completeOnboarding(input: {
         });
         const existingNames = new Set(existing.map((e) => e.toolName.toLowerCase()));
 
-        const toInsert = selectedTools.filter((t) => !existingNames.has(t.name.toLowerCase()));
+        const toInsert = selectedTools
+            .filter((t) => t.name.trim().length > 0)
+            .filter((t) => !existingNames.has(t.name.trim().toLowerCase()));
 
         if (toInsert.length > 0) {
             await db.insert(softwareSpend).values(
                 toInsert.map((t) => ({
                     workspaceId,
-                    toolName: t.name,
+                    toolName: t.name.trim(),
                     vendorUrl: t.url ? (t.url.startsWith("http") ? t.url : `https://${t.url}`) : null,
                     status: "active" as const,
                     monthlyCost: "0",

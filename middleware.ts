@@ -4,12 +4,18 @@ import type { NextRequest } from "next/server";
 
 // Routes that handle their own auth (API key, HMAC, webhook signature, etc.)
 // Each of these MUST implement its own authentication — see route files
-const BYPASS_CLERK = [
+
+/** Prefix-matched: any path starting with these bypasses Clerk */
+const BYPASS_PREFIXES = [
     "/api/extension/",       // API key auth (extension-auth.ts)
+    "/api/cron/",            // CRON_SECRET verification
+];
+
+/** Exact-matched: only these specific paths bypass Clerk */
+const BYPASS_EXACT = [
     "/api/slack/commands",   // Slack HMAC signature verification
     "/api/slack/callback",   // Slack OAuth flow (state HMAC)
-    "/api/cron/",            // CRON_SECRET verification
-    "/api/stripe/webhook",   // Stripe webhook signature (exact path, not prefix)
+    "/api/stripe/webhook",   // Stripe webhook signature
     "/api/webhooks/clerk",   // Svix signature verification (Clerk user.created etc.)
 ];
 
@@ -20,7 +26,10 @@ const clerk = hasClerkKey ? clerkMiddleware() : null;
 
 export default function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
-    if (BYPASS_CLERK.some((prefix) => path.startsWith(prefix))) {
+    if (
+        BYPASS_PREFIXES.some((prefix) => path.startsWith(prefix)) ||
+        BYPASS_EXACT.includes(path)
+    ) {
         return NextResponse.next();
     }
 
