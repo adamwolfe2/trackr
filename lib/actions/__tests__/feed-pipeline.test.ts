@@ -164,7 +164,7 @@ describe("ingestChannel", () => {
         }));
 
         const { XMLParser } = await import("fast-xml-parser");
-        (XMLParser as ReturnType<typeof vi.fn>).mockImplementation(function () {
+        (XMLParser as unknown as ReturnType<typeof vi.fn>).mockImplementation(function () {
             return {
                 parse: vi.fn().mockReturnValue({
                     rss: {
