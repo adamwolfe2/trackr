@@ -22,7 +22,7 @@ function verifyState(state: string): string | null {
     const expectedSignature = createHmac("sha256", secret)
         .update(workspaceId)
         .digest("hex")
-        .slice(0, 16);
+        .slice(0, 32);
 
     // Timing-safe comparison to prevent signature brute-forcing
     try {
