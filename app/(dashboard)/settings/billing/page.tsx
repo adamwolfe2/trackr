@@ -16,6 +16,7 @@ import { getPlanLimits, PLANS } from "@/lib/config/subscriptions";
 import type { Plan } from "@/lib/config/subscriptions";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 import { BillingPlanCards } from "@/components/billing/billing-plan-cards";
+import { BuyCreditsButton } from "@/components/billing/buy-credits-button";
 
 type BillingPlanCard = {
     key: string;
@@ -268,6 +269,22 @@ export default async function BillingPage({
                     />
                 </div>
             </div>
+
+            {/* Extra Credits */}
+            {hasActiveSubscription && currentPlan.extraCreditPrice && (
+                <div className="border border-black bg-white p-6 space-y-4">
+                    <div className="flex items-baseline justify-between">
+                        <h2 className="font-serif text-lg">Extra Credits</h2>
+                        <span className="font-mono text-sm">
+                            {subscription!.creditBalance ?? 0} <span className="text-neutral-400">credits available</span>
+                        </span>
+                    </div>
+                    <p className="font-mono text-xs text-neutral-500">
+                        When you hit your monthly limit, extra credits let you keep running research. Credits never expire.
+                    </p>
+                    <BuyCreditsButton pricePerCredit={currentPlan.extraCreditPrice} />
+                </div>
+            )}
 
             <div className="border border-black/20 p-4 font-mono text-xs text-neutral-500">
                 All plans include a 14-day free trial. Per workspace, not per member. Cancel any time from the billing portal. Upgrades take effect immediately.

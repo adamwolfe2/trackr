@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/services/stripe";
 import { db } from "@/lib/db";
 import { subscriptions, ads, workspaceMembers } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 import { clerkClient } from "@clerk/nextjs/server";
 import { sendTrialEndingEmail } from "@/lib/email/resend";
@@ -93,6 +93,17 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             .update(ads)
             .set({ status: "active" })
             .where(eq(ads.id, session.metadata.adId));
+        return;
+    }
+
+    // Handle extra credit purchase
+    if (session.metadata?.type === "extra_credits" && session.metadata.workspaceId) {
+        const creditCount = parseInt(session.metadata.creditCount ?? "0", 10);
+        if (creditCount > 0) {
+            await db.update(subscriptions)
+                .set({ creditBalance: sql`${subscriptions.creditBalance} + ${creditCount}`, updatedAt: new Date() })
+                .where(eq(subscriptions.workspaceId, session.metadata.workspaceId));
+        }
         return;
     }
 

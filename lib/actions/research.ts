@@ -4,7 +4,7 @@
 
 import { db } from "@/lib/db";
 import { tools, reports, workspaces, researchJobs, subscriptions } from "@/lib/db/schema";
-import { eq, sql, and, gte, ne, inArray, count } from "drizzle-orm";
+import { eq, sql, and, gte, ne, inArray, count, gt } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { tavily } from "@/lib/services/tavily";
 import { openai } from "@ai-sdk/openai";
@@ -17,6 +17,7 @@ import { sendResearchCompleteEmail, sendResearchFailedEmail } from "@/lib/email/
 import { clerkClient } from "@clerk/nextjs/server";
 import { postMessage, researchCompleteBlocks, researchFailedBlocks } from "@/lib/services/slack";
 import { logApiCall, COST_MAP, estimateOpenAICost } from "@/lib/services/api-logger";
+import { perplexity } from "@/lib/services/perplexity";
 
 type ToolWithWorkspace = InferSelectModel<typeof tools> & {
     workspace: InferSelectModel<typeof workspaces>;
@@ -134,11 +135,25 @@ export async function performDeepResearch(toolId: string) {
             ));
 
         if (jobCount >= limits.limits.research) {
-            await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
-            return {
-                success: false,
-                error: `Monthly research limit reached (${limits.limits.research} runs on ${limits.name} plan). Upgrade to run more research this month.`,
-            };
+            // Check if workspace has extra credits
+            if (subscription && subscription.creditBalance > 0) {
+                // Decrement credit balance
+                await db.update(subscriptions)
+                    .set({
+                        creditBalance: sql`${subscriptions.creditBalance} - 1`,
+                        updatedAt: new Date(),
+                    })
+                    .where(and(
+                        eq(subscriptions.workspaceId, tool.workspaceId),
+                        gt(subscriptions.creditBalance, 0),
+                    ));
+            } else {
+                await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+                return {
+                    success: false,
+                    error: `Monthly research limit reached (${limits.limits.research} runs on ${limits.name} plan). Upgrade or purchase extra credits to run more research this month.`,
+                };
+            }
         }
     }
 
@@ -421,6 +436,35 @@ export async function performDeepResearch(toolId: string) {
             marketContent && `MARKET SOURCES:\n${marketContent}`,
         ].filter(Boolean).join("\n\n");
 
+        // ── Step 6.5: Perplexity deep analysis (conditional) ────────────────
+        let perplexityAnalysis = "";
+        if (process.env.PERPLEXITY_API_KEY) {
+            await logProgress(toolId, `Perplexity: Running deep competitive analysis...`);
+            const perplexityStart = Date.now();
+            try {
+                perplexityAnalysis = await withTimeout(
+                    perplexity.search(
+                        `Comprehensive analysis of ${tool.name} (${tool.websiteUrl}): market position, strengths vs competitors, recent developments, user satisfaction trends, and any concerns. Focus on facts and real user experiences.`
+                    ),
+                    60000,
+                    ""
+                );
+                logApiCall({
+                    service: "perplexity",
+                    endpoint: "sonar-reasoning-pro",
+                    durationMs: Date.now() - perplexityStart,
+                    estimatedCost: COST_MAP.perplexity["sonar-reasoning-pro"],
+                    workspaceId: tool.workspaceId,
+                    toolId,
+                });
+                if (perplexityAnalysis) {
+                    await logProgress(toolId, `Perplexity: Analysis complete (${perplexityAnalysis.length} chars)`);
+                }
+            } catch {
+                await logProgress(toolId, `Perplexity: Analysis failed (non-critical, continuing)`);
+            }
+        }
+
         // ── Step 7: GPT-4o-mini synthesis ───────────────────────────────────
         // Count total unique data sources used
         const totalDataSources = [
@@ -506,6 +550,9 @@ ${rawData.redditAnswers?.slice(0, 2000) || "No Reddit summaries available."}
 
 === COMPETITIVE LANDSCAPE + MARKET INTEL ===
 ${rawData.competitors?.slice(0, 3000) || "No competitor data."}
+
+${perplexityAnalysis ? `=== PERPLEXITY DEEP ANALYSIS ===
+${perplexityAnalysis.slice(0, 3000)}` : ""}
 
 INSTRUCTIONS:
 - Be critical and specific. Don't repeat marketing copy — synthesize real user pain points.
