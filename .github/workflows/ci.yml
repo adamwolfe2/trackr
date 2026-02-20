@@ -47,3 +47,6 @@ jobs:
           TAVILY_API_KEY: tvly_stub
           NEXT_PUBLIC_APP_URL: https://trytrackr.com
           CRON_SECRET: cron_stub
+          PERPLEXITY_API_KEY: pplx_stub
+          SLACK_CLIENT_ID: slack_client_stub
+          SLACK_CLIENT_SECRET: slack_secret_stub
