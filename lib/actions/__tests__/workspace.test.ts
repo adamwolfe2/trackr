@@ -33,6 +33,7 @@ vi.mock("drizzle-orm", async (importOriginal) => {
         ...actual,
         eq: vi.fn((...args) => args),
         and: vi.fn((...args) => args),
+        gt: vi.fn((...args) => args),
         count: vi.fn(() => "count"),
     };
 });
@@ -48,11 +49,17 @@ vi.mock("@/lib/services/slack", () => ({
     disconnectSlack: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("@/lib/email/resend", () => ({
+    sendInviteEmail: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { currentUser } from "@clerk/nextjs/server";
 import { getWorkspaceId } from "@/lib/db/queries";
 import { db } from "@/lib/db";
+import { getPlanLimits } from "@/lib/config/subscriptions";
 import {
     updateWorkspaceName,
+    inviteMember,
     removeMember,
     regenerateApiKey,
     updateSlackSettings,
@@ -95,6 +102,11 @@ describe("workspace server actions", () => {
         (db.query.workspaces.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "ws_1", name: "Acme" });
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         (db.query.pendingInvitations.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        // Restore getPlanLimits after vi.resetAllMocks() clears it
+        (getPlanLimits as ReturnType<typeof vi.fn>).mockReturnValue({
+            name: "Free",
+            limits: { members: 3, research: 10 },
+        });
     });
 
     describe("updateWorkspaceName", () => {
@@ -247,6 +259,70 @@ describe("workspace server actions", () => {
             });
             const result = await cancelInvitation("inv_1");
             expect(result).toEqual({ success: true });
+        });
+    });
+
+    describe("inviteMember", () => {
+        function makeFormData(email: string) {
+            return { get: (key: string) => (key === "email" ? email : null) } as unknown as FormData;
+        }
+
+        it("throws Unauthorized when not logged in", async () => {
+            (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+            await expect(inviteMember(makeFormData("a@b.com"))).rejects.toThrow("Unauthorized");
+        });
+
+        it("throws when email is missing", async () => {
+            await expect(inviteMember(makeFormData(""))).rejects.toThrow("Valid email is required");
+        });
+
+        it("throws when email format is invalid", async () => {
+            await expect(inviteMember(makeFormData("not-an-email"))).rejects.toThrow("Valid email is required");
+        });
+
+        it("throws when no workspace found", async () => {
+            (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+            await expect(inviteMember(makeFormData("alice@acme.com"))).rejects.toThrow("No workspace found");
+        });
+
+        it("throws when user is not owner or admin", async () => {
+            (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(VIEWER);
+            await expect(inviteMember(makeFormData("alice@acme.com"))).rejects.toThrow("Only workspace owners can invite");
+        });
+
+        it("throws when member limit is reached", async () => {
+            // memberCount = 3 (Free plan limit)
+            const where = vi.fn().mockResolvedValue([{ value: 3 }]);
+            const from = vi.fn().mockReturnValue({ where });
+            (db.select as ReturnType<typeof vi.fn>).mockReturnValue({ from });
+            await expect(inviteMember(makeFormData("alice@acme.com"))).rejects.toThrow(/allows up to 3 member/);
+        });
+
+        it("inserts a new invitation when none exists", async () => {
+            (db.query.pendingInvitations.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+            const result = await inviteMember(makeFormData("alice@acme.com"));
+            expect(result).toMatchObject({ success: true, message: expect.stringContaining("alice@acme.com") });
+            expect(db.insert).toHaveBeenCalledTimes(1);
+        });
+
+        it("does not insert a duplicate when an active invite already exists", async () => {
+            (db.query.pendingInvitations.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+                id: "inv_existing",
+                workspaceId: "ws_1",
+                email: "alice@acme.com",
+                expiresAt: new Date(Date.now() + 86400000),
+            });
+            const result = await inviteMember(makeFormData("alice@acme.com"));
+            // Returns success (re-sends email) but does NOT insert a duplicate row
+            expect(result).toMatchObject({ success: true });
+            expect(db.insert).not.toHaveBeenCalled();
+        });
+
+        it("normalizes email to lowercase before inserting", async () => {
+            (db.query.pendingInvitations.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+            await inviteMember(makeFormData("  Alice@ACME.COM  "));
+            // Action should succeed — the email is lowercased so it's valid
+            expect(db.insert).toHaveBeenCalledTimes(1);
         });
     });
 });

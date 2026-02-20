@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/recover-stuck-jobs",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/auto-retry-failed",
+      "schedule": "*/10 * * * *"
     }
   ]
 }

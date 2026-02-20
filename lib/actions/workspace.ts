@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { workspaces, workspaceMembers, subscriptions, pendingInvitations } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
-import { eq, and, count } from "drizzle-orm";
+import { eq, and, count, gt } from "drizzle-orm";
 import { getWorkspaceId } from "@/lib/db/queries";
 import { getPlanLimits } from "@/lib/config/subscriptions";
 import { createHash } from "crypto";
@@ -80,14 +80,24 @@ export async function inviteMember(formData: FormData) {
         throw new Error(`Your ${limits.name} plan allows up to ${limits.limits.members} member${limits.limits.members === 1 ? "" : "s"}. Upgrade to add more.`);
     }
 
-    // Upsert pending invitation — stores the workspace association so the
-    // invited user is automatically joined on sign-up (see Clerk webhook).
-    // 7-day expiry gives plenty of time to accept.
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    await db
-        .insert(pendingInvitations)
-        .values({ workspaceId, email, invitedByUserId: user.id, expiresAt })
-        .onConflictDoNothing(); // Idempotent if invited twice (no unique constraint, but safe)
+    // Check if an active (non-expired) invitation already exists for this email.
+    // Without a unique constraint we must do this check manually to prevent duplicates.
+    const existingInvite = await db.query.pendingInvitations.findFirst({
+        where: and(
+            eq(pendingInvitations.workspaceId, workspaceId),
+            eq(pendingInvitations.email, email),
+            gt(pendingInvitations.expiresAt, new Date()),
+        ),
+    });
+
+    if (!existingInvite) {
+        // No active invite — create one with 7-day expiry
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        await db
+            .insert(pendingInvitations)
+            .values({ workspaceId, email, invitedByUserId: user.id, expiresAt });
+    }
+    // If invite already exists, fall through to re-send the email (idempotent UX)
 
     // Send invite email via Resend if available
     try {
