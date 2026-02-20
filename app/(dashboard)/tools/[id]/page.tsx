@@ -277,6 +277,30 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                         <p className="font-mono text-sm text-neutral-600 leading-relaxed">
                             {report?.summary ?? "No analysis available yet. Run deep research to generate a report."}
                         </p>
+                        {serializedReport?.sentimentData && (
+                            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-neutral-200 flex-wrap">
+                                {serializedReport.sentimentData.dataSources && (
+                                    <span className="font-mono text-[10px] border border-neutral-300 px-2 py-0.5 text-neutral-500">
+                                        {serializedReport.sentimentData.dataSources} sources
+                                    </span>
+                                )}
+                                {serializedReport.sentimentData.pagesScraped && (
+                                    <span className="font-mono text-[10px] border border-neutral-300 px-2 py-0.5 text-neutral-500">
+                                        {serializedReport.sentimentData.pagesScraped} pages scraped
+                                    </span>
+                                )}
+                                {serializedReport.sentimentData.redditThreads && serializedReport.sentimentData.redditThreads.length > 0 && (
+                                    <span className="font-mono text-[10px] border border-neutral-300 px-2 py-0.5 text-neutral-500">
+                                        {serializedReport.sentimentData.redditThreads.length} Reddit threads
+                                    </span>
+                                )}
+                                {serializedReport.sentimentData.reviewSources && serializedReport.sentimentData.reviewSources.length > 0 && (
+                                    <span className="font-mono text-[10px] border border-neutral-300 px-2 py-0.5 text-neutral-500">
+                                        {serializedReport.sentimentData.reviewSources.length} review sites
+                                    </span>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     {/* Tabs */}
