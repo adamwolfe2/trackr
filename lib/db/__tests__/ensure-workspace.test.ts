@@ -4,8 +4,9 @@ vi.mock("@/lib/db", () => ({
     db: {
         query: {
             workspaceMembers: { findFirst: vi.fn() },
+            workspaces: { findFirst: vi.fn() },
         },
-        transaction: vi.fn(),
+        insert: vi.fn(),
     },
 }));
 
@@ -20,6 +21,15 @@ import { ensureWorkspace } from "../ensure-workspace";
 const MOCK_WORKSPACE = { id: "ws_1", name: "Adam's Workspace", slug: "ws-user_abc" };
 const MOCK_MEMBER = { id: "mem_1", userId: "user_abc12345", workspaceId: "ws_1", workspace: MOCK_WORKSPACE };
 
+function makeInsertChain(returnValue: unknown = undefined) {
+    const onConflictDoNothing = vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue(returnValue !== undefined ? [returnValue] : []),
+    });
+    const values = vi.fn().mockReturnValue({ onConflictDoNothing });
+    (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values });
+    return { values, onConflictDoNothing };
+}
+
 describe("ensureWorkspace", () => {
     beforeEach(() => {
         vi.resetAllMocks();
@@ -28,120 +38,177 @@ describe("ensureWorkspace", () => {
     it("returns existing workspace when user already has one", async () => {
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
         const result = await ensureWorkspace("user_abc12345");
-        expect(result).toEqual({
-            workspaceId: "ws_1",
-            workspace: MOCK_WORKSPACE,
-            created: false,
-        });
-        expect(db.transaction).not.toHaveBeenCalled();
+        expect(result).toEqual({ workspaceId: "ws_1", workspace: MOCK_WORKSPACE, created: false });
+        expect(db.insert).not.toHaveBeenCalled();
     });
 
-    it("creates new workspace in a transaction when user has none", async () => {
+    it("creates new workspace when user has none", async () => {
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         const newWorkspace = { id: "ws_new", name: "User's Workspace", slug: "ws-user_new" };
-        (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(async (fn) => {
-            const tx = {
-                insert: vi.fn().mockReturnValue({
-                    values: vi.fn().mockReturnValue({
+
+        // First insert (workspace) returns the new workspace
+        // Second insert (member) returns nothing (void)
+        (db.insert as ReturnType<typeof vi.fn>)
+            .mockReturnValueOnce({
+                values: vi.fn().mockReturnValue({
+                    onConflictDoNothing: vi.fn().mockReturnValue({
                         returning: vi.fn().mockResolvedValue([newWorkspace]),
                     }),
                 }),
-            };
-            return fn(tx);
-        });
+            })
+            .mockReturnValueOnce({
+                values: vi.fn().mockReturnValue({
+                    onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+                }),
+            });
 
         const result = await ensureWorkspace("user_new12345");
         expect(result.created).toBe(true);
         expect(result.workspaceId).toBe("ws_new");
-        expect(db.transaction).toHaveBeenCalledTimes(1);
+        expect(db.insert).toHaveBeenCalledTimes(2);
     });
 
     it("uses displayName hint for workspace name", async () => {
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         const capturedValues: Array<Record<string, unknown>> = [];
-        (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(async (fn) => {
-            const tx = {
-                insert: vi.fn().mockReturnValue({
-                    values: vi.fn().mockImplementation((v) => {
-                        capturedValues.push(v);
-                        return { returning: vi.fn().mockResolvedValue([{ id: "ws_1" }]) };
-                    }),
+
+        (db.insert as ReturnType<typeof vi.fn>)
+            .mockReturnValueOnce({
+                values: vi.fn().mockImplementation((v) => {
+                    capturedValues.push(v);
+                    return {
+                        onConflictDoNothing: vi.fn().mockReturnValue({
+                            returning: vi.fn().mockResolvedValue([{ id: "ws_1", slug: "ws-user_xyz" }]),
+                        }),
+                    };
                 }),
-            };
-            return fn(tx);
-        });
+            })
+            .mockReturnValueOnce({
+                values: vi.fn().mockReturnValue({
+                    onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+                }),
+            });
 
         await ensureWorkspace("user_xyz12345", { displayName: "Sarah" });
-        const wsValues = capturedValues[0];
-        expect((wsValues.name as string)).toContain("Sarah");
+        expect((capturedValues[0].name as string)).toContain("Sarah");
     });
 
     it("falls back to email prefix when no displayName provided", async () => {
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         const capturedValues: Array<Record<string, unknown>> = [];
-        (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(async (fn) => {
-            const tx = {
-                insert: vi.fn().mockReturnValue({
-                    values: vi.fn().mockImplementation((v) => {
-                        capturedValues.push(v);
-                        return { returning: vi.fn().mockResolvedValue([{ id: "ws_1" }]) };
-                    }),
+
+        (db.insert as ReturnType<typeof vi.fn>)
+            .mockReturnValueOnce({
+                values: vi.fn().mockImplementation((v) => {
+                    capturedValues.push(v);
+                    return {
+                        onConflictDoNothing: vi.fn().mockReturnValue({
+                            returning: vi.fn().mockResolvedValue([{ id: "ws_1", slug: "ws-user_xyz" }]),
+                        }),
+                    };
                 }),
-            };
-            return fn(tx);
-        });
+            })
+            .mockReturnValueOnce({
+                values: vi.fn().mockReturnValue({
+                    onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+                }),
+            });
 
         await ensureWorkspace("user_xyz12345", { email: "sarah@acme.com" });
-        const wsValues = capturedValues[0];
-        expect((wsValues.name as string)).toContain("sarah");
+        expect((capturedValues[0].name as string)).toContain("sarah");
     });
 
     it("falls back to 'User' when no hints provided", async () => {
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         const capturedValues: Array<Record<string, unknown>> = [];
-        (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(async (fn) => {
-            const tx = {
-                insert: vi.fn().mockReturnValue({
-                    values: vi.fn().mockImplementation((v) => {
-                        capturedValues.push(v);
-                        return { returning: vi.fn().mockResolvedValue([{ id: "ws_1" }]) };
-                    }),
+
+        (db.insert as ReturnType<typeof vi.fn>)
+            .mockReturnValueOnce({
+                values: vi.fn().mockImplementation((v) => {
+                    capturedValues.push(v);
+                    return {
+                        onConflictDoNothing: vi.fn().mockReturnValue({
+                            returning: vi.fn().mockResolvedValue([{ id: "ws_1", slug: "ws-user_xyz" }]),
+                        }),
+                    };
                 }),
-            };
-            return fn(tx);
-        });
+            })
+            .mockReturnValueOnce({
+                values: vi.fn().mockReturnValue({
+                    onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+                }),
+            });
 
         await ensureWorkspace("user_xyz12345");
-        const wsValues = capturedValues[0];
-        expect((wsValues.name as string)).toContain("User");
+        expect((capturedValues[0].name as string)).toContain("User");
     });
 
-    it("handles race condition: re-queries after unique constraint violation", async () => {
-        // First findFirst returns null (no workspace)
-        // Transaction throws unique constraint error
-        // Second findFirst (in catch block) returns the race winner
-        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>)
-            .mockResolvedValueOnce(null)
-            .mockResolvedValueOnce(MOCK_MEMBER);
+    it("handles slug conflict: finds workspace by slug when INSERT returns nothing", async () => {
+        // No existing member
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        // Workspace by slug lookup (race winner)
+        (db.query.workspaces.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_WORKSPACE);
 
-        (db.transaction as ReturnType<typeof vi.fn>).mockRejectedValue(
-            new Error("unique constraint violation on slug")
-        );
+        // Workspace INSERT returns [] (conflict, not inserted)
+        (db.insert as ReturnType<typeof vi.fn>)
+            .mockReturnValueOnce({
+                values: vi.fn().mockReturnValue({
+                    onConflictDoNothing: vi.fn().mockReturnValue({
+                        returning: vi.fn().mockResolvedValue([]), // conflict — not created
+                    }),
+                }),
+            })
+            .mockReturnValueOnce({
+                values: vi.fn().mockReturnValue({
+                    onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+                }),
+            });
 
         const result = await ensureWorkspace("user_abc12345");
         expect(result.created).toBe(false);
         expect(result.workspaceId).toBe("ws_1");
+        expect(db.query.workspaces.findFirst).toHaveBeenCalled();
     });
 
-    it("re-throws when race condition recovery also finds nothing", async () => {
-        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>)
-            .mockResolvedValueOnce(null)  // initial check
-            .mockResolvedValueOnce(null); // recovery check also fails
+    it("throws when workspace not found after slug conflict", async () => {
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        // Workspace by slug also returns nothing (unexpected DB state)
+        (db.query.workspaces.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
 
-        (db.transaction as ReturnType<typeof vi.fn>).mockRejectedValue(
-            new Error("unique constraint violation")
-        );
+        (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({
+            values: vi.fn().mockReturnValue({
+                onConflictDoNothing: vi.fn().mockReturnValue({
+                    returning: vi.fn().mockResolvedValue([]), // conflict, not created
+                }),
+            }),
+        });
 
-        await expect(ensureWorkspace("user_abc12345")).rejects.toThrow("unique constraint violation");
+        await expect(ensureWorkspace("user_abc12345")).rejects.toThrow();
+    });
+
+    it("logs and creates workspace when member exists but workspace is null (orphaned member)", async () => {
+        // Orphaned member — workspace join returns null workspace
+        const orphanedMember = { ...MOCK_MEMBER, workspace: null };
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(orphanedMember);
+        // Should proceed to create a new workspace
+        const newWorkspace = { id: "ws_new", slug: "ws-user_abc" };
+
+        (db.insert as ReturnType<typeof vi.fn>)
+            .mockReturnValueOnce({
+                values: vi.fn().mockReturnValue({
+                    onConflictDoNothing: vi.fn().mockReturnValue({
+                        returning: vi.fn().mockResolvedValue([newWorkspace]),
+                    }),
+                }),
+            })
+            .mockReturnValueOnce({
+                values: vi.fn().mockReturnValue({
+                    onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+                }),
+            });
+
+        const result = await ensureWorkspace("user_abc12345");
+        expect(result.created).toBe(true);
+        expect(result.workspaceId).toBe("ws_new");
     });
 });

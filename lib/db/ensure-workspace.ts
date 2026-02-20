@@ -12,6 +12,8 @@ import { eq } from "drizzle-orm";
  *   - Clerk webhook (user.created)
  *   - completeOnboarding() fallback
  *   - submitTool() fallback
+ *
+ * Uses onConflictDoNothing instead of transactions for Neon HTTP compatibility.
  */
 export async function ensureWorkspace(userId: string, hints?: {
     displayName?: string;
@@ -24,44 +26,52 @@ export async function ensureWorkspace(userId: string, hints?: {
     });
 
     if (existing) {
-        return { workspaceId: existing.workspaceId, workspace: existing.workspace, created: false };
+        if (!existing.workspace) {
+            // Orphaned member record — workspace was deleted. Log and try to create fresh.
+            console.error(`[ensureWorkspace] Member ${existing.id} has no workspace (workspaceId: ${existing.workspaceId}). Creating new workspace.`);
+        } else {
+            return { workspaceId: existing.workspaceId, workspace: existing.workspace, created: false };
+        }
     }
 
     // Derive naming from hints
     const displayName = hints?.displayName || hints?.email?.split("@")[0] || "User";
     const slug = `ws-${userId.slice(0, 8).toLowerCase()}`;
 
-    // Use transaction to atomically create workspace + membership
-    // Handles race between webhook + onboarding
     try {
-        const result = await db.transaction(async (tx) => {
-            const [newWorkspace] = await tx.insert(workspaces).values({
-                name: `${displayName}'s Workspace`,
-                slug,
-                companyContext: hints?.email ? `Personal workspace for ${hints.email}` : null,
-            }).returning();
+        // Step 1: Insert workspace (idempotent via slug unique constraint)
+        const insertedWorkspaces = await db.insert(workspaces).values({
+            name: `${displayName}'s Workspace`,
+            slug,
+            companyContext: hints?.email ? `Personal workspace for ${hints.email}` : null,
+        }).onConflictDoNothing().returning();
 
-            await tx.insert(workspaceMembers).values({
-                userId,
-                workspaceId: newWorkspace.id,
-                role: "owner",
+        // Step 2: Resolve the workspace (either just created or already existing)
+        let workspace = insertedWorkspaces[0];
+        const created = !!workspace;
+
+        if (!workspace) {
+            // Another request already created this workspace (slug conflict)
+            // Find it by slug
+            const existing = await db.query.workspaces.findFirst({
+                where: eq(workspaces.slug, slug),
             });
-
-            return { workspaceId: newWorkspace.id, workspace: newWorkspace, created: true };
-        });
-
-        return result;
-    } catch (err) {
-        // Unique constraint on slug — another request won the race
-        // Re-query and return existing workspace
-        const raceWinner = await db.query.workspaceMembers.findFirst({
-            where: eq(workspaceMembers.userId, userId),
-            with: { workspace: true },
-        });
-        if (raceWinner) {
-            return { workspaceId: raceWinner.workspaceId, workspace: raceWinner.workspace, created: false };
+            if (!existing) {
+                throw new Error(`[ensureWorkspace] Workspace with slug ${slug} not found after conflict`);
+            }
+            workspace = existing;
         }
-        // If still not found, the error was something else — re-throw
+
+        // Step 3: Insert member (idempotent via workspace_members_workspace_user_unique)
+        await db.insert(workspaceMembers).values({
+            userId,
+            workspaceId: workspace.id,
+            role: "owner",
+        }).onConflictDoNothing();
+
+        return { workspaceId: workspace.id, workspace, created };
+    } catch (err) {
+        console.error(`[ensureWorkspace] Failed for userId=${userId} slug=${slug}:`, err);
         throw err;
     }
 }

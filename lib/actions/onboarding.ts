@@ -117,10 +117,17 @@ export async function completeOnboarding(input: {
     }
 
     // Ensure workspace exists — creates one if Clerk webhook was delayed/failed
-    const { workspaceId, workspace: existingWorkspace, created } = await ensureWorkspace(user.id, {
-        displayName: user.firstName || user.username || undefined,
-        email: user.primaryEmailAddress?.emailAddress,
-    });
+    let workspaceResult: Awaited<ReturnType<typeof ensureWorkspace>>;
+    try {
+        workspaceResult = await ensureWorkspace(user.id, {
+            displayName: user.firstName || user.username || undefined,
+            email: user.primaryEmailAddress?.emailAddress,
+        });
+    } catch (err) {
+        console.error("[completeOnboarding] ensureWorkspace failed:", err);
+        throw err;
+    }
+    const { workspaceId, workspace: existingWorkspace, created } = workspaceResult;
 
     // Track referral signup if this is a new workspace creation
     if (created && refCode) {
@@ -128,7 +135,8 @@ export async function completeOnboarding(input: {
     }
 
     // If already completed, still allow re-run (idempotent)
-    const currentName = existingWorkspace.name;
+    // Guard against null workspace (data integrity issue — shouldn't happen)
+    const currentName = existingWorkspace?.name ?? "";
 
     // Build scorecard config
     const scorecardConfig = scorecardDimensions.reduce((acc, d) => {
@@ -137,12 +145,17 @@ export async function completeOnboarding(input: {
     }, {} as Record<string, { label: string; weight: number }>);
 
     // 1. Update workspace with company info + scorecard + mark onboarding done
-    await db.update(workspaces).set({
-        name: companyName.trim() || currentName,
-        companyContext: companyContext.trim(),
-        scorecardConfig,
-        onboardingCompleted: true,
-    }).where(eq(workspaces.id, workspaceId));
+    try {
+        await db.update(workspaces).set({
+            name: companyName.trim() || currentName,
+            companyContext: companyContext.trim(),
+            scorecardConfig,
+            onboardingCompleted: true,
+        }).where(eq(workspaces.id, workspaceId));
+    } catch (err) {
+        console.error("[completeOnboarding] workspace update failed:", err);
+        throw err;
+    }
 
     // 2. Add selected tools to software_spend (skip duplicates)
     if (selectedTools.length > 0) {
