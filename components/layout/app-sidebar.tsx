@@ -3,107 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-    LayoutDashboard,
-    Database,
-    Sparkles,
-    CreditCard,
-    Settings,
-    PlusCircle,
-    Search,
-    Gift,
-    Zap,
-    MessageSquare,
-    SlidersHorizontal,
-    Layers,
-    BarChart3,
-    AlertCircle,
-    Rss,
-    GitCompareArrows,
-} from "lucide-react";
+import { PlusCircle } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { TrackrLogo } from "@/components/common/trackr-logo";
-
-const navItems = [
-    {
-        title: "Dashboard",
-        href: "/dashboard",
-        icon: LayoutDashboard,
-    },
-    {
-        title: "Tool Database",
-        href: "/tools",
-        icon: Database,
-    },
-    {
-        title: "Discover",
-        href: "/discover",
-        icon: Search,
-    },
-    {
-        title: "Your Feed",
-        href: "/feed",
-        icon: Rss,
-    },
-    {
-        title: "Research Queue",
-        href: "/queue",
-        icon: Zap,
-    },
-    {
-        title: "Ask Trackr AI",
-        href: "/ask",
-        icon: MessageSquare,
-    },
-    {
-        title: "Software Stack",
-        href: "/stack",
-        icon: Layers,
-    },
-    {
-        title: "Analytics",
-        href: "/analytics",
-        icon: BarChart3,
-    },
-    {
-        title: "Pain Points",
-        href: "/pain-points",
-        icon: AlertCircle,
-    },
-    {
-        title: "Compare",
-        href: "/compare",
-        icon: GitCompareArrows,
-    },
-    {
-        title: "Scorecard",
-        href: "/scorecard",
-        icon: SlidersHorizontal,
-    },
-    {
-        title: "Advertise",
-        href: "/advertise",
-        icon: Sparkles,
-    },
-    {
-        title: "Referrals",
-        href: "/referrals",
-        icon: Gift,
-    },
-];
-
-const bottomNavItems = [
-    {
-        title: "Billing",
-        href: "/settings/billing",
-        icon: CreditCard,
-    },
-    {
-        title: "Workspace",
-        href: "/workspace",
-        icon: Settings,
-    },
-];
+import { NAV_ITEMS, BOTTOM_NAV_ITEMS } from "@/lib/config/navigation";
 
 export function AppSidebar() {
     const pathname = usePathname();
@@ -132,7 +35,7 @@ export function AppSidebar() {
 
             {/* Main Nav */}
             <div className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-                {navItems.map((item) => {
+                {NAV_ITEMS.map((item) => {
                     const active = isActive(item.href);
                     return (
                         <Link
@@ -154,7 +57,7 @@ export function AppSidebar() {
 
             {/* Bottom Nav */}
             <div className="px-3 py-3 border-t border-black space-y-0.5">
-                {bottomNavItems.map((item) => {
+                {BOTTOM_NAV_ITEMS.map((item) => {
                     const active = isActive(item.href);
                     return (
                         <Link

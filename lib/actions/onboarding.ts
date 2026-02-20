@@ -67,7 +67,7 @@ Write only the description, no preamble or label.`,
 }
 
 const OnboardingSchema = z.object({
-    companyName: z.string().min(1).max(200),
+    companyName: z.string().max(200),
     companyContext: z.string().max(5000).default(""),
     selectedTools: z.array(z.object({
         name: z.string().min(1).max(200),

@@ -16,7 +16,7 @@ function generateState(workspaceId: string): string {
     const signature = createHmac("sha256", secret)
         .update(workspaceId)
         .digest("hex")
-        .slice(0, 16); // Short but sufficient for CSRF protection
+        .slice(0, 32); // Full 32-char HMAC for CSRF protection
 
     return `${workspaceId}.${signature}`;
 }

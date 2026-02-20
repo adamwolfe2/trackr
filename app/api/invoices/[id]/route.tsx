@@ -50,7 +50,7 @@ export async function GET(
                 amount={ad.budget}
                 description={`Ad Campaign for ${ad.tool.name}`}
                 customerName={user.fullName || "Valued Customer"}
-                customerEmail={user.emailAddresses[0].emailAddress}
+                customerEmail={user.emailAddresses?.[0]?.emailAddress ?? "customer"}
             />
         );
 
@@ -60,7 +60,10 @@ export async function GET(
                 "Content-Disposition": `attachment; filename="invoice-${ad.id.slice(0, 8)}.pdf"`,
             },
         });
-    } catch {
+    } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("[api/invoices]", err);
+        }
         return new NextResponse("Failed to generate invoice", { status: 500 });
     }
 }

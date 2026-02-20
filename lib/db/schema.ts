@@ -31,6 +31,7 @@ export const workspaceMembers = pgTable('workspace_members', {
 }, (table) => [
     index('workspace_members_user_id_idx').on(table.userId),
     index('workspace_members_workspace_id_idx').on(table.workspaceId),
+    uniqueIndex('workspace_members_workspace_user_unique').on(table.workspaceId, table.userId),
 ]);
 
 // Tools

@@ -72,6 +72,7 @@ export function CommandPalette() {
                             placeholder="Type a command or search..."
                             className="flex-1 py-4 font-mono text-sm bg-transparent focus:outline-none placeholder:text-neutral-400"
                             autoFocus
+                            aria-label="Search commands"
                         />
                         <kbd className="font-mono text-[10px] border border-neutral-300 px-1.5 py-0.5 text-neutral-400 shrink-0">
                             ESC

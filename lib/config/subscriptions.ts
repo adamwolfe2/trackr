@@ -153,8 +153,13 @@ function getEnvPriceIds(plan: Exclude<PlanSlug, "free">): string[] {
     return ids;
 }
 
-export function getPlanLimits(subscription?: { status: string; planId?: string | null }): Plan {
+export function getPlanLimits(subscription?: { status: string; planId?: string | null; currentPeriodEnd?: Date | null }): Plan {
     if (subscription?.status === 'active' || subscription?.status === 'trialing') {
+        // Check if trial/subscription has expired
+        if (subscription.currentPeriodEnd && new Date(subscription.currentPeriodEnd) < new Date()) {
+            return PLANS.FREE;
+        }
+
         // Slug-based overrides (for manually-granted or internal accounts)
         if (subscription.planId === 'enterprise') return PLANS.ENTERPRISE;
         if (subscription.planId === 'startup') return PLANS.STARTUP;

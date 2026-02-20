@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (!member) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
 
     // Rate limit: 30 searches per minute per IP
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const ip = (req as unknown as { ip?: string }).ip ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const rl = rateLimit(`search:${ip}`, { limit: 30, windowSeconds: 60 });
 
     if (!rl.success) {
@@ -68,7 +68,10 @@ export async function POST(req: NextRequest) {
             { results: similarTools },
             { headers: getRateLimitHeaders(rl) }
         );
-    } catch {
+    } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("[api/search]", err);
+        }
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

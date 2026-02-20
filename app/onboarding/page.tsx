@@ -9,6 +9,17 @@ import { classifyTool } from "@/lib/config/ai-tools";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { toast } from "sonner";
 
+const DEBOUNCE_DELAY_MS = 200;
+
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(timer);
+    }, [value, delay]);
+    return debouncedValue;
+}
+
 type Step = 1 | 2 | 3;
 type Dimension = { key: string; label: string; weight: number };
 
@@ -34,6 +45,9 @@ export default function OnboardingPage() {
 
     // Step 3
     const [dimensions, setDimensions] = useState<Dimension[]>(DEFAULT_SCORECARD_DIMENSIONS);
+
+    // Track failed logo images for safe fallback rendering
+    const [failedLogos, setFailedLogos] = useState<Set<string>>(new Set());
 
     // Restore form state from localStorage on mount
     const [restored, setRestored] = useState(false);
@@ -71,12 +85,25 @@ export default function OnboardingPage() {
         if (restored) saveDraft();
     }, [restored, saveDraft]);
 
+    // Warn user before closing tab with unsaved onboarding progress
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (step > 1) {
+                e.preventDefault();
+            }
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    }, [step]);
+
+    const debouncedSearch = useDebounce(toolSearch, DEBOUNCE_DELAY_MS);
+
     const categories = ["All", ...INTEGRATION_CATEGORIES];
     const categoryFiltered = activeCategory === "All"
         ? INTEGRATIONS
         : INTEGRATIONS.filter((i) => i.category === activeCategory);
 
-    const query = toolSearch.trim().toLowerCase();
+    const query = debouncedSearch.trim().toLowerCase();
     const searchResults = query.length > 0
         ? INTEGRATIONS.filter((i) => i.name.toLowerCase().includes(query))
         : null; // null = use category filter
@@ -99,7 +126,7 @@ export default function OnboardingPage() {
     const addCustomTool = (name: string) => {
         const trimmed = name.trim();
         if (!trimmed) return;
-        if (!customTools.includes(trimmed)) setCustomTools((prev) => [...prev, trimmed]);
+        if (!customTools.some((t) => t.toLowerCase() === trimmed.toLowerCase())) setCustomTools((prev) => [...prev, trimmed]);
         setSelectedTools((prev) => { const next = new Set(prev); next.add(trimmed); return next; });
         setToolSearch("");
     };
@@ -173,7 +200,14 @@ export default function OnboardingPage() {
                     <TrackrLogo size={22} />
                     Trackr
                 </span>
-                <div className="flex items-center gap-2">
+                <div
+                    role="progressbar"
+                    aria-valuenow={step}
+                    aria-valuemin={1}
+                    aria-valuemax={3}
+                    aria-label={`Onboarding step ${step} of 3`}
+                    className="flex items-center gap-2"
+                >
                     {([1, 2, 3] as Step[]).map((s) => (
                         <div key={s} className="flex items-center gap-2">
                             <div className={`w-6 h-6 border border-black flex items-center justify-center text-xs font-mono
@@ -206,8 +240,10 @@ export default function OnboardingPage() {
 
                         <div className="space-y-4">
                             <div>
-                                <label className="text-xs font-mono uppercase tracking-wide text-neutral-500 block mb-1">Company Name</label>
+                                <label htmlFor="company-name" className="text-xs font-mono uppercase tracking-wide text-neutral-500 block mb-1">Company Name</label>
                                 <input
+                                    id="company-name"
+                                    aria-label="Company name"
                                     type="text"
                                     placeholder="Acme Inc."
                                     value={companyName}
@@ -217,9 +253,11 @@ export default function OnboardingPage() {
                             </div>
 
                             <div>
-                                <label className="text-xs font-mono uppercase tracking-wide text-neutral-500 block mb-1">Website URL (optional)</label>
+                                <label htmlFor="website-url" className="text-xs font-mono uppercase tracking-wide text-neutral-500 block mb-1">Website URL (optional)</label>
                                 <div className="flex gap-2">
                                     <input
+                                        id="website-url"
+                                        aria-label="Company website URL"
                                         type="text"
                                         placeholder="https://yourcompany.com"
                                         value={websiteUrl}
@@ -230,6 +268,7 @@ export default function OnboardingPage() {
                                         type="button"
                                         onClick={handleGenerateContext}
                                         disabled={!websiteUrl || isGenerating}
+                                        aria-label="Auto-fill company context from website"
                                         className="flex items-center gap-2 px-4 py-3 border border-black bg-white font-mono text-sm hover:bg-neutral-100 disabled:opacity-40 disabled:cursor-not-allowed shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all"
                                     >
                                         {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -256,15 +295,16 @@ export default function OnboardingPage() {
 
                         <div className="flex justify-between items-center mt-6">
                             <button
-                                onClick={() => setStep(2)}
-                                disabled={!companyName.trim()}
-                                className="flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                disabled={!companyName.trim() || isPending}
+                                className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-40 disabled:cursor-not-allowed transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
                             >
                                 Continue <ArrowRight className="w-4 h-4" />
                             </button>
                             <button
-                                onClick={() => setStep(2)}
-                                className="text-xs font-mono text-neutral-400 hover:text-neutral-600 underline"
+                                onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                disabled={isPending}
+                                className={`text-xs font-mono text-neutral-400 hover:text-neutral-600 underline ${isPending ? "opacity-50 pointer-events-none" : ""}`}
                             >
                                 Skip for now
                             </button>
@@ -288,16 +328,19 @@ export default function OnboardingPage() {
                         <div className="relative mb-4">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400 pointer-events-none" />
                             <input
+                                id="tool-search"
+                                aria-label="Search tools"
                                 type="text"
                                 value={toolSearch}
                                 onChange={(e) => setToolSearch(e.target.value)}
                                 placeholder="Search tools… e.g. Figma, Datadog, Zapier"
-                                className="w-full border border-black pl-9 pr-9 py-2.5 font-mono text-sm bg-white focus:outline-none"
+                                className="w-full border border-black pl-9 pr-9 py-2.5 font-mono text-sm bg-white focus:outline-none focus:ring-2 focus:ring-black"
                             />
                             {toolSearch && (
                                 <button
                                     onClick={() => setToolSearch("")}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-black"
+                                    aria-label="Clear search"
                                 >
                                     <X className="w-3.5 h-3.5" />
                                 </button>
@@ -321,7 +364,7 @@ export default function OnboardingPage() {
                         )}
 
                         {/* Logo grid */}
-                        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3 mb-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 mb-3">
                             {visibleIntegrations.map((integration) => {
                                 const selected = selectedTools.has(integration.name);
                                 return (
@@ -341,7 +384,7 @@ export default function OnboardingPage() {
                                             </div>
                                         )}
                                         <div className="w-8 h-8 flex items-center justify-center">
-                                            {getLogoUrl(integration) ? (
+                                            {getLogoUrl(integration) && !failedLogos.has(integration.name) ? (
                                                 /* eslint-disable-next-line @next/next/no-img-element */
                                                 <img
                                                     src={getLogoUrl(integration)}
@@ -349,15 +392,12 @@ export default function OnboardingPage() {
                                                     width={32}
                                                     height={32}
                                                     className="object-contain w-8 h-8"
-                                                    onError={(e) => {
-                                                        const el = e.target as HTMLImageElement;
-                                                        // Replace broken image with letter fallback
-                                                        el.style.display = "none";
-                                                        el.parentElement!.innerHTML = `<span class="font-mono text-sm font-bold text-neutral-400">${integration.name.charAt(0).toUpperCase()}</span>`;
-                                                    }}
+                                                    onError={() => setFailedLogos((prev) => new Set([...prev, integration.name]))}
                                                 />
                                             ) : (
-                                                <span className="font-mono text-sm font-bold text-neutral-400">{integration.name.charAt(0).toUpperCase()}</span>
+                                                <span className="flex items-center justify-center w-full h-full font-mono text-sm font-bold text-neutral-400 bg-neutral-100">
+                                                    {integration.name.charAt(0).toUpperCase()}
+                                                </span>
                                             )}
                                         </div>
                                         <span className="text-[9px] font-mono text-neutral-600 leading-tight text-center line-clamp-2 max-w-[60px]">
@@ -457,14 +497,16 @@ export default function OnboardingPage() {
 
                         <div className="flex justify-between items-center">
                             <button
-                                onClick={() => setStep(1)}
-                                className="text-xs font-mono text-neutral-400 hover:text-neutral-600 underline"
+                                onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                disabled={isPending}
+                                className={`text-xs font-mono text-neutral-400 hover:text-neutral-600 underline ${isPending ? "opacity-50 pointer-events-none" : ""}`}
                             >
                                 &larr; Back
                             </button>
                             <button
-                                onClick={() => setStep(3)}
-                                className="flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all"
+                                onClick={() => { setStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                disabled={isPending}
+                                className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
                             >
                                 Continue <ArrowRight className="w-4 h-4" />
                             </button>
@@ -479,9 +521,6 @@ export default function OnboardingPage() {
                         <h1 className="text-3xl font-serif font-normal mb-2 leading-tight">Set up your scorecard.</h1>
                         <p className="font-mono text-sm text-neutral-600 mb-8 leading-relaxed">
                             Every tool is scored against these dimensions. Adjust weights to match what matters most to your team.
-                            {totalWeight !== 100 && (
-                                <span className="text-amber-600 ml-1 font-bold">Total: {totalWeight}% (should be 100%)</span>
-                            )}
                         </p>
 
                         <div className="space-y-4 mb-8">
@@ -493,11 +532,13 @@ export default function OnboardingPage() {
                                             <button
                                                 onClick={() => updateDimensionWeight(dim.key, Math.max(0, dim.weight - 5))}
                                                 className="w-6 h-6 border border-black bg-white font-mono text-sm hover:bg-neutral-100 flex items-center justify-center"
+                                                aria-label={`Decrease ${dim.label} weight`}
                                             >−</button>
                                             <span className="w-10 text-center font-mono text-sm font-bold">{dim.weight}%</span>
                                             <button
                                                 onClick={() => updateDimensionWeight(dim.key, Math.min(100, dim.weight + 5))}
                                                 className="w-6 h-6 border border-black bg-white font-mono text-sm hover:bg-neutral-100 flex items-center justify-center"
+                                                aria-label={`Increase ${dim.label} weight`}
                                             >+</button>
                                         </div>
                                     </div>
@@ -511,17 +552,22 @@ export default function OnboardingPage() {
                             ))}
                         </div>
 
+                        <p className={`font-mono text-sm mb-6 ${totalWeight === 100 ? "text-black" : "text-red-500"}`}>
+                            Total: {totalWeight}% {totalWeight === 100 ? "\u2713" : "(must equal 100%)"}
+                        </p>
+
                         <div className="flex justify-between items-center">
                             <button
-                                onClick={() => setStep(2)}
-                                className="text-xs font-mono text-neutral-400 hover:text-neutral-600 underline"
+                                onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                disabled={isPending}
+                                className={`text-xs font-mono text-neutral-400 hover:text-neutral-600 underline ${isPending ? "opacity-50 pointer-events-none" : ""}`}
                             >
                                 ← Back
                             </button>
                             <button
                                 onClick={handleComplete}
                                 disabled={isPending || totalWeight !== 100}
-                                className="flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                                className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-60 disabled:cursor-not-allowed transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
                             >
                                 {isPending ? (
                                     <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>

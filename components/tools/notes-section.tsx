@@ -71,6 +71,7 @@ export function NotesSection({ toolId, notes = [] }: { toolId: string, notes?: {
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
                             rows={2}
+                            maxLength={10000}
                             className="flex-1 px-4 py-3 font-mono text-xs bg-transparent focus:outline-none resize-none border-0"
                             onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) {

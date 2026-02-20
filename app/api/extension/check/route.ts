@@ -90,7 +90,10 @@ export async function GET(req: NextRequest) {
             },
             { status: 200, headers }
         );
-    } catch {
+    } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("[api/extension/check]", err);
+        }
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500, headers }

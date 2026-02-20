@@ -7,6 +7,11 @@ import { currentUser } from "@clerk/nextjs/server";
 import { eq, and, count } from "drizzle-orm";
 import { getWorkspaceId } from "@/lib/db/queries";
 import { getPlanLimits } from "@/lib/config/subscriptions";
+import { createHash } from "crypto";
+
+function hashApiKey(key: string): string {
+    return createHash("sha256").update(key).digest("hex");
+}
 
 export async function updateWorkspaceName(formData: FormData) {
     const user = await currentUser();
@@ -44,7 +49,8 @@ export async function inviteMember(formData: FormData) {
     if (!user) throw new Error("Unauthorized");
 
     const email = (formData.get("email") as string)?.trim().toLowerCase();
-    if (!email || !email.includes("@")) throw new Error("Valid email is required");
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !EMAIL_REGEX.test(email)) throw new Error("Valid email is required");
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
@@ -161,7 +167,8 @@ export async function regenerateApiKey() {
     }
 
     const apiKey = `trk_${crypto.randomUUID().replace(/-/g, "")}`;
-    await db.update(workspaces).set({ apiKey }).where(eq(workspaces.id, workspaceId));
+    const hashedKey = hashApiKey(apiKey);
+    await db.update(workspaces).set({ apiKey: hashedKey }).where(eq(workspaces.id, workspaceId));
 
     revalidatePath("/workspace");
     return apiKey;

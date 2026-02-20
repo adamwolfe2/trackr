@@ -1,6 +1,11 @@
 import { db } from "@/lib/db";
 import { workspaces } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { createHash } from "crypto";
+
+function hashApiKey(key: string): string {
+    return createHash("sha256").update(key).digest("hex");
+}
 
 /**
  * Authenticate Chrome Extension requests via Bearer API key.
@@ -12,8 +17,9 @@ export async function getWorkspaceFromApiKey(req: Request) {
     const apiKey = auth.slice(7);
     if (!apiKey) return null;
 
+    const hashedKey = hashApiKey(apiKey);
     const workspace = await db.query.workspaces.findFirst({
-        where: eq(workspaces.apiKey, apiKey),
+        where: eq(workspaces.apiKey, hashedKey),
     });
     return workspace ?? null;
 }
@@ -29,7 +35,7 @@ export function corsHeaders(req?: Request): Record<string, string> {
     const isAllowed =
         origin.startsWith("chrome-extension://") ||
         origin.startsWith("http://localhost") ||
-        origin.startsWith("https://trytrackr.com");
+        origin === "https://trytrackr.com";
 
     return {
         "Access-Control-Allow-Origin": isAllowed ? origin : "https://trytrackr.com",

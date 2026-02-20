@@ -9,6 +9,7 @@ import { rateLimit } from "@/lib/middleware/rate-limit";
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
+import { checkFeatureAccess } from "@/lib/middleware/require-subscription";
 
 export const maxDuration = 30;
 
@@ -28,6 +29,15 @@ export async function POST(req: NextRequest) {
         with: { workspace: true },
     });
     if (!member) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
+
+    // Premium feature gate: Ask AI requires Startup+ plan
+    const plan = await checkFeatureAccess(member.workspaceId, "askAI");
+    if (!plan) {
+        return NextResponse.json(
+            { error: "Ask AI requires a Startup or Enterprise plan. Please upgrade." },
+            { status: 403 }
+        );
+    }
 
     const rl = rateLimit(`chat:${user.id}`, { limit: 20, windowSeconds: 60 });
 
@@ -191,7 +201,10 @@ ${toolContext ? `## Researched Tool Reports\n${toolContext}\n` : ""}
         });
 
         return result.toUIMessageStreamResponse();
-    } catch {
+    } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("[api/chat]", err);
+        }
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

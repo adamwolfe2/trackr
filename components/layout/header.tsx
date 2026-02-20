@@ -24,11 +24,12 @@ export function Header() {
 
             <button
                 onClick={openCommandPalette}
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 border border-neutral-300 hover:border-black transition-colors cursor-pointer bg-[#F8F8F5]"
+                className="flex items-center gap-2 px-3 py-1.5 border border-neutral-300 hover:border-black transition-colors cursor-pointer bg-[#F8F8F5]"
+                aria-label="Search"
             >
-                <Search className="h-3.5 w-3.5 text-neutral-400" />
-                <span className="font-mono text-xs text-neutral-400">Search...</span>
-                <kbd className="font-mono text-[10px] border border-neutral-300 px-1.5 py-0.5 text-neutral-400 ml-4">
+                <Search className="h-4 w-4 text-neutral-400 md:h-3.5 md:w-3.5" />
+                <span className="hidden md:inline font-mono text-xs text-neutral-400">Search...</span>
+                <kbd className="hidden md:inline font-mono text-[10px] border border-neutral-300 px-1.5 py-0.5 text-neutral-400 ml-4">
                     {isMac ? "⌘" : "Ctrl+"}K
                 </kbd>
             </button>

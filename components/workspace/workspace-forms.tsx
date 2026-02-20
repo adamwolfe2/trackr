@@ -1,9 +1,20 @@
 "use client";
 
 import { useRef } from "react";
+import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext } from "@/lib/actions/workspace";
-import { UserX } from "lucide-react";
+import { Loader2, UserX } from "lucide-react";
+
+function SubmitButton({ children, className }: { children: React.ReactNode; className: string }) {
+    const { pending } = useFormStatus();
+    return (
+        <button type="submit" disabled={pending} className={`${className} disabled:opacity-50 disabled:cursor-not-allowed`}>
+            {pending ? <Loader2 className="h-3 w-3 animate-spin inline mr-1.5" /> : null}
+            {children}
+        </button>
+    );
+}
 
 export function InviteMemberForm() {
     const formRef = useRef<HTMLFormElement>(null);
@@ -27,11 +38,12 @@ export function InviteMemberForm() {
                 type="email"
                 placeholder="colleague@company.com"
                 required
+                maxLength={320}
                 className="flex-1 sm:max-w-sm border border-black px-4 py-2 font-mono text-sm bg-white focus:outline-none"
             />
-            <button type="submit" className="border sm:border-l-0 border-t-0 sm:border-t border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800 whitespace-nowrap">
+            <SubmitButton className="border sm:border-l-0 border-t-0 sm:border-t border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800 whitespace-nowrap">
                 Send Invite
-            </button>
+            </SubmitButton>
         </form>
     );
 }
@@ -46,9 +58,9 @@ export function RemoveMemberButton({ memberId }: { memberId: string }) {
                 toast.error(error instanceof Error ? error.message : "Failed to remove member");
             }
         }}>
-            <button type="submit" className="font-mono text-[10px] uppercase tracking-widest border border-red-300 text-red-500 px-2 py-0.5 hover:bg-red-50 flex items-center gap-1">
+            <SubmitButton className="font-mono text-[10px] uppercase tracking-widest border border-red-300 text-red-500 px-2 py-0.5 hover:bg-red-50 flex items-center gap-1">
                 <UserX className="h-2.5 w-2.5" /> Remove
-            </button>
+            </SubmitButton>
         </form>
     );
 }
@@ -73,13 +85,15 @@ export function UpdateWorkspaceNameForm({ defaultName, disabled }: { defaultName
                     name="name"
                     defaultValue={defaultName}
                     disabled={disabled}
+                    required
+                    maxLength={200}
                     className="w-full border border-black px-4 py-2 font-mono text-sm bg-white focus:outline-none disabled:opacity-40"
                 />
             </div>
             {!disabled && (
-                <button type="submit" className="border border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-white hover:bg-black hover:text-white">
+                <SubmitButton className="border border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-white hover:bg-black hover:text-white">
                     Save Changes
-                </button>
+                </SubmitButton>
             )}
         </form>
     );
@@ -106,6 +120,7 @@ export function UpdateCompanyContextForm({ defaultContext, disabled }: { default
                     rows={6}
                     defaultValue={defaultContext}
                     disabled={disabled}
+                    maxLength={5000}
                     placeholder="Describe your company: industry, business model, team size, main goals, tech stack, and what kind of tools would be most valuable..."
                     className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none resize-none disabled:opacity-40"
                 />
@@ -114,9 +129,9 @@ export function UpdateCompanyContextForm({ defaultContext, disabled }: { default
                 </p>
             </div>
             {!disabled && (
-                <button type="submit" className="border border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-white hover:bg-black hover:text-white">
+                <SubmitButton className="border border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-white hover:bg-black hover:text-white">
                     Save Company Profile
-                </button>
+                </SubmitButton>
             )}
         </form>
     );

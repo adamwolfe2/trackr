@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { tools, reports, researchJobs, notes, workspaceMembers, subscriptions } from "@/lib/db/schema";
-import { eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, inArray, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ExternalLink, ChevronLeft } from "lucide-react";
 import Link from "next/link";
@@ -11,6 +11,7 @@ import { ExportButton } from "@/components/common/export-button";
 import { ShareReportButton } from "@/components/tools/share-report-button";
 import { ToolDetailTabs } from "@/components/tools/tool-detail-tabs";
 import { clerkClient } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 
@@ -32,8 +33,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function ToolDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
 
+    const user = await currentUser();
+    if (!user) return notFound();
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+    });
+    if (!member) return notFound();
+
+    // Fetch tool AND verify it belongs to the user's workspace
     const tool = await db.query.tools.findFirst({
-        where: eq(tools.id, id),
+        where: and(eq(tools.id, id), eq(tools.workspaceId, member.workspaceId)),
     });
 
     if (!tool) return notFound();

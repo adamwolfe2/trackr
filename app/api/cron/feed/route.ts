@@ -11,9 +11,14 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 5 min max for processing all workspaces
 
 export async function GET(req: Request) {
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) {
+        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    }
+
     const authHeader = req.headers.get('Authorization') || '';
-    const expected = `Bearer ${process.env.CRON_SECRET || ''}`;
-    if (!process.env.CRON_SECRET || authHeader.length !== expected.length || !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
+    const expected = `Bearer ${cronSecret}`;
+    if (authHeader.length !== expected.length || !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -64,7 +69,10 @@ export async function GET(req: Request) {
             toolsExtracted: totalExtracted,
             suggestions: totalSuggestions,
         });
-    } catch {
+    } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("[api/cron/feed]", err);
+        }
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

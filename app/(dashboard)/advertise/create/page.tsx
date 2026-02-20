@@ -1,11 +1,17 @@
 export const dynamic = "force-dynamic";
 
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { tools, workspaceMembers } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { CreateAdForm } from "@/components/advertise/create-ad-form";
+
+export const metadata: Metadata = {
+    title: "New Ad Campaign — Trackr",
+    description: "Create a sponsored placement to boost your tool's visibility.",
+};
 
 export default async function CreateAdPage() {
     const user = await currentUser();

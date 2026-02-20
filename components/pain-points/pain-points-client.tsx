@@ -312,6 +312,7 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
                                 name="title"
                                 required
                                 autoFocus
+                                maxLength={200}
                                 placeholder="e.g. Video editing takes too long"
                                 className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
                             />
@@ -323,6 +324,7 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
                             <input
                                 id="category"
                                 name="category"
+                                maxLength={100}
                                 placeholder="e.g. Marketing, Engineering, Ops"
                                 className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none"
                             />
@@ -335,6 +337,7 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
                                 id="description"
                                 name="description"
                                 rows={3}
+                                maxLength={2000}
                                 placeholder="Describe the impact and current workarounds..."
                                 className="w-full border border-black px-4 py-2.5 font-mono text-sm bg-white focus:outline-none resize-none"
                             />

@@ -21,6 +21,7 @@ interface StatusCounts {
 
 interface MemberActivity {
     userId: string;
+    name: string;
     role: string;
     toolCount: number;
 }
@@ -278,12 +279,12 @@ export default function AnalyticsClient({
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 border border-black bg-neutral-100 flex items-center justify-center">
                                         <span className="font-mono text-xs font-bold uppercase">
-                                            {member.userId.slice(0, 2)}
+                                            {member.name.charAt(0)}
                                         </span>
                                     </div>
                                     <div>
                                         <div className="font-mono text-sm">
-                                            Member {member.userId.slice(-6)}
+                                            {member.name}
                                         </div>
                                         <div className="font-mono text-xs text-neutral-400 uppercase">
                                             {member.role}

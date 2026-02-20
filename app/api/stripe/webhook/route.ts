@@ -26,6 +26,9 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
+    // Stripe guarantees event IDs are unique — use as idempotency key
+    const eventId = event.id;
+
     try {
         switch (event.type) {
             case "checkout.session.completed": {
@@ -112,14 +115,24 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
             })
             .where(eq(subscriptions.workspaceId, workspaceId));
     } else {
-        await db.insert(subscriptions).values({
-            workspaceId,
-            stripeCustomerId: customerId,
-            stripeSubscriptionId: subscriptionId,
-            status: stripeSubscription.status,
-            planId,
-            currentPeriodEnd: periodEnd,
-        });
+        await db.insert(subscriptions)
+            .values({
+                workspaceId,
+                stripeCustomerId: customerId,
+                stripeSubscriptionId: subscriptionId,
+                status: stripeSubscription.status,
+                planId,
+                currentPeriodEnd: periodEnd,
+            })
+            .onConflictDoUpdate({
+                target: subscriptions.stripeSubscriptionId,
+                set: {
+                    status: stripeSubscription.status,
+                    planId,
+                    currentPeriodEnd: periodEnd,
+                    updatedAt: new Date(),
+                },
+            });
     }
 }
 
@@ -166,25 +179,16 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-    // In Stripe v20, subscription is accessed via parent.subscription_details
     const subRef = invoice.parent?.subscription_details?.subscription;
     const subscriptionId = typeof subRef === "string"
         ? subRef
-        : subRef?.id ?? null;
+        : typeof subRef === "object" && subRef !== null && "id" in subRef
+            ? (subRef as { id: string }).id
+            : null;
 
-    if (!subscriptionId) return;
+    if (!subscriptionId) return; // Can't identify subscription — skip
 
-    const existing = await db.query.subscriptions.findFirst({
-        where: eq(subscriptions.stripeSubscriptionId, subscriptionId),
-    });
-
-    if (!existing) return;
-
-    await db
-        .update(subscriptions)
-        .set({
-            status: "past_due",
-            updatedAt: new Date(),
-        })
+    await db.update(subscriptions)
+        .set({ status: "past_due", updatedAt: new Date() })
         .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));
 }

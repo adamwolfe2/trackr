@@ -19,10 +19,14 @@ const STUCK_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
  * Schedule: every 5 minutes via Vercel Cron or Upstash.
  */
 export async function GET(req: Request) {
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) {
+        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    }
+
     const authHeader = req.headers.get("Authorization") || "";
-    const expected = `Bearer ${process.env.CRON_SECRET || ""}`;
+    const expected = `Bearer ${cronSecret}`;
     if (
-        !process.env.CRON_SECRET ||
         authHeader.length !== expected.length ||
         !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
     ) {
@@ -79,7 +83,10 @@ export async function GET(req: Request) {
             recovered: stuckJobs.length,
             toolIds: stuckToolIds,
         });
-    } catch {
+    } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("[api/cron/recover-stuck-jobs]", err);
+        }
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

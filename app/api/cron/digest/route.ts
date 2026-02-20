@@ -14,9 +14,14 @@ const FROM = "Trackr <noreply@trytrackr.com>";
 function getResend() { return new Resend(process.env.RESEND_API_KEY!); }
 
 export async function GET(req: Request) {
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret) {
+        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    }
+
     const authHeader = req.headers.get('Authorization') || '';
-    const expected = `Bearer ${process.env.CRON_SECRET || ''}`;
-    if (!process.env.CRON_SECRET || authHeader.length !== expected.length || !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
+    const expected = `Bearer ${cronSecret}`;
+    if (authHeader.length !== expected.length || !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -144,7 +149,10 @@ export async function GET(req: Request) {
         }
 
         return NextResponse.json({ success: true, digestsSent, renewalsSent });
-    } catch {
+    } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+            console.error("[api/cron/digest]", err);
+        }
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

@@ -87,7 +87,8 @@ export default async function DashboardPage() {
         .select({ avg: sql<string>`avg(${tools.overallScore})` })
         .from(tools)
         .where(sql`${tools.workspaceId} = ${workspaceId} AND ${tools.overallScore} IS NOT NULL`);
-    const avgScore = avgScoreData[0]?.avg ? parseFloat(avgScoreData[0].avg) : 0;
+    const parsedAvg = avgScoreData[0]?.avg ? parseFloat(avgScoreData[0].avg) : 0;
+    const avgScore = Number.isFinite(parsedAvg) ? parsedAvg : 0;
 
     // Quick actions context
     const now = new Date();
