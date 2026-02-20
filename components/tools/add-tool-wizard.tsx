@@ -170,6 +170,14 @@ export function AddToolWizard() {
                         </div>
                     </div>
 
+                    {/* Timeline Info */}
+                    <div className="border border-black/20 bg-neutral-50 px-4 py-3 flex items-start gap-3">
+                        <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0 text-neutral-500" />
+                        <p className="font-mono text-xs text-neutral-500 leading-relaxed">
+                            Research starts immediately after submission. Our agents will map the site, pull reviews from G2, Reddit, and Trustpilot, analyze competitors, and deliver a scored report — <span className="text-black font-medium">typically under 2 minutes</span>.
+                        </p>
+                    </div>
+
                     {/* Actions */}
                     <div className="flex gap-3 pt-2">
                         <button

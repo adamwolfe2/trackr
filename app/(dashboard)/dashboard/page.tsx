@@ -1,7 +1,7 @@
 import { Clock, ArrowRight, PlusCircle, DollarSign, AlertTriangle, CalendarClock, Sparkles } from "lucide-react";
 import { db } from "@/lib/db";
 import { tools, painPoints, workspaceMembers, workspaces, researchJobs, reports, softwareSpend, toolSuggestions } from "@/lib/db/schema";
-import { eq, sql, desc, inArray } from "drizzle-orm";
+import { eq, sql, desc, inArray, gte, and } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -90,6 +90,18 @@ export default async function DashboardPage() {
     const parsedAvg = avgScoreData[0]?.avg ? parseFloat(avgScoreData[0].avg) : 0;
     const avgScore = Number.isFinite(parsedAvg) ? parsedAvg : 0;
 
+    // This-week deltas
+    const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const [toolsThisWeekData, reportsThisWeekData] = await Promise.all([
+        db.select({ count: sql<number>`count(*)` }).from(tools)
+            .where(and(eq(tools.workspaceId, workspaceId), gte(tools.submittedAt, oneWeekAgo))),
+        db.select({ count: sql<number>`count(*)` }).from(reports)
+            .innerJoin(tools, eq(reports.toolId, tools.id))
+            .where(and(eq(tools.workspaceId, workspaceId), gte(reports.createdAt, oneWeekAgo))),
+    ]);
+    const toolsThisWeek = Number(toolsThisWeekData[0]?.count || 0);
+    const reportsThisWeek = Number(reportsThisWeekData[0]?.count || 0);
+
     // Quick actions context
     const now = new Date();
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -160,6 +172,8 @@ export default async function DashboardPage() {
                 activeTools={toolsCount}
                 researchReports={reportsCount}
                 activePainPoints={activePainPoints}
+                toolsThisWeek={toolsThisWeek}
+                reportsThisWeek={reportsThisWeek}
             />
 
             {/* Quick Actions */}

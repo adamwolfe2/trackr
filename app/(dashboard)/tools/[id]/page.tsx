@@ -180,6 +180,22 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         failed: "border-neutral-400 text-neutral-500",
     };
 
+    const sentimentConsensus = serializedReport?.sentimentData?.sentimentConsensus;
+    const sentimentLabel: Record<string, string> = {
+        very_positive: "Very Positive",
+        positive: "Positive",
+        mixed: "Mixed",
+        negative: "Negative",
+        very_negative: "Very Negative",
+    };
+    const sentimentColors: Record<string, string> = {
+        very_positive: "bg-black text-white",
+        positive: "border-black text-black",
+        mixed: "border-neutral-400 text-neutral-500",
+        negative: "border-red-400 text-red-600",
+        very_negative: "bg-red-600 text-white border-red-600",
+    };
+
     return (
         <div className="space-y-6">
             {/* Back link */}
@@ -200,14 +216,22 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                             {tool.status}
                         </span>
                     </h1>
-                    <div className="flex items-center gap-2 font-mono text-xs text-neutral-400">
+                    <div className="flex items-center gap-2 font-mono text-xs text-neutral-400 flex-wrap">
                         {toolHostname && (
                             <a href={tool.websiteUrl!} target="_blank" rel="noopener noreferrer" className="hover:text-black flex items-center gap-1">
                                 {toolHostname} <ExternalLink className="h-2.5 w-2.5" />
                             </a>
                         )}
-                        {tool.websiteUrl && <span>·</span>}
+                        {toolHostname && <span>·</span>}
                         <span>Last updated {tool.lastResearchedAt ? formatDistanceToNow(new Date(tool.lastResearchedAt), { addSuffix: true }) : "Never"}</span>
+                        {sentimentConsensus && (
+                            <>
+                                <span>·</span>
+                                <span className={`border px-1.5 py-0.5 text-[10px] uppercase tracking-widest ${sentimentColors[sentimentConsensus.overall] ?? "border-neutral-300 text-neutral-500"}`}>
+                                    {sentimentLabel[sentimentConsensus.overall] ?? sentimentConsensus.overall}
+                                </span>
+                            </>
+                        )}
                     </div>
                 </div>
 
