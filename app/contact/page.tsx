@@ -10,9 +10,16 @@ export const metadata: Metadata = {
     description: "Get in touch with the Trackr team. Questions, enterprise inquiries, or AI audit bookings.",
     openGraph: {
         title: "Contact — Trackr",
-        description: "Get in touch with the Trackr team.",
+        description: "Get in touch with the Trackr team. Questions, enterprise inquiries, or AI audit bookings.",
         type: "website",
         url: "https://trytrackr.com/contact",
+        images: [{ url: "/og.png", width: 1456, height: 816, alt: "Contact Trackr" }],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Contact — Trackr",
+        description: "Get in touch with the Trackr team. Questions, enterprise inquiries, or AI audit bookings.",
+        images: ["/og.png"],
     },
 };
 

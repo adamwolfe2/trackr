@@ -14,6 +14,13 @@ export const metadata: Metadata = {
             "See how Trackr researches AI tools in 7 automated steps — from site crawling to structured reports.",
         type: "website",
         url: "https://trytrackr.com/process",
+        images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr Research Process" }],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Our Process — Trackr",
+        description: "See how Trackr researches AI tools in 7 automated steps — from site crawling to structured reports.",
+        images: ["/og.png"],
     },
 };
 

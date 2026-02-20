@@ -14,6 +14,13 @@ export const metadata: Metadata = {
         description: `Free to start. Team at $${PLANS.TEAM.price}/mo. Startup at $${PLANS.STARTUP.price}/mo. Enterprise at $${PLANS.ENTERPRISE.price}/mo.`,
         type: "website",
         url: "https://trytrackr.com/pricing",
+        images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr Pricing" }],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Pricing — Trackr",
+        description: `Free to start. Team at $${PLANS.TEAM.price}/mo. Startup at $${PLANS.STARTUP.price}/mo. Enterprise at $${PLANS.ENTERPRISE.price}/mo.`,
+        images: ["/og.png"],
     },
 };
 

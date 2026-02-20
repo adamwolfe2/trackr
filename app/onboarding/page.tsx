@@ -534,6 +534,13 @@ export default function OnboardingPage() {
                                 <button
                                     onClick={() => { setStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                                     disabled={isPending}
+                                    className={`text-xs font-mono text-neutral-400 hover:text-neutral-600 underline ${isPending ? "opacity-50 pointer-events-none" : ""}`}
+                                >
+                                    Skip — I&apos;ll add tools later
+                                </button>
+                                <button
+                                    onClick={() => { setStep(3); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                                    disabled={isPending}
                                     className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
                                 >
                                     Continue <ArrowRight className="w-4 h-4" />
@@ -582,9 +589,19 @@ export default function OnboardingPage() {
                             ))}
                         </div>
 
-                        <p className={`font-mono text-sm mb-6 ${totalWeight === 100 ? "text-black" : "text-red-500"}`}>
-                            Total: {totalWeight}% {totalWeight === 100 ? "\u2713" : "(must equal 100%)"}
-                        </p>
+                        <div className="flex items-center justify-between mb-6">
+                            <p className={`font-mono text-sm ${totalWeight === 100 ? "text-black" : "text-red-500"}`}>
+                                Total: {totalWeight}% {totalWeight === 100 ? "\u2713" : "(must equal 100%)"}
+                            </p>
+                            {totalWeight !== 100 && (
+                                <button
+                                    onClick={() => setDimensions(DEFAULT_SCORECARD_DIMENSIONS)}
+                                    className="font-mono text-xs text-neutral-400 hover:text-black underline underline-offset-2"
+                                >
+                                    Reset to defaults
+                                </button>
+                            )}
+                        </div>
 
                         <div className="flex justify-between items-center">
                             <button

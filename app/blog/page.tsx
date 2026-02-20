@@ -13,6 +13,13 @@ export const metadata: Metadata = {
         description: "Guides, insights, and tool recommendations for ops teams evaluating AI tools.",
         type: "website",
         url: "https://trytrackr.com/blog",
+        images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr Blog" }],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Blog — Trackr",
+        description: "Guides, insights, and tool recommendations for ops teams evaluating AI tools.",
+        images: ["/og.png"],
     },
 };
 

@@ -13,6 +13,13 @@ export const metadata: Metadata = {
         description: "Trackr helps operations teams research, evaluate, and track AI tools with intelligence — not spreadsheets.",
         type: "website",
         url: "https://trytrackr.com/about",
+        images: [{ url: "/og.png", width: 1456, height: 816, alt: "About Trackr" }],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "About — Trackr",
+        description: "Trackr helps operations teams research, evaluate, and track AI tools with intelligence — not spreadsheets.",
+        images: ["/og.png"],
     },
 };
 
