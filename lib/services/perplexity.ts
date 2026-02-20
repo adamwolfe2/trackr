@@ -1,5 +1,49 @@
 import { OpenAI } from "openai";
 
+// In-memory response cache: query → { result, expiresAt }
+const responseCache = new Map<string, { result: string; expiresAt: number }>();
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+function getCached(key: string): string | null {
+    const entry = responseCache.get(key);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+        responseCache.delete(key);
+        return null;
+    }
+    return entry.result;
+}
+
+function setCache(key: string, result: string) {
+    responseCache.set(key, { result, expiresAt: Date.now() + CACHE_TTL_MS });
+}
+
+async function sleep(ms: number) {
+    return new Promise((r) => setTimeout(r, ms));
+}
+
+async function withRetry<T>(
+    fn: () => Promise<T>,
+    maxAttempts = 3,
+    baseDelayMs = 1000
+): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        try {
+            return await fn();
+        } catch (err) {
+            lastError = err;
+            // Don't retry if it's a rate-limit (429) — back off longer
+            const isRateLimit = err instanceof Error && err.message.includes("429");
+            const delay = isRateLimit
+                ? Math.pow(2, attempt) * 5000 // 5s, 10s, 20s for rate limits
+                : Math.pow(2, attempt) * baseDelayMs; // 1s, 2s, 4s for other errors
+            if (attempt < maxAttempts - 1) await sleep(delay);
+        }
+    }
+    throw lastError;
+}
+
 export class PerplexityService {
     private client: OpenAI | null = null;
 
@@ -8,29 +52,36 @@ export class PerplexityService {
         if (apiKey) {
             this.client = new OpenAI({
                 apiKey: apiKey,
-                baseURL: "https://api.perplexity.ai"
+                baseURL: "https://api.perplexity.ai",
             });
         }
     }
 
-    async search(query: string, model: string = "sonar-reasoning-pro"): Promise<string> {
+    async search(query: string, model = "sonar-reasoning-pro"): Promise<string> {
         if (!this.client) {
-            console.warn("PERPLEXITY_API_KEY is not set. Returning mock search results.");
-            return "Mock search result: No major red flags found. Users praise the ease of use but complain about pricing.";
+            return "";
         }
 
+        const cacheKey = `${model}:${query}`;
+        const cached = getCached(cacheKey);
+        if (cached !== null) return cached;
+
         try {
-            const response = await this.client.chat.completions.create({
-                model: model,
-                messages: [
-                    { role: "system", content: "You are a helpful research assistant. Find facts, reviews, and sentiment." },
-                    { role: "user", content: query }
-                ]
+            const result = await withRetry(async () => {
+                const response = await this.client!.chat.completions.create({
+                    model,
+                    messages: [
+                        { role: "system", content: "You are a helpful research assistant. Find facts, reviews, and sentiment." },
+                        { role: "user", content: query },
+                    ],
+                });
+                return response.choices[0].message.content || "";
             });
 
-            return response.choices[0].message.content || "";
+            setCache(cacheKey, result);
+            return result;
         } catch (error) {
-            console.error("Perplexity search failed:", error);
+            console.error("Perplexity search failed after retries:", error);
             return "";
         }
     }
@@ -43,29 +94,37 @@ export class PerplexityService {
         if (!this.client) {
             return JSON.stringify({
                 sentiment: "neutral",
-                quotes: ["Mock quote 1: Great tool!", "Mock quote 2: Too expensive."]
+                quotes: ["Mock quote 1: Great tool!", "Mock quote 2: Too expensive."],
             });
         }
 
+        const cacheKey = `sentiment:${entity}`;
+        const cached = getCached(cacheKey);
+        if (cached !== null) return cached;
+
         try {
-            const response = await this.client.chat.completions.create({
-                model: "sonar-reasoning-pro",
-                messages: [
-                    {
-                        role: "system",
-                        content: `You are an expert sentiment analyst. Your goal is to find authentic user reviews and extracting specific, direct quotes.
-                        
+            const result = await withRetry(async () => {
+                const response = await this.client!.chat.completions.create({
+                    model: "sonar-reasoning-pro",
+                    messages: [
+                        {
+                            role: "system",
+                            content: `You are an expert sentiment analyst. Your goal is to find authentic user reviews and extracting specific, direct quotes.
+
                         Output a JSON object with:
                         - "summary": A brief summary of user sentiment.
                         - "sentiment": "positive", "neutral", or "negative".
                         - "quotes": An array of objects { "text": "...", "source": "..." } containing real user quotes.
-                        `
-                    },
-                    { role: "user", content: `Analyze the sentiment for "${entity}". Find 3-5 specific, direct quotes from users on Reddit, G2, or Capterra.` }
-                ]
+                        `,
+                        },
+                        { role: "user", content: `Analyze the sentiment for "${entity}". Find 3-5 specific, direct quotes from users on Reddit, G2, or Capterra.` },
+                    ],
+                });
+                return response.choices[0].message.content || "";
             });
 
-            return response.choices[0].message.content || "";
+            setCache(cacheKey, result);
+            return result;
         } catch (error) {
             console.error("Perplexity sentiment analysis failed:", error);
             return "";
@@ -74,30 +133,42 @@ export class PerplexityService {
 
     async discoverTools(painPoint: string): Promise<string> {
         if (!this.client) {
-            console.warn("PERPLEXITY_API_KEY is not set. Returning mock suggestions.");
             return this.getMockSuggestions(painPoint);
         }
 
+        const cacheKey = `discover:${painPoint}`;
+        const cached = getCached(cacheKey);
+        if (cached !== null) return cached;
+
         try {
-            const response = await this.client.chat.completions.create({
-                model: "sonar-reasoning-pro", // or sonar-small-online
-                messages: [
-                    { role: "system", content: "You are an expert software procurement assistant. specialized in finding the best B2B SaaS tools." },
-                    { role: "user", content: `Find 3-5 software tools that solve this pain point: "${painPoint}". Return a JSON list with name, url, and short description.` }
-                ]
+            const result = await withRetry(async () => {
+                const response = await this.client!.chat.completions.create({
+                    model: "sonar-reasoning-pro",
+                    messages: [
+                        { role: "system", content: "You are an expert software procurement assistant. specialized in finding the best B2B SaaS tools." },
+                        { role: "user", content: `Find 3-5 software tools that solve this pain point: "${painPoint}". Return a JSON list with name, url, and short description.` },
+                    ],
+                });
+                return response.choices[0].message.content || "";
             });
 
-            return response.choices[0].message.content || "";
+            setCache(cacheKey, result);
+            return result;
         } catch (error) {
             console.error("Perplexity discovery failed:", error);
             return this.getMockSuggestions(painPoint);
         }
     }
 
+    /** Exported for testing — allows cache inspection/clearing */
+    _clearCache() {
+        responseCache.clear();
+    }
+
     private getMockSuggestions(painPoint: string): string {
         return JSON.stringify([
             { name: "Mock Tool A", url: "https://example.com/a", description: `Solves ${painPoint} efficiently.` },
-            { name: "Mock Tool B", url: "https://example.com/b", description: `Alternative for ${painPoint}.` }
+            { name: "Mock Tool B", url: "https://example.com/b", description: `Alternative for ${painPoint}.` },
         ]);
     }
 }
