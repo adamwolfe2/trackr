@@ -1,5 +1,6 @@
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Header } from "@/components/layout/header"
+import { CommandPalette } from "@/components/command-palette"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
@@ -50,6 +51,7 @@ export default async function DashboardLayout({
                     </div>
                 </main>
             </div>
+            <CommandPalette />
         </div>
     )
 }
