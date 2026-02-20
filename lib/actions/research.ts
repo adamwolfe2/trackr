@@ -439,8 +439,9 @@ export async function performDeepResearch(toolId: string) {
         // ── Step 6.5: Perplexity deep analysis (conditional) ────────────────
         let perplexityAnalysis = "";
         if (!process.env.PERPLEXITY_API_KEY) {
-            await logProgress(toolId, `Perplexity: Skipped (PERPLEXITY_API_KEY not set — set this env var for deeper competitive analysis)`);
-        } else if (process.env.PERPLEXITY_API_KEY) {
+            console.warn("[research] PERPLEXITY_API_KEY not set — competitive analysis step skipped. Set this env var for deeper intelligence.");
+            await logProgress(toolId, `Perplexity: Skipped (PERPLEXITY_API_KEY not set — add this env var for competitive analysis)`);
+        } else {
             await logProgress(toolId, `Perplexity: Running deep competitive analysis...`);
             const perplexityStart = Date.now();
             try {
@@ -462,8 +463,9 @@ export async function performDeepResearch(toolId: string) {
                 if (perplexityAnalysis) {
                     await logProgress(toolId, `Perplexity: Analysis complete (${perplexityAnalysis.length} chars)`);
                 }
-            } catch {
-                await logProgress(toolId, `Perplexity: Analysis failed (non-critical, continuing)`);
+            } catch (err) {
+                const detail = err instanceof Error ? err.message : String(err);
+                await logProgress(toolId, `Perplexity: Analysis failed (non-critical, continuing) — ${detail}`);
             }
         }
 
