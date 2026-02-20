@@ -4,7 +4,7 @@ import { MarketingNavigation } from "@/components/marketing/marketing-navigation
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
-import { PLANS, PAYMENT_LINKS, type PlanSlug } from "@/lib/config/subscriptions";
+import { PLANS } from "@/lib/config/subscriptions";
 
 export const metadata: Metadata = {
     title: "Pricing — Trackr",

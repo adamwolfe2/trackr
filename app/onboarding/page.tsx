@@ -29,6 +29,7 @@ export default function OnboardingPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const plan = searchParams.get("plan") ?? "";
+    const ref = searchParams.get("ref") ?? "";
 
     // Step 1
     const [companyName, setCompanyName] = useState("");
@@ -169,6 +170,7 @@ export default function OnboardingPage() {
                     selectedTools: toolsArray,
                     scorecardDimensions: dimensions,
                     plan: plan || undefined,
+                    refCode: ref || undefined,
                 });
 
                 // Clear draft on success

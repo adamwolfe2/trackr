@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/services/stripe";
 import { db } from "@/lib/db";
-import { subscriptions, ads } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { subscriptions, ads, workspaceMembers } from "@/lib/db/schema";
+import { eq, and } from "drizzle-orm";
 import type Stripe from "stripe";
+import { clerkClient } from "@clerk/nextjs/server";
+import { sendTrialEndingEmail } from "@/lib/email/resend";
+import { getPlanLimits } from "@/lib/config/subscriptions";
 
 export async function POST(req: NextRequest) {
     const body = await req.text();
@@ -47,11 +50,20 @@ export async function POST(req: NextRequest) {
                 await handlePaymentFailed(event.data.object as Stripe.Invoice);
                 break;
             }
+            case "invoice.payment_succeeded": {
+                await handlePaymentSucceeded(event.data.object as Stripe.Invoice);
+                break;
+            }
+            case "customer.subscription.trial_will_end": {
+                await handleTrialWillEnd(event.data.object as Stripe.Subscription);
+                break;
+            }
             default: {
                 // Unhandled event type — return 200 to acknowledge receipt
             }
         }
-    } catch {
+    } catch (err) {
+        console.error(`Stripe webhook error [${event.type}]:`, err instanceof Error ? err.message : err);
         return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
     }
 
@@ -179,16 +191,74 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-    const subRef = invoice.parent?.subscription_details?.subscription;
-    const subscriptionId = typeof subRef === "string"
-        ? subRef
-        : typeof subRef === "object" && subRef !== null && "id" in subRef
-            ? (subRef as { id: string }).id
-            : null;
-
-    if (!subscriptionId) return; // Can't identify subscription — skip
+    const subscriptionId = getSubscriptionIdFromInvoice(invoice);
+    if (!subscriptionId) return;
 
     await db.update(subscriptions)
         .set({ status: "past_due", updatedAt: new Date() })
         .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));
+}
+
+async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
+    const subscriptionId = getSubscriptionIdFromInvoice(invoice);
+    if (!subscriptionId) return;
+
+    const existing = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.stripeSubscriptionId, subscriptionId),
+    });
+
+    // Only flip back to active if the subscription was past_due
+    if (existing?.status === "past_due") {
+        await db.update(subscriptions)
+            .set({ status: "active", updatedAt: new Date() })
+            .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));
+    }
+}
+
+async function handleTrialWillEnd(sub: Stripe.Subscription) {
+    const subscriptionId = sub.id;
+
+    const existing = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.stripeSubscriptionId, subscriptionId),
+    });
+
+    if (!existing) return;
+
+    // Calculate days left from trial_end
+    const trialEnd = sub.trial_end ? new Date(sub.trial_end * 1000) : null;
+    const daysLeft = trialEnd
+        ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        : 3; // Stripe sends this 3 days before by default
+
+    // Look up workspace owner to send email
+    const owner = await db.query.workspaceMembers.findFirst({
+        where: and(
+            eq(workspaceMembers.workspaceId, existing.workspaceId),
+            eq(workspaceMembers.role, "owner"),
+        ),
+    });
+
+    if (!owner) return;
+
+    try {
+        const clerk = await clerkClient();
+        const clerkUser = await clerk.users.getUser(owner.userId);
+        const email = clerkUser.emailAddresses[0]?.emailAddress;
+        const plan = getPlanLimits(existing);
+
+        if (email) {
+            await sendTrialEndingEmail(email, daysLeft, plan.name);
+        }
+    } catch {
+        // Non-critical — don't fail webhook if email errors
+    }
+}
+
+function getSubscriptionIdFromInvoice(invoice: Stripe.Invoice): string | null {
+    const subRef = invoice.parent?.subscription_details?.subscription;
+    if (typeof subRef === "string") return subRef;
+    if (typeof subRef === "object" && subRef !== null && "id" in subRef) {
+        return (subRef as { id: string }).id;
+    }
+    return null;
 }

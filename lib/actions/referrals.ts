@@ -5,6 +5,7 @@ import { referrals } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { getWorkspaceId } from "@/lib/db/queries";
+import { eq, sql } from "drizzle-orm";
 
 export async function createReferralCode() {
     const user = await currentUser();
@@ -28,5 +29,29 @@ export async function createReferralCode() {
     } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to create referral code";
         return { success: false, error: message };
+    }
+}
+
+/** Increment click count for a referral code (fire-and-forget, no auth needed) */
+export async function trackReferralClick(code: string) {
+    if (!code || typeof code !== "string" || code.length > 20) return;
+    try {
+        await db.update(referrals)
+            .set({ clicks: sql`${referrals.clicks} + 1` })
+            .where(eq(referrals.code, code.toUpperCase()));
+    } catch {
+        // Non-critical
+    }
+}
+
+/** Increment signup count for a referral code (called during onboarding) */
+export async function trackReferralSignup(code: string) {
+    if (!code || typeof code !== "string" || code.length > 20) return;
+    try {
+        await db.update(referrals)
+            .set({ signups: sql`${referrals.signups} + 1` })
+            .where(eq(referrals.code, code.toUpperCase()));
+    } catch {
+        // Non-critical
     }
 }

@@ -9,6 +9,7 @@ import { firecrawl } from "@/lib/services/firecrawl";
 import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { ensureWorkspace } from "@/lib/db/ensure-workspace";
+import { trackReferralSignup } from "@/lib/actions/referrals";
 import { z } from "zod";
 
 /** Scrape company website and auto-generate a context description */
@@ -79,6 +80,7 @@ const OnboardingSchema = z.object({
         weight: z.number().min(0).max(100),
     })).max(20),
     plan: z.string().max(50).optional(),
+    refCode: z.string().max(20).optional(),
 });
 
 /**
@@ -95,6 +97,7 @@ export async function completeOnboarding(input: {
     selectedTools: Array<{ name: string; url?: string }>;
     scorecardDimensions: Array<{ key: string; label: string; weight: number }>;
     plan?: string;
+    refCode?: string;
 }): Promise<{ success: true; redirectTo: string }> {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
@@ -103,7 +106,7 @@ export async function completeOnboarding(input: {
     if (!parsed.success) {
         throw new Error(`Invalid onboarding data: ${parsed.error.issues[0]?.message ?? "validation failed"}`);
     }
-    const { companyName, companyContext, selectedTools, scorecardDimensions, plan } = parsed.data;
+    const { companyName, companyContext, selectedTools, scorecardDimensions, plan, refCode } = parsed.data;
 
     // Validate scorecard weights sum to 100%
     if (scorecardDimensions.length > 0) {
@@ -114,10 +117,15 @@ export async function completeOnboarding(input: {
     }
 
     // Ensure workspace exists — creates one if Clerk webhook was delayed/failed
-    const { workspaceId, workspace: existingWorkspace } = await ensureWorkspace(user.id, {
+    const { workspaceId, workspace: existingWorkspace, created } = await ensureWorkspace(user.id, {
         displayName: user.firstName || user.username || undefined,
         email: user.primaryEmailAddress?.emailAddress,
     });
+
+    // Track referral signup if this is a new workspace creation
+    if (created && refCode) {
+        trackReferralSignup(refCode).catch(() => {});
+    }
 
     // If already completed, still allow re-run (idempotent)
     const currentName = existingWorkspace.name;

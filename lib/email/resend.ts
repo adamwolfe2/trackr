@@ -128,6 +128,34 @@ export async function sendResearchFailedEmail(
     });
 }
 
+export async function sendTrialEndingEmail(
+    to: string,
+    daysLeft: number,
+    planName: string
+) {
+    if (!process.env.RESEND_API_KEY) return;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+    const urgency = daysLeft <= 3
+        ? `<p style="font-size: 13px; color: #C0392B; font-weight: bold; margin: 0 0 16px;">Your trial expires ${daysLeft === 0 ? "today" : `in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`}.</p>`
+        : `<p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">Your ${escapeHtml(planName)} trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.</p>`;
+    await getResend().emails.send({
+        from: FROM,
+        to,
+        subject: `Your Trackr trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
+        html: emailWrapper(`
+            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Trial Ending Soon</p>
+            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                Don&apos;t lose access
+            </h1>
+            ${urgency}
+            <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
+                Add a payment method to keep your ${escapeHtml(planName)} features — research credits, team members, integrations, and all your saved data.
+            </p>
+            ${emailButton(`${appUrl}/settings/billing`, "Add Payment Method →")}
+        `),
+    });
+}
+
 export async function sendRenewalAlertEmail(
     to: string,
     tools: Array<{ name: string; renewalDate: Date; monthlyCost: string | null }>

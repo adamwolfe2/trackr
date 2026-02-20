@@ -138,6 +138,11 @@ export default async function BillingPage({
 
     const hasActiveSubscription = subscription && (subscription.status === "active" || subscription.status === "trialing" || subscription.status === "past_due");
 
+    // Trial countdown
+    const trialDaysLeft = subscription?.status === "trialing" && subscription.currentPeriodEnd
+        ? Math.max(0, Math.ceil((new Date(subscription.currentPeriodEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        : null;
+
     return (
         <div className="space-y-8">
             <div>
@@ -150,6 +155,24 @@ export default async function BillingPage({
                     )}
                 </p>
             </div>
+
+            {trialDaysLeft !== null && (
+                <div className={`p-4 font-mono text-sm space-y-2 ${
+                    trialDaysLeft <= 3
+                        ? "border-2 border-red-600 bg-red-50 text-red-800"
+                        : "border border-black bg-white"
+                }`}>
+                    <p className="font-semibold">
+                        Your trial ends in {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""}
+                    </p>
+                    <p className={trialDaysLeft <= 3 ? "" : "text-neutral-600"}>
+                        Add a payment method to keep your {currentPlan.name} features after the trial ends.
+                    </p>
+                    {subscription?.stripeCustomerId && (
+                        <ManageSubscriptionButton workspaceId={workspaceId} />
+                    )}
+                </div>
+            )}
 
             {success && (
                 <div className="border border-black bg-white p-4 font-mono text-sm">
