@@ -28,6 +28,21 @@ vi.mock("@/lib/actions/research", () => ({
     performDeepResearch: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock("@/lib/ai/embedding", () => ({
+    generateEmbedding: vi.fn().mockResolvedValue(Array(1536).fill(0.1)),
+}));
+
+vi.mock("@/lib/actions/preview", () => ({
+    previewToolInternal: vi.fn().mockResolvedValue({ image: "https://example.com/logo.png" }),
+}));
+
+vi.mock("@/lib/config/subscriptions", () => ({
+    getPlanLimits: vi.fn().mockReturnValue({
+        name: "Free",
+        limits: { tools: 10, research: 5, members: 3 },
+    }),
+}));
+
 vi.mock("@/lib/db", () => ({
     db: {
         query: {
@@ -50,7 +65,12 @@ vi.mock("drizzle-orm", async (importOriginal) => {
 import { currentUser } from "@clerk/nextjs/server";
 import { getWorkspaceId } from "@/lib/db/queries";
 import { db } from "@/lib/db";
-import { deleteTool, updateToolStatus, publishReport } from "../tools";
+import { redirect } from "next/navigation";
+import { getPlanLimits } from "@/lib/config/subscriptions";
+import { ensureWorkspace } from "@/lib/db/ensure-workspace";
+import { generateEmbedding } from "@/lib/ai/embedding";
+import { previewToolInternal } from "@/lib/actions/preview";
+import { submitTool, deleteTool, updateToolStatus, publishReport } from "../tools";
 
 const MOCK_USER = { id: "user_1" };
 const MOCK_TOOL = { id: "tool_1", workspaceId: "ws_1", name: "Linear", publicSlug: null };
@@ -73,10 +93,16 @@ function setupDbChains() {
 
     // transaction — run callback immediately
     (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(async (fn) => {
+        const txSelectWhere = vi.fn().mockResolvedValue([{ value: 0 }]);
+        const txSelectFrom = vi.fn().mockReturnValue({ where: txSelectWhere });
         const tx = {
             delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue({}) }),
             update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue({}) }) }),
-            insert: vi.fn().mockReturnValue({ values: vi.fn().mockResolvedValue({}) }),
+            insert: vi.fn().mockReturnValue({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "tool_new" }]) }) }),
+            select: vi.fn().mockReturnValue({ from: txSelectFrom }),
+            query: {
+                subscriptions: { findFirst: vi.fn().mockResolvedValue(null) },
+            },
         };
         return fn(tx);
     });
@@ -90,6 +116,85 @@ describe("tools server actions", () => {
         (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
         (db.query.tools.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_TOOL);
         (db.query.reports.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_REPORT);
+        // Restore mocks cleared by vi.resetAllMocks()
+        (getPlanLimits as ReturnType<typeof vi.fn>).mockReturnValue({
+            name: "Free",
+            limits: { tools: 10, research: 5, members: 3 },
+        });
+        (ensureWorkspace as ReturnType<typeof vi.fn>).mockResolvedValue({ workspaceId: "ws_1" });
+        (generateEmbedding as ReturnType<typeof vi.fn>).mockResolvedValue(Array(1536).fill(0.1));
+        (previewToolInternal as ReturnType<typeof vi.fn>).mockResolvedValue({ image: "https://example.com/logo.png" });
+    });
+
+    describe("submitTool", () => {
+        function makeFormData(name: string, websiteUrl: string) {
+            return {
+                get: (key: string) => {
+                    if (key === "name") return name;
+                    if (key === "website_url") return websiteUrl;
+                    return null;
+                },
+            } as unknown as FormData;
+        }
+
+        it("throws Unauthorized when not logged in", async () => {
+            (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+            await expect(submitTool(makeFormData("Linear", "https://linear.app"))).rejects.toThrow("Unauthorized");
+        });
+
+        it("throws when tool name is empty", async () => {
+            await expect(submitTool(makeFormData("", "https://linear.app"))).rejects.toThrow("Tool name must be 1-200 characters");
+        });
+
+        it("throws when tool name exceeds 200 characters", async () => {
+            await expect(submitTool(makeFormData("A".repeat(201), "https://linear.app"))).rejects.toThrow("Tool name must be 1-200 characters");
+        });
+
+        it("throws when website URL is missing", async () => {
+            await expect(submitTool(makeFormData("Linear", ""))).rejects.toThrow("Website URL is required");
+        });
+
+        it("throws when website URL is invalid", async () => {
+            // "not a url" contains spaces → new URL("https://not a url") throws
+            await expect(submitTool(makeFormData("Linear", "not a url"))).rejects.toThrow("Invalid website URL");
+        });
+
+        it("calls redirect to the new tool after successful submission", async () => {
+            await submitTool(makeFormData("Linear", "https://linear.app"));
+            expect(redirect).toHaveBeenCalledWith("/tools/tool_new");
+        });
+
+        it("runs research in the background after tool creation", async () => {
+            const { performDeepResearch } = await import("@/lib/actions/research");
+            await submitTool(makeFormData("Linear", "https://linear.app"));
+            expect(performDeepResearch).toHaveBeenCalledWith("tool_new");
+        });
+
+        it("throws when tool limit is reached", async () => {
+            (getPlanLimits as ReturnType<typeof vi.fn>).mockReturnValue({
+                name: "Free",
+                limits: { tools: 5, research: 5, members: 3 },
+            });
+            // Mock transaction to simulate toolCount >= limit
+            (db.transaction as ReturnType<typeof vi.fn>).mockImplementation(async (fn) => {
+                const txSelectWhere = vi.fn().mockResolvedValue([{ value: 5 }]); // at limit
+                const txSelectFrom = vi.fn().mockReturnValue({ where: txSelectWhere });
+                const tx = {
+                    delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue({}) }),
+                    update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue({}) }) }),
+                    insert: vi.fn().mockReturnValue({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "tool_new" }]) }) }),
+                    select: vi.fn().mockReturnValue({ from: txSelectFrom }),
+                    query: { subscriptions: { findFirst: vi.fn().mockResolvedValue(null) } },
+                };
+                return fn(tx);
+            });
+            await expect(submitTool(makeFormData("Linear", "https://linear.app"))).rejects.toThrow("Tool limit reached");
+        });
+
+        it("accepts URL without https:// prefix", async () => {
+            await submitTool(makeFormData("Linear", "linear.app"));
+            expect(redirect).toHaveBeenCalledWith("/tools/tool_new");
+        });
     });
 
     describe("deleteTool", () => {
