@@ -11,6 +11,7 @@ import { ExportButton } from "@/components/common/export-button";
 import { ShareReportButton } from "@/components/tools/share-report-button";
 import { PublishButton } from "@/components/tools/publish-button";
 import { ToolDetailTabs } from "@/components/tools/tool-detail-tabs";
+import { ResearchSchedulePicker } from "@/components/tools/research-schedule-picker";
 import { clerkClient } from "@clerk/nextjs/server";
 import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
@@ -60,6 +61,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
     });
     const plan = getPlanLimits(subscription);
     const canExport = hasFeature(plan, "reportExport");
+    const canSchedule = hasFeature(plan, "scheduledResearch");
 
     const workspaceTools = await db.query.tools.findMany({
         where: eq(tools.workspaceId, tool.workspaceId),
@@ -341,6 +343,14 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                             <span className="font-mono text-xs truncate block max-w-[150px]">{tool.submittedBy || "Unknown"}</span>
                         </div>
                     </div>
+
+                    {/* Research Schedule */}
+                    <ResearchSchedulePicker
+                        toolId={tool.id}
+                        currentInterval={(tool.researchInterval as "manual" | "weekly" | "biweekly" | "monthly") ?? "manual"}
+                        nextResearchAt={tool.nextResearchAt ? tool.nextResearchAt.toISOString() : null}
+                        canSchedule={canSchedule}
+                    />
 
                     {/* Competitors */}
                     {report?.competitors && (report.competitors as string[]).length > 0 && (

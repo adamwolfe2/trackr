@@ -53,6 +53,8 @@ export const tools = pgTable('tools', {
     researchLogs: jsonb('research_logs'), // Array of { message: string, timestamp: string }
     embedding: vector('embedding', { dimensions: 1536 }), // pgvector
     publicSlug: text('public_slug').unique(), // Set when a report is published to the public library
+    researchInterval: text('research_interval').default('manual').notNull(), // manual | weekly | biweekly | monthly
+    nextResearchAt: timestamp('next_research_at'), // When next auto-research should trigger
 }, (table) => [
     index('tools_workspace_id_idx').on(table.workspaceId),
     index('tools_status_idx').on(table.status),

@@ -10,6 +10,7 @@ export type PlanFeatures = {
     compareTools: boolean | "limited"; // "limited" = 2 tools max
     spendTracking: boolean;
     reportExport: boolean;
+    scheduledResearch: boolean;
     apiAccess: boolean;
 };
 
@@ -49,6 +50,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             compareTools: "limited",
             spendTracking: false,
             reportExport: false,
+            scheduledResearch: false,
             apiAccess: false,
         },
     },
@@ -73,6 +75,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             compareTools: true,
             spendTracking: true,
             reportExport: true,
+            scheduledResearch: true,
             apiAccess: false,
         },
     },
@@ -97,6 +100,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             compareTools: true,
             spendTracking: true,
             reportExport: true,
+            scheduledResearch: true,
             apiAccess: false,
         },
     },
@@ -121,6 +125,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             compareTools: true,
             spendTracking: true,
             reportExport: true,
+            scheduledResearch: true,
             apiAccess: true,
         },
     },
