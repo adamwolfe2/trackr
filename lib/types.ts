@@ -62,10 +62,13 @@ export type CuratedTool = {
     hq?: string;
 };
 
+export type TemplateType = "playbook" | "template" | "guide" | "framework";
+
 export type Template = {
     id: string;
     slug: string;
     name: string;
+    type: TemplateType; // playbook, template, guide, or framework
     tagline: string;
     description: string;
     category: string;
@@ -75,4 +78,6 @@ export type Template = {
     tags: string[];
     estimatedSetup: string; // e.g. "2–4 hours"
     outcome: string; // what you get
+    date?: string; // publication date e.g. "2026-02-20"
+    reference?: string; // reference slug for linking
 };
