@@ -345,15 +345,15 @@ export const STEP_DESCRIPTIONS = [
   },
 ];
 
-// Connector labels between steps
+// Connector labels — each describes the output flowing FROM the step above it
 export const CONNECTOR_LABELS = [
-  "12 URLs → selecting 4 key pages",
-  "4 pages → ~30KB markdown extracted",
-  "Markdown + metadata → searching reviews",
-  "Reviews collected → verifying trust signals",
-  "Trust verified → mining Reddit discussions",
-  "Reddit insights → analyzing competition",
-  "All data collected → synthesizing report",
+  "12 URLs discovered · 4 key pages selected",
+  "4 pages scraped · ~30KB clean markdown",
+  "15 reviews collected · avg 4.8/5 score",
+  "Trust signals confirmed · company verified",
+  "8 unique threads from 15 raw results",
+  "5 competitors mapped · market intel ready",
+  "Structured JSON report generated · schema validated",
 ];
 
 // Hero stats

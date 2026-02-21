@@ -38,13 +38,10 @@ export function ProcessPage() {
                 </motion.div>
             </div>
 
-            {/* Pipeline: alternating nodes with connectors */}
+            {/* Pipeline: nodes followed by their output connectors */}
             <div className="space-y-0">
                 {STEP_DESCRIPTIONS.map((step, i) => (
                     <div key={step.stepNumber}>
-                        {/* Connector before each node */}
-                        <PipelineConnector label={CONNECTOR_LABELS[i]} />
-
                         <PipelineNode
                             stepNumber={step.stepNumber}
                             stepName={step.stepName}
@@ -62,11 +59,11 @@ export function ProcessPage() {
                             {step.stepNumber === 6 && <StepCompetitiveIntel />}
                             {step.stepNumber === 7 && <StepAiSynthesis />}
                         </PipelineNode>
+
+                        {/* Output connector flowing to next step / report */}
+                        <PipelineConnector label={CONNECTOR_LABELS[i]} />
                     </div>
                 ))}
-
-                {/* Final connector to report */}
-                <PipelineConnector label={CONNECTOR_LABELS[CONNECTOR_LABELS.length - 1]} />
             </div>
 
             {/* Report Finale */}
