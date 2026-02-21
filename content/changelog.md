@@ -6,6 +6,27 @@ All notable changes to Trackr are documented here.
 
 ## February 2026
 
+### 2026-02-20 — Deep Security Audit Rounds 8-11
+
+**Security**
+- **XSS prevention in blog renderer** — Custom markdown-to-HTML renderer now escapes HTML before applying inline formatting regex. Link URLs validated to block `javascript:` and `data:` protocol injection. Inline code blocks processed first to prevent content from being re-processed by bold/italic regex.
+- **HTML injection in digest emails** — Workspace names and tool names are now HTML-escaped before being embedded in weekly digest email templates. Previously an attacker-controlled workspace name like `<script>` would have been included verbatim.
+- **SSRF in Slack research command** — `/trackr research <url>` now blocks requests to private IP ranges (10.x, 192.168.x, 172.16–31.x, 127.x, ::1) and `.local`/`.internal` hostnames to prevent server-side request forgery via the Slack integration.
+- **Invoice access control** — Invoice PDF generation now requires the ad campaign to be in `active` or `completed` status. Draft and paused campaigns can no longer produce invoices.
+- **Rate limiting on report sharing** — Share token generation is now rate-limited to 10 requests per minute per user.
+- **Rate limiter memory cap** — In-memory rate limiter now hard-caps at 50,000 entries to prevent unbounded memory growth under sustained traffic.
+
+**Bug Fixes**
+- **UUID validation expanded** — `deleteSoftwareSpend`, `updateSoftwareSpendStatus`, `updateSoftwareSpendDetails`, and `cancelInvitation` now validate that the ID parameter is a valid UUID before executing any database queries.
+- **Null safety in notifications** — `toolSuggestions.reason` could theoretically be null; now guarded with optional chaining before `.slice()`.
+- **Stripe ad rollback** — If Stripe checkout session creation fails after an ad record is inserted, the orphaned draft ad record is now cleaned up automatically.
+- **Production error logging** — All API route `catch` blocks that were previously gated behind `NODE_ENV === "development"` now always log errors. Fixes invisible failures in production for: extension/context, extension/check, cron/recover-stuck-jobs, cron/feed, cron/auto-retry-failed, and search.
+
+**Tests**
+- 749 tests, all passing (+4 invoice status, +3 spend UUID, +2 workspace UUID, +1 pain-point UUID).
+
+---
+
 ### 2026-02-20 — Security Hardening & Bug Fixes
 
 **Security**
