@@ -100,7 +100,13 @@ export async function POST(req: NextRequest) {
         }).returning();
 
         // Kick off deep research in the background
-        after(() => performDeepResearch(newTool.id));
+        after(async () => {
+            try {
+                await performDeepResearch(newTool.id);
+            } catch (err) {
+                console.error("[extension/research] background research failed:", err);
+            }
+        });
 
         return NextResponse.json(
             { success: true, toolId: newTool.id },

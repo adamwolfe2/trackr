@@ -126,8 +126,15 @@ export async function saveScorecardRecipe(recipe: ScorecardRecipeInput) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
-    const workspaceId = await getWorkspaceId(user.id);
-    if (!workspaceId) throw new Error("No workspace found");
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+    });
+    if (!member) throw new Error("No workspace found");
+    if (member.role !== "owner" && member.role !== "admin") {
+        throw new Error("Only workspace owners and admins can update the scorecard configuration");
+    }
+
+    const workspaceId = member.workspaceId;
 
     await db.update(workspaces)
         .set({ scorecardConfig: recipe as unknown as Record<string, unknown> })

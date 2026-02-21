@@ -73,18 +73,27 @@ async function handleResearch(urlArg: string, channelId: string) {
         });
     }
 
-    // Normalize URL
-    let url = urlArg;
-    if (!url.startsWith("http")) url = "https://" + url;
+    // Normalize and validate URL — only allow https:// for security
+    let url = urlArg.trim();
+    if (!url.startsWith("https://") && !url.startsWith("http://")) url = "https://" + url;
 
+    let parsedUrl: URL;
     try {
-        new URL(url);
+        parsedUrl = new URL(url);
     } catch {
         return NextResponse.json({
             response_type: "ephemeral",
             text: `Invalid URL: \`${urlArg}\`. Try something like \`notion.so\` or \`https://linear.app\`.`,
         });
     }
+
+    if (parsedUrl.protocol !== "https:") {
+        return NextResponse.json({
+            response_type: "ephemeral",
+            text: "Only HTTPS URLs are supported. Please use a URL starting with `https://`.",
+        });
+    }
+    url = parsedUrl.href;
 
     // Find workspace by slack channel
     const workspace = await db.query.workspaces.findFirst({

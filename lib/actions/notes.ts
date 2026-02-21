@@ -5,7 +5,7 @@ import { notes, workspaceMembers, tools } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 const addNoteSchema = z.object({
     toolId: z.string().uuid(),
@@ -23,12 +23,11 @@ export async function addNote(toolId: string, content: string) {
 
     if (!member) throw new Error("User is not a member of any workspace");
 
-    // Verify the tool belongs to the caller's workspace
+    // Verify the tool belongs to the caller's workspace (workspace-scoped query prevents cross-workspace access)
     const tool = await db.query.tools.findFirst({
-        where: eq(tools.id, toolId),
+        where: and(eq(tools.id, toolId), eq(tools.workspaceId, member.workspaceId)),
     });
-    if (!tool) throw new Error("Tool not found");
-    if (tool.workspaceId !== member.workspaceId) throw new Error("Not authorized");
+    if (!tool) throw new Error("Not authorized");
 
     const validated = addNoteSchema.safeParse({ toolId, content });
     if (!validated.success) {

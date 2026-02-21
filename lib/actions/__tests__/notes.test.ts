@@ -25,7 +25,7 @@ vi.mock("@/lib/db", () => ({
 
 vi.mock("drizzle-orm", async (importOriginal) => {
     const actual = await importOriginal<typeof import("drizzle-orm")>();
-    return { ...actual, eq: vi.fn((...args) => args) };
+    return { ...actual, eq: vi.fn((...args) => args), and: vi.fn((...args) => args) };
 });
 
 import { currentUser } from "@clerk/nextjs/server";
@@ -58,16 +58,16 @@ describe("addNote", () => {
         );
     });
 
-    it("throws when tool is not found", async () => {
+    it("throws when tool is not found (workspace-scoped query returns null)", async () => {
         (db.query.tools.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(addNote(VALID_UUID, "Some note content")).rejects.toThrow("Tool not found");
+        // Now returns "Not authorized" (unified message — workspace-scoped query returns null
+        // for both missing tools and tools from other workspaces)
+        await expect(addNote(VALID_UUID, "Some note content")).rejects.toThrow("Not authorized");
     });
 
-    it("throws when tool belongs to a different workspace", async () => {
-        (db.query.tools.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
-            ...MOCK_TOOL,
-            workspaceId: "ws_other",
-        });
+    it("throws when tool belongs to a different workspace (workspace-scoped query returns null)", async () => {
+        // Simulate workspace-scoped query returning null (tool exists but not in caller's workspace)
+        (db.query.tools.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         await expect(addNote(VALID_UUID, "Some note content")).rejects.toThrow("Not authorized");
     });
 
