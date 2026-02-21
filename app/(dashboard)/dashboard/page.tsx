@@ -128,7 +128,8 @@ export default async function DashboardPage() {
     // Quick actions context
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const [missingCostCount, upcomingRenewalCount, newSuggestionCount, failedToolCount] = await Promise.all([
+    const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+    const [missingCostCount, upcomingRenewalCount, newSuggestionCount, failedToolCount, staleToolCount] = await Promise.all([
         db.select({ count: sql<number>`count(*)` }).from(softwareSpend)
             .where(sql`${softwareSpend.workspaceId} = ${workspaceId} AND ${softwareSpend.status} = 'active' AND (${softwareSpend.monthlyCost} IS NULL OR ${softwareSpend.monthlyCost}::numeric = 0)`),
         db.select({ count: sql<number>`count(*)` }).from(softwareSpend)
@@ -137,6 +138,9 @@ export default async function DashboardPage() {
             .where(sql`${toolSuggestions.workspaceId} = ${workspaceId} AND ${toolSuggestions.status} = 'new'`),
         db.select({ count: sql<number>`count(*)` }).from(tools)
             .where(sql`${tools.workspaceId} = ${workspaceId} AND ${tools.status} = 'failed'`),
+        // Active tools with no schedule that haven't been researched in 60+ days
+        db.select({ count: sql<number>`count(*)` }).from(tools)
+            .where(sql`${tools.workspaceId} = ${workspaceId} AND ${tools.status} = 'active' AND ${tools.researchInterval} = 'manual' AND ${tools.lastResearchedAt} < ${sixtyDaysAgo}`),
     ]);
 
     type QuickAction = { icon: typeof ArrowRight; label: string; href: string; badge?: string };
@@ -168,6 +172,11 @@ export default async function DashboardPage() {
 
     if (activePainPoints === 0 && toolsCount > 0) {
         quickActions.push({ icon: PlusCircle, label: "Add pain points to get AI recommendations", href: "/pain-points", badge: "Setup" });
+    }
+
+    const staleCount = Number(staleToolCount[0]?.count || 0);
+    if (staleCount > 0) {
+        quickActions.push({ icon: RefreshCw, label: `${staleCount} tool${staleCount > 1 ? "s" : ""} not researched in 60+ days — set a schedule`, href: "/tools", badge: "Stale" });
     }
 
     const statusLabel = (status: string) => {
