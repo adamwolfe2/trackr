@@ -82,9 +82,13 @@ export function FeedClient({ channels, items, suggestions = [] }: { channels: Ch
 
     const handleMarkAllRead = () => {
         startTransition(async () => {
-            await markAllRead(activeChannel || undefined);
-            router.refresh();
-            toast.success("Marked all as read");
+            try {
+                await markAllRead(activeChannel || undefined);
+                router.refresh();
+                toast.success("Marked all as read");
+            } catch {
+                toast.error("Failed to mark all as read");
+            }
         });
     };
 
@@ -224,15 +228,23 @@ function FeedItemRow({ item }: { item: FeedItem }) {
 
     const handleRead = () => {
         startTransition(async () => {
-            await markFeedItemRead(item.id);
-            router.refresh();
+            try {
+                await markFeedItemRead(item.id);
+                router.refresh();
+            } catch {
+                toast.error("Failed to mark as read");
+            }
         });
     };
 
     const handleSave = () => {
         startTransition(async () => {
-            await toggleFeedItemSaved(item.id);
-            router.refresh();
+            try {
+                await toggleFeedItemSaved(item.id);
+                router.refresh();
+            } catch {
+                toast.error("Failed to save item");
+            }
         });
     };
 
@@ -364,16 +376,24 @@ function ChannelSettingsPanel({
 
     const handleDelete = (id: string) => {
         startTransition(async () => {
-            await deleteFeedChannel(id);
-            router.refresh();
-            toast.success("Channel deleted");
+            try {
+                await deleteFeedChannel(id);
+                router.refresh();
+                toast.success("Channel deleted");
+            } catch {
+                toast.error("Failed to delete channel");
+            }
         });
     };
 
     const handleToggle = (id: string, enabled: boolean) => {
         startTransition(async () => {
-            await updateFeedChannel(id, { enabled: !enabled });
-            router.refresh();
+            try {
+                await updateFeedChannel(id, { enabled: !enabled });
+                router.refresh();
+            } catch {
+                toast.error("Failed to update channel");
+            }
         });
     };
 

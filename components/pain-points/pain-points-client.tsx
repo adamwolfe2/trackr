@@ -118,16 +118,25 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
 
     const handleToggle = (id: string, currentActive: boolean) => {
         startTransition(async () => {
-            await togglePainPointActive(id, currentActive);
-            router.refresh();
+            try {
+                await togglePainPointActive(id, currentActive);
+                router.refresh();
+            } catch {
+                toast.error("Failed to update pain point");
+            }
         });
     };
 
     const handleDelete = (id: string) => {
         setConfirmDeleteId(null);
         startTransition(async () => {
-            await deletePainPoint(id);
-            router.refresh();
+            try {
+                await deletePainPoint(id);
+                router.refresh();
+                toast.success("Pain point deleted");
+            } catch {
+                toast.error("Failed to delete pain point");
+            }
         });
     };
 

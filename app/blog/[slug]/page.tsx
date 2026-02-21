@@ -15,6 +15,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {
         title: `${post.title} — Trackr Blog`,
         description: post.description,
+        alternates: {
+            canonical: `https://trytrackr.com/blog/${slug}`,
+        },
         openGraph: {
             title: post.title,
             description: post.description,

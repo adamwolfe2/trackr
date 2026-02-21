@@ -36,7 +36,7 @@ export async function createFeedChannel(data: {
     if (!name || name.length > 100) throw new Error("Channel name must be 1-100 characters");
 
     if (data.type === "topic") {
-        const keywords = data.config.keywords?.filter(k => k.trim());
+        const keywords = data.config.keywords?.map(k => k.trim()).filter(Boolean);
         if (!keywords || keywords.length === 0) throw new Error("At least one keyword is required");
         if (keywords.length > 10) throw new Error("Maximum 10 keywords per channel");
     } else if (data.type === "rss") {
@@ -82,6 +82,7 @@ export async function markFeedItemRead(id: string) {
     await db.update(feedItems)
         .set({ isRead: true })
         .where(and(eq(feedItems.id, id), eq(feedItems.workspaceId, workspaceId)));
+    revalidatePath("/feed");
 }
 
 export async function toggleFeedItemSaved(id: string) {

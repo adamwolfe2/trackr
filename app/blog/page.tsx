@@ -8,6 +8,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
     title: "Blog — Trackr",
     description: "Guides, insights, and tool recommendations for ops teams evaluating AI tools. From the Trackr team.",
+    alternates: {
+        canonical: "https://trytrackr.com/blog",
+    },
     openGraph: {
         title: "Blog — Trackr",
         description: "Guides, insights, and tool recommendations for ops teams evaluating AI tools.",

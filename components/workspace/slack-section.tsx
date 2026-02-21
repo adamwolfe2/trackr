@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { MessageSquare, Check, Loader2, Unplug, ExternalLink } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { MessageSquare, Check, Loader2, Unplug, ExternalLink, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { updateSlackSettings, disconnectSlackWorkspace } from "@/lib/actions/workspace";
 import { useSearchParams } from "next/navigation";
@@ -26,6 +26,7 @@ export function SlackSection({
 }) {
     const [channels, setChannels] = useState<Channel[]>([]);
     const [loading, setLoading] = useState(false);
+    const [fetchError, setFetchError] = useState(false);
     const [saving, setSaving] = useState(false);
     const [disconnecting, setDisconnecting] = useState(false);
     const [channelId, setChannelId] = useState<string | null>(currentChannelId);
@@ -44,19 +45,31 @@ export function SlackSection({
         }
     }, [searchParams]);
 
-    // Only fetch channels if connected
-    useEffect(() => {
+    const fetchChannels = useCallback(async () => {
         if (!isConnected) return;
         setLoading(true);
-        fetch("/api/slack/channels")
-            .then((r) => r.json())
-            .then((data) => {
+        setFetchError(false);
+        try {
+            const r = await fetch("/api/slack/channels");
+            const data = await r.json();
+            if (data.error) {
+                setFetchError(true);
+                toast.error(data.error);
+            } else {
                 setChannels(data.channels || []);
-                if (data.error) toast.error(data.error);
-            })
-            .catch(() => toast.error("Failed to load Slack channels"))
-            .finally(() => setLoading(false));
+            }
+        } catch {
+            setFetchError(true);
+            toast.error("Failed to load Slack channels");
+        } finally {
+            setLoading(false);
+        }
     }, [isConnected]);
+
+    // Only fetch channels if connected
+    useEffect(() => {
+        fetchChannels();
+    }, [fetchChannels]);
 
     const handleSave = async () => {
         setSaving(true);
@@ -194,6 +207,19 @@ export function SlackSection({
                     <div className="flex items-center gap-2 font-mono text-xs text-neutral-400">
                         <Loader2 className="h-3 w-3 animate-spin" />
                         Loading channels...
+                    </div>
+                ) : fetchError ? (
+                    <div className="border border-neutral-200 px-4 py-3 flex items-center justify-between gap-4">
+                        <p className="font-mono text-xs text-neutral-500">
+                            Failed to load channels. Check your connection and try again.
+                        </p>
+                        <button
+                            onClick={fetchChannels}
+                            className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest border border-black px-3 py-1.5 hover:bg-neutral-100 shrink-0"
+                        >
+                            <RefreshCw className="h-2.5 w-2.5" />
+                            Retry
+                        </button>
                     </div>
                 ) : channels.length === 0 ? (
                     <div className="border border-neutral-200 px-4 py-3">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext, cancelInvitation } from "@/lib/actions/workspace";
@@ -119,6 +119,8 @@ export function UpdateWorkspaceNameForm({ defaultName, disabled }: { defaultName
 }
 
 export function UpdateCompanyContextForm({ defaultContext, disabled }: { defaultContext: string; disabled: boolean }) {
+    const [charCount, setCharCount] = useState(defaultContext.length);
+    const MAX_CHARS = 5000;
     return (
         <form
             action={async (fd: FormData) => {
@@ -132,14 +134,20 @@ export function UpdateCompanyContextForm({ defaultContext, disabled }: { default
             className="space-y-4"
         >
             <div>
-                <label className="font-mono text-xs uppercase tracking-widest block mb-2" htmlFor="company-context">Company Context</label>
+                <div className="flex items-center justify-between mb-2">
+                    <label className="font-mono text-xs uppercase tracking-widest" htmlFor="company-context">Company Context</label>
+                    <span className={`font-mono text-[10px] ${charCount > MAX_CHARS * 0.9 ? "text-amber-600" : "text-neutral-400"}`}>
+                        {charCount.toLocaleString()} / {MAX_CHARS.toLocaleString()}
+                    </span>
+                </div>
                 <textarea
                     id="company-context"
                     name="companyContext"
                     rows={6}
                     defaultValue={defaultContext}
                     disabled={disabled}
-                    maxLength={5000}
+                    maxLength={MAX_CHARS}
+                    onChange={(e) => setCharCount(e.target.value.length)}
                     placeholder="Describe your company: industry, business model, team size, main goals, tech stack, and what kind of tools would be most valuable..."
                     className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none resize-none disabled:opacity-40"
                 />

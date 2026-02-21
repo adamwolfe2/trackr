@@ -613,7 +613,7 @@ export default function OnboardingPage() {
                             <div className="flex items-center gap-3">
                                 <button
                                     onClick={handleComplete}
-                                    disabled={isPending || totalWeight !== 100}
+                                    disabled={isPending || totalWeight !== 100 || dimensions.length === 0}
                                     className={`flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-sm uppercase tracking-wide border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] disabled:opacity-60 disabled:cursor-not-allowed transition-all ${isPending ? "opacity-50 pointer-events-none" : ""}`}
                                 >
                                     {isPending ? (
