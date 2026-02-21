@@ -29,6 +29,11 @@ export async function GET(
         return new NextResponse("Invoice not found", { status: 404 });
     }
 
+    // Only allow invoices for paid campaigns
+    if (ad.status !== "completed" && ad.status !== "active") {
+        return new NextResponse("Invoice not available for this campaign", { status: 404 });
+    }
+
     // Verify ownership
     const member = await db.query.workspaceMembers.findFirst({
         where: and(
@@ -61,9 +66,7 @@ export async function GET(
             },
         });
     } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-            console.error("[api/invoices]", err);
-        }
+        console.error("[api/invoices]", err);
         return new NextResponse("Failed to generate invoice", { status: 500 });
     }
 }

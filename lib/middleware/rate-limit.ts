@@ -11,12 +11,21 @@ interface RateLimitEntry {
 
 const store = new Map<string, RateLimitEntry>();
 
-// Cleanup stale entries every 5 minutes
+// Cleanup stale entries every 5 minutes; also hard-cap at 50k entries to prevent unbounded growth
 if (typeof setInterval !== "undefined") {
     setInterval(() => {
         const now = Date.now();
         for (const [key, entry] of store.entries()) {
             if (entry.resetAt < now) store.delete(key);
+        }
+        // Safety cap: if still over limit after expiry cleanup, evict oldest keys
+        if (store.size > 50_000) {
+            const excess = store.size - 50_000;
+            let deleted = 0;
+            for (const key of store.keys()) {
+                store.delete(key);
+                if (++deleted >= excess) break;
+            }
         }
     }, 5 * 60 * 1000);
 }

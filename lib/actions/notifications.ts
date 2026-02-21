@@ -101,7 +101,7 @@ export async function getNotifications(): Promise<Notification[]> {
         id: `suggestion-${s.id}`,
         type: 'new_suggestion' as const,
         title: 'New Tool Discovered',
-        message: `${s.toolName} — ${s.reason.slice(0, 80)}`,
+        message: `${s.toolName}${s.reason ? ` — ${s.reason.slice(0, 80)}` : ""}`,
         createdAt: s.createdAt,
         read: seenIds.includes(`suggestion-${s.id}`),
         link: '/feed',

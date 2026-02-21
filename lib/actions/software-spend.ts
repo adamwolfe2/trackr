@@ -54,7 +54,10 @@ export async function addSoftwareSpend(formData: FormData) {
     return { success: true };
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function deleteSoftwareSpend(id: string) {
+    if (!UUID_RE.test(id)) throw new Error("Invalid spend entry ID");
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
@@ -72,6 +75,7 @@ export async function deleteSoftwareSpend(id: string) {
 const VALID_SPEND_STATUSES = ["active", "evaluating", "canceling", "canceled"] as const;
 
 export async function updateSoftwareSpendStatus(id: string, status: string) {
+    if (!UUID_RE.test(id)) throw new Error("Invalid spend entry ID");
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
@@ -148,6 +152,7 @@ export async function updateSoftwareSpendDetails(
     renewalDate?: string | null,
     contractLengthMonths?: number | null
 ) {
+    if (!UUID_RE.test(id)) throw new Error("Invalid spend entry ID");
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 

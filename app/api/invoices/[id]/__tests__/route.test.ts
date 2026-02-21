@@ -47,6 +47,7 @@ const MOCK_AD = {
     id: "ad_abc123",
     workspaceId: "ws_1",
     budget: "500",
+    status: "active",
     createdAt: new Date("2026-01-01"),
     tool: { name: "Linear" },
 };
@@ -124,5 +125,23 @@ describe("GET /api/invoices/[id]", () => {
         const res = await callRoute("ad_unique99xyz");
         const disposition = res.headers.get("Content-Disposition");
         expect(disposition).toContain("ad_uniqu"); // first 8 chars of "ad_unique99xyz"
+    });
+
+    it("returns 404 for draft ads (invoice not yet available)", async () => {
+        (db.query.ads.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            ...MOCK_AD,
+            status: "draft",
+        });
+        const res = await callRoute();
+        expect(res.status).toBe(404);
+    });
+
+    it("returns 404 for paused ads (invoice not available)", async () => {
+        (db.query.ads.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            ...MOCK_AD,
+            status: "paused",
+        });
+        const res = await callRoute();
+        expect(res.status).toBe(404);
     });
 });

@@ -39,6 +39,7 @@ import {
 } from "../software-spend";
 
 const MOCK_USER = { id: "user_1" };
+const VALID_SPEND_UUID = "550e8400-e29b-41d4-a716-446655440010";
 
 function setupDbChains() {
     const where = vi.fn().mockResolvedValue({});
@@ -136,31 +137,39 @@ describe("software-spend server actions", () => {
     });
 
     describe("deleteSoftwareSpend", () => {
+        it("throws for non-UUID id", async () => {
+            await expect(deleteSoftwareSpend("spend_1")).rejects.toThrow("Invalid spend entry ID");
+        });
+
         it("throws Unauthorized when not logged in", async () => {
             (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-            await expect(deleteSoftwareSpend("spend_1")).rejects.toThrow("Unauthorized");
+            await expect(deleteSoftwareSpend(VALID_SPEND_UUID)).rejects.toThrow("Unauthorized");
         });
 
         it("throws when no workspace found", async () => {
             (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-            await expect(deleteSoftwareSpend("spend_1")).rejects.toThrow("No workspace found");
+            await expect(deleteSoftwareSpend(VALID_SPEND_UUID)).rejects.toThrow("No workspace found");
         });
 
         it("returns success when deletion completes", async () => {
-            const result = await deleteSoftwareSpend("spend_1");
+            const result = await deleteSoftwareSpend(VALID_SPEND_UUID);
             expect(result).toEqual({ success: true });
             expect(db.delete).toHaveBeenCalledTimes(1);
         });
     });
 
     describe("updateSoftwareSpendStatus", () => {
+        it("throws for non-UUID id", async () => {
+            await expect(updateSoftwareSpendStatus("spend_1", "active")).rejects.toThrow("Invalid spend entry ID");
+        });
+
         it("throws Unauthorized when not logged in", async () => {
             (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-            await expect(updateSoftwareSpendStatus("spend_1", "active")).rejects.toThrow("Unauthorized");
+            await expect(updateSoftwareSpendStatus(VALID_SPEND_UUID, "active")).rejects.toThrow("Unauthorized");
         });
 
         it("throws for invalid status value", async () => {
-            await expect(updateSoftwareSpendStatus("spend_1", "invalid_status")).rejects.toThrow(
+            await expect(updateSoftwareSpendStatus(VALID_SPEND_UUID, "invalid_status")).rejects.toThrow(
                 "Invalid status"
             );
         });
@@ -171,13 +180,13 @@ describe("software-spend server actions", () => {
                 setupDbChains();
                 (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
                 (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
-                const result = await updateSoftwareSpendStatus("spend_1", status);
+                const result = await updateSoftwareSpendStatus(VALID_SPEND_UUID, status);
                 expect(result).toEqual({ success: true });
             }
         });
 
         it("returns success for valid status update", async () => {
-            const result = await updateSoftwareSpendStatus("spend_1", "canceled");
+            const result = await updateSoftwareSpendStatus(VALID_SPEND_UUID, "canceled");
             expect(result).toEqual({ success: true });
         });
     });

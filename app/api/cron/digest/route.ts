@@ -13,6 +13,16 @@ export const dynamic = 'force-dynamic';
 const FROM = "Trackr <noreply@trytrackr.com>";
 function getResend() { return new Resend(process.env.RESEND_API_KEY!); }
 
+/** Escape HTML special characters in user-provided strings before inserting into HTML emails */
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#x27;");
+}
+
 export async function GET(req: Request) {
     const cronSecret = process.env.CRON_SECRET;
     if (!cronSecret) {
@@ -67,7 +77,7 @@ export async function GET(req: Request) {
 
                 if (recentTools.length > 0) {
                     const toolRows = recentTools.map((t) =>
-                        `<tr><td style="padding:8px;font-size:13px;border-bottom:1px solid #D0D0CC;">${t.name}</td><td style="padding:8px;font-size:13px;text-align:right;border-bottom:1px solid #D0D0CC;">${t.overallScore ? `${Number(t.overallScore).toFixed(1)}/10` : "—"}</td></tr>`
+                        `<tr><td style="padding:8px;font-size:13px;border-bottom:1px solid #D0D0CC;">${escapeHtml(t.name)}</td><td style="padding:8px;font-size:13px;text-align:right;border-bottom:1px solid #D0D0CC;">${t.overallScore ? `${Number(t.overallScore).toFixed(1)}/10` : "—"}</td></tr>`
                     ).join("");
 
                     await getResend().emails.send({
@@ -78,7 +88,7 @@ export async function GET(req: Request) {
                             <div style="font-family: 'SF Mono', monospace; max-width: 480px; margin: 0 auto; padding: 32px; border: 2px solid #000; background: #F3F3EF;">
                                 <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Weekly Digest</p>
                                 <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 22px; margin: 0 0 16px;">
-                                    ${owner.workspace.name}
+                                    ${escapeHtml(owner.workspace.name)}
                                 </h1>
                                 <p style="font-size: 13px; color: #555; margin: 0 0 16px;">
                                     Here's what your team researched in the past 7 days:
@@ -150,9 +160,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json({ success: true, digestsSent, renewalsSent });
     } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-            console.error("[api/cron/digest]", err);
-        }
+        console.error("[api/cron/digest]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
