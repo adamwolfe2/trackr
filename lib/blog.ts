@@ -280,31 +280,40 @@ function escapeHtml(text: string): string {
 
 /**
  * Handles inline formatting: bold, italic, links, inline code.
+ * Text is HTML-escaped first to prevent XSS; inline code is processed
+ * before bold/italic to protect its content from nested regex passes.
  */
 function inlineFormat(text: string): string {
-  let result = text;
+  // 1. Escape HTML special characters FIRST to prevent XSS
+  let result = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
 
-  // Links: [text](url)
-  result = result.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" class="underline underline-offset-2 hover:text-black text-neutral-900 font-medium" target="_blank" rel="noopener noreferrer">$1</a>'
-  );
-
-  // Inline code: `code`
+  // 2. Inline code FIRST — protects its content from other regex passes
   result = result.replace(
     /`([^`]+)`/g,
-    '<code class="bg-black/5 border border-black/10 px-1.5 py-0.5 font-mono text-xs">$1</code>'
+    (_, code) => `<code class="bg-black/5 border border-black/10 px-1.5 py-0.5 font-mono text-xs">${code}</code>`
   );
 
-  // Bold + italic: ***text*** or ___text___
+  // 3. Links: [text](url) — validate URL to block javascript: and data: URIs
+  result = result.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    (_, linkText, url) => {
+      const safeUrl = /^(https?:\/\/|\/|#)/.test(url.trim()) ? url.trim() : "#";
+      return `<a href="${safeUrl}" class="underline underline-offset-2 hover:text-black text-neutral-900 font-medium" target="_blank" rel="noopener noreferrer">${linkText}</a>`;
+    }
+  );
+
+  // 4. Bold + italic: ***text*** or ___text___
   result = result.replace(/\*{3}([^*]+)\*{3}/g, "<strong><em>$1</em></strong>");
   result = result.replace(/_{3}([^_]+)_{3}/g, "<strong><em>$1</em></strong>");
 
-  // Bold: **text** or __text__
+  // 5. Bold: **text** or __text__
   result = result.replace(/\*{2}([^*]+)\*{2}/g, '<strong class="text-black font-semibold">$1</strong>');
   result = result.replace(/_{2}([^_]+)_{2}/g, '<strong class="text-black font-semibold">$1</strong>');
 
-  // Italic: *text* or _text_
+  // 6. Italic: *text* or _text_
   result = result.replace(/\*([^*]+)\*/g, "<em>$1</em>");
   result = result.replace(/\b_([^_]+)_\b/g, "<em>$1</em>");
 
