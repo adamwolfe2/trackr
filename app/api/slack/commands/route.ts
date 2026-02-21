@@ -93,6 +93,26 @@ async function handleResearch(urlArg: string, channelId: string) {
             text: "Only HTTPS URLs are supported. Please use a URL starting with `https://`.",
         });
     }
+
+    // Block SSRF — reject private/loopback hostnames
+    const hostname = parsedUrl.hostname.toLowerCase();
+    const ssrfBlocked = (
+        hostname === "localhost" ||
+        hostname === "127.0.0.1" ||
+        hostname === "::1" ||
+        hostname.startsWith("10.") ||
+        hostname.startsWith("192.168.") ||
+        /^172\.(1[6-9]|2\d|3[01])\./.test(hostname) ||
+        hostname.endsWith(".local") ||
+        hostname.endsWith(".internal")
+    );
+    if (ssrfBlocked) {
+        return NextResponse.json({
+            response_type: "ephemeral",
+            text: "That URL is not allowed. Please provide a public web address.",
+        });
+    }
+
     url = parsedUrl.href;
 
     // Find workspace by slack channel

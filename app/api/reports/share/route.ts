@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { reports, tools, workspaceMembers } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
+import { rateLimit } from "@/lib/middleware/rate-limit";
 
 const ShareSchema = z.object({
     reportId: z.string().uuid("reportId must be a valid UUID"),
@@ -13,6 +14,11 @@ export async function POST(req: NextRequest) {
     const user = await currentUser();
     if (!user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const rl = rateLimit(`share:${user.id}`, { limit: 10, windowSeconds: 60 });
+    if (!rl.success) {
+        return NextResponse.json({ error: "Too many requests" }, { status: 429 });
     }
 
     let body: unknown;
