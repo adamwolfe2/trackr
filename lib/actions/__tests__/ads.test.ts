@@ -15,6 +15,7 @@ vi.mock("@/lib/db", () => ({
             tools: { findFirst: vi.fn() },
         },
         insert: vi.fn(),
+        delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
     },
 }));
 
@@ -58,6 +59,7 @@ describe("createAdCampaign", () => {
         const returning = vi.fn().mockResolvedValue([{ id: "ad_1" }]);
         const insertValues = vi.fn().mockReturnValue({ returning });
         (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values: insertValues });
+        (db.delete as ReturnType<typeof vi.fn>).mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
 
         mockSessionCreate.mockResolvedValue({ url: "https://checkout.stripe.com/session_xyz" });
     });

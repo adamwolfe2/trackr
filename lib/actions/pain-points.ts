@@ -116,4 +116,5 @@ export async function togglePainPointActive(id: string, currentState: boolean) {
         .where(and(eq(painPoints.id, id), eq(painPoints.workspaceId, workspaceId)));
 
     revalidatePath("/pain-points");
+    return { success: true };
 }

@@ -661,8 +661,8 @@ INSTRUCTIONS:
                 if (email) {
                     await sendResearchCompleteEmail(email, tool.name, toolId, avgScore);
                 }
-            } catch {
-                // Non-critical — don't fail research if email errors
+            } catch (emailErr) {
+                console.warn(`[research] Failed to send complete email for tool ${toolId}:`, emailErr);
             }
         }
 
@@ -675,8 +675,8 @@ INSTRUCTIONS:
                     researchCompleteBlocks(tool.name, toolId, avgScore),
                     tool.workspace.slackBotToken ?? undefined,
                 );
-            } catch {
-                // Non-critical
+            } catch (slackErr) {
+                console.warn(`[research] Failed to send Slack complete notification for tool ${toolId}:`, slackErr);
             }
         }
 
@@ -709,8 +709,8 @@ INSTRUCTIONS:
                 if (email) {
                     await sendResearchFailedEmail(email, tool.name, toolId, message);
                 }
-            } catch {
-                // Non-critical
+            } catch (emailErr) {
+                console.warn(`[research] Failed to send failed email for tool ${toolId}:`, emailErr);
             }
         }
 
@@ -723,8 +723,8 @@ INSTRUCTIONS:
                     researchFailedBlocks(tool.name, toolId, message),
                     tool.workspace.slackBotToken ?? undefined,
                 );
-            } catch {
-                // Non-critical
+            } catch (slackErr) {
+                console.warn(`[research] Failed to send Slack failure notification for tool ${toolId}:`, slackErr);
             }
         }
 

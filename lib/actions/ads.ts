@@ -51,34 +51,42 @@ export async function createAdCampaign(_workspaceId: string, toolId: string, bud
         clicks: 0,
     }).returning();
 
-    // Create Stripe Session
-    const session = await stripe.checkout.sessions.create({
-        mode: 'payment',
-        payment_method_types: ['card'],
-        line_items: [
-            {
-                price_data: {
-                    currency: 'usd',
-                    product_data: {
-                        name: `Ad Campaign for ${tool.name}`,
-                        description: `Budget: $${budget}`,
+    // Create Stripe Session — if this fails, roll back the orphaned draft ad
+    let session;
+    try {
+        session = await stripe.checkout.sessions.create({
+            mode: 'payment',
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'usd',
+                        product_data: {
+                            name: `Ad Campaign for ${tool.name}`,
+                            description: `Budget: $${budget}`,
+                        },
+                        unit_amount: budget * 100,
                     },
-                    unit_amount: budget * 100,
+                    quantity: 1,
                 },
-                quantity: 1,
+            ],
+            customer_email: user.emailAddresses[0].emailAddress,
+            metadata: {
+                adId: newAd.id,
+                workspaceId: workspaceId,
+                type: 'ad_campaign'
             },
-        ],
-        customer_email: user.emailAddresses[0].emailAddress,
-        metadata: {
-            adId: newAd.id,
-            workspaceId: workspaceId,
-            type: 'ad_campaign'
-        },
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/advertise?success=true`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/advertise/create?canceled=true`,
-    });
+            success_url: `${process.env.NEXT_PUBLIC_APP_URL}/advertise?success=true`,
+            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/advertise/create?canceled=true`,
+        });
+    } catch (err) {
+        // Clean up orphaned draft ad to prevent accumulation of dangling records
+        await db.delete(ads).where(eq(ads.id, newAd.id)).catch(() => {});
+        throw err;
+    }
 
     if (!session.url) {
+        await db.delete(ads).where(eq(ads.id, newAd.id)).catch(() => {});
         throw new Error("Failed to create checkout session");
     }
 

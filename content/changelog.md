@@ -6,6 +6,29 @@ All notable changes to Trackr are documented here.
 
 ## February 2026
 
+### 2026-02-20 — Security Hardening & Bug Fixes
+
+**Security**
+- **SSRF protection expanded** — Private IP ranges (10.x, 192.168.x, 172.16–31.x, 127.x) now blocked in onboarding URL validator, RSS feed submissions, and tool preview actions. Prevents server-side request forgery attacks.
+- **Webhook idempotency race condition fixed** — Stripe and Clerk webhooks now use atomic database insert (`INSERT...ON CONFLICT DO NOTHING`) to claim events, preventing duplicate processing if Stripe retries a webhook while the first delivery is still in-flight.
+- **Rate limiting improved** — Authenticated search endpoint now rate-limits by user ID instead of IP address (IP is trivially spoofed via X-Forwarded-For).
+- **Invite rate limiting** — Workspace owners are now limited to 20 pending invitations per hour to prevent email spam abuse.
+- **Chrome Extension CORS hardened** — Extension API now validates origin against a strict `chrome-extension://[a-z0-9]{20,}` regex instead of a loose prefix check.
+
+**Bug Fixes**
+- **Delete with error recovery** — Stack/spend item deletion now shows a toast and restores the confirm state if the server action fails, instead of silently failing.
+- **Notes error feedback** — Adding a note now shows a toast error if the action fails instead of swallowing the exception.
+- **Slug race condition** — Concurrent `publishReport` calls can no longer generate duplicate public slugs; uniqueness check now runs inside the database transaction.
+- **Discover page crash** — Tavily API errors on the Discover page no longer crash the entire server component; errors are caught and return an empty results array.
+- **Suggested prompts** — Ask page suggested prompts are now disabled while a request is in flight to prevent duplicate submissions.
+- **Compare page security** — Slug parameters are now allowlisted to `[a-z0-9-]+` before query, preventing path traversal in the public compare endpoint.
+
+**TypeScript & Tests**
+- Zero TypeScript errors (Next.js 16 `revalidateTag` API updated, loading page prop names fixed).
+- 743 tests, all passing.
+
+---
+
 ### 2026-02-20 — Referral Credits & Production Fix
 
 **Bug Fixes**
