@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Check, X, ArrowRightLeft, Plus, ExternalLink, Search, ChevronDown } from "lucide-react";
+import { Check, X, ArrowRightLeft, Plus, ExternalLink, Search, ChevronDown, Link2 } from "lucide-react";
 import Link from "next/link";
 
 type PricingEntry = { price?: string; tier?: string; [key: string]: unknown };
@@ -146,6 +146,7 @@ function ToolSelector({
 
 export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
     const router = useRouter();
+    const [copiedUrl, setCopiedUrl] = useState(false);
     const [selectedToolIds, setSelectedToolIds] = useState<(string | null)[]>(() => {
         const initial: (string | null)[] = [null, null];
         if (preSelectedIds[0] && tools.some(t => t.id === preSelectedIds[0])) {
@@ -248,9 +249,24 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-3">
-                <ArrowRightLeft className="h-5 w-5" strokeWidth={1.5} />
-                <h1 className="font-serif text-2xl font-normal">Compare Tools</h1>
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-3">
+                    <ArrowRightLeft className="h-5 w-5" strokeWidth={1.5} />
+                    <h1 className="font-serif text-2xl font-normal">Compare Tools</h1>
+                </div>
+                {bothSelected && (
+                    <button
+                        onClick={async () => {
+                            await navigator.clipboard.writeText(window.location.href);
+                            setCopiedUrl(true);
+                            setTimeout(() => setCopiedUrl(false), 2000);
+                        }}
+                        className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs bg-white hover:bg-black hover:text-white transition-colors"
+                    >
+                        {copiedUrl ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
+                        {copiedUrl ? "Copied!" : "Copy Link"}
+                    </button>
+                )}
             </div>
 
             {/* Empty state */}

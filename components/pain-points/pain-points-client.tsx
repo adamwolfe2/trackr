@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { addPainPoint, batchAddPainPoints, deletePainPoint, togglePainPointActive, updatePainPoint } from "@/lib/actions/pain-points";
-import { PlusCircle, Trash2, X, Sparkles, Copy, Check, ChevronUp, Pencil } from "lucide-react";
+import { PlusCircle, Trash2, X, Sparkles, Copy, Check, ChevronUp, Pencil, Download } from "lucide-react";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
@@ -153,6 +153,27 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
         }
     };
 
+    const handleExportCsv = () => {
+        const headers = ["Title", "Category", "Description", "Status", "Created"];
+        const rows = initialData.map(p => [
+            p.title,
+            p.category ?? "",
+            p.description ?? "",
+            p.active ? "Active" : "Inactive",
+            new Date(p.createdAt).toISOString().slice(0, 10),
+        ]);
+        const csv = [headers, ...rows]
+            .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+            .join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `pain-points-${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
     const handleParseResponse = () => {
         setParseError("");
         setParsedItems(null);
@@ -209,6 +230,15 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
                         {copied ? <Check className="h-3.5 w-3.5" /> : <Sparkles className="h-3.5 w-3.5" />}
                         {copied ? "Copied!" : "Ask AI to Fill This"}
                     </button>
+                    {initialData.length > 0 && (
+                        <button
+                            onClick={handleExportCsv}
+                            className="flex items-center gap-2 border border-black px-4 py-2.5 font-mono text-xs bg-white hover:bg-neutral-100 whitespace-nowrap"
+                        >
+                            <Download className="h-3.5 w-3.5" />
+                            Export CSV
+                        </button>
+                    )}
                     <button
                         onClick={() => setShowForm(prev => !prev)}
                         className="flex items-center gap-2 border border-black px-4 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 whitespace-nowrap"
