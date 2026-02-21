@@ -433,6 +433,7 @@ describe("performDeepResearch", () => {
             "Linear",
             "tool_1",
             expect.any(Number),
+            null, // previousScore — mock tool has no prior score
         );
     });
 

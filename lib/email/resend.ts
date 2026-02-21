@@ -106,11 +106,23 @@ export async function sendResearchCompleteEmail(
     to: string,
     toolName: string,
     toolId: string,
-    score: number
+    score: number,
+    previousScore?: number | null,
 ) {
     if (!process.env.RESEND_API_KEY) return;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
     const resend = getResend();
+
+    let scoreDeltaHtml = "";
+    if (previousScore != null) {
+        const delta = score - previousScore;
+        if (Math.abs(delta) >= 0.1) {
+            const sign = delta > 0 ? "+" : "";
+            const color = delta > 0 ? "#111" : "#888";
+            scoreDeltaHtml = `<span style="font-size: 14px; color: ${color}; margin-left: 8px;">${sign}${delta.toFixed(1)} vs last</span>`;
+        }
+    }
+
     await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
@@ -118,7 +130,7 @@ export async function sendResearchCompleteEmail(
         html: emailWrapper(`
             <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Research Complete</p>
             <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 8px;">${escapeHtml(toolName)}</h1>
-            <div style="font-size: 40px; font-family: Georgia, 'Newsreader', serif; margin: 16px 0;">${score.toFixed(1)}<span style="font-size: 18px; color: #999;">/10</span></div>
+            <div style="font-size: 40px; font-family: Georgia, 'Newsreader', serif; margin: 16px 0; display: flex; align-items: baseline; gap: 8px;">${score.toFixed(1)}<span style="font-size: 18px; color: #999;">/10</span>${scoreDeltaHtml}</div>
             <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
                 Your research report is ready. Open it to see the full scorecard, pros/cons, competitor analysis, and pricing breakdown.
             </p>

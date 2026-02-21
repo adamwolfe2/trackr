@@ -108,6 +108,9 @@ export async function performDeepResearch(toolId: string) {
         return { success: false, error: "Tool not found or missing URL" };
     }
 
+    // Capture previous score for delta display in completion email
+    const previousScore = tool.overallScore ? parseFloat(tool.overallScore) : null;
+
     // Check monthly research run limit
     const subscription = await db.query.subscriptions.findFirst({
         where: eq(subscriptions.workspaceId, tool.workspaceId),
@@ -659,7 +662,7 @@ INSTRUCTIONS:
                 const clerkUser = await clerk.users.getUser(tool.submittedBy);
                 const email = clerkUser.emailAddresses[0]?.emailAddress;
                 if (email) {
-                    await sendResearchCompleteEmail(email, tool.name, toolId, avgScore);
+                    await sendResearchCompleteEmail(email, tool.name, toolId, avgScore, previousScore);
                 }
             } catch (emailErr) {
                 console.warn(`[research] Failed to send complete email for tool ${toolId}:`, emailErr);
