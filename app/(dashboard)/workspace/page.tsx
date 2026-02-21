@@ -132,7 +132,7 @@ export default async function WorkspacePage() {
                                         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                                             {roleLabel(member.role)}
                                             {isOwnerOrAdmin && !isCurrentUser && !isThisOwner && (
-                                                <RemoveMemberButton memberId={member.id} />
+                                                <RemoveMemberButton memberId={member.id} memberName={displayName} />
                                             )}
                                         </div>
                                     </div>
