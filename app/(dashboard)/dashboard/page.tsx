@@ -1,9 +1,9 @@
-import { Clock, ArrowRight, PlusCircle, DollarSign, AlertTriangle, CalendarClock, Sparkles } from "lucide-react";
+import { Clock, ArrowRight, PlusCircle, DollarSign, AlertTriangle, CalendarClock, Sparkles, RefreshCw } from "lucide-react";
 import { db } from "@/lib/db";
 import { tools, painPoints, workspaceMembers, workspaces, researchJobs, reports, softwareSpend, toolSuggestions } from "@/lib/db/schema";
-import { eq, sql, desc, inArray, gte, and } from "drizzle-orm";
+import { eq, sql, desc, inArray, gte, and, ne, isNotNull, lte } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
-import { currentUser } from "@clerk/nextjs/server";
+import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import { formatDistanceToNow } from "date-fns";
@@ -69,6 +69,36 @@ export default async function DashboardPage() {
         limit: 5,
     });
 
+    // Resolve triggeredBy Clerk user IDs to names
+    const triggeredByIds = [...new Set(workspaceActivity.map(j => j.triggeredBy).filter(Boolean))] as string[];
+    const triggeredByNames = new Map<string, string>();
+    if (triggeredByIds.length > 0) {
+        try {
+            const clerkUsers = await (await clerkClient()).users.getUserList({ userId: triggeredByIds, limit: 50 });
+            for (const u of clerkUsers.data) {
+                const name = [u.firstName, u.lastName].filter(Boolean).join(" ") || u.emailAddresses[0]?.emailAddress || "Team Member";
+                triggeredByNames.set(u.id, name);
+            }
+        } catch {
+            // Clerk unavailable — degrade gracefully
+        }
+    }
+
+    // Tools with upcoming scheduled research (next 7 days)
+    const now = new Date();
+    const sevenDaysAhead = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const scheduledTools = await db.query.tools.findMany({
+        where: and(
+            eq(tools.workspaceId, workspaceId),
+            ne(tools.researchInterval, "manual"),
+            isNotNull(tools.nextResearchAt),
+            lte(tools.nextResearchAt, sevenDaysAhead),
+        ),
+        columns: { id: true, name: true, researchInterval: true, nextResearchAt: true },
+        orderBy: [tools.nextResearchAt],
+        limit: 5,
+    });
+
     const reportsCountData = await db
         .select({ count: sql<number>`count(*)` })
         .from(reports)
@@ -96,7 +126,6 @@ export default async function DashboardPage() {
     const reportsThisWeek = Number(reportsThisWeekData[0]?.count || 0);
 
     // Quick actions context
-    const now = new Date();
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
     const [missingCostCount, upcomingRenewalCount, newSuggestionCount, failedToolCount] = await Promise.all([
@@ -305,6 +334,9 @@ export default async function DashboardPage() {
                                             <div className="font-mono text-[10px] text-neutral-400 flex items-center gap-1 mt-0.5">
                                                 <Clock className="h-2.5 w-2.5" />
                                                 {formatDistanceToNow(job.triggeredAt, { addSuffix: true })}
+                                                {job.triggeredBy && triggeredByNames.get(job.triggeredBy) && (
+                                                    <> · {triggeredByNames.get(job.triggeredBy)}</>
+                                                )}
                                             </div>
                                         </div>
                                         <span className={`font-mono text-[10px] uppercase border px-1.5 py-0.5 flex-shrink-0 ${
@@ -322,6 +354,42 @@ export default async function DashboardPage() {
                     </div>
                 </div>
             </div>
+
+            {/* Upcoming Scheduled Research */}
+            {scheduledTools.length > 0 && (
+                <div className="border border-black">
+                    <div className="border-b border-black px-5 py-3 flex items-center justify-between">
+                        <h2 className="font-mono text-xs uppercase tracking-widest flex items-center gap-2">
+                            <RefreshCw className="h-3 w-3" />
+                            Upcoming Scheduled Research
+                        </h2>
+                        <Link href="/tools" className="font-mono text-[10px] text-neutral-400 hover:text-black transition-colors">
+                            Manage →
+                        </Link>
+                    </div>
+                    <div className="divide-y divide-neutral-100">
+                        {scheduledTools.map((tool) => {
+                            const nextDate = tool.nextResearchAt ? new Date(tool.nextResearchAt) : null;
+                            const isOverdue = nextDate && nextDate < now;
+                            return (
+                                <div key={tool.id} className="flex items-center justify-between px-5 py-3">
+                                    <Link href={`/tools/${tool.id}`} className="font-mono text-xs font-medium hover:underline">
+                                        {tool.name}
+                                    </Link>
+                                    <div className="flex items-center gap-3">
+                                        <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest">
+                                            {tool.researchInterval}
+                                        </span>
+                                        <span className={`font-mono text-[10px] border px-1.5 py-0.5 ${isOverdue ? "border-black bg-black text-white" : "border-neutral-300 text-neutral-500"}`}>
+                                            {isOverdue ? "Due now" : nextDate ? nextDate.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
