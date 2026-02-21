@@ -52,7 +52,10 @@ export async function generateCompanyContext(websiteUrl: string): Promise<{ cont
         }
 
         const scrape = await firecrawl.scrapeUrl(websiteUrl);
-        if (!scrape.success) return { context: "", error: "Could not scrape website" };
+        if (!scrape.success) {
+            console.error("[onboarding] Firecrawl scrape failed:", (scrape as unknown as Record<string, unknown>).error ?? "unknown error");
+            return { context: "", error: "Could not scrape website" };
+        }
         const content = scrape.data?.markdown?.slice(0, 4000) ?? "";
 
         if (!content) return { context: "", error: "No readable content found on website" };

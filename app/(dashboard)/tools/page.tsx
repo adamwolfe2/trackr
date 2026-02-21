@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { db } from "@/lib/db";
-import { tools, workspaceMembers, softwareSpend } from "@/lib/db/schema";
+import { tools, workspaceMembers, softwareSpend, subscriptions } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { ToolsView } from "@/components/tools/tools-view";
+import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export default async function ToolsPage() {
         redirect("/onboarding");
     }
 
-    const [toolsList, spendEntries] = await Promise.all([
+    const [toolsList, spendEntries, subscription] = await Promise.all([
         db.query.tools.findMany({
             where: eq(tools.workspaceId, member.workspaceId),
             orderBy: [desc(tools.submittedAt)],
@@ -35,7 +36,13 @@ export default async function ToolsPage() {
         db.query.softwareSpend.findMany({
             where: eq(softwareSpend.workspaceId, member.workspaceId),
         }),
+        db.query.subscriptions.findFirst({
+            where: eq(subscriptions.workspaceId, member.workspaceId),
+        }),
     ]);
+
+    const plan = getPlanLimits(subscription ?? undefined);
+    const canSchedule = hasFeature(plan, "scheduledResearch");
 
     // Stats
     const now = new Date();
@@ -69,7 +76,7 @@ export default async function ToolsPage() {
                 </Link>
             </div>
 
-            <ToolsView tools={toolsList} stats={stats} isEmpty={toolsList.length === 0} />
+            <ToolsView tools={toolsList} stats={stats} isEmpty={toolsList.length === 0} canSchedule={canSchedule} />
         </div>
     );
 }

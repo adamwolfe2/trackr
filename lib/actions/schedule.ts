@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { tools, workspaceMembers } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
@@ -70,4 +70,49 @@ export async function updateResearchSchedule(
 
     revalidatePath(`/tools/${toolId}`);
     return { success: true };
+}
+
+export async function updateBulkResearchSchedule(
+    toolIds: string[],
+    interval: ResearchInterval,
+): Promise<{ success: boolean; updated: number; error?: string }> {
+    if (!Array.isArray(toolIds) || toolIds.length === 0) {
+        return { success: false, updated: 0, error: "No tools selected" };
+    }
+    if (toolIds.length > 100) {
+        return { success: false, updated: 0, error: "Too many tools selected" };
+    }
+    if (toolIds.some((id) => !UUID_RE.test(id))) {
+        return { success: false, updated: 0, error: "Invalid tool ID" };
+    }
+
+    const validIntervals: ResearchInterval[] = ["manual", "weekly", "biweekly", "monthly"];
+    if (!validIntervals.includes(interval)) {
+        return { success: false, updated: 0, error: "Invalid interval" };
+    }
+
+    const user = await currentUser();
+    if (!user) return { success: false, updated: 0, error: "Not authenticated" };
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+        columns: { workspaceId: true },
+    });
+    if (!member) return { success: false, updated: 0, error: "Workspace not found" };
+
+    // Only update tools that belong to this workspace (ownership check via AND)
+    const nextResearchAt = getNextResearchAt(interval);
+    const result = await db
+        .update(tools)
+        .set({ researchInterval: interval, nextResearchAt })
+        .where(
+            and(
+                inArray(tools.id, toolIds),
+                eq(tools.workspaceId, member.workspaceId),
+            ),
+        )
+        .returning({ id: tools.id });
+
+    revalidatePath("/tools");
+    return { success: true, updated: result.length };
 }

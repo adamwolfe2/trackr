@@ -321,7 +321,7 @@ export default async function DashboardPage() {
                     <div className="border-b border-black px-5 py-3 flex items-center justify-between">
                         <h2 className="font-mono text-xs uppercase tracking-widest">Recent Activity</h2>
                         {workspaceActivity.length > 0 && (
-                            <Link href="/queue" className="font-mono text-[10px] text-neutral-400 hover:text-black transition-colors">
+                            <Link href="/workspace/activity" className="font-mono text-[10px] text-neutral-400 hover:text-black transition-colors">
                                 View all →
                             </Link>
                         )}
