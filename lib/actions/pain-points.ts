@@ -63,6 +63,8 @@ export async function batchAddPainPoints(items: Array<{ title: string; category?
     if (!workspaceId) throw new Error("No workspace found");
 
     if (items.length > 100) throw new Error("Batch size limit exceeded (max 100)");
+    const totalChars = items.reduce((sum, i) => sum + (i.title?.length ?? 0) + (i.description?.length ?? 0), 0);
+    if (totalChars > 200_000) throw new Error("Payload too large");
     const valid = items.filter(i => i.title?.trim());
     if (valid.length === 0) throw new Error("No valid pain points to add");
 
