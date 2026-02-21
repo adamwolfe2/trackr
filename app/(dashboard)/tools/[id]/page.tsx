@@ -112,6 +112,23 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         try { return new URL(tool.websiteUrl).hostname; } catch { return tool.websiteUrl; }
     })();
 
+    // Compute score trend: compare current vs previous report
+    const prevReport = allReports[1];
+    let scoreTrend: { delta: number; direction: "up" | "down" | "flat" } | null = null;
+    if (prevReport?.scorecardSnapshot && tool.overallScore) {
+        const prevScores = Object.values(prevReport.scorecardSnapshot as Record<string, { score: number }>).map(s => s.score);
+        const prevAvg = prevScores.length > 0
+            ? prevScores.reduce((a, b) => a + b, 0) / prevScores.length
+            : null;
+        if (prevAvg !== null) {
+            const delta = parseFloat(tool.overallScore) - prevAvg;
+            scoreTrend = {
+                delta: Math.abs(parseFloat(delta.toFixed(1))),
+                direction: delta > 0.05 ? "up" : delta < -0.05 ? "down" : "flat",
+            };
+        }
+    }
+
     // Extract features + pricing from report for tab component
     const featuresList = report?.features && typeof report.features === "object" && "list" in report.features
         ? ((report.features as Record<string, unknown>).list as string[])
@@ -271,6 +288,11 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                             {Number(tool.overallScore || 0).toFixed(1)}
                         </div>
                         <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Score</div>
+                        {scoreTrend && scoreTrend.direction !== "flat" && (
+                            <div className={`font-mono text-[10px] mt-0.5 ${scoreTrend.direction === "up" ? "text-black" : "text-neutral-500"}`}>
+                                {scoreTrend.direction === "up" ? "↑" : "↓"} {scoreTrend.delta} vs last
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

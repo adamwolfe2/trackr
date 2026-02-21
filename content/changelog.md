@@ -6,6 +6,29 @@ All notable changes to Trackr are documented here.
 
 ## February 2026
 
+### 2026-02-20 — Research Scheduling, CSV Exports, and UX Polish
+
+**New Features**
+- **Scheduled auto-research** — Set per-tool research intervals (weekly, bi-weekly, or monthly) directly from the tool detail page. Trackr automatically re-researches tools on schedule and advances the next run date. Available on Team, Startup, and Enterprise plans.
+- **CSV export for stack and pain points** — Download your full software stack inventory or all pain points as a CSV file directly from the list views.
+- **Shareable compare links** — The tool comparison page now has a "Copy Link" button that copies a URL with both tool IDs pre-selected for easy sharing with teammates.
+- **Chat persistence** — Ask Trackr conversations now persist across page refreshes via localStorage. A "New Chat" button lets you clear the history and start fresh.
+- **Referrals credits earned stat** — The referrals page now shows a "Credits Earned" stat card (5 credits per signup) alongside clicks and signups.
+- **Team activity attribution** — The dashboard Recent Activity feed now shows which team member triggered each research job.
+- **Upcoming Scheduled Research widget** — A new dashboard widget shows tools due for auto-research within the next 7 days, with "Due now" badges for overdue tools.
+- **Schedule badge on tool cards** — Kanban board cards now display a clock icon and interval label for tools with auto-research configured.
+
+**Bug Fixes**
+- **Build failure fixed** — Removed dead shadcn `toast.tsx` / `toaster.tsx` / `use-toast.ts` stubs that imported `@radix-ui/react-toast` (never in package.json), which was blocking all Vercel deployments.
+- **Referral link toast** — Generating a referral link now shows a success toast instead of silently revalidating.
+- **Billing error feedback** — Upgrade button now forwards the actual server error message instead of swallowing it.
+- **Onboarding redirect** — Missing-workspace state in the advertise/create flow now redirects to onboarding instead of showing a bare error div.
+
+**Tests**
+- 754 tests, all passing (+5 schedule action tests).
+
+---
+
 ### 2026-02-20 — Deep Security Audit Rounds 8-11
 
 **Security**
