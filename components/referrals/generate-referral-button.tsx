@@ -12,7 +12,9 @@ export function GenerateReferralButton() {
         startTransition(async () => {
             try {
                 const result = await createReferralCode();
-                if (!result.success) {
+                if (result.success) {
+                    toast.success("Referral link generated! Copy it and start sharing.");
+                } else {
                     toast.error(result.error ?? "Failed to generate referral code. Please try again.");
                 }
             } catch (err) {
