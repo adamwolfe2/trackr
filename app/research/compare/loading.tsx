@@ -3,7 +3,7 @@ import { MarketingNavigation } from "@/components/marketing/marketing-navigation
 export default function CompareLoading() {
     return (
         <div className="min-h-screen bg-[#F3F3EF]">
-            <MarketingNavigation isSignedIn={false} />
+            <MarketingNavigation isLoggedIn={false} />
             <main className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
                 <div className="animate-pulse space-y-8">
                     {/* Back link */}

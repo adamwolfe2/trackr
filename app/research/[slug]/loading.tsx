@@ -3,7 +3,7 @@ import { MarketingNavigation } from "@/components/marketing/marketing-navigation
 export default function ResearchSlugLoading() {
     return (
         <div className="min-h-screen bg-[#F3F3EF]">
-            <MarketingNavigation isSignedIn={false} />
+            <MarketingNavigation isLoggedIn={false} />
             <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
                 <div className="animate-pulse space-y-8">
                     {/* Back link */}
