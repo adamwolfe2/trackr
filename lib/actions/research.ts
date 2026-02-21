@@ -675,7 +675,7 @@ INSTRUCTIONS:
                 await postMessage(
                     tool.workspace.slackChannelId,
                     `Research complete: ${tool.name} scored ${avgScore.toFixed(1)}/10`,
-                    researchCompleteBlocks(tool.name, toolId, avgScore),
+                    researchCompleteBlocks(tool.name, toolId, avgScore, previousScore),
                     tool.workspace.slackBotToken ?? undefined,
                 );
             } catch (slackErr) {

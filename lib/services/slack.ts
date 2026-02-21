@@ -91,7 +91,14 @@ export async function listChannels(botToken?: string) {
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
 
-export function researchCompleteBlocks(toolName: string, toolId: string, score: number) {
+export function researchCompleteBlocks(toolName: string, toolId: string, score: number, previousScore?: number | null) {
+    let scoreDelta = "";
+    if (previousScore != null) {
+        const delta = score - previousScore;
+        if (Math.abs(delta) >= 0.1) {
+            scoreDelta = ` (${delta > 0 ? "+" : ""}${delta.toFixed(1)} vs last)`;
+        }
+    }
     return [
         {
             type: "header",
@@ -100,7 +107,7 @@ export function researchCompleteBlocks(toolName: string, toolId: string, score: 
         {
             type: "section",
             fields: [
-                { type: "mrkdwn", text: `*Score*\n${score.toFixed(1)}/10` },
+                { type: "mrkdwn", text: `*Score*\n${score.toFixed(1)}/10${scoreDelta}` },
                 { type: "mrkdwn", text: `*Status*\nReport ready` },
             ],
         },
