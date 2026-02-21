@@ -39,6 +39,7 @@ const MOCK_USER = {
     emailAddresses: [{ emailAddress: "owner@acme.com" }],
 };
 const MOCK_OWNER_MEMBER = { id: "mem_1", userId: "user_1", workspaceId: "ws_1", role: "owner" };
+const MOCK_ADMIN_MEMBER = { id: "mem_3", userId: "user_1", workspaceId: "ws_1", role: "admin" };
 const MOCK_VIEWER_MEMBER = { id: "mem_2", userId: "user_1", workspaceId: "ws_1", role: "viewer" };
 
 describe("createCheckoutSession", () => {
@@ -68,9 +69,15 @@ describe("createCheckoutSession", () => {
         await expect(createCheckoutSession("ws_1")).rejects.toThrow("Unauthorized");
     });
 
-    it("throws when user is not a workspace owner", async () => {
+    it("throws when user is a viewer (not owner or admin)", async () => {
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_VIEWER_MEMBER);
         await expect(createCheckoutSession("ws_1")).rejects.toThrow("Unauthorized");
+    });
+
+    it("allows admin role to create checkout session", async () => {
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_ADMIN_MEMBER);
+        const result = await createCheckoutSession("ws_1", "team", "monthly");
+        expect(result).toEqual({ url: "https://checkout.stripe.com/session_abc" });
     });
 
     it("throws when user is not in the requested workspace (DB returns null with scoped query)", async () => {
@@ -153,9 +160,15 @@ describe("createCustomerPortalSession", () => {
         await expect(createCustomerPortalSession("ws_1")).rejects.toThrow("Unauthorized");
     });
 
-    it("throws when user is not the workspace owner", async () => {
+    it("throws when user is a viewer (not owner or admin)", async () => {
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_VIEWER_MEMBER);
         await expect(createCustomerPortalSession("ws_1")).rejects.toThrow("Unauthorized");
+    });
+
+    it("allows admin role to open customer portal", async () => {
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_ADMIN_MEMBER);
+        const result = await createCustomerPortalSession("ws_1");
+        expect(result).toEqual({ url: "https://billing.stripe.com/session_abc" });
     });
 
     it("throws when no subscription found", async () => {
