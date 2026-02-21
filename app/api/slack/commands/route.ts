@@ -51,9 +51,11 @@ export async function POST(req: Request) {
         const subcommand = text.split(" ")[0]?.toLowerCase();
         const arg = text.slice(subcommand.length).trim();
 
+        const slackUserId = params.get("user_id") || "";
+
         switch (subcommand) {
             case "research":
-                return handleResearch(arg, channelId);
+                return handleResearch(arg, channelId, slackUserId);
             case "status":
                 return handleStatus(appUrl, channelId);
             case "help":
@@ -65,7 +67,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ text: "Unknown command" });
 }
 
-async function handleResearch(urlArg: string, channelId: string) {
+async function handleResearch(urlArg: string, channelId: string, slackUserId: string) {
     if (!urlArg) {
         return NextResponse.json({
             response_type: "ephemeral",
@@ -159,11 +161,13 @@ async function handleResearch(urlArg: string, channelId: string) {
     }
 
     // Create tool and kick off research
+    // submittedBy stores "slack:USER_ID" for Slack-initiated research (audit trail)
     const [tool] = await db.insert(tools).values({
         workspaceId: workspace.id,
         name: toolName,
         websiteUrl: url,
         status: "queued",
+        submittedBy: slackUserId ? `slack:${slackUserId}` : undefined,
     }).returning();
 
     // Fire-and-forget research
