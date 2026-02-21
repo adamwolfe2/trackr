@@ -24,7 +24,7 @@ export default function AskTrackrPage() {
 
     // AI SDK v6: useChat defaults to POST /api/chat — no api option needed.
     // Returns sendMessage (not append), status (not isLoading), parts (not content).
-    const { messages, sendMessage, status, setMessages } = useChat({
+    const { messages, sendMessage, status, error, setMessages } = useChat({
         messages: storedMessages,
     });
 
@@ -44,6 +44,7 @@ export default function AskTrackrPage() {
     };
 
     const isLoading = status === "submitted" || status === "streaming";
+    const hasError = status === "error";
 
     const bottomRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -194,6 +195,19 @@ export default function AskTrackrPage() {
                                 <span className="inline-block w-1.5 h-1.5 bg-black animate-bounce" style={{ animationDelay: "0ms" }} />
                                 <span className="inline-block w-1.5 h-1.5 bg-black animate-bounce" style={{ animationDelay: "150ms" }} />
                                 <span className="inline-block w-1.5 h-1.5 bg-black animate-bounce" style={{ animationDelay: "300ms" }} />
+                            </div>
+                        </div>
+                    )}
+
+                    {hasError && (
+                        <div className="flex gap-3 justify-start">
+                            <div className="w-6 h-6 bg-black flex items-center justify-center shrink-0 mt-0.5">
+                                <Bot className="w-3.5 h-3.5 text-white" />
+                            </div>
+                            <div className="border border-red-500 px-4 py-3 bg-white font-mono text-xs text-red-600">
+                                {error?.message?.includes("429") || error?.message?.includes("rate")
+                                    ? "Too many requests — please wait a moment and try again."
+                                    : "Something went wrong. Please try again."}
                             </div>
                         </div>
                     )}
