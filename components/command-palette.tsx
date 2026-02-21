@@ -60,7 +60,7 @@ export function CommandPalette() {
             />
 
             {/* Dialog */}
-            <div className="fixed left-1/2 top-[20%] -translate-x-1/2 w-full max-w-lg">
+            <div className="fixed left-1/2 top-[8%] sm:top-[20%] -translate-x-1/2 w-[calc(100%-2rem)] max-w-lg">
                 <Command
                     className="border border-black bg-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] overflow-hidden"
                     loop

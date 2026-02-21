@@ -359,7 +359,7 @@ function ToolCard({ tool }: { tool: CuratedTool }) {
             <div className="p-5 flex flex-col gap-3 flex-1">
                 {/* Header row */}
                 <div className="flex items-start justify-between gap-3">
-                    {/* Integration favicons + category pill */}
+                    {/* Tool favicon + category pill */}
                     <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
@@ -367,18 +367,6 @@ function ToolCard({ tool }: { tool: CuratedTool }) {
                             alt={tool.name}
                             className="w-5 h-5 object-contain flex-shrink-0"
                         />
-                        {tool.integrations.slice(0, 3).map((domain) => (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                                key={domain}
-                                src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`}
-                                alt={domain}
-                                className="w-4 h-4 object-contain opacity-50 flex-shrink-0"
-                            />
-                        ))}
-                        {tool.integrations.length > 3 && (
-                            <span className="font-mono text-[9px] text-neutral-400">+{tool.integrations.length - 3}</span>
-                        )}
                     </div>
                     {/* Category pill */}
                     <span className="font-mono text-[9px] uppercase tracking-widest border border-neutral-300 px-1.5 py-0.5 text-neutral-500 shrink-0 whitespace-nowrap">

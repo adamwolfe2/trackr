@@ -48,26 +48,31 @@ export default async function WorkspacePage() {
     });
 
     // Resolve Clerk user data for all members (names, emails)
-    const clerk = await clerkClient();
-    const memberUserData = await Promise.all(
-        members.map(async (member) => {
-            if (member.userId === user.id) {
-                return { userId: member.userId, firstName: user.firstName, lastName: user.lastName, email: user.emailAddresses[0]?.emailAddress };
-            }
-            try {
-                const clerkUser = await clerk.users.getUser(member.userId);
-                return {
-                    userId: member.userId,
-                    firstName: clerkUser.firstName,
-                    lastName: clerkUser.lastName,
-                    email: clerkUser.emailAddresses[0]?.emailAddress ?? null,
-                };
-            } catch {
-                return { userId: member.userId, firstName: null, lastName: null, email: null };
-            }
-        })
-    );
-    const memberUserMap = new Map(memberUserData.map((u) => [u.userId, u]));
+    let memberUserMap = new Map<string, { userId: string; firstName: string | null; lastName: string | null; email: string | null | undefined }>();
+    try {
+        const clerk = await clerkClient();
+        const memberUserData = await Promise.all(
+            members.map(async (member) => {
+                if (member.userId === user.id) {
+                    return { userId: member.userId, firstName: user.firstName, lastName: user.lastName, email: user.emailAddresses[0]?.emailAddress };
+                }
+                try {
+                    const clerkUser = await clerk.users.getUser(member.userId);
+                    return {
+                        userId: member.userId,
+                        firstName: clerkUser.firstName,
+                        lastName: clerkUser.lastName,
+                        email: clerkUser.emailAddresses[0]?.emailAddress ?? null,
+                    };
+                } catch {
+                    return { userId: member.userId, firstName: null, lastName: null, email: null };
+                }
+            })
+        );
+        memberUserMap = new Map(memberUserData.map((u) => [u.userId, u]));
+    } catch {
+        // Clerk unavailable — page renders; member names show as "Team Member"
+    }
 
     const isOwnerOrAdmin = currentMember.role === "owner" || currentMember.role === "admin";
 

@@ -168,7 +168,12 @@ function PricingJsonLd() {
 }
 
 export default async function PricingPage() {
-    const user = await currentUser();
+    let user = null;
+    try {
+        user = await currentUser();
+    } catch {
+        // Render page without auth context (logged-out view)
+    }
 
     return (
         <main className="flex-grow w-full max-w-6xl mx-auto px-6">
@@ -186,11 +191,11 @@ export default async function PricingPage() {
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-4 gap-0 border border-black mb-24">
-                    {planCards.map((card, i) => (
+                <div className="grid md:grid-cols-4 gap-0 border border-black mb-24 divide-y divide-black md:divide-y-0 md:divide-x md:divide-black">
+                    {planCards.map((card) => (
                         <div
                             key={card.plan.slug}
-                            className={`p-8 flex flex-col ${i < planCards.length - 1 ? "border-r border-black" : ""} ${card.highlight ? "bg-black text-white" : "bg-white"}`}
+                            className={`p-8 flex flex-col ${card.highlight ? "bg-black text-white" : "bg-white"}`}
                         >
                             {card.highlight && (
                                 <span className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-3 block">Most Popular</span>

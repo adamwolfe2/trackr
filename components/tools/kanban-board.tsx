@@ -300,11 +300,11 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                 )}
 
                 {/* Kanban Columns — horizontal scroll on mobile, grid on lg */}
-                <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0">
+                <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0 snap-x snap-mandatory">
                     {COLUMNS.map((col) => {
                         const colTools = filteredTools.filter(t => (col.statuses as readonly string[]).includes(t.status));
                         return (
-                            <div key={col.id} className="flex-shrink-0 w-[260px] sm:w-[280px] lg:w-auto min-w-0 flex flex-col">
+                            <div key={col.id} className="flex-shrink-0 w-[240px] sm:w-[280px] lg:w-auto min-w-0 flex flex-col snap-start">
                                 <DroppableColumn col={col} toolCount={colTools.length}>
                                     {colTools.map((tool) => (
                                         <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} />
