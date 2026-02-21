@@ -94,7 +94,10 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         : [];
     const clerkUserIds = noteMembers.map(m => m.userId);
     const clerkUsers = clerkUserIds.length > 0
-        ? await (await clerkClient()).users.getUserList({ userId: clerkUserIds, limit: 100 }).catch(() => ({ data: [] }))
+        ? await (await clerkClient()).users.getUserList({ userId: clerkUserIds, limit: 100 }).catch((err) => {
+            console.warn("[tool-detail] Failed to fetch note authors from Clerk:", err);
+            return { data: [] };
+        })
         : { data: [] };
     const memberIdToName = new Map<string, string>();
     for (const member of noteMembers) {

@@ -111,6 +111,9 @@ export async function performDeepResearch(toolId: string) {
     // Capture previous score for delta display in completion email
     const previousScore = tool.overallScore ? parseFloat(tool.overallScore) : null;
 
+    // Track whether a credit was deducted so we can refund it if research fails
+    let creditDeducted = false;
+
     // Check monthly research run limit
     const subscription = await db.query.subscriptions.findFirst({
         where: eq(subscriptions.workspaceId, tool.workspaceId),
@@ -140,7 +143,8 @@ export async function performDeepResearch(toolId: string) {
         if (jobCount >= limits.limits.research) {
             // Check if workspace has extra credits
             if (subscription && subscription.creditBalance > 0) {
-                // Decrement credit balance
+                // Decrement credit balance — tracked so we can refund if research fails
+                creditDeducted = true;
                 await db.update(subscriptions)
                     .set({
                         creditBalance: sql`${subscriptions.creditBalance} - 1`,
@@ -693,6 +697,21 @@ INSTRUCTIONS:
         const message = error instanceof Error ? error.message : "Unknown error";
         await logProgress(toolId, `Error: ${message}`);
         await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+
+        // Refund credit if we deducted one but research didn't complete
+        if (creditDeducted) {
+            try {
+                await db.update(subscriptions)
+                    .set({
+                        creditBalance: sql`${subscriptions.creditBalance} + 1`,
+                        updatedAt: new Date(),
+                    })
+                    .where(eq(subscriptions.workspaceId, tool.workspaceId));
+                console.log(`[research] Refunded 1 credit to workspace ${tool.workspaceId} after research failure`);
+            } catch (refundErr) {
+                console.error(`[research] Failed to refund credit for workspace ${tool.workspaceId}:`, refundErr);
+            }
+        }
 
         // Mark researchJob as failed
         if (researchJob) {

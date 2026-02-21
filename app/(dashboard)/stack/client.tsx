@@ -99,29 +99,33 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
     };
 
     const handleExportCsv = () => {
-        const headers = ["Tool Name", "Category", "Status", "Monthly Cost", "Seats", "Billing Cycle", "Renewal Date", "Contract Length (mo)", "Vendor URL", "Notes"];
-        const rows = initialData.map(e => [
-            e.toolName,
-            e.category ?? "",
-            e.status,
-            e.monthlyCost ?? "",
-            e.seatCount != null ? String(e.seatCount) : "",
-            e.billingCycle ?? "",
-            e.renewalDate ? new Date(e.renewalDate).toISOString().slice(0, 10) : "",
-            e.contractLength != null ? String(e.contractLength) : "",
-            e.vendorUrl ?? "",
-            e.notes ?? "",
-        ]);
-        const csv = [headers, ...rows]
-            .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-            .join("\n");
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `software-stack-${new Date().toISOString().slice(0, 10)}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
+        try {
+            const headers = ["Tool Name", "Category", "Status", "Monthly Cost", "Seats", "Billing Cycle", "Renewal Date", "Contract Length (mo)", "Vendor URL", "Notes"];
+            const rows = initialData.map(e => [
+                e.toolName,
+                e.category ?? "",
+                e.status,
+                e.monthlyCost ?? "",
+                e.seatCount != null ? String(e.seatCount) : "",
+                e.billingCycle ?? "",
+                e.renewalDate ? new Date(e.renewalDate).toISOString().slice(0, 10) : "",
+                e.contractLength != null ? String(e.contractLength) : "",
+                e.vendorUrl ?? "",
+                e.notes ?? "",
+            ]);
+            const csv = [headers, ...rows]
+                .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+                .join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.href = url;
+            link.download = `software-stack-${new Date().toISOString().slice(0, 10)}.csv`;
+            link.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error("CSV export failed:", err);
+        }
     };
 
     const handleParseStack = () => {
