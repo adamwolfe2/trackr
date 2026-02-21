@@ -34,7 +34,16 @@ export async function POST(req: NextRequest) {
     }
     const { reportId } = parsed.data;
 
-    // Get report and verify user has access
+    // Verify workspace membership FIRST (before any report lookup)
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+        columns: { workspaceId: true },
+    });
+    if (!member) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    }
+
+    // Fetch report only if it belongs to this workspace (prevents cross-workspace info disclosure)
     const report = await db.query.reports.findFirst({
         where: eq(reports.id, reportId),
     });
@@ -43,25 +52,15 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Report not found" }, { status: 404 });
     }
 
-    // Verify user belongs to the tool's workspace
+    // Verify the report's tool belongs to the caller's workspace
     const tool = await db.query.tools.findFirst({
-        where: eq(tools.id, report.toolId),
-        columns: { workspaceId: true },
+        where: and(eq(tools.id, report.toolId), eq(tools.workspaceId, member.workspaceId)),
+        columns: { id: true },
     });
 
     if (!tool) {
-        return NextResponse.json({ error: "Tool not found" }, { status: 404 });
-    }
-
-    const member = await db.query.workspaceMembers.findFirst({
-        where: and(
-            eq(workspaceMembers.userId, user.id),
-            eq(workspaceMembers.workspaceId, tool.workspaceId)
-        ),
-    });
-
-    if (!member) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        // Return 404 (not 403) to avoid leaking whether the reportId exists in another workspace
+        return NextResponse.json({ error: "Report not found" }, { status: 404 });
     }
 
     // If already has a share token, return existing URL

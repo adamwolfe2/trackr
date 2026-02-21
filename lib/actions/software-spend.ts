@@ -110,7 +110,10 @@ export async function batchAddSoftwareSpend(items: Array<{
     if (!workspaceId) throw new Error("No workspace found");
 
     if (items.length > 100) throw new Error("Batch size limit exceeded (max 100)");
-    const valid = items.filter(i => i.toolName?.trim());
+    const valid = items.filter(i => {
+        const name = i.toolName?.trim();
+        return name && name.length <= 200;
+    });
     if (valid.length === 0) throw new Error("No valid tools to add");
 
     // Filter out tools already in the stack
