@@ -106,9 +106,7 @@ export async function GET(req: Request) {
             toolIds: toolsToRetry,
         });
     } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-            console.error("[api/cron/auto-retry-failed]", err);
-        }
+        console.error("[api/cron/auto-retry-failed]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

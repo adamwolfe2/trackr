@@ -70,9 +70,7 @@ export async function GET(req: Request) {
             suggestions: totalSuggestions,
         });
     } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-            console.error("[api/cron/feed]", err);
-        }
+        console.error("[api/cron/feed]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

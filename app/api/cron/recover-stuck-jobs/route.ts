@@ -84,9 +84,7 @@ export async function GET(req: Request) {
             toolIds: stuckToolIds,
         });
     } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-            console.error("[api/cron/recover-stuck-jobs]", err);
-        }
+        console.error("[api/cron/recover-stuck-jobs]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

@@ -68,9 +68,7 @@ export async function POST(req: NextRequest) {
             { headers: getRateLimitHeaders(rl) }
         );
     } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-            console.error("[api/search]", err);
-        }
+        console.error("[api/search]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }
