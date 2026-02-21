@@ -102,6 +102,7 @@ function setupDbChains() {
             select: vi.fn().mockReturnValue({ from: txSelectFrom }),
             query: {
                 subscriptions: { findFirst: vi.fn().mockResolvedValue(null) },
+                tools: { findFirst: vi.fn().mockResolvedValue(null) }, // slug uniqueness: null = available
             },
         };
         return fn(tx);
@@ -275,10 +276,9 @@ describe("tools server actions", () => {
         });
 
         it("publishes the report and returns slug when tool has no publicSlug", async () => {
-            // findFirst for slug uniqueness check returns null (slug is available)
-            (db.query.tools.findFirst as ReturnType<typeof vi.fn>)
-                .mockResolvedValueOnce(MOCK_TOOL)   // tool ownership check
-                .mockResolvedValueOnce(null);         // slug uniqueness check (no collision)
+            // tool ownership check returns MOCK_TOOL (no publicSlug)
+            (db.query.tools.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_TOOL);
+            // tx.query.tools.findFirst returns null (slug available) — default from setupDbChains
             const result = await publishReport("report_1");
             expect(result.published).toBe(true);
             expect(typeof result.slug).toBe("string");
@@ -297,18 +297,37 @@ describe("slugify (via publishReport behavior)", () => {
     });
 
     it("converts tool name to lowercase slug with dashes", async () => {
+        // Tool ownership check: HubSpot CRM with no publicSlug
         (db.query.tools.findFirst as ReturnType<typeof vi.fn>)
-            .mockResolvedValueOnce({ ...MOCK_TOOL, name: "HubSpot CRM", publicSlug: null })
-            .mockResolvedValueOnce(null); // slug available
+            .mockResolvedValue({ ...MOCK_TOOL, name: "HubSpot CRM", publicSlug: null });
+        // tx.query.tools.findFirst returns null (slug available) — default from setupDbChains
         const result = await publishReport("report_1");
         expect(result.slug).toBe("hubspot-crm");
     });
 
     it("appends -2 when base slug is taken", async () => {
+        // Tool ownership check: Notion with no publicSlug
         (db.query.tools.findFirst as ReturnType<typeof vi.fn>)
-            .mockResolvedValueOnce({ ...MOCK_TOOL, name: "Notion", publicSlug: null })
-            .mockResolvedValueOnce({ id: "other_tool" }) // "notion" is taken
-            .mockResolvedValueOnce(null);                 // "notion-2" is available
+            .mockResolvedValue({ ...MOCK_TOOL, name: "Notion", publicSlug: null });
+        // Override tx mock: "notion" is taken, "notion-2" is available
+        (db.transaction as ReturnType<typeof vi.fn>).mockImplementationOnce(async (fn) => {
+            const txToolsFindFirst = vi.fn()
+                .mockResolvedValueOnce({ id: "other_tool" }) // "notion" taken
+                .mockResolvedValueOnce(null);                 // "notion-2" available
+            const txSelectWhere = vi.fn().mockResolvedValue([{ value: 0 }]);
+            const txSelectFrom = vi.fn().mockReturnValue({ where: txSelectWhere });
+            const tx = {
+                delete: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue({}) }),
+                update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue({}) }) }),
+                insert: vi.fn().mockReturnValue({ values: vi.fn().mockReturnValue({ returning: vi.fn().mockResolvedValue([{ id: "tool_new" }]) }) }),
+                select: vi.fn().mockReturnValue({ from: txSelectFrom }),
+                query: {
+                    subscriptions: { findFirst: vi.fn().mockResolvedValue(null) },
+                    tools: { findFirst: txToolsFindFirst },
+                },
+            };
+            return fn(tx);
+        });
         const result = await publishReport("report_1");
         expect(result.slug).toBe("notion-2");
     });

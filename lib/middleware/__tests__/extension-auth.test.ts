@@ -15,7 +15,7 @@ import { getWorkspaceFromApiKey, corsHeaders, checkExtensionRateLimit } from "..
 function makeRequest(authHeader?: string) {
     return {
         headers: {
-            get: (key: string) => (key === "Authorization" ? (authHeader ?? null) : key === "Origin" ? "chrome-extension://abc123" : null),
+            get: (key: string) => (key === "Authorization" ? (authHeader ?? null) : key === "Origin" ? "chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef" : null),
         },
     } as unknown as Request;
 }
@@ -59,10 +59,12 @@ describe("getWorkspaceFromApiKey", () => {
 });
 
 describe("corsHeaders", () => {
-    it("allows chrome-extension origins", () => {
-        const req = { headers: { get: () => "chrome-extension://abc123" } } as unknown as Request;
+    it("allows chrome-extension origins with valid ID format", () => {
+        // Chrome extension IDs are 32 lowercase letters; use a realistic mock ID
+        const extOrigin = "chrome-extension://abcdefghijklmnopqrstuvwxyzabcdef";
+        const req = { headers: { get: () => extOrigin } } as unknown as Request;
         const headers = corsHeaders(req);
-        expect(headers["Access-Control-Allow-Origin"]).toBe("chrome-extension://abc123");
+        expect(headers["Access-Control-Allow-Origin"]).toBe(extOrigin);
     });
 
     it("allows localhost origins", () => {
@@ -71,10 +73,10 @@ describe("corsHeaders", () => {
         expect(headers["Access-Control-Allow-Origin"]).toBe("http://localhost:3000");
     });
 
-    it("falls back to trytrackr.com for unknown origins", () => {
+    it("returns empty string for unknown origins (not trytrackr.com)", () => {
         const req = { headers: { get: () => "https://evil.com" } } as unknown as Request;
         const headers = corsHeaders(req);
-        expect(headers["Access-Control-Allow-Origin"]).toBe("https://trytrackr.com");
+        expect(headers["Access-Control-Allow-Origin"]).toBe("");
     });
 
     it("includes required CORS headers", () => {

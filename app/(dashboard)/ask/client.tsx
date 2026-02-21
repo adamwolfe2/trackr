@@ -72,9 +72,11 @@ export default function AskTrackrPage() {
                                     <button
                                         key={prompt}
                                         onClick={() => {
+                                            if (isLoading) return;
                                             sendMessage({ text: prompt });
                                         }}
-                                        className="border border-black bg-white px-3 py-1.5 font-mono text-[10px] hover:bg-black hover:text-white transition-colors text-left"
+                                        disabled={isLoading}
+                                        className="border border-black bg-white px-3 py-1.5 font-mono text-[10px] hover:bg-black hover:text-white transition-colors text-left disabled:opacity-40 disabled:cursor-not-allowed"
                                     >
                                         {prompt}
                                     </button>

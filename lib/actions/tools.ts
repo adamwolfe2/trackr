@@ -82,7 +82,13 @@ export async function submitTool(formData: FormData) {
     });
 
     // 4. Kick off research in the background (runs after redirect is sent)
-    after(() => performDeepResearch(newTool.id));
+    after(async () => {
+        try {
+            await performDeepResearch(newTool.id);
+        } catch (err) {
+            console.error(`[tools] Background research failed for tool ${newTool.id}:`, err);
+        }
+    });
 
     revalidatePath("/tools");
     redirect(`/tools/${newTool.id}`);
@@ -180,20 +186,19 @@ export async function publishReport(reportId: string) {
         return { published: false, slug: null };
     }
 
-    // Generate unique slug — append -2, -3 etc if taken
+    // Generate unique slug inside the transaction to prevent race conditions
     let slug = baseSlug;
-    let attempt = 2;
-    while (true) {
-        const existing = await db.query.tools.findFirst({
-            where: eq(tools.publicSlug, slug),
-            columns: { id: true },
-        });
-        if (!existing) break;
-        slug = `${baseSlug}-${attempt++}`;
-        if (attempt > 50) throw new Error("Could not generate a unique slug");
-    }
-
     await db.transaction(async (tx) => {
+        let attempt = 2;
+        while (true) {
+            const existing = await tx.query.tools.findFirst({
+                where: eq(tools.publicSlug, slug),
+                columns: { id: true },
+            });
+            if (!existing) break;
+            slug = `${baseSlug}-${attempt++}`;
+            if (attempt > 50) throw new Error("Could not generate a unique slug");
+        }
         // Unpublish any other reports for this tool
         await tx.update(reports).set({ isPublic: false }).where(eq(reports.toolId, tool.id));
         // Publish this report

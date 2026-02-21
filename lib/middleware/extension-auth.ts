@@ -31,14 +31,15 @@ export async function getWorkspaceFromApiKey(req: Request) {
 export function corsHeaders(req?: Request): Record<string, string> {
     const origin = req?.headers.get("Origin") || "";
 
-    // Allow Chrome extensions and localhost (for dev)
+    // Allow Chrome extensions (strict pattern) and localhost dev ports only
     const isAllowed =
-        origin.startsWith("chrome-extension://") ||
-        origin.startsWith("http://localhost") ||
+        /^chrome-extension:\/\/[a-z0-9]{20,}$/.test(origin) ||
+        origin === "http://localhost:3000" ||
+        origin === "http://localhost:3001" ||
         origin === "https://trytrackr.com";
 
     return {
-        "Access-Control-Allow-Origin": isAllowed ? origin : "https://trytrackr.com",
+        "Access-Control-Allow-Origin": isAllowed ? origin : "",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Max-Age": "86400",

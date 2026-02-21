@@ -36,16 +36,21 @@ interface NewsItem {
 const getAINews = unstable_cache(
     async (): Promise<NewsItem[]> => {
         const month = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
-        const result = await tavily.search(
-            `AI tools funding announcements product launches ${month}`,
-            { maxResults: 8, searchDepth: "basic", includeAnswer: false }
-        );
-        return result.results.map(r => ({
-            title: r.title,
-            url: r.url,
-            content: r.content?.slice(0, 220) ?? "",
-            source: (() => { try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; } })(),
-        }));
+        try {
+            const result = await tavily.search(
+                `AI tools funding announcements product launches ${month}`,
+                { maxResults: 8, searchDepth: "basic", includeAnswer: false }
+            );
+            return result.results.map(r => ({
+                title: r.title,
+                url: r.url,
+                content: r.content?.slice(0, 220) ?? "",
+                source: (() => { try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; } })(),
+            }));
+        } catch (err) {
+            console.error("[discover] Tavily news fetch failed:", err);
+            return [];
+        }
     },
     ["ai-news-feed"],
     { revalidate: 3600 }
@@ -73,8 +78,9 @@ const fetchSuggestionsFromAI = unstable_cache(
                         }));
                 }
             }
-        } catch {
-            // Parse failure — return empty suggestions
+        } catch (err) {
+            // API error or JSON parse failure — return empty suggestions
+            console.error("[discover] Perplexity suggestions failed:", err);
         }
         return suggestions;
     },
