@@ -1,16 +1,47 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import type { TextUIPart } from "ai";
+import type { TextUIPart, UIMessage } from "ai";
 import { useState, useEffect, useRef } from "react";
-import { Send, Bot, User } from "lucide-react";
+import { Send, Bot, User, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+
+const STORAGE_KEY = "trackr-chat-messages";
+
+function loadStoredMessages(): UIMessage[] {
+    if (typeof window === "undefined") return [];
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        return raw ? (JSON.parse(raw) as UIMessage[]) : [];
+    } catch {
+        return [];
+    }
+}
 
 export default function AskTrackrPage() {
     const [input, setInput] = useState("");
+    const [storedMessages] = useState<UIMessage[]>(loadStoredMessages);
+
     // AI SDK v6: useChat defaults to POST /api/chat — no api option needed.
     // Returns sendMessage (not append), status (not isLoading), parts (not content).
-    const { messages, sendMessage, status } = useChat();
+    const { messages, sendMessage, status, setMessages } = useChat({
+        messages: storedMessages,
+    });
+
+    // Persist conversation to localStorage whenever messages change
+    useEffect(() => {
+        if (messages.length === 0) return;
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+        } catch {
+            // localStorage quota exceeded — ignore
+        }
+    }, [messages]);
+
+    const handleNewChat = () => {
+        localStorage.removeItem(STORAGE_KEY);
+        setMessages([]);
+    };
 
     const isLoading = status === "submitted" || status === "streaming";
 
@@ -41,11 +72,22 @@ export default function AskTrackrPage() {
             {/* Chat Window */}
             <div className="flex-1 flex flex-col border border-black overflow-hidden">
                 {/* Chat Header */}
-                <div className="border-b border-black px-5 py-3 flex items-center gap-2 bg-white">
-                    <div className="w-5 h-5 bg-black flex items-center justify-center">
-                        <Bot className="w-3 h-3 text-white" />
+                <div className="border-b border-black px-5 py-3 flex items-center justify-between bg-white">
+                    <div className="flex items-center gap-2">
+                        <div className="w-5 h-5 bg-black flex items-center justify-center">
+                            <Bot className="w-3 h-3 text-white" />
+                        </div>
+                        <span className="font-mono text-xs uppercase tracking-widest">Trackr Assistant</span>
                     </div>
-                    <span className="font-mono text-xs uppercase tracking-widest">Trackr Assistant</span>
+                    {messages.length > 0 && (
+                        <button
+                            onClick={handleNewChat}
+                            className="flex items-center gap-1.5 font-mono text-[10px] text-neutral-400 hover:text-black transition-colors border border-transparent hover:border-black px-2 py-1"
+                        >
+                            <Trash2 className="w-3 h-3" />
+                            New Chat
+                        </button>
+                    )}
                 </div>
 
                 {/* Messages */}

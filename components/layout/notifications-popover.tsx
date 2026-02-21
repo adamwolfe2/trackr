@@ -27,7 +27,7 @@ export function NotificationsPopover() {
         };
 
         fetchNotifications();
-        const interval = setInterval(fetchNotifications, 60000);
+        const interval = setInterval(fetchNotifications, 30000);
         return () => clearInterval(interval);
     }, []);
 
