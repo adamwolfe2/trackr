@@ -425,12 +425,17 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                                     </div>
                                     <ArrowRight className="h-3 w-3 text-neutral-300 group-hover:text-black shrink-0" />
                                 </Link>
-                                {!isResearching && (
-                                    <div className="flex items-center gap-2.5 p-2.5 border border-neutral-200 hover:border-black transition-colors group cursor-default">
+                                {!isResearching && tool.researchInterval && tool.researchInterval !== "manual" && (
+                                    <div className="flex items-center gap-2.5 p-2.5 border border-neutral-200 bg-neutral-50">
                                         <RefreshCw className="h-3.5 w-3.5 text-neutral-400 shrink-0" strokeWidth={1.5} />
                                         <div className="flex-1 min-w-0">
-                                            <span className="font-mono text-xs block">Re-run research</span>
-                                            <span className="font-mono text-[10px] text-neutral-400">Use the button above to refresh data</span>
+                                            <span className="font-mono text-xs block capitalize">Auto-research: {tool.researchInterval}</span>
+                                            <span className="font-mono text-[10px] text-neutral-400">
+                                                {tool.nextResearchAt
+                                                    ? `Next run: ${new Date(tool.nextResearchAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                                                    : "Schedule active"
+                                                }
+                                            </span>
                                         </div>
                                     </div>
                                 )}
