@@ -18,6 +18,7 @@ export async function submitTool(formData: FormData) {
 
     const name = (formData.get("name") as string)?.trim();
     const websiteUrl = (formData.get("website_url") as string)?.trim();
+    const description = (formData.get("description") as string)?.trim() || "";
 
     if (!name || name.length < 1 || name.length > 200) {
         throw new Error("Tool name must be 1-200 characters");
@@ -46,7 +47,7 @@ export async function submitTool(formData: FormData) {
     const { previewToolInternal } = await import("@/lib/actions/preview");
 
     const [embedding, preview] = await Promise.all([
-        generateEmbedding(`${name}: ${websiteUrl}`).catch(() => null),
+        generateEmbedding(description ? `${name}: ${description} (${websiteUrl})` : `${name}: ${websiteUrl}`).catch(() => null),
         previewToolInternal(websiteUrl).catch(() => null),
     ]);
     const logoUrl = (preview && "image" in preview && preview.image) ? preview.image : null;

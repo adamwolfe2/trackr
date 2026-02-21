@@ -31,14 +31,7 @@ export default async function DashboardPage() {
         with: { workspace: true },
     }) as MemberWithWorkspace | undefined;
 
-    if (!member) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
-                <h1 className="font-serif text-3xl">Welcome to Trackr</h1>
-                <p className="font-mono text-sm text-neutral-500">You don&apos;t have a workspace yet.</p>
-            </div>
-        );
-    }
+    if (!member) redirect("/onboarding");
 
     const workspaceId = member.workspaceId;
 
@@ -122,7 +115,7 @@ export default async function DashboardPage() {
 
     const failedCount = Number(failedToolCount[0]?.count || 0);
     if (failedCount > 0) {
-        quickActions.push({ icon: AlertTriangle, label: `${failedCount} failed research${failedCount > 1 ? "es" : ""} — retry`, href: "/tools", badge: "Action" });
+        quickActions.push({ icon: AlertTriangle, label: `${failedCount} failed research job${failedCount > 1 ? "s" : ""} — retry`, href: "/tools", badge: "Action" });
     }
 
     const renewalCount = Number(upcomingRenewalCount[0]?.count || 0);

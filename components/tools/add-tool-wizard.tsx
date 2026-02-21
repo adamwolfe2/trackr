@@ -1,11 +1,30 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import { Loader2, ArrowRight, Globe, Sparkles } from "lucide-react";
 import { previewTool } from "@/lib/actions/preview";
 import { submitTool } from "@/lib/actions/tools";
 import { toast } from "sonner";
+
+function SubmitButton() {
+    const { pending } = useFormStatus();
+    return (
+        <button
+            type="submit"
+            disabled={pending}
+            className="flex items-center gap-2 border border-black px-6 py-3 font-mono text-sm bg-black text-white hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+            {pending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+                <Sparkles className="w-4 h-4" />
+            )}
+            {pending ? "Starting Research…" : "Confirm & Start Research"}
+        </button>
+    );
+}
 
 export function AddToolWizard() {
     const searchParams = useSearchParams();
@@ -187,13 +206,7 @@ export function AddToolWizard() {
                         >
                             Back
                         </button>
-                        <button
-                            type="submit"
-                            className="flex items-center gap-2 border border-black px-6 py-3 font-mono text-sm bg-black text-white hover:bg-neutral-800"
-                        >
-                            <Sparkles className="w-4 h-4" />
-                            Confirm & Start Research
-                        </button>
+                        <SubmitButton />
                     </div>
                 </form>
             )}

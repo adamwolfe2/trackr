@@ -173,11 +173,10 @@ export default function OnboardingPage() {
                     refCode: ref || undefined,
                 });
 
-                // Clear draft on success
-                localStorage.removeItem("trackr_onboarding_draft");
-
                 // Navigate client-side (server action returns URL instead of calling redirect)
+                // Clear draft only after navigation is initiated so it's not lost on failure
                 router.push(result.redirectTo);
+                localStorage.removeItem("trackr_onboarding_draft");
             } catch (error: unknown) {
                 const message = error instanceof Error ? error.message : "Unknown error";
                 toast.error(message.includes("Scorecard weights")

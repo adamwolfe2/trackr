@@ -132,12 +132,16 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
     };
 
     const handleCopyPrompt = async () => {
-        await navigator.clipboard.writeText(PAIN_POINTS_PROMPT);
-        setCopied(true);
-        setShowPaste(true);
-        setParsedItems(null);
-        setTimeout(() => setCopied(false), 2000);
-        toast.success("Prompt copied — paste it into Claude, ChatGPT, or any AI model.");
+        try {
+            await navigator.clipboard.writeText(PAIN_POINTS_PROMPT);
+            setCopied(true);
+            setShowPaste(true);
+            setParsedItems(null);
+            setTimeout(() => setCopied(false), 2000);
+            toast.success("Prompt copied — paste it into Claude, ChatGPT, or any AI model.");
+        } catch {
+            toast.error("Couldn't copy to clipboard. Please copy the prompt manually.");
+        }
     };
 
     const handleParseResponse = () => {

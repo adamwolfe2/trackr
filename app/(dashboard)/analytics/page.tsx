@@ -83,8 +83,7 @@ export default async function AnalyticsPage() {
     }
 
     // ── Research activity by week (last 8 weeks) ────────────────────
-    const eightWeeksAgo = new Date();
-    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+    const eightWeeksAgo = new Date(Date.now() - 56 * 24 * 60 * 60 * 1000);
 
     let weeklyActivity: { week: string; count: number }[] = [];
     if (toolIds.length > 0) {

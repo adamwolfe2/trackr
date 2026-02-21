@@ -43,7 +43,7 @@ const getAINews = unstable_cache(
         return result.results.map(r => ({
             title: r.title,
             url: r.url,
-            content: r.content.slice(0, 220),
+            content: r.content?.slice(0, 220) ?? "",
             source: (() => { try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; } })(),
         }));
     },

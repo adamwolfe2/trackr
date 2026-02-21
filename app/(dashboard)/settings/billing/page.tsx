@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
+import { redirect } from "next/navigation";
 import { subscriptions, workspaceMembers, tools, researchJobs } from "@/lib/db/schema";
 
 export const metadata: Metadata = {
@@ -32,7 +33,7 @@ export default async function BillingPage({
     searchParams: Promise<Record<string, string>>;
 }) {
     const user = await currentUser();
-    if (!user) return null;
+    if (!user) redirect("/sign-in");
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) return <div>No workspace found</div>;
