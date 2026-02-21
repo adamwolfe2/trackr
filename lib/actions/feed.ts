@@ -42,7 +42,17 @@ export async function createFeedChannel(data: {
     } else if (data.type === "rss") {
         const feedUrl = data.config.feedUrl?.trim();
         if (!feedUrl) throw new Error("Feed URL is required");
-        try { new URL(feedUrl); } catch { throw new Error("Invalid feed URL"); }
+        try {
+            const parsed = new URL(feedUrl);
+            if (!["http:", "https:"].includes(parsed.protocol)) throw new Error("Invalid feed URL");
+            const h = parsed.hostname.toLowerCase();
+            if (h === "localhost" || h === "0.0.0.0" || h.endsWith(".local") || h.endsWith(".internal") ||
+                /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.)/.test(h)) {
+                throw new Error("Invalid feed URL");
+            }
+        } catch (err) {
+            throw new Error(err instanceof Error && err.message !== "Invalid feed URL" ? "Invalid feed URL" : (err as Error).message);
+        }
     }
 
     const workspaceId = await getWorkspaceId();

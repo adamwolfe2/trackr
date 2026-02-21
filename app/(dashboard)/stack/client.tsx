@@ -781,8 +781,13 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                                 const id = toDelete;
                                                                 setToDelete(null);
                                                                 startTransition(async () => {
-                                                                    await deleteSoftwareSpend(id);
-                                                                    router.refresh();
+                                                                    try {
+                                                                        await deleteSoftwareSpend(id);
+                                                                        router.refresh();
+                                                                    } catch (err) {
+                                                                        toast.error(err instanceof Error ? err.message : "Failed to delete");
+                                                                        setToDelete(id);
+                                                                    }
                                                                 });
                                                             }}
                                                             className="border border-black px-2 py-1 font-mono text-[10px] bg-black text-white hover:bg-neutral-800"

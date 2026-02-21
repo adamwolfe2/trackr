@@ -80,6 +80,18 @@ export async function inviteMember(formData: FormData) {
         throw new Error(`Your ${limits.name} plan allows up to ${limits.limits.members} member${limits.limits.members === 1 ? "" : "s"}. Upgrade to add more.`);
     }
 
+    // Rate limit: max 20 invites per hour per user
+    const [{ value: recentInviteCount }] = await db
+        .select({ value: count() })
+        .from(pendingInvitations)
+        .where(and(
+            eq(pendingInvitations.invitedByUserId, user.id),
+            gt(pendingInvitations.createdAt, new Date(Date.now() - 60 * 60 * 1000))
+        ));
+    if (recentInviteCount >= 20) {
+        throw new Error("Rate limit reached. You can send at most 20 invitations per hour.");
+    }
+
     // Check if an active (non-expired) invitation already exists for this email.
     // Without a unique constraint we must do this check manually to prevent duplicates.
     const existingInvite = await db.query.pendingInvitations.findFirst({

@@ -29,13 +29,22 @@ export async function generateCompanyContext(websiteUrl: string): Promise<{ cont
     try {
         if (!websiteUrl.startsWith("http")) websiteUrl = `https://${websiteUrl}`;
 
-        // Block private/internal URLs
+        // Block private/internal URLs and enforce https
         try {
             const parsed = new URL(websiteUrl);
+            if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+                return { context: "", error: "Invalid URL" };
+            }
             const hostname = parsed.hostname.toLowerCase();
-            if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "0.0.0.0" ||
+            if (
+                hostname === "localhost" || hostname === "0.0.0.0" ||
                 hostname === "[::1]" || hostname.endsWith(".local") || hostname.endsWith(".internal") ||
-                hostname === "metadata.google.internal") {
+                hostname === "metadata.google.internal" ||
+                /^127\./.test(hostname) ||
+                /^10\./.test(hostname) ||
+                /^192\.168\./.test(hostname) ||
+                /^172\.(1[6-9]|2[0-9]|3[01])\./.test(hostname)
+            ) {
                 return { context: "", error: "Invalid URL" };
             }
         } catch {

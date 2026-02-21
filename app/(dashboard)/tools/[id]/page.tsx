@@ -79,6 +79,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
     const toolNotes = await db.query.notes.findMany({
         where: eq(notes.toolId, id),
         orderBy: [desc(notes.createdAt)],
+        limit: 200,
     });
 
     // Resolve workspace member names for notes

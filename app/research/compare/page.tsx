@@ -44,7 +44,7 @@ export async function generateMetadata({
     searchParams: Promise<{ tools?: string }>;
 }): Promise<Metadata> {
     const { tools: toolsParam } = await searchParams;
-    const slugs = (toolsParam ?? "").split(",").map(s => s.trim()).filter(Boolean).slice(0, 2);
+    const slugs = (toolsParam ?? "").split(",").map(s => s.trim()).filter(s => /^[a-z0-9-]+$/.test(s)).slice(0, 2);
 
     if (slugs.length < 2) {
         return { title: "Compare Tools — Trackr" };
@@ -82,7 +82,7 @@ export default async function PublicComparePage({
 }) {
     const user = await currentUser();
     const { tools: toolsParam } = await searchParams;
-    const slugs = (toolsParam ?? "").split(",").map(s => s.trim()).filter(Boolean).slice(0, 2);
+    const slugs = (toolsParam ?? "").split(",").map(s => s.trim()).filter(s => /^[a-z0-9-]+$/.test(s)).slice(0, 2);
 
     // Need exactly 2 valid slugs
     const results = await Promise.all(slugs.map(fetchPublicReport));

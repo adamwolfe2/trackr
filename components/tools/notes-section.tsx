@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { addNote } from "@/lib/actions/notes";
 import { formatDistanceToNow } from "date-fns";
 import { Loader2, Send } from "lucide-react";
+import { toast } from "sonner";
 
 export function NotesSection({ toolId, notes = [] }: { toolId: string, notes?: { id: string; content: string; noteType: string; createdAt: string; userName?: string }[] }) {
     const [content, setContent] = useState("");
@@ -17,8 +18,8 @@ export function NotesSection({ toolId, notes = [] }: { toolId: string, notes?: {
             try {
                 await addNote(toolId, content);
                 setContent("");
-            } catch {
-                // Note addition failed — server action throws user-facing error
+            } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Failed to add note");
             }
         });
     }
