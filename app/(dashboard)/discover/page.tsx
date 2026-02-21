@@ -195,8 +195,8 @@ export default async function DiscoverPage() {
                     </div>
                     <form action={async () => {
                         "use server";
-                        revalidateTag("discover-suggestions", { expire: 0 });
-                        revalidateTag("ai-news-feed", { expire: 0 });
+                        revalidateTag("discover-suggestions");
+                        revalidateTag("ai-news-feed");
                     }}>
                         <button type="submit" className="border border-black px-4 py-2 font-mono text-xs bg-white hover:bg-black hover:text-white whitespace-nowrap">
                             Refresh
