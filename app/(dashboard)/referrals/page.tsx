@@ -60,7 +60,7 @@ export default async function ReferralsPage() {
                         <h2 className="font-mono text-xs uppercase tracking-widest">Your Stats</h2>
                     </div>
                     <div className="p-5">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-3 gap-4">
                             <div className="border border-black p-4 text-center">
                                 <div className="font-mono text-3xl font-bold">{myReferral?.clicks || 0}</div>
                                 <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mt-1">Clicks</div>
@@ -68,6 +68,10 @@ export default async function ReferralsPage() {
                             <div className="border border-black p-4 text-center">
                                 <div className="font-mono text-3xl font-bold">{myReferral?.signups || 0}</div>
                                 <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mt-1">Signups</div>
+                            </div>
+                            <div className="border border-black p-4 text-center bg-black text-white">
+                                <div className="font-mono text-3xl font-bold">{(myReferral?.signups || 0) * 5}</div>
+                                <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mt-1">Credits Earned</div>
                             </div>
                         </div>
                     </div>

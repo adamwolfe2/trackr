@@ -21,7 +21,7 @@ export default async function CreateAdPage() {
         where: eq(workspaceMembers.userId, user.id),
     });
 
-    if (!member) return <div>No workspace found</div>;
+    if (!member) redirect("/onboarding");
 
     const myTools = await db.query.tools.findMany({
         where: eq(tools.workspaceId, member.workspaceId),
