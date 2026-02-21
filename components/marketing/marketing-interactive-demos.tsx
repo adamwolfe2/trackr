@@ -9,6 +9,7 @@ import {
   MessageSquare,
   TrendingUp,
   Zap,
+  Cpu,
 } from "lucide-react";
 
 /* ─── Shared: window chrome wrapper ──────────────────────────────────── */
@@ -716,6 +717,208 @@ function AskDemo({ active }: { active: boolean }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   DEMO 4: Research Agent
+   ═══════════════════════════════════════════════════════════════════════ */
+
+const RESEARCH_URL = "linear.app";
+
+const RESEARCH_STEPS = [
+  { label: "Scraping product page", detail: "linear.app", delay: 700 },
+  { label: "Pulling G2 & Capterra reviews", detail: "47 reviews found", delay: 1500 },
+  { label: "Scanning Reddit threads", detail: "12 threads analyzed", delay: 2300 },
+  { label: "Running competitive analysis", detail: "vs Jira, Asana, ClickUp", delay: 3100 },
+  { label: "Generating scored report", detail: "Complete", delay: 3900 },
+];
+
+function ResearchAgentDemo({ active }: { active: boolean }) {
+  const [typedUrl, setTypedUrl] = useState("");
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [activeStep, setActiveStep] = useState<number | null>(null);
+  const [showResult, setShowResult] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      setTypedUrl("");
+      setCompletedSteps([]);
+      setActiveStep(null);
+      setShowResult(false);
+      return;
+    }
+
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
+
+    // Type the URL first
+    let i = 0;
+    const typeNext = () => {
+      if (i <= RESEARCH_URL.length) {
+        setTypedUrl(RESEARCH_URL.slice(0, i));
+        i++;
+        timeouts.push(setTimeout(typeNext, 70));
+      } else {
+        // Kick off pipeline steps
+        RESEARCH_STEPS.forEach((step, idx) => {
+          timeouts.push(setTimeout(() => setActiveStep(idx), step.delay));
+          timeouts.push(
+            setTimeout(() => {
+              setCompletedSteps((prev) => [...prev, idx]);
+              if (idx === RESEARCH_STEPS.length - 1) setActiveStep(null);
+            }, step.delay + 650)
+          );
+        });
+        timeouts.push(setTimeout(() => setShowResult(true), 4750));
+      }
+    };
+    timeouts.push(setTimeout(typeNext, 400));
+
+    return () => timeouts.forEach(clearTimeout);
+  }, [active]);
+
+  const isRunning = active && completedSteps.length < RESEARCH_STEPS.length;
+
+  return (
+    <div>
+      <DemoWindow
+        title="trackr — research agent"
+        statusLabel="Researching"
+        showStatus={isRunning}
+      >
+        <div className="p-4">
+          {/* URL input */}
+          <div className="border border-black px-3 py-2.5 flex items-center gap-2 mb-4 bg-white">
+            <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-wider flex-shrink-0">
+              URL
+            </span>
+            <span className="font-mono text-[11px] text-neutral-700 flex-1 min-h-[18px]">
+              {typedUrl}
+              {active && typedUrl.length < RESEARCH_URL.length && (
+                <span className="inline-block w-0.5 h-3.5 bg-black ml-0.5 animate-pulse align-middle" />
+              )}
+              {!active && (
+                <span className="text-neutral-400">paste any tool URL...</span>
+              )}
+            </span>
+          </div>
+
+          {/* Pipeline steps */}
+          <div className="space-y-2 mb-4">
+            {RESEARCH_STEPS.map((step, idx) => {
+              const done = completedSteps.includes(idx);
+              const running = activeStep === idx;
+              return (
+                <motion.div
+                  key={step.label}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: active ? 1 : 0 }}
+                  transition={{ delay: idx * 0.04 }}
+                  className="flex items-center justify-between gap-2"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div
+                      className={`w-3 h-3 flex-shrink-0 flex items-center justify-center border ${
+                        done
+                          ? "bg-black border-black"
+                          : running
+                          ? "border-black"
+                          : "border-neutral-200"
+                      }`}
+                    >
+                      {done && (
+                        <span className="text-white text-[8px] leading-none">
+                          ✓
+                        </span>
+                      )}
+                      {running && (
+                        <motion.div
+                          className="w-1.5 h-1.5 bg-black"
+                          animate={{ opacity: [0.3, 1, 0.3] }}
+                          transition={{ duration: 0.6, repeat: Infinity }}
+                        />
+                      )}
+                    </div>
+                    <span
+                      className={`font-mono text-[10px] truncate ${
+                        done || running ? "text-black" : "text-neutral-300"
+                      }`}
+                    >
+                      {step.label}
+                    </span>
+                  </div>
+                  <div className="flex-shrink-0">
+                    {done && (
+                      <span className="font-mono text-[9px] text-neutral-400">
+                        {step.detail}
+                      </span>
+                    )}
+                    {running && (
+                      <motion.span
+                        animate={{ opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 0.8, repeat: Infinity }}
+                        className="font-mono text-[9px] text-neutral-400"
+                      >
+                        running...
+                      </motion.span>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Result card */}
+          <AnimatePresence>
+            {showResult && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35 }}
+                className="border border-black bg-white p-3"
+              >
+                <div className="flex items-center justify-between mb-2.5">
+                  <div className="flex items-center gap-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="https://www.google.com/s2/favicons?domain=linear.app&sz=32"
+                      alt=""
+                      width={14}
+                      height={14}
+                      className="flex-shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                    <span className="font-serif text-sm font-medium">
+                      Linear
+                    </span>
+                  </div>
+                  <div className="flex items-baseline gap-0.5">
+                    <span className="font-mono text-xl font-bold leading-none">
+                      9.1
+                    </span>
+                    <span className="font-mono text-[9px] text-neutral-400">
+                      /10
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {["AI-Native", "Recommended", "Replace Jira"].map((tag) => (
+                    <span
+                      key={tag}
+                      className="font-mono text-[9px] uppercase tracking-wider border border-black px-1.5 py-0.5"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </DemoWindow>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
    MAIN SECTION — Tabbed demo picker
    ═══════════════════════════════════════════════════════════════════════ */
 
@@ -740,6 +943,13 @@ const DEMOS = [
     label: "Ask Workspace",
     description:
       "Semantic search across every research report your team has generated.",
+  },
+  {
+    key: "research",
+    icon: Cpu,
+    label: "Research Agent",
+    description:
+      "Paste any tool URL. Watch AI agents scrape, analyze, and score it in under 2 minutes.",
   },
 ] as const;
 
@@ -780,8 +990,8 @@ export function MarketingInteractiveDemos() {
         </p>
       </motion.div>
 
-      {/* Tab pills */}
-      <div className="flex flex-wrap justify-center gap-3 mb-8 max-w-2xl mx-auto">
+      {/* Tab pills — 2×2 on mobile, 1×4 on md+ */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8 max-w-2xl mx-auto">
         {DEMOS.map((demo) => {
           const Icon = demo.icon;
           const isActive = activeDemo === demo.key;
@@ -789,13 +999,13 @@ export function MarketingInteractiveDemos() {
             <button
               key={demo.key}
               onClick={() => setActiveDemo(demo.key)}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 font-mono text-xs uppercase tracking-wide border transition-all ${
+              className={`flex items-center justify-center gap-2 px-4 py-2.5 font-mono text-xs uppercase tracking-wide border transition-all w-full ${
                 isActive
                   ? "bg-black text-white border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
                   : "bg-white text-neutral-600 border-black/20 hover:border-black hover:bg-neutral-50"
               }`}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-3.5 h-3.5 flex-shrink-0" />
               {demo.label}
             </button>
           );
@@ -827,6 +1037,9 @@ export function MarketingInteractiveDemos() {
             )}
             {activeDemo === "ask" && (
               <AskDemo active={hasBeenVisible && activeDemo === "ask"} />
+            )}
+            {activeDemo === "research" && (
+              <ResearchAgentDemo active={hasBeenVisible && activeDemo === "research"} />
             )}
           </motion.div>
         </AnimatePresence>
