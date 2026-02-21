@@ -4,7 +4,7 @@ import { stripe } from "@/lib/services/stripe";
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { workspaceMembers, subscriptions } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { PlanSlug, BillingInterval } from "@/lib/config/subscriptions";
 
 type PaidPlanSlug = Exclude<PlanSlug, "free">;
@@ -29,10 +29,10 @@ export async function createCheckoutSession(
     }
 
     const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id)
+        where: and(eq(workspaceMembers.userId, user.id), eq(workspaceMembers.workspaceId, workspaceId)),
     });
 
-    if (!member || member.role !== 'owner' || member.workspaceId !== workspaceId) {
+    if (!member || member.role !== 'owner') {
         throw new Error("Unauthorized: You must be the workspace owner to upgrade.");
     }
 
@@ -71,10 +71,10 @@ export async function createCustomerPortalSession(workspaceId: string) {
     if (!user) throw new Error("Unauthorized");
 
     const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id)
+        where: and(eq(workspaceMembers.userId, user.id), eq(workspaceMembers.workspaceId, workspaceId)),
     });
 
-    if (!member || member.role !== 'owner' || member.workspaceId !== workspaceId) {
+    if (!member || member.role !== 'owner') {
         throw new Error("Unauthorized");
     }
 

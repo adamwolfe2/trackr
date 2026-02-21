@@ -73,12 +73,10 @@ describe("createCheckoutSession", () => {
         await expect(createCheckoutSession("ws_1")).rejects.toThrow("Unauthorized");
     });
 
-    it("throws when user's workspace doesn't match requested workspaceId", async () => {
-        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
-            ...MOCK_OWNER_MEMBER,
-            workspaceId: "ws_DIFFERENT",
-        });
-        await expect(createCheckoutSession("ws_1")).rejects.toThrow("Unauthorized");
+    it("throws when user is not in the requested workspace (DB returns null with scoped query)", async () => {
+        // Query is now scoped to workspaceId, so DB returns null when user isn't in that workspace
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        await expect(createCheckoutSession("ws_DIFFERENT")).rejects.toThrow("Unauthorized");
     });
 
     it("throws when no member found at all", async () => {

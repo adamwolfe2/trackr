@@ -16,6 +16,8 @@ export function BuyCreditsButton({ pricePerCredit }: { pricePerCredit: number })
                 const result = await purchaseExtraCredits(selectedPack);
                 if (result.url) {
                     window.location.href = result.url;
+                } else {
+                    toast.error("Checkout session could not be created. Please try again.");
                 }
             } catch (err) {
                 toast.error(err instanceof Error ? err.message : "Failed to start checkout");

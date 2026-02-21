@@ -27,14 +27,7 @@ export default async function WorkspacePage() {
         where: eq(workspaceMembers.userId, user.id),
     });
 
-    if (!currentMember) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4">
-                <h1 className="font-serif text-3xl">No Workspace Found</h1>
-                <p className="font-mono text-sm text-neutral-500">Complete onboarding to set up your workspace.</p>
-            </div>
-        );
-    }
+    if (!currentMember) redirect("/onboarding");
 
     const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.id, currentMember.workspaceId),

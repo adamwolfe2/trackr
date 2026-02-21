@@ -1,15 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useFormStatus } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import { Loader2, ArrowRight, Globe, Sparkles } from "lucide-react";
 import { previewTool } from "@/lib/actions/preview";
 import { submitTool } from "@/lib/actions/tools";
 import { toast } from "sonner";
 
-function SubmitButton() {
-    const { pending } = useFormStatus();
+function SubmitButton({ pending }: { pending: boolean }) {
     return (
         <button
             type="submit"
@@ -31,9 +29,28 @@ export function AddToolWizard() {
     const [step, setStep] = useState<1 | 2>(1);
     const [url, setUrl] = useState(searchParams.get("url") ?? "");
     const [isPreviewing, startPreview] = useTransition();
+    const [isSubmitting, startSubmit] = useTransition();
     const [metadata, setMetadata] = useState<{ title: string; description: string; image: string } | null>(null);
     const [description, setDescription] = useState("");
     const [previewFailed, setPreviewFailed] = useState(false);
+
+    const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        const formData = new FormData(e.currentTarget);
+        startSubmit(async () => {
+            try {
+                await submitTool(formData);
+            } catch (err) {
+                // Re-throw Next.js redirect errors — they are not real errors
+                if (err && typeof err === "object" && "digest" in err &&
+                    typeof (err as { digest: unknown }).digest === "string" &&
+                    (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")) {
+                    throw err;
+                }
+                toast.error(err instanceof Error ? err.message : "Failed to submit tool. Please try again.");
+            }
+        });
+    };
 
     const handlePreview = () => {
         if (!url) return;
@@ -125,7 +142,7 @@ export function AddToolWizard() {
 
             {/* Step 2 — Review & Submit */}
             {step === 2 && metadata && (
-                <form action={submitTool} className="space-y-6">
+                <form onSubmit={handleFormSubmit} className="space-y-6">
                     <input type="hidden" name="website_url" value={url} />
 
                     <div className="grid gap-6 md:grid-cols-[1fr_200px]">
@@ -206,7 +223,7 @@ export function AddToolWizard() {
                         >
                             Back
                         </button>
-                        <SubmitButton />
+                        <SubmitButton pending={isSubmitting} />
                     </div>
                 </form>
             )}

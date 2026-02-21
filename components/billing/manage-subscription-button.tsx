@@ -15,8 +15,8 @@ export function ManageSubscriptionButton({ workspaceId }: { workspaceId: string 
             if (url) {
                 window.location.href = url;
             }
-        } catch {
-            toast.error("Something went wrong");
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : "Something went wrong opening the billing portal");
         } finally {
             setIsLoading(false);
         }
