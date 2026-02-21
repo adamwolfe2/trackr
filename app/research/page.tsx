@@ -7,14 +7,17 @@ import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { Star } from "lucide-react";
+import { CURATED_TOOLS, PRIMARY_CATEGORIES } from "@/data/tools.seed";
+import { TEMPLATES } from "@/data/templates.seed";
+import { CuratedLibrary } from "@/components/research/curated-library";
 
 export const metadata: Metadata = {
-    title: "Tool Research Library — Trackr",
-    description: "Browse AI-powered research reports on SaaS tools. Scores, pros, cons, pricing, and competitive analysis — all in one place.",
+    title: "AI Tool Library — Trackr",
+    description: "Browse scorecards for 60+ AI tools. Research reports, templates, and competitive intelligence for teams evaluating SaaS.",
     openGraph: {
-        title: "Tool Research Library — Trackr",
-        description: "Browse AI-powered research reports on SaaS tools.",
-        images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr Research Library" }],
+        title: "AI Tool Library — Trackr",
+        description: "Scorecards for 60+ AI tools — features, pricing, pros, cons, and competitive analysis.",
+        images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr AI Tool Library" }],
     },
     alternates: {
         canonical: "https://trytrackr.com/research",
@@ -34,7 +37,7 @@ export default async function ResearchLibraryPage({
     const { category } = await searchParams;
     const activeCategory = category?.trim() || null;
 
-    // Fetch publicly published tools + their latest public report
+    // Fetch publicly published user-generated tools + their latest public report
     const publicTools = await db
         .select({
             id: tools.id,
@@ -61,35 +64,32 @@ export default async function ResearchLibraryPage({
         )
         .orderBy(desc(reports.createdAt));
 
-    // Collect all categories from all public tools for filter pills
-    const allTools = activeCategory
-        ? await db
-            .select({ category: tools.category })
-            .from(tools)
-            .innerJoin(reports, and(eq(reports.toolId, tools.id), eq(reports.isPublic, true)))
-            .where(isNotNull(tools.publicSlug))
-        : publicTools;
-
-    const allCategories = Array.from(
-        new Set(allTools.flatMap(t => t.category ?? []))
-    ).sort();
-
     const jsonLd = {
         "@context": "https://schema.org",
         "@graph": [
             {
                 "@type": "CollectionPage",
-                name: "Trackr Research Library",
-                description: "AI-powered SaaS tool research reports",
+                name: "Trackr AI Tool Library",
+                description: "AI-powered SaaS tool scorecards and research reports",
                 url: "https://trytrackr.com/research",
             },
             {
                 "@type": "BreadcrumbList",
                 itemListElement: [
                     { "@type": "ListItem", position: 1, name: "Home", item: "https://trytrackr.com" },
-                    { "@type": "ListItem", position: 2, name: "Research Library", item: "https://trytrackr.com/research" },
-                    ...(activeCategory ? [{ "@type": "ListItem", position: 3, name: activeCategory, item: `https://trytrackr.com/research?category=${encodeURIComponent(activeCategory)}` }] : []),
+                    { "@type": "ListItem", position: 2, name: "AI Tool Library", item: "https://trytrackr.com/research" },
                 ],
+            },
+            {
+                "@type": "ItemList",
+                name: "Curated AI Tools",
+                numberOfItems: CURATED_TOOLS.length,
+                itemListElement: CURATED_TOOLS.slice(0, 20).map((t, i) => ({
+                    "@type": "ListItem",
+                    position: i + 1,
+                    name: t.name,
+                    url: `https://trytrackr.com/research/${t.slug}`,
+                })),
             },
         ],
     };
@@ -103,65 +103,53 @@ export default async function ResearchLibraryPage({
             <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
                 <MarketingNavigation isLoggedIn={!!user} />
 
-                <section className="py-24 border-t border-black/10">
+                {/* ── Hero ── */}
+                <section className="py-16 border-t border-black/10">
                     <div className="mb-10">
-                        <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-3">Research Library</p>
+                        <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-3">AI Tool Library</p>
                         <h1 className="font-serif text-4xl md:text-5xl font-normal mb-4">
-                            SaaS Tool Intelligence
+                            The AI Stack Intelligence Library
                         </h1>
-                        <p className="font-mono text-base text-neutral-600 max-w-xl">
-                            AI-powered research reports on the tools your team evaluates. Each report covers features, pricing, user sentiment, and competitive analysis.
+                        <p className="font-mono text-base text-neutral-600 max-w-xl mb-6">
+                            Scorecards for 60+ AI tools. Research reports, stack templates, and competitive intelligence — all in one place.
                         </p>
-                    </div>
-
-                    {/* Category filter pills */}
-                    {allCategories.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-8 pb-6 border-b border-black/10">
-                            <Link
-                                href="/research"
-                                className={`font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 border transition-colors ${
-                                    !activeCategory
-                                        ? "bg-black text-white border-black"
-                                        : "border-neutral-300 text-neutral-500 hover:border-black hover:text-black"
-                                }`}
-                            >
-                                All
-                            </Link>
-                            {allCategories.map((cat) => (
-                                <Link
-                                    key={cat}
-                                    href={`/research?category=${encodeURIComponent(cat)}`}
-                                    className={`font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 border transition-colors ${
-                                        activeCategory === cat
-                                            ? "bg-black text-white border-black"
-                                            : "border-neutral-300 text-neutral-500 hover:border-black hover:text-black"
-                                    }`}
-                                >
-                                    {cat}
-                                </Link>
+                        {/* Stats row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px border border-black bg-black w-full max-w-lg">
+                            {[
+                                { label: "Curated Tools", value: CURATED_TOOLS.length.toString() },
+                                { label: "Categories", value: PRIMARY_CATEGORIES.length.toString() },
+                                { label: "Templates", value: TEMPLATES.length.toString() },
+                                { label: "Dimensions", value: "7" },
+                            ].map((stat) => (
+                                <div key={stat.label} className="bg-white px-4 py-3 text-center">
+                                    <div className="font-mono text-xl font-bold">{stat.value}</div>
+                                    <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-400">{stat.label}</div>
+                                </div>
                             ))}
                         </div>
-                    )}
+                    </div>
 
-                    {/* Results count */}
-                    {activeCategory && (
-                        <p className="font-mono text-xs text-neutral-400 mb-4">
-                            {publicTools.length} report{publicTools.length !== 1 ? "s" : ""} in <span className="text-black">{activeCategory}</span>
-                        </p>
-                    )}
+                    {/* Curated library client component */}
+                    <CuratedLibrary
+                        tools={CURATED_TOOLS}
+                        templates={TEMPLATES}
+                        primaryCategories={PRIMARY_CATEGORIES}
+                    />
+                </section>
 
-                    {publicTools.length === 0 ? (
-                        <div className="border border-dashed border-neutral-300 py-24 text-center">
-                            <p className="font-mono text-sm text-neutral-400 mb-4">
-                                {activeCategory ? `No published reports for "${activeCategory}" yet.` : "No published reports yet."}
+                {/* ── Community Reports ── */}
+                {publicTools.length > 0 && (
+                    <section className="py-12 border-t border-black/10">
+                        <div className="mb-6">
+                            <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Community Reports</p>
+                            <h2 className="font-serif text-2xl font-normal">
+                                User-Researched Tools
+                            </h2>
+                            <p className="font-mono text-xs text-neutral-500 mt-1">
+                                AI-powered research reports submitted by Trackr users.
                             </p>
-                            {activeCategory && (
-                                <Link href="/research" className="font-mono text-xs text-neutral-400 hover:text-black underline">
-                                    View all reports →
-                                </Link>
-                            )}
                         </div>
-                    ) : (
+
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px border border-black bg-black">
                             {publicTools.map((t) => {
                                 const scorecard = t.scorecardSnapshot as Record<string, ScorecardEntry> | null;
@@ -189,9 +177,9 @@ export default async function ResearchLibraryPage({
                                                     />
                                                 )}
                                                 <div className="min-w-0">
-                                                    <h2 className="font-serif text-lg group-hover:underline underline-offset-2 leading-tight truncate">
+                                                    <h3 className="font-serif text-lg group-hover:underline underline-offset-2 leading-tight truncate">
                                                         {t.name}
-                                                    </h2>
+                                                    </h3>
                                                     {domain && (
                                                         <p className="font-mono text-[10px] text-neutral-400 truncate">{domain}</p>
                                                     )}
@@ -230,26 +218,25 @@ export default async function ResearchLibraryPage({
                                 );
                             })}
                         </div>
-                    )}
+                    </section>
+                )}
 
-                    <div className="mt-16 pt-8 border-t border-black/10">
-                        <div className="border border-black bg-black text-white p-8">
-                            <p className="font-mono text-xs uppercase tracking-wider text-neutral-400 mb-3">Research any tool</p>
-                            <h3 className="font-serif text-2xl font-normal mb-3 text-white">
-                                Don't see the tool you're evaluating?
-                            </h3>
-                            <p className="font-mono text-sm text-neutral-400 mb-6 max-w-md">
-                                Submit any tool URL. Research agents produce a scored report in under 2 minutes.
-                            </p>
-                            <Link
-                                href="/sign-up"
-                                className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 font-mono text-xs uppercase tracking-widest hover:bg-neutral-100 transition-colors border border-white"
-                            >
-                                Get Started Free →
-                            </Link>
-                        </div>
-                    </div>
-                </section>
+                {/* ── CTA ── */}
+                <div className="my-16 border border-black bg-black text-white p-8">
+                    <p className="font-mono text-xs uppercase tracking-wider text-neutral-400 mb-3">Research any tool</p>
+                    <h3 className="font-serif text-2xl font-normal mb-3 text-white">
+                        Don't see the tool you're evaluating?
+                    </h3>
+                    <p className="font-mono text-sm text-neutral-400 mb-6 max-w-md">
+                        Submit any tool URL. Research agents produce a scored report in under 2 minutes.
+                    </p>
+                    <Link
+                        href="/sign-up"
+                        className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 font-mono text-xs uppercase tracking-widest hover:bg-neutral-100 transition-colors border border-white"
+                    >
+                        Get Started Free →
+                    </Link>
+                </div>
 
                 <MarketingFooter />
             </main>

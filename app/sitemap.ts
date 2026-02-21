@@ -3,6 +3,8 @@ import { getAllPosts } from '@/lib/blog';
 import { db } from '@/lib/db';
 import { reports, tools } from '@/lib/db/schema';
 import { isNotNull, eq, and } from 'drizzle-orm';
+import { CURATED_TOOLS } from '@/data/tools.seed';
+import { TEMPLATES } from '@/data/templates.seed';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://trytrackr.com';
@@ -129,6 +131,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'weekly',
             priority: 0.6,
         },
+        // Curated tool library pages
+        ...CURATED_TOOLS.map((t) => ({
+            url: `${baseUrl}/research/${t.slug}`,
+            lastModified: new Date(),
+            changeFrequency: 'weekly' as const,
+            priority: 0.85,
+        })),
+        // Template pages
+        ...TEMPLATES.map((t) => ({
+            url: `${baseUrl}/research/templates/${t.slug}`,
+            lastModified: new Date(),
+            changeFrequency: 'monthly' as const,
+            priority: 0.7,
+        })),
         ...blogPosts,
         ...sharedReports,
         ...researchPages,
