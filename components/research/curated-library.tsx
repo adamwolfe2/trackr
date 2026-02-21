@@ -12,6 +12,7 @@ import {
     ArrowRight,
     Filter,
     X,
+    TrendingUp,
 } from "lucide-react";
 import type { CuratedTool, Template } from "@/lib/types";
 import { sortTools } from "@/lib/scoring";
@@ -48,9 +49,10 @@ interface Props {
     tools: CuratedTool[];
     templates: Template[];
     primaryCategories: string[];
+    hotToolSlugs?: string[];
 }
 
-export function CuratedLibrary({ tools, templates, primaryCategories }: Props) {
+export function CuratedLibrary({ tools, templates, primaryCategories, hotToolSlugs = [] }: Props) {
     const [activeTab, setActiveTab] = useState<"tools" | "templates">("tools");
     const [search, setSearch] = useState("");
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -108,6 +110,13 @@ export function CuratedLibrary({ tools, templates, primaryCategories }: Props) {
         );
     }, [templates, search]);
 
+    const hotTools = useMemo(() => {
+        if (!hotToolSlugs.length) return [];
+        return hotToolSlugs
+            .map((slug) => tools.find((t) => t.slug === slug))
+            .filter(Boolean) as CuratedTool[];
+    }, [tools, hotToolSlugs]);
+
     const hasActiveFilters = selectedCategory || selectedType || selectedTier || selectedSignal;
 
     const clearFilters = () => {
@@ -140,6 +149,45 @@ export function CuratedLibrary({ tools, templates, primaryCategories }: Props) {
                     </button>
                 ))}
             </div>
+
+            {/* Hot This Week */}
+            {hotTools.length > 0 && activeTab === "tools" && !hasActiveFilters && !search && (
+                <div className="mb-6">
+                    <div className="flex items-center gap-2 mb-3">
+                        <TrendingUp className="h-3 w-3 text-neutral-400" />
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Hot this week</span>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px border border-black bg-black">
+                        {hotTools.map((tool) => (
+                            <Link
+                                key={tool.id}
+                                href={`/research/${tool.slug}`}
+                                className="group bg-white hover:bg-[#F3F3EF] transition-colors p-4 flex flex-col gap-2"
+                            >
+                                <div className="flex items-center gap-2">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                        src={`https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
+                                        alt={tool.name}
+                                        className="w-5 h-5 object-contain flex-shrink-0"
+                                    />
+                                    <span className="font-serif text-sm group-hover:underline underline-offset-2 truncate">{tool.name}</span>
+                                </div>
+                                <p className="font-mono text-[9px] text-neutral-400 line-clamp-2 leading-relaxed">{tool.tagline}</p>
+                                <div className="flex items-center justify-between mt-auto">
+                                    <span className="font-mono text-[9px] uppercase tracking-widest border border-neutral-200 px-1 py-0.5 text-neutral-400">
+                                        {tool.category}
+                                    </span>
+                                    <div className="flex items-center gap-0.5">
+                                        <Star className="w-2 h-2 fill-black" />
+                                        <span className="font-mono text-[10px] font-bold">{tool.overallScore.toFixed(1)}</span>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Search + Sort bar */}
             <div className="flex gap-3 mb-4 flex-wrap">

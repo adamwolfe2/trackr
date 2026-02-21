@@ -7,7 +7,7 @@ import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { Star } from "lucide-react";
-import { CURATED_TOOLS, PRIMARY_CATEGORIES } from "@/data/tools.seed";
+import { CURATED_TOOLS, PRIMARY_CATEGORIES, HOT_TOOL_SLUGS } from "@/data/tools.seed";
 import { TEMPLATES } from "@/data/templates.seed";
 import { CuratedLibrary } from "@/components/research/curated-library";
 
@@ -134,6 +134,7 @@ export default async function ResearchLibraryPage({
                         tools={CURATED_TOOLS}
                         templates={TEMPLATES}
                         primaryCategories={PRIMARY_CATEGORIES}
+                        hotToolSlugs={HOT_TOOL_SLUGS}
                     />
                 </section>
 
