@@ -12,6 +12,9 @@ export const metadata: Metadata = {
         type: "website",
         url: "https://trytrackr.com/terms",
     },
+    alternates: {
+        canonical: "https://trytrackr.com/terms",
+    },
 };
 
 export default async function TermsPage() {

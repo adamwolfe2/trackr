@@ -41,6 +41,9 @@ export const metadata: Metadata = {
     description: "Research agents evaluate any software tool in under 2 minutes. Scored reports. Shared team database.",
     images: ["/og.png"],
   },
+  alternates: {
+    canonical: "https://trytrackr.com",
+  },
 };
 
 const jsonLd = {

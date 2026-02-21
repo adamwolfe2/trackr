@@ -8,7 +8,10 @@ import { PLANS } from "@/lib/config/subscriptions";
 
 export const metadata: Metadata = {
     title: "Pricing — Trackr",
-    description: `Free to start. Team at $${PLANS.TEAM.price}/mo. Startup at $${PLANS.STARTUP.price}/mo. Enterprise at $${PLANS.ENTERPRISE.price}/mo.`,
+    description: `Free to start. Team at ${PLANS.TEAM.price}/mo. Startup at ${PLANS.STARTUP.price}/mo. Enterprise at ${PLANS.ENTERPRISE.price}/mo.`,
+    alternates: {
+        canonical: "https://trytrackr.com/pricing",
+    },
     openGraph: {
         title: "Pricing — Trackr",
         description: `Free to start. Team at $${PLANS.TEAM.price}/mo. Startup at $${PLANS.STARTUP.price}/mo. Enterprise at $${PLANS.ENTERPRISE.price}/mo.`,

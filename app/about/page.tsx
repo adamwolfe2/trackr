@@ -8,6 +8,9 @@ import { ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
     title: "About — Trackr",
     description: "Trackr helps operations teams research, evaluate, and track AI tools with intelligence — not spreadsheets.",
+    alternates: {
+        canonical: "https://trytrackr.com/about",
+    },
     openGraph: {
         title: "About — Trackr",
         description: "Trackr helps operations teams research, evaluate, and track AI tools with intelligence — not spreadsheets.",

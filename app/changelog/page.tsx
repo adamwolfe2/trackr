@@ -16,6 +16,9 @@ export const metadata: Metadata = {
         url: "https://trytrackr.com/changelog",
         images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr Changelog" }],
     },
+    alternates: {
+        canonical: "https://trytrackr.com/changelog",
+    },
 };
 
 export default async function ChangelogPage() {

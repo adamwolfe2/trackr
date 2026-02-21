@@ -16,6 +16,9 @@ export const metadata: Metadata = {
         description: "Browse AI-powered research reports on SaaS tools.",
         images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr Research Library" }],
     },
+    alternates: {
+        canonical: "https://trytrackr.com/research",
+    },
 };
 
 export const dynamic = "force-dynamic";

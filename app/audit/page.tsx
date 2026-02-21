@@ -15,6 +15,9 @@ export const metadata: Metadata = {
         type: "website",
         url: "https://trytrackr.com/audit",
     },
+    alternates: {
+        canonical: "https://trytrackr.com/audit",
+    },
 };
 
 const URGENCY_STATS = [

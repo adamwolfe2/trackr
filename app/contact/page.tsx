@@ -9,6 +9,9 @@ import { ArrowRight, Mail } from "lucide-react";
 export const metadata: Metadata = {
     title: "Contact — Trackr",
     description: "Get in touch with the Trackr team. Questions, enterprise inquiries, or AI audit bookings.",
+    alternates: {
+        canonical: "https://trytrackr.com/contact",
+    },
     openGraph: {
         title: "Contact — Trackr",
         description: "Get in touch with the Trackr team. Questions, enterprise inquiries, or AI audit bookings.",

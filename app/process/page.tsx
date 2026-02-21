@@ -8,6 +8,9 @@ export const metadata: Metadata = {
     title: "Our Process — Trackr",
     description:
         "See how Trackr researches AI tools in 7 automated steps — from site crawling to structured reports — using Firecrawl, Tavily, Perplexity, and GPT-4o.",
+    alternates: {
+        canonical: "https://trytrackr.com/process",
+    },
     openGraph: {
         title: "Our Process — Trackr",
         description:

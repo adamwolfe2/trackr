@@ -12,6 +12,9 @@ export const metadata: Metadata = {
         type: "website",
         url: "https://trytrackr.com/privacy",
     },
+    alternates: {
+        canonical: "https://trytrackr.com/privacy",
+    },
 };
 
 export default async function PrivacyPage() {
