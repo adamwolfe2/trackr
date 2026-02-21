@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Star, Loader2, X, Search } from "lucide-react";
+import { Star, Loader2, X, Search, Clock } from "lucide-react";
 import {
     DndContext,
     DragEndEvent,
@@ -29,6 +29,7 @@ interface KanbanTool {
     overallScore: string | null;
     lastResearchedAt: Date | null;
     category: string[] | null;
+    researchInterval?: string | null;
 }
 
 interface Stats {
@@ -79,6 +80,12 @@ function CardContent({ tool }: { tool: KanbanTool }) {
                     </span>
                 )}
             </div>
+            {tool.researchInterval && tool.researchInterval !== "manual" && (
+                <div className="flex items-center gap-1 font-mono text-[9px] text-neutral-400 mb-1">
+                    <Clock className="w-2 h-2" />
+                    {tool.researchInterval}
+                </div>
+            )}
             <div className="text-[10px] font-mono text-neutral-400">
                 {tool.status === "researching" ? (
                     <span className="flex items-center gap-1 text-neutral-500">

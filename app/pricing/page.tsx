@@ -57,6 +57,7 @@ const planCards = [
             "Chrome extension",
             "Spend tracking + exports",
             "Full tool comparison",
+            "Scheduled auto-research (weekly/monthly)",
             `Extra credits: $${PLANS.TEAM.extraCreditPrice}/each`,
         ],
         cta: "Start with Team",

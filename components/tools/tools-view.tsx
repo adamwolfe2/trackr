@@ -14,6 +14,7 @@ interface Tool {
     overallScore: string | null;
     lastResearchedAt: Date | null;
     category: string[] | null;
+    researchInterval?: string | null;
 }
 
 interface Stats {
