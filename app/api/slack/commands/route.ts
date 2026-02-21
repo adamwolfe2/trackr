@@ -75,6 +75,12 @@ async function handleResearch(urlArg: string, channelId: string) {
 
     // Normalize and validate URL — only allow https:// for security
     let url = urlArg.trim();
+    if (url.length > 2048) {
+        return NextResponse.json({
+            response_type: "ephemeral",
+            text: "URL is too long. Please provide a valid tool URL.",
+        });
+    }
     if (!url.startsWith("https://") && !url.startsWith("http://")) url = "https://" + url;
 
     let parsedUrl: URL;
