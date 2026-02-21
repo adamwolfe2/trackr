@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { tools, reports } from "@/lib/db/schema";
-import { eq, desc, and, isNotNull } from "drizzle-orm";
+import { eq, desc, and, isNotNull, arrayContains } from "drizzle-orm";
 import Link from "next/link";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
@@ -22,10 +22,16 @@ export const dynamic = "force-dynamic";
 
 type ScorecardEntry = { score: number; justification: string };
 
-export default async function ResearchLibraryPage() {
+export default async function ResearchLibraryPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ category?: string }>;
+}) {
     const user = await currentUser();
+    const { category } = await searchParams;
+    const activeCategory = category?.trim() || null;
 
-    // Fetch all publicly published tools + their latest public report
+    // Fetch publicly published tools + their latest public report
     const publicTools = await db
         .select({
             id: tools.id,
@@ -45,15 +51,44 @@ export default async function ResearchLibraryPage() {
         })
         .from(tools)
         .innerJoin(reports, and(eq(reports.toolId, tools.id), eq(reports.isPublic, true)))
-        .where(isNotNull(tools.publicSlug))
+        .where(
+            activeCategory
+                ? and(isNotNull(tools.publicSlug), arrayContains(tools.category, [activeCategory]))
+                : isNotNull(tools.publicSlug)
+        )
         .orderBy(desc(reports.createdAt));
+
+    // Collect all categories from all public tools for filter pills
+    const allTools = activeCategory
+        ? await db
+            .select({ category: tools.category })
+            .from(tools)
+            .innerJoin(reports, and(eq(reports.toolId, tools.id), eq(reports.isPublic, true)))
+            .where(isNotNull(tools.publicSlug))
+        : publicTools;
+
+    const allCategories = Array.from(
+        new Set(allTools.flatMap(t => t.category ?? []))
+    ).sort();
 
     const jsonLd = {
         "@context": "https://schema.org",
-        "@type": "CollectionPage",
-        name: "Trackr Research Library",
-        description: "AI-powered SaaS tool research reports",
-        url: "https://trytrackr.com/research",
+        "@graph": [
+            {
+                "@type": "CollectionPage",
+                name: "Trackr Research Library",
+                description: "AI-powered SaaS tool research reports",
+                url: "https://trytrackr.com/research",
+            },
+            {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                    { "@type": "ListItem", position: 1, name: "Home", item: "https://trytrackr.com" },
+                    { "@type": "ListItem", position: 2, name: "Research Library", item: "https://trytrackr.com/research" },
+                    ...(activeCategory ? [{ "@type": "ListItem", position: 3, name: activeCategory, item: `https://trytrackr.com/research?category=${encodeURIComponent(activeCategory)}` }] : []),
+                ],
+            },
+        ],
     };
 
     return (
@@ -66,7 +101,7 @@ export default async function ResearchLibraryPage() {
                 <MarketingNavigation isLoggedIn={!!user} />
 
                 <section className="py-24 border-t border-black/10">
-                    <div className="mb-12">
+                    <div className="mb-10">
                         <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-3">Research Library</p>
                         <h1 className="font-serif text-4xl md:text-5xl font-normal mb-4">
                             SaaS Tool Intelligence
@@ -76,9 +111,52 @@ export default async function ResearchLibraryPage() {
                         </p>
                     </div>
 
+                    {/* Category filter pills */}
+                    {allCategories.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-8 pb-6 border-b border-black/10">
+                            <Link
+                                href="/research"
+                                className={`font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 border transition-colors ${
+                                    !activeCategory
+                                        ? "bg-black text-white border-black"
+                                        : "border-neutral-300 text-neutral-500 hover:border-black hover:text-black"
+                                }`}
+                            >
+                                All
+                            </Link>
+                            {allCategories.map((cat) => (
+                                <Link
+                                    key={cat}
+                                    href={`/research?category=${encodeURIComponent(cat)}`}
+                                    className={`font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 border transition-colors ${
+                                        activeCategory === cat
+                                            ? "bg-black text-white border-black"
+                                            : "border-neutral-300 text-neutral-500 hover:border-black hover:text-black"
+                                    }`}
+                                >
+                                    {cat}
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Results count */}
+                    {activeCategory && (
+                        <p className="font-mono text-xs text-neutral-400 mb-4">
+                            {publicTools.length} report{publicTools.length !== 1 ? "s" : ""} in <span className="text-black">{activeCategory}</span>
+                        </p>
+                    )}
+
                     {publicTools.length === 0 ? (
                         <div className="border border-dashed border-neutral-300 py-24 text-center">
-                            <p className="font-mono text-sm text-neutral-400">No published reports yet.</p>
+                            <p className="font-mono text-sm text-neutral-400 mb-4">
+                                {activeCategory ? `No published reports for "${activeCategory}" yet.` : "No published reports yet."}
+                            </p>
+                            {activeCategory && (
+                                <Link href="/research" className="font-mono text-xs text-neutral-400 hover:text-black underline">
+                                    View all reports →
+                                </Link>
+                            )}
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px border border-black bg-black">

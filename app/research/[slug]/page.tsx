@@ -1,9 +1,9 @@
 import { db } from "@/lib/db";
 import { tools, reports } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNotNull, ne, arrayOverlaps } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink, ArrowLeft } from "lucide-react";
+import { ExternalLink, ArrowLeft, Star } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { currentUser } from "@clerk/nextjs/server";
@@ -78,6 +78,30 @@ export default async function PublicResearchPage({
     });
     if (!report) notFound();
 
+    // Fetch related tools: same category OR listed as competitor, exclude current tool
+    const relatedTools = tool.category && tool.category.length > 0
+        ? await db
+            .select({
+                id: tools.id,
+                name: tools.name,
+                websiteUrl: tools.websiteUrl,
+                logoUrl: tools.logoUrl,
+                overallScore: tools.overallScore,
+                publicSlug: tools.publicSlug,
+                category: tools.category,
+                summary: reports.summary,
+            })
+            .from(tools)
+            .innerJoin(reports, and(eq(reports.toolId, tools.id), eq(reports.isPublic, true)))
+            .where(and(
+                isNotNull(tools.publicSlug),
+                ne(tools.id, tool.id),
+                arrayOverlaps(tools.category, tool.category),
+            ))
+            .orderBy(desc(tools.overallScore))
+            .limit(4)
+        : [];
+
     const scorecard = report.scorecardSnapshot as Record<string, ScorecardEntry> | null;
     const pros = report.pros as string[] | null;
     const cons = report.cons as string[] | null;
@@ -105,22 +129,35 @@ export default async function PublicResearchPage({
 
     const jsonLd = {
         "@context": "https://schema.org",
-        "@type": "Review",
-        name: `${tool.name} Research Report`,
-        description: report.summary ?? undefined,
-        reviewRating: {
-            "@type": "Rating",
-            ratingValue: overallScore.toFixed(1),
-            bestRating: "10",
-            worstRating: "0",
-        },
-        author: { "@type": "Organization", name: "Trackr" },
-        itemReviewed: {
-            "@type": "SoftwareApplication",
-            name: tool.name,
-            url: tool.websiteUrl ?? undefined,
-        },
-        datePublished: report.createdAt.toISOString(),
+        "@graph": [
+            {
+                "@type": "Review",
+                name: `${tool.name} Research Report`,
+                description: report.summary ?? undefined,
+                reviewRating: {
+                    "@type": "Rating",
+                    ratingValue: overallScore.toFixed(1),
+                    bestRating: "10",
+                    worstRating: "0",
+                },
+                author: { "@type": "Organization", name: "Trackr" },
+                itemReviewed: {
+                    "@type": "SoftwareApplication",
+                    name: tool.name,
+                    url: tool.websiteUrl ?? undefined,
+                    applicationCategory: tool.category?.[0] ?? "BusinessApplication",
+                },
+                datePublished: report.createdAt.toISOString(),
+            },
+            {
+                "@type": "BreadcrumbList",
+                itemListElement: [
+                    { "@type": "ListItem", position: 1, name: "Home", item: "https://trytrackr.com" },
+                    { "@type": "ListItem", position: 2, name: "Research Library", item: "https://trytrackr.com/research" },
+                    { "@type": "ListItem", position: 3, name: `${tool.name} Research Report`, item: `https://trytrackr.com/research/${slug}` },
+                ],
+            },
+        ],
     };
 
     const sentimentColors: Record<string, string> = {
@@ -389,6 +426,50 @@ export default async function PublicResearchPage({
                         </div>
                     </div>
                 </section>
+
+                {/* Related Tools */}
+                {relatedTools.length > 0 && (
+                    <section className="mt-12 pt-8 border-t border-black/10">
+                        <h2 className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-6">Similar Tools</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px border border-black bg-black">
+                            {relatedTools.map((t) => {
+                                const domain = t.websiteUrl
+                                    ? (() => { try { return new URL(t.websiteUrl).hostname.replace("www.", ""); } catch { return null; } })()
+                                    : null;
+                                return (
+                                    <Link
+                                        key={t.id}
+                                        href={`/research/${t.publicSlug}`}
+                                        className="group bg-white hover:bg-[#F3F3EF] transition-colors p-5 flex flex-col gap-2"
+                                    >
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="flex items-center gap-2 min-w-0">
+                                                {(t.logoUrl || domain) && (
+                                                    // eslint-disable-next-line @next/next/no-img-element
+                                                    <img
+                                                        src={t.logoUrl ?? `https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+                                                        alt={t.name}
+                                                        className="w-6 h-6 object-contain flex-shrink-0"
+                                                    />
+                                                )}
+                                                <span className="font-serif text-base group-hover:underline underline-offset-2 truncate">{t.name}</span>
+                                            </div>
+                                            {t.overallScore && (
+                                                <div className="flex items-center gap-0.5 flex-shrink-0">
+                                                    <Star className="w-2.5 h-2.5 fill-black" />
+                                                    <span className="font-mono text-xs font-bold">{Number(t.overallScore).toFixed(1)}</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {t.summary && (
+                                            <p className="font-mono text-[10px] text-neutral-500 line-clamp-2 leading-relaxed">{t.summary}</p>
+                                        )}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </section>
+                )}
 
                 <MarketingFooter />
             </main>
