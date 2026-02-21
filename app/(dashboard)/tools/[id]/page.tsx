@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { tools, reports, researchJobs, notes, workspaceMembers, subscriptions } from "@/lib/db/schema";
 import { eq, desc, inArray, and } from "drizzle-orm";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ExternalLink, ChevronLeft, GitCompare, RefreshCw, Share2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -35,12 +35,12 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
     const { id } = await params;
 
     const user = await currentUser();
-    if (!user) return notFound();
+    if (!user) redirect("/sign-in");
 
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),
     });
-    if (!member) return notFound();
+    if (!member) redirect("/onboarding");
 
     // Fetch tool AND verify it belongs to the user's workspace
     const tool = await db.query.tools.findFirst({
