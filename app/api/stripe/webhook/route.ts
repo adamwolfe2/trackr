@@ -29,19 +29,23 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
-    // Idempotency: skip if already processed
+    // Idempotency: atomically claim the event — only one concurrent request can succeed
     const eventId = event.id;
-    const alreadyProcessed = await db.query.webhookEvents.findFirst({
-        where: and(
-            eq(webhookEvents.source, 'stripe'),
-            eq(webhookEvents.eventId, eventId),
-        ),
-    });
-    if (alreadyProcessed) {
+    const claimed = await db.insert(webhookEvents)
+        .values({
+            source: 'stripe',
+            eventId,
+            eventType: event.type,
+            error: null,
+        })
+        .onConflictDoNothing()
+        .returning({ id: webhookEvents.id });
+
+    if (claimed.length === 0) {
+        // Another request already claimed this event — skip silently
         return NextResponse.json({ received: true });
     }
 
-    let processingError: string | undefined;
     try {
         switch (event.type) {
             case "checkout.session.completed": {
@@ -73,21 +77,12 @@ export async function POST(req: NextRequest) {
             }
         }
     } catch (err) {
-        processingError = err instanceof Error ? err.message : String(err);
+        const processingError = err instanceof Error ? err.message : String(err);
         console.error(`Stripe webhook error [${event.type}]:`, processingError);
-    }
-
-    // Audit log: record event regardless of success/failure for debugging
-    await db.insert(webhookEvents)
-        .values({
-            source: 'stripe',
-            eventId,
-            eventType: event.type,
-            error: processingError ?? null,
-        })
-        .onConflictDoNothing();
-
-    if (processingError) {
+        // Update the already-inserted record with the error
+        await db.update(webhookEvents)
+            .set({ error: processingError })
+            .where(and(eq(webhookEvents.source, 'stripe'), eq(webhookEvents.eventId, eventId)));
         return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
     }
 

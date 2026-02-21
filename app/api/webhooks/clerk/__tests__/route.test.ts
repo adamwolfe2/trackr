@@ -23,7 +23,10 @@ vi.mock("@/lib/db", () => ({
         },
         insert: vi.fn().mockReturnValue({
             values: vi.fn().mockReturnValue({
-                onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+                onConflictDoNothing: vi.fn().mockReturnValue({
+                    returning: vi.fn().mockResolvedValue([{ id: "evt_1" }]),
+                }),
+                onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
             }),
         }),
         update: vi.fn().mockReturnValue({
@@ -97,7 +100,10 @@ describe("POST /api/webhooks/clerk", () => {
         // Re-wire insert chain (cleared by vi.clearAllMocks)
         const insertChain = {
             values: vi.fn().mockReturnValue({
-                onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
+                onConflictDoNothing: vi.fn().mockReturnValue({
+                    returning: vi.fn().mockResolvedValue([{ id: "evt_1" }]),
+                }),
+                onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),
             }),
         };
         (db.insert as ReturnType<typeof vi.fn>).mockReturnValue(insertChain);
@@ -121,7 +127,14 @@ describe("POST /api/webhooks/clerk", () => {
     });
 
     it("returns 200 (idempotent) for already-processed event", async () => {
-        (db.query.webhookEvents.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "existing" });
+        // Simulate the atomic insert returning empty — event was already claimed
+        (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({
+            values: vi.fn().mockReturnValue({
+                onConflictDoNothing: vi.fn().mockReturnValue({
+                    returning: vi.fn().mockResolvedValue([]),
+                }),
+            }),
+        });
         mockVerify.mockReturnValue({ type: "user.created", data: { id: "usr_1", email_addresses: [], username: "alice" } });
 
         const res = await POST(makeRequest({}));

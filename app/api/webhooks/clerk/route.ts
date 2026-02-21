@@ -7,21 +7,6 @@ import { db } from '@/lib/db'
 import { pendingInvitations, workspaceMembers, workspaces, subscriptions, webhookEvents } from '@/lib/db/schema'
 import { and, eq, gt } from 'drizzle-orm'
 
-async function markProcessed(eventId: string, eventType: string, error?: string) {
-    await db.insert(webhookEvents)
-        .values({ source: 'clerk', eventId, eventType, error: error ?? null })
-        .onConflictDoNothing();
-}
-
-async function isAlreadyProcessed(eventId: string): Promise<boolean> {
-    const existing = await db.query.webhookEvents.findFirst({
-        where: and(
-            eq(webhookEvents.source, 'clerk'),
-            eq(webhookEvents.eventId, eventId),
-        ),
-    });
-    return !!existing;
-}
 
 export async function POST(req: Request) {
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET
@@ -59,9 +44,15 @@ export async function POST(req: Request) {
     const eventType = evt.type;
     const eventId = svix_id;
 
-    // Idempotency: skip if already processed
-    if (await isAlreadyProcessed(eventId)) {
-        return new Response('', { status: 200 })
+    // Idempotency: atomically claim the event — only one concurrent request can succeed
+    const claimed = await db.insert(webhookEvents)
+        .values({ source: 'clerk', eventId, eventType, error: null })
+        .onConflictDoNothing()
+        .returning({ id: webhookEvents.id });
+
+    if (claimed.length === 0) {
+        // Another request already claimed this event — skip silently
+        return new Response('', { status: 200 });
     }
 
     try {
@@ -72,10 +63,12 @@ export async function POST(req: Request) {
         } else if (eventType === 'user.deleted') {
             await handleUserDeleted(evt);
         }
-        await markProcessed(eventId, eventType);
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        await markProcessed(eventId, eventType, message);
+        // Update the already-inserted record with the error
+        await db.update(webhookEvents)
+            .set({ error: message })
+            .where(and(eq(webhookEvents.source, 'clerk'), eq(webhookEvents.eventId, eventId)));
         console.error(`Clerk webhook error [${eventType}]:`, message);
         return new Response('Webhook handler error', { status: 500 });
     }
