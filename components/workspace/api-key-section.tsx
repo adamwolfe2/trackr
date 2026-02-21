@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Copy, Check, RefreshCw, Key, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { regenerateApiKey } from "@/lib/actions/workspace";
@@ -22,6 +22,20 @@ export function ApiKeySection({
     const [copied, setCopied] = useState(false);
     const [generating, setGenerating] = useState(false);
     const [justGenerated, setJustGenerated] = useState(false);
+    const [hideCountdown, setHideCountdown] = useState<number | null>(null);
+
+    // Countdown timer for auto-hiding the revealed key
+    useEffect(() => {
+        if (hideCountdown === null) return;
+        if (hideCountdown <= 0) {
+            setRevealed(false);
+            setJustGenerated(false);
+            setHideCountdown(null);
+            return;
+        }
+        const t = setTimeout(() => setHideCountdown(c => (c !== null ? c - 1 : null)), 1000);
+        return () => clearTimeout(t);
+    }, [hideCountdown]);
 
     const handleCopy = async () => {
         if (!apiKey) return;
@@ -50,12 +64,8 @@ export function ApiKeySection({
             setApiKey(newKey);
             setRevealed(true);
             setJustGenerated(true);
-            toast.success("New API key generated. Copy it now — it won't be shown in full again.");
-            // Auto-hide after 60s
-            setTimeout(() => {
-                setRevealed(false);
-                setJustGenerated(false);
-            }, 60000);
+            setHideCountdown(60);
+            toast.success("New API key generated. Copy it now — it will be hidden in 60 seconds.");
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : "Failed to generate API key";
             toast.error(message);
@@ -125,8 +135,8 @@ export function ApiKeySection({
 
                     {justGenerated && (
                         <p className="font-mono text-[10px] text-amber-600">
-                            Copy this key now. For security, the full key will be hidden after you
-                            leave this page.
+                            Copy this key now. It will be hidden automatically
+                            {hideCountdown !== null ? ` in ${hideCountdown}s` : " after you leave this page"}.
                         </p>
                     )}
                 </div>

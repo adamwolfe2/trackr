@@ -35,6 +35,8 @@ export function ResearchStream({ toolId }: { toolId: string }) {
     const [status, setStatus] = useState("initializing");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [elapsed, setElapsed] = useState(0);
+    const [networkError, setNetworkError] = useState(false);
+    const consecutiveFailsRef = useRef(0);
     const router = useRouter();
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -43,7 +45,13 @@ export function ResearchStream({ toolId }: { toolId: string }) {
         const fetchLogs = async () => {
             try {
                 const res = await fetch(`/api/tools/${toolId}/logs`);
-                if (!res.ok) return;
+                if (!res.ok) {
+                    consecutiveFailsRef.current += 1;
+                    if (consecutiveFailsRef.current >= 4) setNetworkError(true);
+                    return;
+                }
+                consecutiveFailsRef.current = 0;
+                setNetworkError(false);
                 const data = await res.json() as {
                     logs?: { message: string; timestamp: string }[];
                     status?: string;
@@ -60,7 +68,8 @@ export function ResearchStream({ toolId }: { toolId: string }) {
                     if (data.status === "active") router.refresh();
                 }
             } catch {
-                // Silent — polling will retry
+                consecutiveFailsRef.current += 1;
+                if (consecutiveFailsRef.current >= 4) setNetworkError(true);
             }
         };
 
@@ -159,10 +168,17 @@ export function ResearchStream({ toolId }: { toolId: string }) {
                     </div>
                 ))}
 
-                {status === "researching" && (
+                {status === "researching" && !networkError && (
                     <div className="flex items-center gap-2 text-neutral-400 pt-1">
                         <Loader2 className="h-3 w-3 animate-spin" />
                         <span>Processing...</span>
+                    </div>
+                )}
+
+                {networkError && (
+                    <div className="flex items-center gap-2 text-amber-600 pt-1 border-t border-neutral-200 mt-2">
+                        <AlertTriangle className="h-3 w-3 shrink-0" />
+                        <span>Connection issue — retrying. Research may still be running.</span>
                     </div>
                 )}
 

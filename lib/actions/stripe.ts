@@ -32,8 +32,8 @@ export async function createCheckoutSession(
         where: and(eq(workspaceMembers.userId, user.id), eq(workspaceMembers.workspaceId, workspaceId)),
     });
 
-    if (!member || member.role !== 'owner') {
-        throw new Error("Unauthorized: You must be the workspace owner to upgrade.");
+    if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
+        throw new Error("Unauthorized: Only workspace owners and admins can manage billing.");
     }
 
     const priceId = getPriceId(plan, interval);
@@ -74,7 +74,7 @@ export async function createCustomerPortalSession(workspaceId: string) {
         where: and(eq(workspaceMembers.userId, user.id), eq(workspaceMembers.workspaceId, workspaceId)),
     });
 
-    if (!member || member.role !== 'owner') {
+    if (!member || (member.role !== 'owner' && member.role !== 'admin')) {
         throw new Error("Unauthorized");
     }
 

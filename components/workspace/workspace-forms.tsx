@@ -48,9 +48,11 @@ export function InviteMemberForm() {
     );
 }
 
-export function RemoveMemberButton({ memberId }: { memberId: string }) {
+export function RemoveMemberButton({ memberId, memberName }: { memberId: string; memberName?: string }) {
     return (
         <form action={async () => {
+            const name = memberName ?? "this member";
+            if (!window.confirm(`Remove ${name} from the workspace? They will lose access immediately.`)) return;
             try {
                 await removeMember(memberId);
                 toast.success("Member removed");

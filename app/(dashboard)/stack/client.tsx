@@ -729,9 +729,15 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                             <select
                                                 defaultValue={entry.status}
                                                 onChange={(e) => {
+                                                    const newStatus = e.target.value;
                                                     startTransition(async () => {
-                                                        await updateSoftwareSpendStatus(entry.id, e.target.value);
-                                                        router.refresh();
+                                                        try {
+                                                            await updateSoftwareSpendStatus(entry.id, newStatus);
+                                                            router.refresh();
+                                                        } catch (err) {
+                                                            toast.error(err instanceof Error ? err.message : "Failed to update status");
+                                                            router.refresh(); // revert UI to server state
+                                                        }
                                                     });
                                                 }}
                                                 className="border border-black px-2 py-1 font-mono text-xs bg-white focus:outline-none"

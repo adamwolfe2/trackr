@@ -18,8 +18,8 @@ export async function createReferralCode() {
     if (!workspaceId) throw new Error("No workspace found");
 
     try {
-        // Generate simple random code
-        const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+        // Generate cryptographically strong 8-char alphanumeric code
+        const code = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
 
         await db.insert(referrals).values({
             referrerWorkspaceId: workspaceId,

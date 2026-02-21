@@ -36,7 +36,7 @@ export default async function BillingPage({
     if (!user) redirect("/sign-in");
 
     const workspaceId = await getWorkspaceId(user.id);
-    if (!workspaceId) return <div>No workspace found</div>;
+    if (!workspaceId) redirect("/onboarding");
 
     const subscription = await db.query.subscriptions.findFirst({
         where: eq(subscriptions.workspaceId, workspaceId),
