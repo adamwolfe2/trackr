@@ -104,6 +104,7 @@ export default async function BillingPage({
                 `${PLANS.TEAM.limits.members} members`,
                 "Slack + Chrome extension",
                 "Spend tracking + exports",
+                "Scheduled auto-research",
                 `Extra credits: $${PLANS.TEAM.extraCreditPrice}/each`,
             ],
             isCurrent: currentPlan.slug === "team",
