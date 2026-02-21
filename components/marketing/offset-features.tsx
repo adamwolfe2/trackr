@@ -1,6 +1,6 @@
 "use client";
 
-import { Bot, Sliders, Target, Search, Users, Newspaper, BarChart3, LayoutGrid } from "lucide-react";
+import { Bot, Sliders, Target, Search, Users, Newspaper, BarChart3, LayoutGrid, Clock } from "lucide-react";
 import { motion, useInView, type Variants } from "framer-motion";
 import { useRef } from "react";
 
@@ -60,6 +60,13 @@ const features = [
         headline: "One database. No duplication.",
         body: "Invite your team. Everyone can add tools, read reports, and leave notes. No more parallel research or spreadsheet chaos.",
         colSpan: "md:col-span-1"
+    },
+    {
+        icon: Clock,
+        title: "Auto-Research Schedule",
+        headline: "Set it. Forget it. Stay current.",
+        body: "Schedule weekly, bi-weekly, or monthly research for any tool. Trackr automatically re-researches on schedule and tracks score changes over time — so your data is never stale.",
+        colSpan: "md:col-span-2"
     }
 ];
 
