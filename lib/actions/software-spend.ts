@@ -27,6 +27,7 @@ export async function addSoftwareSpend(formData: FormData) {
 
     const monthlyCostRaw = formData.get("monthlyCost") as string;
     const parsedCost = monthlyCostRaw ? parseFloat(monthlyCostRaw) : 0;
+    if (!isNaN(parsedCost) && parsedCost > 10_000_000) throw new Error("Monthly cost exceeds maximum allowed value");
     const monthlyCost = isNaN(parsedCost) || parsedCost < 0 ? "0" : parsedCost.toFixed(2);
 
     const seatCountRaw = formData.get("seatCount") as string;
@@ -154,6 +155,12 @@ export async function updateSoftwareSpendDetails(
     if (!workspaceId) throw new Error("No workspace found");
 
     const cost = parseFloat(monthlyCost);
+    if (!isNaN(cost) && cost > 10_000_000) throw new Error("Monthly cost exceeds maximum allowed value");
+    if (seatCount !== null && seatCount > 1_000_000) throw new Error("Seat count exceeds maximum allowed value");
+    if (contractLengthMonths !== null && contractLengthMonths !== undefined && (contractLengthMonths < 1 || contractLengthMonths > 120)) {
+        throw new Error("Contract length must be between 1 and 120 months");
+    }
+
     const updates: Record<string, unknown> = {
         monthlyCost: isNaN(cost) || cost < 0 ? "0" : cost.toFixed(2),
         seatCount: seatCount !== null && seatCount >= 0 ? seatCount : null,
