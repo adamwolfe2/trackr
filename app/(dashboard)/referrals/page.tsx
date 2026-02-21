@@ -11,8 +11,8 @@ export const metadata: Metadata = {
 import { eq, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { createReferralCode } from "@/lib/actions/referrals";
 import { CopyLinkButton } from "@/components/referrals/copy-link-button";
+import { GenerateReferralButton } from "@/components/referrals/generate-referral-button";
 
 export default async function ReferralsPage() {
     const user = await currentUser();
@@ -46,14 +46,7 @@ export default async function ReferralsPage() {
                         {myReferral ? (
                             <CopyLinkButton referralUrl={`${process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com"}/sign-up?ref=${myReferral.code}`} />
                         ) : (
-                            <form action={async () => {
-                                "use server";
-                                await createReferralCode();
-                            }}>
-                                <button type="submit" className="w-full border border-black px-5 py-3 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800">
-                                    Generate Referral Link
-                                </button>
-                            </form>
+                            <GenerateReferralButton />
                         )}
                         <p className="font-mono text-[10px] text-neutral-400 leading-relaxed">
                             You earn 5 research credits for every new workspace that signs up using your link. Credits are added to your account automatically.
