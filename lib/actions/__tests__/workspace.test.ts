@@ -234,30 +234,36 @@ describe("workspace server actions", () => {
         });
     });
 
+    const VALID_INV_UUID = "550e8400-e29b-41d4-a716-446655440099";
+
     describe("cancelInvitation", () => {
+        it("throws for invalid (non-UUID) id", async () => {
+            await expect(cancelInvitation("inv_1")).rejects.toThrow("Invalid invitation ID");
+        });
+
         it("throws Unauthorized when not logged in", async () => {
             (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-            await expect(cancelInvitation("inv_1")).rejects.toThrow("Unauthorized");
+            await expect(cancelInvitation(VALID_INV_UUID)).rejects.toThrow("Unauthorized");
         });
 
         it("throws when user is not owner or admin", async () => {
             (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(VIEWER);
-            await expect(cancelInvitation("inv_1")).rejects.toThrow("Only workspace owners or admins");
+            await expect(cancelInvitation(VALID_INV_UUID)).rejects.toThrow("Only workspace owners or admins");
         });
 
         it("throws when invitation is not found in this workspace", async () => {
             // pendingInvitations.findFirst returns null (invitation not found)
             (db.query.pendingInvitations.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-            await expect(cancelInvitation("inv_not_found")).rejects.toThrow("Invitation not found");
+            await expect(cancelInvitation(VALID_INV_UUID)).rejects.toThrow("Invitation not found");
         });
 
         it("succeeds when owner cancels a valid invitation", async () => {
             (db.query.pendingInvitations.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
-                id: "inv_1",
+                id: VALID_INV_UUID,
                 workspaceId: "ws_1",
                 email: "invite@acme.com",
             });
-            const result = await cancelInvitation("inv_1");
+            const result = await cancelInvitation(VALID_INV_UUID);
             expect(result).toEqual({ success: true });
         });
     });

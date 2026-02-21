@@ -26,5 +26,5 @@ export async function PATCH(
     }
 
     await markNotificationsRead([id]);
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true }, { headers: getRateLimitHeaders(rl) });
 }

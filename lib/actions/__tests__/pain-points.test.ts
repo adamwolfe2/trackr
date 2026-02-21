@@ -119,16 +119,20 @@ describe("deletePainPoint", () => {
 
     it("throws Unauthorized when not logged in", async () => {
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(deletePainPoint("pp_1")).rejects.toThrow("Unauthorized");
+        await expect(deletePainPoint("550e8400-e29b-41d4-a716-446655440001")).rejects.toThrow("Unauthorized");
     });
 
     it("throws when no workspace found", async () => {
         (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(deletePainPoint("pp_1")).rejects.toThrow("No workspace found");
+        await expect(deletePainPoint("550e8400-e29b-41d4-a716-446655440001")).rejects.toThrow("No workspace found");
+    });
+
+    it("throws for invalid (non-UUID) id", async () => {
+        await expect(deletePainPoint("pp_1")).rejects.toThrow("Invalid pain point ID");
     });
 
     it("calls db.delete for valid request", async () => {
-        await deletePainPoint("pp_1");
+        await deletePainPoint("550e8400-e29b-41d4-a716-446655440001");
         expect(db.delete).toHaveBeenCalledTimes(1);
     });
 });

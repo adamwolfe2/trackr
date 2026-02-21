@@ -273,7 +273,10 @@ export async function disconnectSlackWorkspace() {
     return { success: true };
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function cancelInvitation(invitationId: string) {
+    if (!UUID_RE.test(invitationId)) throw new Error("Invalid invitation ID");
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 

@@ -41,7 +41,10 @@ export async function addPainPoint(formData: FormData) {
     return { success: true };
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function deletePainPoint(id: string) {
+    if (!UUID_RE.test(id)) throw new Error("Invalid pain point ID");
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
