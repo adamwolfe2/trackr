@@ -220,7 +220,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
     return (
         <div className="space-y-6">
             {/* Back link */}
-            <Link href="/tools" className="font-mono text-sm flex items-center gap-1 text-neutral-500 hover:text-black">
+            <Link href="/tools" className="print:hidden font-mono text-sm flex items-center gap-1 text-neutral-500 hover:text-black">
                 <ChevronLeft className="h-3 w-3" /> Back to Tools
             </Link>
 
@@ -256,7 +256,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 flex-shrink-0">
+                <div className="print:hidden flex items-center gap-3 flex-shrink-0">
                     {report && (
                         <PublishButton
                             reportId={report.id}

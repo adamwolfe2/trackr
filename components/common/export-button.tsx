@@ -1,6 +1,6 @@
 "use client";
 
-import { Download } from "lucide-react";
+import { Download, Printer } from "lucide-react";
 import { useState } from "react";
 
 interface ExportButtonProps {
@@ -105,9 +105,16 @@ export function ExportButton({ toolName, report }: ExportButtonProps) {
                         <button
                             onClick={handleExportJSON}
                             disabled={!report}
-                            className="w-full text-left px-4 py-2.5 font-mono text-xs hover:bg-black hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="w-full text-left px-4 py-2.5 font-mono text-xs hover:bg-black hover:text-white disabled:opacity-40 disabled:cursor-not-allowed border-b border-black"
                         >
                             Export as JSON
+                        </button>
+                        <button
+                            onClick={() => { setOpen(false); setTimeout(() => window.print(), 50); }}
+                            className="w-full text-left px-4 py-2.5 font-mono text-xs hover:bg-black hover:text-white flex items-center gap-2"
+                        >
+                            <Printer className="h-3 w-3" />
+                            Print / Save as PDF
                         </button>
                     </div>
                 </>
