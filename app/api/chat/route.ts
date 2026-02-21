@@ -202,9 +202,7 @@ ${toolContext ? `## Researched Tool Reports\n${toolContext}\n` : ""}
 
         return result.toUIMessageStreamResponse();
     } catch (err) {
-        if (process.env.NODE_ENV === "development") {
-            console.error("[api/chat]", err);
-        }
+        console.error("[api/chat]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

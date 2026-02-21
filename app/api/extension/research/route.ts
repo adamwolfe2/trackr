@@ -52,8 +52,22 @@ export async function POST(req: NextRequest) {
         );
     }
 
+    // Validate URL format
+    let parsedUrl: URL;
+    try {
+        parsedUrl = new URL(url.startsWith("http") ? url : `https://${url}`);
+        if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+            throw new Error("Invalid protocol");
+        }
+    } catch {
+        return NextResponse.json(
+            { error: "Invalid URL format" },
+            { status: 400, headers }
+        );
+    }
+
     // Derive a tool name from the title or URL domain
-    const toolName = title?.trim() || new URL(url).hostname.replace("www.", "");
+    const toolName = title?.trim() || parsedUrl.hostname.replace("www.", "");
 
     // Check tool count limit
     const subscription = await db.query.subscriptions.findFirst({
@@ -112,7 +126,8 @@ export async function POST(req: NextRequest) {
             { success: true, toolId: newTool.id },
             { status: 200, headers }
         );
-    } catch {
+    } catch (err) {
+        console.error("[extension/research] Failed to create tool or trigger research:", err);
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500, headers }
