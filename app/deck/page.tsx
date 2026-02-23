@@ -838,12 +838,12 @@ function S4() {
     );
 }
 
-// S5 — Our Methodology: reframed copy, demo UI unchanged
+// S5 — Our Methodology: grid layout matching S7's proportions
 function S5() {
     return (
         <Slide>
-            <div className="flex items-start gap-14">
-                <div className="flex-[0_0_300px] pt-2">
+            <div className="grid grid-cols-[1fr_1.4fr] gap-14 items-start">
+                <div>
                     <Label>Our Methodology</Label>
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-4"
                         style={{ fontSize: "clamp(28px,3.5vw,48px)" }}>
@@ -868,8 +868,8 @@ function S5() {
                         ))}
                     </div>
                 </div>
-                <div className="flex-1 pt-2">
-                    <ResearchAgentDemo widgetHeight={520} />
+                <div>
+                    <ResearchAgentDemo widgetHeight={460} />
                 </div>
             </div>
         </Slide>
@@ -879,8 +879,8 @@ function S5() {
 // S6 — What We Find in Every Audit (was S7): eyebrow + headline + callout reframed
 function S6() {
     return (
-        <Slide className="!items-start">
-            <div className="pt-2 w-full">
+        <Slide>
+            <div className="w-full">
                 <Label>What We Find in Every Audit</Label>
                 <div className="flex items-end justify-between mb-4">
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight"
