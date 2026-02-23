@@ -12,6 +12,7 @@ interface Tool {
     name: string;
     url: string;
     domain: string;
+    logoUrl?: string; // optional direct URL; falls back to Google favicons
     category: string;
     tier: Tier;
     score: number;
@@ -70,6 +71,7 @@ const TOOLS: Tool[] = [
         name: "Wispr Flow",
         url: "wispr.flow",
         domain: "wispr.flow",
+        logoUrl: "https://wispr.flow/favicon.ico",
         category: "Voice Dictation",
         tier: "underground",
         score: 9.6,
@@ -216,12 +218,20 @@ function ToolCard({ tool }: { tool: Tool }) {
                     <div className="flex items-center gap-2 min-w-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                            src={`https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
+                            src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
                             alt=""
                             width={18}
                             height={18}
                             className="flex-shrink-0"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                            onError={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                // Try Google favicon fallback before hiding
+                                if (!img.src.includes("google.com")) {
+                                    img.src = `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`;
+                                } else {
+                                    img.style.display = "none";
+                                }
+                            }}
                         />
                         <div className="min-w-0">
                             <div className="font-serif text-base font-medium leading-tight">{tool.name}</div>

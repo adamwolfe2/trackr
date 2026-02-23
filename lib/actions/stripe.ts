@@ -36,6 +36,9 @@ export async function createCheckoutSession(
         throw new Error("Unauthorized: Only workspace owners and admins can manage billing.");
     }
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) throw new Error("NEXT_PUBLIC_APP_URL is required for Stripe redirect URLs");
+
     const priceId = getPriceId(plan, interval);
 
     // Reuse existing Stripe customer if workspace already has one (prevents duplicates on re-subscribe)
@@ -60,8 +63,8 @@ export async function createCheckoutSession(
         ...customerIdentifier,
         metadata: { workspaceId, userId: user.id, plan, interval },
         subscription_data: { trial_period_days: 14 },
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?success=true`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing?canceled=true`,
+        success_url: `${appUrl}/settings/billing?success=true`,
+        cancel_url: `${appUrl}/settings/billing?canceled=true`,
     });
 
     if (!session.url) {
@@ -91,9 +94,12 @@ export async function createCustomerPortalSession(workspaceId: string) {
         throw new Error("No subscription found");
     }
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) throw new Error("NEXT_PUBLIC_APP_URL is required for Stripe redirect URLs");
+
     const session = await stripe.billingPortal.sessions.create({
         customer: subscription.stripeCustomerId,
-        return_url: `${process.env.NEXT_PUBLIC_APP_URL}/settings/billing`,
+        return_url: `${appUrl}/settings/billing`,
     });
 
     return { url: session.url };

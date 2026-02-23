@@ -51,6 +51,9 @@ export async function createAdCampaign(_workspaceId: string, toolId: string, bud
         clicks: 0,
     }).returning();
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl) throw new Error("NEXT_PUBLIC_APP_URL is required for Stripe redirect URLs");
+
     const primaryEmail = user.emailAddresses[0]?.emailAddress;
     if (!primaryEmail) {
         await db.delete(ads).where(eq(ads.id, newAd.id)).catch((err) =>
@@ -84,8 +87,8 @@ export async function createAdCampaign(_workspaceId: string, toolId: string, bud
                 workspaceId: workspaceId,
                 type: 'ad_campaign'
             },
-            success_url: `${process.env.NEXT_PUBLIC_APP_URL}/advertise?success=true`,
-            cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/advertise/create?canceled=true`,
+            success_url: `${appUrl}/advertise?success=true`,
+            cancel_url: `${appUrl}/advertise/create?canceled=true`,
         });
     } catch (err) {
         // Clean up orphaned draft ad to prevent accumulation of dangling records

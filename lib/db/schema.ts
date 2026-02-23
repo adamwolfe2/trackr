@@ -416,4 +416,12 @@ export const dripEmails = pgTable('drip_emails', {
     index('drip_emails_email_idx').on(table.email),
 ]);
 
+// Community Votes — anonymous per-tool like/dislike counts for the curated library
+export const communityVotes = pgTable('community_votes', {
+    toolSlug: text('tool_slug').primaryKey(),
+    upVotes: integer('up_votes').default(0).notNull(),
+    downVotes: integer('down_votes').default(0).notNull(),
+    updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
 export * from './referrals-schema';

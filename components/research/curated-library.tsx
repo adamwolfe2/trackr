@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import {
     Search,
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import type { CuratedTool, Template } from "@/lib/types";
 import { sortTools } from "@/lib/scoring";
+import { VoteButtons } from "@/components/community/vote-buttons";
 
 const TIER_LABELS: Record<string, string> = {
     essential: "Essential",
@@ -61,6 +62,14 @@ export function CuratedLibrary({ tools, templates, primaryCategories, hotToolSlu
     const [selectedSignal, setSelectedSignal] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<SortKey>("score");
     const [showFilters, setShowFilters] = useState(false);
+    const [voteData, setVoteData] = useState<Record<string, { up: number; down: number }>>({});
+
+    useEffect(() => {
+        fetch("/api/votes")
+            .then((r) => r.json())
+            .then((d) => { if (d.votes) setVoteData(d.votes); })
+            .catch(() => { /* votes unavailable — show base scores */ });
+    }, []);
 
     const filteredTools = useMemo(() => {
         let result = tools;
@@ -167,9 +176,17 @@ export function CuratedLibrary({ tools, templates, primaryCategories, hotToolSlu
                                 <div className="flex items-center gap-2">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img
-                                        src={`https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
+                                        src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
                                         alt={tool.name}
                                         className="w-5 h-5 object-contain flex-shrink-0"
+                                        onError={(e) => {
+                                            const img = e.target as HTMLImageElement;
+                                            if (!img.src.includes("google.com")) {
+                                                img.src = `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`;
+                                            } else {
+                                                img.style.display = "none";
+                                            }
+                                        }}
                                     />
                                     <span className="font-serif text-sm group-hover:underline underline-offset-2 truncate">{tool.name}</span>
                                 </div>
@@ -367,7 +384,7 @@ export function CuratedLibrary({ tools, templates, primaryCategories, hotToolSlu
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px border border-black bg-black">
                             {filteredTools.map((tool) => (
-                                <ToolCard key={tool.id} tool={tool} />
+                                <ToolCard key={tool.id} tool={tool} votes={voteData[tool.slug]} />
                             ))}
                         </div>
                     )}
@@ -394,13 +411,26 @@ export function CuratedLibrary({ tools, templates, primaryCategories, hotToolSlu
     );
 }
 
-function ToolCard({ tool }: { tool: CuratedTool }) {
+function adjustedScore(base: number, up: number, down: number): number {
+    const total = up + down;
+    if (total === 0) return base;
+    const sentiment = (up - down) / total; // -1 to +1
+    const weight = Math.min(1, total / 200); // full weight at 200+ votes
+    const adjustment = sentiment * weight * 0.3;
+    return Math.min(10, Math.round((base + adjustment) * 10) / 10);
+}
+
+function ToolCard({ tool, votes }: { tool: CuratedTool; votes?: { up: number; down: number } }) {
     const prioritySignals = tool.signals.filter((s) =>
         ["YC", "Agents", "RAG", "OpenSource"].includes(s)
     );
     const secondarySignals = tool.signals.filter((s) =>
         !["YC", "Agents", "RAG", "OpenSource"].includes(s)
     );
+
+    const displayScore = votes
+        ? adjustedScore(tool.overallScore, votes.up, votes.down)
+        : tool.overallScore;
 
     return (
         <div className="bg-white flex flex-col group">
@@ -411,9 +441,17 @@ function ToolCard({ tool }: { tool: CuratedTool }) {
                     <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                            src={`https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
+                            src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
                             alt={tool.name}
                             className="w-5 h-5 object-contain flex-shrink-0"
+                            onError={(e) => {
+                                const img = e.target as HTMLImageElement;
+                                if (!img.src.includes("google.com")) {
+                                    img.src = `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`;
+                                } else {
+                                    img.style.display = "none";
+                                }
+                            }}
                         />
                     </div>
                     {/* Category pill */}
@@ -429,7 +467,7 @@ function ToolCard({ tool }: { tool: CuratedTool }) {
                         <p className="font-mono text-[10px] text-neutral-400">{tool.domain}</p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                        <div className="font-mono text-xl font-bold">{tool.overallScore.toFixed(1)}</div>
+                        <div className="font-mono text-xl font-bold">{displayScore.toFixed(1)}</div>
                         <div className="flex items-center gap-0.5 justify-end">
                             <Star className="w-2.5 h-2.5 fill-black" />
                             <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-widest">Score</span>
@@ -459,6 +497,17 @@ function ToolCard({ tool }: { tool: CuratedTool }) {
                     ))}
                 </div>
             </div>
+
+            {/* Vote bar */}
+            {votes && (
+                <div className="px-3 pb-3">
+                    <VoteButtons
+                        slug={tool.slug}
+                        initialUp={votes.up}
+                        initialDown={votes.down}
+                    />
+                </div>
+            )}
 
             {/* CTA */}
             <div className="border-t border-neutral-100 p-3 flex gap-2">

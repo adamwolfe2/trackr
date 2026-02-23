@@ -49,6 +49,7 @@ export type CuratedTool = {
     integrations: string[]; // key integration domains for favicons
     scorecard: Scorecard;
     overallScore: number; // pre-computed average
+    logoUrl?: string; // optional direct logo URL — falls back to Google favicons
     pros: string[];
     cons: string[];
     bestFor: string[]; // ideal use cases

@@ -184,6 +184,13 @@ export async function performDeepResearch(toolId: string) {
         triggeredAt: new Date(),
     }).returning();
 
+    // Drizzle RETURNING on Neon HTTP should never return an empty array for a
+    // successful INSERT, but guard explicitly so a missed job doesn't silently
+    // stay "running" forever (picked up by the stuck-job recovery cron).
+    if (!researchJob) {
+        throw new Error(`[research] Failed to create researchJob row for tool ${toolId} — INSERT returned no rows`);
+    }
+
     await db.update(tools).set({
         status: "researching",
         researchLogs: [] as unknown as ResearchLog[],
