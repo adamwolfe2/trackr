@@ -143,9 +143,9 @@ export async function performDeepResearch(toolId: string) {
         if (jobCount >= limits.limits.research) {
             // Check if workspace has extra credits
             if (subscription && subscription.creditBalance > 0) {
-                // Decrement credit balance — tracked so we can refund if research fails
-                creditDeducted = true;
-                await db.update(subscriptions)
+                // Atomically decrement credit balance — only marks creditDeducted if the
+                // DB row was actually updated (protects against concurrent over-deduction).
+                const [deducted] = await db.update(subscriptions)
                     .set({
                         creditBalance: sql`${subscriptions.creditBalance} - 1`,
                         updatedAt: new Date(),
@@ -153,7 +153,20 @@ export async function performDeepResearch(toolId: string) {
                     .where(and(
                         eq(subscriptions.workspaceId, tool.workspaceId),
                         gt(subscriptions.creditBalance, 0),
-                    ));
+                    ))
+                    .returning({ id: subscriptions.id });
+                // Only set creditDeducted if the update actually consumed a credit.
+                // If another concurrent request already drained the balance the WHERE
+                // clause returns 0 rows — treat that as limit reached too.
+                if (deducted) {
+                    creditDeducted = true;
+                } else {
+                    await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+                    return {
+                        success: false,
+                        error: `Monthly research limit reached (${limits.limits.research} runs on ${limits.name} plan). Upgrade or purchase extra credits to run more research this month.`,
+                    };
+                }
             } else {
                 await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
                 return {

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { reports, tools, workspaceMembers } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 
@@ -63,19 +63,31 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Report not found" }, { status: 404 });
     }
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
+
     // If already has a share token, return existing URL
     if (report.shareToken) {
-        const url = `${process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com"}/share/${report.shareToken}`;
-        return NextResponse.json({ url, token: report.shareToken });
+        return NextResponse.json({
+            url: `${appUrl}/share/${report.shareToken}`,
+            token: report.shareToken,
+        });
     }
 
-    // Generate new share token
+    // Generate and write new share token — only if shareToken is still null.
+    // The isNull() condition in the WHERE clause means concurrent requests that
+    // race here only one will write; we re-fetch to return whatever was stored.
     const token = crypto.randomUUID().replace(/-/g, "");
 
     await db.update(reports)
         .set({ shareToken: token })
-        .where(eq(reports.id, reportId));
+        .where(and(eq(reports.id, reportId), isNull(reports.shareToken)));
 
-    const url = `${process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com"}/share/${token}`;
-    return NextResponse.json({ url, token });
+    // Re-fetch the stored token (handles the race: another request may have won)
+    const saved = await db.query.reports.findFirst({
+        where: eq(reports.id, reportId),
+        columns: { shareToken: true },
+    });
+    const finalToken = saved?.shareToken ?? token;
+
+    return NextResponse.json({ url: `${appUrl}/share/${finalToken}`, token: finalToken });
 }

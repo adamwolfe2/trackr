@@ -3,7 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { after } from "next/server";
 import { db } from "@/lib/db";
 import { tools, subscriptions } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 import { getWorkspaceId } from "@/lib/db/queries";
 import { performDeepResearch } from "@/lib/actions/research";
 import { rateLimit } from "@/lib/middleware/rate-limit";
@@ -50,11 +50,22 @@ export async function POST(req: NextRequest) {
     // Verify tool exists and belongs to this workspace
     const tool = await db.query.tools.findFirst({
         where: and(eq(tools.id, toolId), eq(tools.workspaceId, workspaceId)),
+        columns: { id: true, status: true },
     });
     if (!tool) return NextResponse.json({ error: "Tool not found" }, { status: 404 });
 
-    // Don't allow starting research if already in progress
-    if (tool.status === "researching") {
+    // Atomically claim the tool for research — the ne() condition ensures only one
+    // concurrent request succeeds, preventing duplicate research jobs from rapid clicks.
+    const [claimed] = await db.update(tools)
+        .set({ status: "researching" })
+        .where(and(
+            eq(tools.id, toolId),
+            eq(tools.workspaceId, workspaceId),
+            ne(tools.status, "researching"),
+        ))
+        .returning({ id: tools.id });
+
+    if (!claimed) {
         return NextResponse.json({ error: "Research already in progress" }, { status: 409 });
     }
 

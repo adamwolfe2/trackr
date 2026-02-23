@@ -176,8 +176,10 @@ const MOCK_REPORT = {
 // ── DB chain helpers ──────────────────────────────────────────────────────────
 
 function setupDbChains(selectJobCount = 0) {
-    // update chain: .set().where() → {}
-    const updateWhere = vi.fn().mockResolvedValue({});
+    // update chain: .set().where() → thenable that also supports .returning()
+    const updateReturning = vi.fn().mockResolvedValue([{ id: "sub_1" }]);
+    const updateWhereResult = Object.assign(Promise.resolve({}), { returning: updateReturning });
+    const updateWhere = vi.fn().mockReturnValue(updateWhereResult);
     const updateSet = vi.fn().mockReturnValue({ where: updateWhere });
     (db.update as ReturnType<typeof vi.fn>).mockReturnValue({ set: updateSet });
 

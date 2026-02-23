@@ -11,7 +11,15 @@ vi.mock("@/lib/db", () => ({
             subscriptions: { findFirst: vi.fn() },
             researchJobs: { findFirst: vi.fn() },
         },
-        update: vi.fn().mockReturnValue({ set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }) }),
+        update: vi.fn().mockReturnValue({
+            set: vi.fn().mockReturnValue({
+                where: vi.fn().mockReturnValue(
+                    Object.assign(Promise.resolve(undefined), {
+                        returning: vi.fn().mockResolvedValue([{ id: "tool_1" }]),
+                    })
+                ),
+            }),
+        }),
         insert: vi.fn().mockReturnValue({
             values: vi.fn().mockReturnValue({
                 returning: vi.fn().mockResolvedValue([{ id: "job_1" }]),
@@ -73,7 +81,13 @@ describe("POST /api/research/start", () => {
         (db.query.researchJobs.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
         (db.update as ReturnType<typeof vi.fn>).mockReturnValue({
-            set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+            set: vi.fn().mockReturnValue({
+                where: vi.fn().mockReturnValue(
+                    Object.assign(Promise.resolve(undefined), {
+                        returning: vi.fn().mockResolvedValue([{ id: "tool_1" }]),
+                    })
+                ),
+            }),
         });
         (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({
             values: vi.fn().mockReturnValue({

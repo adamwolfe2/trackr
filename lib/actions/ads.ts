@@ -51,6 +51,14 @@ export async function createAdCampaign(_workspaceId: string, toolId: string, bud
         clicks: 0,
     }).returning();
 
+    const primaryEmail = user.emailAddresses[0]?.emailAddress;
+    if (!primaryEmail) {
+        await db.delete(ads).where(eq(ads.id, newAd.id)).catch((err) =>
+            console.error("[cleanup] Failed to delete orphaned ad after missing email:", newAd.id, err)
+        );
+        throw new Error("User has no email address — cannot create Stripe checkout session");
+    }
+
     // Create Stripe Session — if this fails, roll back the orphaned draft ad
     let session;
     try {
@@ -70,7 +78,7 @@ export async function createAdCampaign(_workspaceId: string, toolId: string, bud
                     quantity: 1,
                 },
             ],
-            customer_email: user.emailAddresses[0].emailAddress,
+            customer_email: primaryEmail,
             metadata: {
                 adId: newAd.id,
                 workspaceId: workspaceId,
@@ -81,12 +89,16 @@ export async function createAdCampaign(_workspaceId: string, toolId: string, bud
         });
     } catch (err) {
         // Clean up orphaned draft ad to prevent accumulation of dangling records
-        await db.delete(ads).where(eq(ads.id, newAd.id)).catch(() => {});
+        await db.delete(ads).where(eq(ads.id, newAd.id)).catch((cleanupErr) =>
+            console.error("[cleanup] Failed to delete orphaned ad:", newAd.id, cleanupErr)
+        );
         throw err;
     }
 
     if (!session.url) {
-        await db.delete(ads).where(eq(ads.id, newAd.id)).catch(() => {});
+        await db.delete(ads).where(eq(ads.id, newAd.id)).catch((cleanupErr) =>
+            console.error("[cleanup] Failed to delete orphaned ad (no session URL):", newAd.id, cleanupErr)
+        );
         throw new Error("Failed to create checkout session");
     }
 

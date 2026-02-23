@@ -44,9 +44,14 @@ export async function createCheckoutSession(
         columns: { stripeCustomerId: true },
     });
 
+    const primaryEmail = user.emailAddresses[0]?.emailAddress;
+    if (!primaryEmail && !existingSub?.stripeCustomerId) {
+        throw new Error("User has no email address — cannot create Stripe checkout session");
+    }
+
     const customerIdentifier = existingSub?.stripeCustomerId
         ? { customer: existingSub.stripeCustomerId }
-        : { customer_email: user.emailAddresses[0].emailAddress };
+        : { customer_email: primaryEmail! };
 
     const session = await stripe.checkout.sessions.create({
         mode: 'subscription',
