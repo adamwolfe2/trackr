@@ -8,7 +8,7 @@ import { TrackrLogo } from "@/components/common/trackr-logo";
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-const TOTAL = 10;
+const TOTAL = 9;
 const BG = "#F3F3EF";
 
 const DEMO_TOOLS = [
@@ -791,51 +791,46 @@ function S3() {
     );
 }
 
-// S4 — What Trackr Does: value-focused card copy
+// S4 — The Engagement: 4-phase horizontal timeline
 function S4() {
-    const CAPS = [
+    const PHASES = [
         {
             n: "01",
-            label: "Research Agent",
-            title: "Research any tool in under 2 minutes",
-            body: "Paste a URL or tool name. Three parallel AI agents crawl the product site, G2, Capterra, Reddit, HackerNews, and competitor pages simultaneously — then deliver a 7-dimension scorecard tuned to your team's actual use case.",
-            tools: ["notion.so","linear.app","figma.com","clay.com","cursor.sh"],
+            title: "Stack Intake",
+            body: "We map every tool your org pays for, who owns it, and what it's actually being used for.",
         },
         {
             n: "02",
-            label: "Spend Tracker",
-            title: "Kill the software waste. Own every dollar.",
-            body: "Map every tool to a team, budget owner, and renewal date. Instantly see what's AI vs legacy. Identify redundancy before it compounds. Export CFO-ready reports in one click.",
-            tools: ["salesforce.com","hubspot.com","asana.com","slack.com","zoom.us"],
+            title: "Expert Audit",
+            body: "Our AI-native operators run every tool through our research agents — scoring each one across 7 dimensions and benchmarking against best-in-class alternatives.",
         },
         {
             n: "03",
-            label: "Stack Intelligence",
-            title: "One workspace. Every tool. Always current.",
-            body: "Compare tools side by side, set renewal alerts, get AI-generated swap recommendations, and ask your stack direct questions: 'What should we replace Zapier with?' It answers.",
-            tools: ["notion.so","slack.com","github.com","figma.com","zapier.com"],
+            title: "Action Plan",
+            body: "We deliver a prioritized list: what to cut, what to swap, what to add, and in what order. Every recommendation is backed by agent-generated data, not opinion.",
+        },
+        {
+            n: "04",
+            title: "Handoff",
+            body: "We implement the plan with your team and leave your Trackr workspace fully populated — so your stack intelligence stays live after we leave.",
         },
     ];
     return (
         <Slide>
-            <Label>What Trackr Does</Label>
-            <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-10"
+            <Label>How We Work</Label>
+            <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-5"
                 style={{ fontSize: "clamp(36px,4.5vw,60px)" }}>
-                Research. Track. Decide.<br />One platform.
+                We come in. We fix it.<br />We leave you the system.
             </h2>
-            <div className="grid grid-cols-3 gap-0 border border-black">
-                {CAPS.map((c, i) => (
-                    <div key={c.label} className={`p-8 ${i < 2 ? "border-r border-black" : ""}`}>
-                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-3">{c.n}</div>
-                        <h3 className="font-serif text-lg font-normal mb-2 leading-snug">{c.title}</h3>
-                        <p className="font-mono text-xs text-black/55 leading-relaxed mb-6">{c.body}</p>
-                        <div className="flex gap-1.5 flex-wrap">
-                            {c.tools.map(d => (
-                                <div key={d} className="w-6 h-6 border border-black/10 bg-[#F3F3EF] flex items-center justify-center">
-                                    <Favicon domain={d} size={12} />
-                                </div>
-                            ))}
-                        </div>
+            <p className="font-mono text-sm text-black/55 leading-relaxed mb-10 max-w-[680px]">
+                This isn&apos;t a tool you set up yourself. We do it with you — auditing your stack, interviewing your team, identifying what to cut and what to add, and implementing the recommendations. When we&apos;re done, your team has a live intelligence workspace so you never need to start from scratch again.
+            </p>
+            <div className="grid grid-cols-4 gap-0 border border-black">
+                {PHASES.map((p, i) => (
+                    <div key={p.n} className={`p-8 ${i < 3 ? "border-r border-black" : ""}`}>
+                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-3">{p.n}</div>
+                        <h3 className="font-serif text-xl font-normal mb-4">{p.title}</h3>
+                        <p className="font-mono text-xs text-black/55 leading-relaxed">{p.body}</p>
                     </div>
                 ))}
             </div>
@@ -843,19 +838,19 @@ function S4() {
     );
 }
 
-// S5 — Research Agent Deep Dive: intro paragraph + renamed sources
+// S5 — Our Methodology: reframed copy, demo UI unchanged
 function S5() {
     return (
         <Slide>
             <div className="flex items-start gap-14">
                 <div className="flex-[0_0_300px] pt-2">
-                    <Label>Research Agent</Label>
+                    <Label>Our Methodology</Label>
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-4"
                         style={{ fontSize: "clamp(28px,3.5vw,48px)" }}>
-                        Any tool.<br />Under 2 minutes.<br />7 dimensions.
+                        Every tool we evaluate is scored across 7 dimensions. Automatically.
                     </h2>
                     <p className="font-mono text-xs text-black/55 leading-relaxed mb-5">
-                        Most teams spend 2–3 hours manually researching a single tool. Trackr does it in under 2 minutes and produces a more thorough report than any human analyst could.
+                        When we audit your stack, every tool gets put through our research agents. We don&apos;t rely on gut feel or vendor decks. We crawl the product site, pull community reviews, benchmark competitors, and score each tool across 7 dimensions — in under 2 minutes. This is how we back every recommendation we make.
                     </p>
                     <div className="border border-black bg-white p-4 shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
                         <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-3">What Our Agents Read</div>
@@ -881,48 +876,20 @@ function S5() {
     );
 }
 
-// S6 — How It Works: updated stat copy + Step 8 callout
+// S6 — What We Find in Every Audit (was S7): eyebrow + headline + callout reframed
 function S6() {
-    return (
-        <Slide>
-            <Label>How It Works</Label>
-            <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-8"
-                style={{ fontSize: "clamp(36px,4.5vw,60px)" }}>
-                7 automated steps.<br />Zero manual work.
-            </h2>
-            <ProcessAnimation />
-            <div className="mt-4 grid grid-cols-4 gap-0 border border-black">
-                {[
-                    { stat: "~$0.01",  label: "per page crawled", sub: "Enterprise-grade research for pennies" },
-                    { stat: "< 2 min", label: "avg report time",  sub: "vs. 2–3 hours manual" },
-                    { stat: "30 days", label: "auto-refresh cycle", sub: "Your stack intel never goes stale" },
-                    { stat: "Step 8",  label: "Deliver to team",   sub: "Slack, email, or workspace — one click" },
-                ].map((x, i) => (
-                    <div key={x.stat} className={`p-4 flex flex-col gap-1 ${i < 3 ? "border-r border-black" : ""}`}>
-                        <div className="font-serif text-xl font-normal">{x.stat}</div>
-                        <div className="font-mono text-[10px] text-black/50 font-medium">{x.label}</div>
-                        <div className="font-mono text-[9px] text-black/35 leading-snug">{x.sub}</div>
-                    </div>
-                ))}
-            </div>
-        </Slide>
-    );
-}
-
-// S7 — Spend Tracker: eyebrow rename + intro paragraph + callout
-function S7() {
     return (
         <Slide className="!items-start">
             <div className="pt-2 w-full">
-                <Label>Software Spend Intelligence</Label>
+                <Label>What We Find in Every Audit</Label>
                 <div className="flex items-end justify-between mb-4">
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight"
                         style={{ fontSize: "clamp(28px,3.5vw,48px)" }}>
-                        Every dollar mapped.<br />Every tool accountable.
+                        Most companies are paying<br />for the same capability<br />three times.
                     </h2>
                     <div className="flex-shrink-0 ml-8 border border-black bg-white px-5 py-3 max-w-[340px] shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
                         <p className="font-mono text-xs text-black/60 leading-relaxed">
-                            The average company has <span className="font-medium text-black">5–7 tools doing the same job</span> across different departments. Trackr makes the overlap visible — and the fix obvious.
+                            In every audit we run, we map your entire software spend by department and owner. The overlap is almost always immediate — and the savings are real. This is what your action plan is built on.
                         </p>
                     </div>
                 </div>
@@ -937,8 +904,8 @@ function S7() {
     );
 }
 
-// S8 — Stack Intelligence: Ask Trackr AI as hero
-function S8() {
+// S7 — What We Leave Behind (was S8): eyebrow + headline + body reframed
+function S7() {
     const SUPPORTING = [
         { title: "500+ Tools Indexed",   body: "Every major AI and SaaS tool scored with agent-generated data. Updated automatically as tools evolve.", tools: ["notion.so","figma.com","linear.app","slack.com"] },
         { title: "Side-by-Side Compare", body: "Select any tools and compare them dimension-by-dimension. Share comparisons with your team instantly.", tools: ["airtable.com","zapier.com","asana.com","hubspot.com"] },
@@ -953,16 +920,16 @@ function S8() {
 
     return (
         <Slide>
-            <Label>Stack Intelligence</Label>
+            <Label>What We Leave Behind</Label>
             <div className="grid grid-cols-[1fr_1fr] gap-10 items-start">
                 {/* Left: Ask Trackr AI hero */}
                 <div>
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-3"
                         style={{ fontSize: "clamp(28px,3.2vw,44px)" }}>
-                        Chat with your<br />entire stack.
+                        After the engagement,<br />your team doesn&apos;t start<br />from scratch. Ever.
                     </h2>
                     <p className="font-mono text-xs text-black/55 leading-relaxed mb-5">
-                        Ask Trackr anything about your software. It knows every tool you pay for, every score, every renewal date.
+                        We populate your Trackr workspace during the engagement. Every tool we evaluated, every score, every renewal date — it&apos;s all live when we hand off. Your team can research new tools, get swap recommendations, and stay current on the market without re-engaging us. This is how the value compounds after we leave.
                     </p>
                     {/* Chat UI mockup */}
                     <div className="border border-black bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] overflow-hidden">
@@ -1012,8 +979,8 @@ function S8() {
     );
 }
 
-// S9 — The Trackr Difference: complete rewrite with 5 cards (2+2+1 layout)
-function S9() {
+// S8 — The Trackr Difference (was S9): add framing sentence above grid
+function S8() {
     const DIFFS = [
         {
             title: "Built by operators, not researchers",
@@ -1039,10 +1006,13 @@ function S9() {
     return (
         <Slide>
             <Label>The Trackr Difference</Label>
-            <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-8"
+            <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-4"
                 style={{ fontSize: "clamp(28px,3.5vw,50px)" }}>
                 You don&apos;t just get software.<br />You get AI-native operators who&apos;ve<br />deployed this across 50+ organizations.
             </h2>
+            <p className="font-mono text-sm text-black/55 leading-relaxed mb-7 max-w-[680px]">
+                You&apos;re not buying a research tool. You&apos;re hiring operators who&apos;ve built AI infrastructure inside real organizations — and the tool is how we prove our work.
+            </p>
             <div className="grid grid-cols-2 gap-0 border border-black">
                 {DIFFS.slice(0, 4).map((d, i) => (
                     <div key={d.title}
@@ -1078,8 +1048,8 @@ function S9() {
     );
 }
 
-// S10 — Enterprise AI Audit CTA: complete rewrite
-function S10() {
+// S9 — Enterprise AI Audit CTA (was S10): subheadline + attribution updated
+function S9() {
     return (
         <Slide>
             <div className="text-center">
@@ -1093,10 +1063,10 @@ function S10() {
                     We audit your entire AI stack,<br />eliminate the waste, and get you<br />to AI-native in 5 days.
                 </h1>
                 <p className="font-mono text-sm text-black/50 max-w-[620px] mx-auto leading-relaxed mb-4">
-                    This isn&apos;t a generic AI strategy deck. We sit inside your org, interview your department heads, evaluate every tool you pay for, and deliver a prioritized action plan with specific tool swaps, workflow redesigns, and ROI projections. Then we help you implement it.
+                    We sit inside your org, interview your department heads, score every tool in your stack, and deliver a prioritized action plan — specific tool swaps, workflow redesigns, and ROI projections. Then we implement it with you. And we leave the system running when we&apos;re done.
                 </p>
                 <p className="font-mono text-xs text-black/35 max-w-[540px] mx-auto mb-10 leading-relaxed">
-                    Used by RevOps leaders, VPs of Engineering, COOs, and department managers who need an outside expert to make sense of the AI landscape — fast.
+                    For ops leaders, department heads, and founders who want to be AI-native — and want someone who&apos;s done it before to show them how.
                 </p>
                 <div className="flex gap-4 justify-center mb-10">
                     <a href="https://cal.com/adamwolfe/trackr" target="_blank" rel="noopener noreferrer"
@@ -1130,16 +1100,15 @@ function S10() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SLIDES: Record<number, (props: { goTo: (n: number) => void }) => React.ReactNode> = {
-    1:  ({ goTo }) => <S1 goTo={goTo} />,
-    2:  () => <S2 />,
-    3:  () => <S3 />,
-    4:  () => <S4 />,
-    5:  () => <S5 />,
-    6:  () => <S6 />,
-    7:  () => <S7 />,
-    8:  () => <S8 />,
-    9:  () => <S9 />,
-    10: () => <S10 />,
+    1: ({ goTo }) => <S1 goTo={goTo} />,
+    2: () => <S2 />,
+    3: () => <S3 />,
+    4: () => <S4 />,
+    5: () => <S5 />,
+    6: () => <S6 />,
+    7: () => <S7 />,
+    8: () => <S8 />,
+    9: () => <S9 />,
 };
 
 export default function DeckPage() {
