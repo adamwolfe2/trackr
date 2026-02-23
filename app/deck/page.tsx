@@ -105,10 +105,9 @@ const PROCESS_STEPS = [
     { n: "4", tool: "TAVILY",    title: "Community Intel",    desc: "Pull Reddit threads, HackerNews, LinkedIn for unfiltered usage patterns." },
     { n: "5", tool: "AI",        title: "Synthesize",         desc: "AI consolidates all gathered data into a structured knowledge profile." },
     { n: "6", tool: "AI",        title: "Score 7 Dimensions", desc: "Features, Pricing, AI Capabilities, Integrations, Ease of Use, Support, Momentum." },
-    { n: "7", tool: "TRACKR",   title: "Deliver",             desc: "Report saved to your workspace. Team notified. Renewal alerts set." },
+    { n: "7", tool: "TRACKR",    title: "Deliver",            desc: "Report saved to your workspace. Team notified. Renewal alerts set." },
 ];
 
-// Tool spend data — shown as product table with logos
 const SPEND_TOOLS_DETAILED = [
     { domain: "salesforce.com", name: "Salesforce", dept: "Sales",     seats: 45, cost: 2400, type: "Legacy" as const },
     { domain: "hubspot.com",    name: "HubSpot",    dept: "Marketing", seats: 12, cost: 1800, type: "Legacy" as const },
@@ -262,7 +261,7 @@ function ResearchAgentDemo({ autoPlay = true, widgetHeight = 480 }: { autoPlay?:
         return clearAll;
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const headerH = 84; // title bar + url bar combined
+    const headerH = 84;
     const bodyH = widgetHeight - headerH;
 
     return (
@@ -328,8 +327,8 @@ function ResearchAgentDemo({ autoPlay = true, widgetHeight = 480 }: { autoPlay?:
                                         )}
                                         {streamVisible[si] >= 4 && (
                                             <div className="flex items-center gap-1 pl-2.5 pt-0.5">
-                                                <CheckCircle2 className="w-2.5 h-2.5 text-black" />
-                                                <span className="font-mono text-[9px] text-black font-medium">Done</span>
+                                                <CheckCircle2 className="w-2.5 h-2.5 text-green-600" />
+                                                <span className="font-mono text-[9px] text-green-600 font-medium">Done</span>
                                             </div>
                                         )}
                                     </div>
@@ -441,7 +440,7 @@ function ResearchAgentDemo({ autoPlay = true, widgetHeight = 480 }: { autoPlay?:
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SPEND TRACKER DEMO (auto-playing product table)
+// SPEND TRACKER DEMO
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SpendTrackerDemo() {
@@ -454,12 +453,10 @@ function SpendTrackerDemo() {
         timers.current = [];
         const add = (d: number, fn: () => void) => { const id = setTimeout(fn, d); timers.current.push(id); };
 
-        // Rows animate in one by one
         SPEND_TOOLS_DETAILED.forEach((_, i) => {
             add(200 + i * 160, () => setRowsVisible(i + 1));
         });
 
-        // After all rows loaded, cycle department highlights
         const allLoaded = 200 + SPEND_TOOLS_DETAILED.length * 160 + 600;
         SPEND_DEPTS.forEach((dept, i) => {
             add(allLoaded + i * 1800, () => setHighlight(dept.id));
@@ -495,11 +492,11 @@ function SpendTrackerDemo() {
                     <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/40 mb-3">By Department</div>
                     {SPEND_DEPTS.map(dept => {
                         const deptTotal = SPEND_TOOLS_DETAILED
-                            .filter(t => t.dept.toLowerCase().startsWith(dept.id.slice(0,3)) ||
-                                (dept.id === "mkt" && t.dept === "Marketing") ||
+                            .filter(t =>
+                                (dept.id === "mkt"  && t.dept === "Marketing") ||
                                 (dept.id === "sales" && t.dept === "Sales") ||
-                                (dept.id === "eng" && t.dept === "Eng") ||
-                                (dept.id === "ops" && t.dept === "Ops"))
+                                (dept.id === "eng"  && t.dept === "Eng") ||
+                                (dept.id === "ops"  && t.dept === "Ops"))
                             .reduce((s, t) => s + t.cost, 0);
                         return (
                             <div key={dept.id}
@@ -516,13 +513,11 @@ function SpendTrackerDemo() {
 
             {/* Right: Tool table */}
             <div className="border border-black bg-white overflow-hidden flex flex-col shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
-                {/* Table header */}
                 <div className="grid grid-cols-[1.8fr_0.8fr_0.6fr_0.7fr_0.6fr] px-4 py-2 border-b border-black/10 bg-[#F3F3EF] flex-shrink-0">
                     {["Tool", "Dept", "Seats", "Monthly", "Type"].map(h => (
                         <div key={h} className="font-mono text-[8px] uppercase tracking-[0.15em] text-black/35">{h}</div>
                     ))}
                 </div>
-                {/* Rows */}
                 <div className="flex-1 overflow-hidden divide-y divide-black/06">
                     {SPEND_TOOLS_DETAILED.map((tool, i) => {
                         const deptId = tool.dept === "Marketing" ? "mkt" : tool.dept.toLowerCase();
@@ -537,20 +532,15 @@ function SpendTrackerDemo() {
                                     background: isHighlighted ? "rgba(0,0,0,0.03)" : "white",
                                     borderLeft: isHighlighted ? "2px solid black" : "2px solid transparent",
                                 }}>
-                                {/* Tool name + favicon */}
                                 <div className="flex items-center gap-2 min-w-0">
                                     <div className="w-5 h-5 border border-black/10 bg-[#F3F3EF] flex items-center justify-center flex-shrink-0">
                                         <Favicon domain={tool.domain} size={12} />
                                     </div>
                                     <span className="font-mono text-[11px] font-medium text-black truncate">{tool.name}</span>
                                 </div>
-                                {/* Dept */}
                                 <div className="font-mono text-[10px] text-black/45">{tool.dept}</div>
-                                {/* Seats */}
                                 <div className="font-mono text-[10px] text-black/45">{tool.seats}</div>
-                                {/* Cost */}
                                 <div className="font-mono text-[11px] font-medium text-black">${tool.cost.toLocaleString()}</div>
-                                {/* Type badge */}
                                 <div>
                                     <span className={`font-mono text-[8px] uppercase tracking-widest px-1.5 py-0.5 border ${
                                         tool.type === "AI"
@@ -564,7 +554,6 @@ function SpendTrackerDemo() {
                         );
                     })}
                 </div>
-                {/* Footer */}
                 <div className="border-t border-black/10 px-4 py-2 bg-[#F3F3EF] flex items-center justify-between flex-shrink-0">
                     <span className="font-mono text-[9px] text-black/35">{SPEND_TOOLS_DETAILED.length} tools tracked · auto-synced</span>
                     <span className="font-mono text-[9px] text-black/35">Last updated: today</span>
@@ -575,7 +564,7 @@ function SpendTrackerDemo() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PROCESS ANIMATION (auto-playing) — white bg, green done, arrows
+// PROCESS ANIMATION
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ProcessAnimation() {
@@ -637,7 +626,6 @@ function ProcessAnimation() {
                                 </div>
                             )}
                         </div>
-                        {/* Arrow divider between steps */}
                         {i < PROCESS_STEPS.length - 1 && (
                             <div className="flex-shrink-0 w-6 border-l border-r border-black/15 flex items-center justify-center bg-[#F3F3EF]">
                                 <span className="font-mono text-[9px] text-black/30">→</span>
@@ -654,6 +642,7 @@ function ProcessAnimation() {
 // SLIDE COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────
 
+// S1 — Hero: Pain-point centric
 function S1({ goTo }: { goTo: (n: number) => void }) {
     return (
         <Slide>
@@ -664,19 +653,23 @@ function S1({ goTo }: { goTo: (n: number) => void }) {
                         <TrackrLogo size={20} />
                         <span className="font-serif text-lg font-normal tracking-tight">Trackr</span>
                     </div>
-                    <Label>AI Tool Intelligence for Ops Teams</Label>
-                    <h1 className="font-serif font-normal leading-[1.05] tracking-tight mb-6"
-                        style={{ fontSize: "clamp(38px,4.5vw,62px)" }}>
-                        Your team&apos;s AI tool<br />intelligence layer.
+                    <Label>The AI Tool Problem</Label>
+                    <h1 className="font-serif font-normal leading-[1.05] tracking-tight mb-5"
+                        style={{ fontSize: "clamp(32px,3.8vw,54px)" }}>
+                        Your competitors are<br />adopting AI faster than<br />you can evaluate it.
                     </h1>
-                    <p className="font-mono text-sm text-black/55 leading-relaxed mb-10 max-w-[440px]">
-                        Research any AI tool in under 2 minutes. Track what you pay for. Stay current on launches. One shared workspace — no spreadsheets, no Slack threads, no wasted research.
+                    <p className="font-mono text-sm text-black/55 leading-relaxed mb-8 max-w-[440px]">
+                        Trackr gives your team AI-native experts and a research platform that finds, scores, and monitors every tool in your stack — so you never fall behind again.
                     </p>
-                    <div className="flex flex-col gap-4 mb-10">
-                        {["Reports in under 2 min", "7-dimension scorecard", "Auto-refreshes every 30 days"].map(f => (
-                            <div key={f} className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 bg-black flex-shrink-0" />
-                                <span className="font-mono text-xs text-black/50">{f}</span>
+                    <div className="flex flex-col gap-3 mb-10">
+                        {[
+                            "AI-native experts embedded in your stack evaluation",
+                            "Full tool research in under 2 minutes, auto-refreshed every 30 days",
+                            "One shared workspace — no spreadsheets, no Slack threads, no wasted cycles",
+                        ].map(f => (
+                            <div key={f} className="flex items-start gap-2">
+                                <span className="w-1.5 h-1.5 bg-black flex-shrink-0 mt-1.5" />
+                                <span className="font-mono text-xs text-black/55 leading-relaxed">{f}</span>
                             </div>
                         ))}
                     </div>
@@ -701,13 +694,29 @@ function S1({ goTo }: { goTo: (n: number) => void }) {
     );
 }
 
-// S2 — The Reality: left headline + right 2×2 pain stats
+// S2 — The Reality: updated headline + specific stat labels + new paragraph
 function S2() {
     const PAIN_STATS = [
-        { stat: "8,000+",  body: "AI tools launched in 2024 alone. Your team can't evaluate them manually.", source: "CB Insights" },
-        { stat: "73%",     body: "of AI implementations fail to deliver ROI within the first 6 months.", source: "McKinsey, 2025" },
-        { stat: "14 hrs",  body: "per week that ops leaders spend evaluating and tracking tools manually.", source: "Internal survey" },
-        { stat: "$340B",   body: "wasted annually on redundant, underused, and invisible software spend.", source: "Gartner, 2025" },
+        {
+            stat: "8,000+",
+            body: "AI tools launched in 2024 alone — most your team has never heard of.",
+            source: "CB Insights",
+        },
+        {
+            stat: "73%",
+            body: "of AI implementations fail because companies picked the wrong tool for the wrong problem.",
+            source: "McKinsey, 2025",
+        },
+        {
+            stat: "14 hrs",
+            body: "per week that ops leaders spend manually researching tools that may already be obsolete.",
+            source: "Internal survey",
+        },
+        {
+            stat: "$340B",
+            body: "wasted annually on redundant, underused, and invisible software — most approved without a proper evaluation.",
+            source: "Gartner, 2025",
+        },
     ];
     return (
         <Slide>
@@ -716,12 +725,12 @@ function S2() {
                 <div>
                     <Label>The Reality</Label>
                     <h2 className="font-serif font-normal leading-[1.06] tracking-tight mb-6"
-                        style={{ fontSize: "clamp(40px,5vw,72px)" }}>
-                        The AI race is<br />happening now.<br />
-                        <span className="text-black/28">Most operators<br />are losing it.</span>
+                        style={{ fontSize: "clamp(28px,3.4vw,48px)" }}>
+                        You don&apos;t have time to<br />research 8,000+ new AI<br />tools. Your competitors<br />
+                        <span className="text-black/28">don&apos;t either — but<br />some of them found<br />a way.</span>
                     </h2>
-                    <p className="font-mono text-sm text-black/50 leading-relaxed">
-                        Former Fortune 500 CROs. Ex-Google, Meta, and Palantir operators. Even the most sophisticated technology leaders in the world admit they can&apos;t keep up with AI tools — and they&apos;re right.
+                    <p className="font-mono text-xs text-black/50 leading-relaxed">
+                        The problem isn&apos;t effort. It&apos;s that no one in your org is proactively scanning what&apos;s available, what&apos;s better than what you use, and what your competitors are already running.
                     </p>
                 </div>
                 {/* Right: 2×2 pain stats */}
@@ -743,29 +752,38 @@ function S2() {
     );
 }
 
+// S3 — Why Companies Fall Behind on AI (replaces "cost of standing still")
 function S3() {
-    const STATS = [
-        { stat: "73%",   label: "of AI implementations fail to deliver ROI within 6 months", source: "McKinsey, 2025" },
-        { stat: "8,000+",label: "AI tools launched in 2024 alone — and counting",             source: "CB Insights"   },
-        { stat: "14 hrs",label: "per week ops leaders spend evaluating tools manually",        source: "Internal survey"},
-        { stat: "$340B", label: "wasted annually on redundant and underutilized software",     source: "Gartner, 2025" },
+    const REASONS = [
+        {
+            n: "01",
+            title: "No dedicated AI researcher on the team",
+            body: "Most companies rely on whoever has time, which is no one. Tools get adopted ad hoc, creating overlap, waste, and security risk.",
+        },
+        {
+            n: "02",
+            title: "No system to evaluate or compare tools",
+            body: "Decisions happen in Slack threads and Google Docs. There's no scoring framework, no institutional memory, no way to compare Vendor A vs Vendor B objectively.",
+        },
+        {
+            n: "03",
+            title: "No one proactively watching the market",
+            body: "The best tools rarely reach your inbox. By the time you hear about them, your competitors already onboarded.",
+        },
     ];
     return (
         <Slide>
-            <Label>Why This Matters Right Now</Label>
+            <Label>Why Companies Fall Behind on AI</Label>
             <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-10"
                 style={{ fontSize: "clamp(36px,4.5vw,60px)" }}>
-                The cost of standing still<br />is compounding daily.
+                Three structural problems<br />every ops team faces.
             </h2>
-            <div className="grid grid-cols-4 gap-0 border border-black">
-                {STATS.map((s, i) => (
-                    <div key={s.stat} className={`p-8 ${i < 3 ? "border-r border-black" : ""}`}>
-                        <div className="font-serif font-normal leading-none mb-3"
-                            style={{ fontSize: "clamp(32px,3.5vw,52px)" }}>
-                            {s.stat}
-                        </div>
-                        <p className="font-mono text-xs text-black/55 leading-relaxed mb-3">{s.label}</p>
-                        <div className="font-mono text-[9px] text-black/30 uppercase tracking-widest">{s.source}</div>
+            <div className="grid grid-cols-3 gap-0 border border-black">
+                {REASONS.map((r, i) => (
+                    <div key={r.n} className={`p-8 ${i < 2 ? "border-r border-black" : ""}`}>
+                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-4">{r.n}</div>
+                        <h3 className="font-serif text-xl font-normal mb-4 leading-snug">{r.title}</h3>
+                        <p className="font-mono text-xs text-black/55 leading-relaxed">{r.body}</p>
                     </div>
                 ))}
             </div>
@@ -773,21 +791,28 @@ function S3() {
     );
 }
 
+// S4 — What Trackr Does: value-focused card copy
 function S4() {
     const CAPS = [
         {
+            n: "01",
             label: "Research Agent",
-            body: "AI agents map, scrape, and score any tool in under 2 minutes. G2, Reddit, Capterra, competitor pages — all synthesized into a 7-dimension scorecard.",
+            title: "Research any tool in under 2 minutes",
+            body: "Paste a URL or tool name. Three parallel AI agents crawl the product site, G2, Capterra, Reddit, HackerNews, and competitor pages simultaneously — then deliver a 7-dimension scorecard tuned to your team's actual use case.",
             tools: ["notion.so","linear.app","figma.com","clay.com","cursor.sh"],
         },
         {
+            n: "02",
             label: "Spend Tracker",
-            body: "Map every software dollar to a team and owner. AI vs. legacy breakdown. Identify redundancy. Export CFO-ready reports instantly.",
+            title: "Kill the software waste. Own every dollar.",
+            body: "Map every tool to a team, budget owner, and renewal date. Instantly see what's AI vs legacy. Identify redundancy before it compounds. Export CFO-ready reports in one click.",
             tools: ["salesforce.com","hubspot.com","asana.com","slack.com","zoom.us"],
         },
         {
+            n: "03",
             label: "Stack Intelligence",
-            body: "Your team's shared workspace. Compare tools side-by-side, track renewals, get AI recommendations, and stay current on every tool in your stack.",
+            title: "One workspace. Every tool. Always current.",
+            body: "Compare tools side by side, set renewal alerts, get AI-generated swap recommendations, and ask your stack direct questions: 'What should we replace Zapier with?' It answers.",
             tools: ["notion.so","slack.com","github.com","figma.com","zapier.com"],
         },
     ];
@@ -801,8 +826,8 @@ function S4() {
             <div className="grid grid-cols-3 gap-0 border border-black">
                 {CAPS.map((c, i) => (
                     <div key={c.label} className={`p-8 ${i < 2 ? "border-r border-black" : ""}`}>
-                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-3">0{i+1}</div>
-                        <h3 className="font-serif text-xl font-normal mb-4">{c.label}</h3>
+                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-3">{c.n}</div>
+                        <h3 className="font-serif text-lg font-normal mb-2 leading-snug">{c.title}</h3>
                         <p className="font-mono text-xs text-black/55 leading-relaxed mb-6">{c.body}</p>
                         <div className="flex gap-1.5 flex-wrap">
                             {c.tools.map(d => (
@@ -818,24 +843,32 @@ function S4() {
     );
 }
 
+// S5 — Research Agent Deep Dive: intro paragraph + renamed sources
 function S5() {
     return (
         <Slide>
             <div className="flex items-start gap-14">
                 <div className="flex-[0_0_300px] pt-2">
                     <Label>Research Agent</Label>
-                    <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-5"
+                    <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-4"
                         style={{ fontSize: "clamp(28px,3.5vw,48px)" }}>
                         Any tool.<br />Under 2 minutes.<br />7 dimensions.
                     </h2>
-                    <p className="font-mono text-xs text-black/55 leading-relaxed mb-6">
-                        Paste a URL or name. Three parallel AI agents research the tool simultaneously — crawling the site, scanning reviews, benchmarking competitors. A complete scorecard is delivered to your workspace automatically.
+                    <p className="font-mono text-xs text-black/55 leading-relaxed mb-5">
+                        Most teams spend 2–3 hours manually researching a single tool. Trackr does it in under 2 minutes and produces a more thorough report than any human analyst could.
                     </p>
                     <div className="border border-black bg-white p-4 shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
-                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-3">Sources Analyzed</div>
-                        {["Product site + changelog","G2, Capterra, Trustpilot","Reddit + HackerNews threads","Competitor pages + pricing","3 parallel AI agents"].map(s => (
-                            <div key={s} className="flex items-center gap-2 font-mono text-xs text-black/55 mb-1.5">
-                                <span className="w-1 h-1 bg-black flex-shrink-0" /> {s}
+                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-3">What Our Agents Read</div>
+                        {[
+                            "Product site, pricing page, changelog",
+                            "G2, Capterra, TrustRadius, Trustpilot",
+                            "Reddit + HackerNews community threads",
+                            "Competitor pages + live pricing",
+                            "LinkedIn pages + recent funding news",
+                            "3 parallel AI agents running simultaneously",
+                        ].map(s => (
+                            <div key={s} className="flex items-start gap-2 font-mono text-xs text-black/55 mb-1.5">
+                                <span className="w-1 h-1 bg-black flex-shrink-0 mt-1.5" /> {s}
                             </div>
                         ))}
                     </div>
@@ -848,6 +881,7 @@ function S5() {
     );
 }
 
+// S6 — How It Works: updated stat copy + Step 8 callout
 function S6() {
     return (
         <Slide>
@@ -857,15 +891,17 @@ function S6() {
                 7 automated steps.<br />Zero manual work.
             </h2>
             <ProcessAnimation />
-            <div className="mt-5 grid grid-cols-3 gap-0 border border-black">
+            <div className="mt-4 grid grid-cols-4 gap-0 border border-black">
                 {[
-                    { stat: "~$0.01",  label: "per page crawled" },
-                    { stat: "< 2 min", label: "avg report time"  },
-                    { stat: "30 days", label: "auto-refresh cycle"},
+                    { stat: "~$0.01",  label: "per page crawled", sub: "Enterprise-grade research for pennies" },
+                    { stat: "< 2 min", label: "avg report time",  sub: "vs. 2–3 hours manual" },
+                    { stat: "30 days", label: "auto-refresh cycle", sub: "Your stack intel never goes stale" },
+                    { stat: "Step 8",  label: "Deliver to team",   sub: "Slack, email, or workspace — one click" },
                 ].map((x, i) => (
-                    <div key={x.stat} className={`p-5 flex items-center gap-4 ${i < 2 ? "border-r border-black" : ""}`}>
-                        <div className="font-serif text-2xl font-normal">{x.stat}</div>
-                        <div className="font-mono text-[10px] text-black/40">{x.label}</div>
+                    <div key={x.stat} className={`p-4 flex flex-col gap-1 ${i < 3 ? "border-r border-black" : ""}`}>
+                        <div className="font-serif text-xl font-normal">{x.stat}</div>
+                        <div className="font-mono text-[10px] text-black/50 font-medium">{x.label}</div>
+                        <div className="font-mono text-[9px] text-black/35 leading-snug">{x.sub}</div>
                     </div>
                 ))}
             </div>
@@ -873,84 +909,176 @@ function S6() {
     );
 }
 
+// S7 — Spend Tracker: eyebrow rename + intro paragraph + callout
 function S7() {
     return (
         <Slide className="!items-start">
             <div className="pt-2 w-full">
-                <Label>Spend Tracker</Label>
-                <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-6"
-                    style={{ fontSize: "clamp(28px,3.5vw,48px)" }}>
-                    Every dollar mapped.<br />Every tool accountable.
-                </h2>
-                <div style={{ height: 400 }}>
+                <Label>Software Spend Intelligence</Label>
+                <div className="flex items-end justify-between mb-4">
+                    <h2 className="font-serif font-normal leading-[1.05] tracking-tight"
+                        style={{ fontSize: "clamp(28px,3.5vw,48px)" }}>
+                        Every dollar mapped.<br />Every tool accountable.
+                    </h2>
+                    <div className="flex-shrink-0 ml-8 border border-black bg-white px-5 py-3 max-w-[340px] shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
+                        <p className="font-mono text-xs text-black/60 leading-relaxed">
+                            The average company has <span className="font-medium text-black">5–7 tools doing the same job</span> across different departments. Trackr makes the overlap visible — and the fix obvious.
+                        </p>
+                    </div>
+                </div>
+                <div style={{ height: 360 }}>
                     <SpendTrackerDemo />
+                </div>
+                <div className="mt-3 border border-black/20 bg-white/60 px-5 py-3 font-mono text-xs text-black/50">
+                    Companies using Trackr identify an average of <span className="font-medium text-black">3–5 redundant tools within the first 30 days.</span>
                 </div>
             </div>
         </Slide>
     );
 }
 
+// S8 — Stack Intelligence: Ask Trackr AI as hero
 function S8() {
-    const FEATURES = [
-        { title: "500+ Tools Indexed",    body: "Every major AI and SaaS tool scored with agent-generated data. Updated automatically as tools evolve.", tools: ["notion.so","figma.com","linear.app","slack.com"] },
-        { title: "Side-by-Side Compare",  body: "Select any tools from your stack and compare them dimension-by-dimension. Share comparisons with your team.", tools: ["airtable.com","zapier.com","asana.com","hubspot.com"] },
-        { title: "Renewal Alerts",        body: "Track contract end dates and renewal windows. Get Slack notifications before commitments auto-renew.", tools: ["slack.com","gmail.com","notion.so","calendar.google.com"] },
-        { title: "Ask Trackr AI",         body: "Chat with your stack. Ask \"What should we replace Zapier with?\" or \"Which tools have overlapping features?\"", tools: ["cursor.sh","clay.com","linear.app","figma.com"] },
+    const SUPPORTING = [
+        { title: "500+ Tools Indexed",   body: "Every major AI and SaaS tool scored with agent-generated data. Updated automatically as tools evolve.", tools: ["notion.so","figma.com","linear.app","slack.com"] },
+        { title: "Side-by-Side Compare", body: "Select any tools and compare them dimension-by-dimension. Share comparisons with your team instantly.", tools: ["airtable.com","zapier.com","asana.com","hubspot.com"] },
+        { title: "Renewal Alerts",       body: "Track contract end dates. Get Slack notifications before commitments auto-renew. Never overpay again.", tools: ["slack.com","gmail.com","notion.so","calendar.google.com"] },
     ];
+
+    const CHAT_EXAMPLES = [
+        { q: "What should we replace Zapier with?",               a: "Based on your stack: n8n (open source, free) or Make — both rated higher for your use case." },
+        { q: "Which tools are up for renewal in Q2?",             a: "3 tools renewing in Q2: Gong ($9,600/yr), ZoomInfo ($5,400/yr), Datadog ($7,440/yr)." },
+        { q: "Do we have any overlap between Sales and RevOps?",  a: "Yes — HubSpot and Salesforce have 60% feature overlap across your active workflows." },
+    ];
+
     return (
         <Slide>
             <Label>Stack Intelligence</Label>
-            <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-8"
-                style={{ fontSize: "clamp(36px,4.5vw,60px)" }}>
-                One workspace.<br />Every tool. Full clarity.
-            </h2>
-            <div className="grid grid-cols-2 gap-0 border border-black">
-                {FEATURES.map((f, i) => (
-                    <div key={f.title}
-                        className={`p-7 ${i % 2 === 0 ? "border-r border-black" : ""} ${i < 2 ? "border-b border-black" : ""}`}>
-                        <h3 className="font-serif text-xl font-normal mb-3">{f.title}</h3>
-                        <p className="font-mono text-xs text-black/55 leading-relaxed mb-4">{f.body}</p>
-                        <div className="flex gap-1.5">
-                            {f.tools.map(d => (
-                                <div key={d} className="w-6 h-6 border border-black/10 bg-[#F3F3EF] flex items-center justify-center">
-                                    <Favicon domain={d} size={12} />
+            <div className="grid grid-cols-[1fr_1fr] gap-10 items-start">
+                {/* Left: Ask Trackr AI hero */}
+                <div>
+                    <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-3"
+                        style={{ fontSize: "clamp(28px,3.2vw,44px)" }}>
+                        Chat with your<br />entire stack.
+                    </h2>
+                    <p className="font-mono text-xs text-black/55 leading-relaxed mb-5">
+                        Ask Trackr anything about your software. It knows every tool you pay for, every score, every renewal date.
+                    </p>
+                    {/* Chat UI mockup */}
+                    <div className="border border-black bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] overflow-hidden">
+                        <div className="px-4 py-2.5 border-b border-black/10 bg-[#F3F3EF] flex items-center gap-2">
+                            <TrackrLogo size={12} />
+                            <span className="font-mono text-[10px] uppercase tracking-widest text-black/50">Ask Trackr AI</span>
+                        </div>
+                        <div className="p-4 space-y-4">
+                            {CHAT_EXAMPLES.map((ex, i) => (
+                                <div key={i} className="space-y-1.5">
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-4 h-4 bg-black flex-shrink-0 flex items-center justify-center mt-0.5">
+                                            <span className="font-mono text-[8px] text-white">U</span>
+                                        </div>
+                                        <p className="font-mono text-[10px] text-black leading-snug">{ex.q}</p>
+                                    </div>
+                                    <div className="flex items-start gap-2">
+                                        <div className="w-4 h-4 border border-black/20 bg-[#F3F3EF] flex-shrink-0 flex items-center justify-center mt-0.5">
+                                            <TrackrLogo size={8} />
+                                        </div>
+                                        <p className="font-mono text-[10px] text-black/55 leading-snug">{ex.a}</p>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     </div>
-                ))}
+                </div>
+
+                {/* Right: supporting features */}
+                <div className="flex flex-col gap-0 border border-black">
+                    {SUPPORTING.map((f, i) => (
+                        <div key={f.title} className={`p-6 ${i < SUPPORTING.length - 1 ? "border-b border-black" : ""}`}>
+                            <h3 className="font-serif text-lg font-normal mb-2">{f.title}</h3>
+                            <p className="font-mono text-xs text-black/55 leading-relaxed mb-3">{f.body}</p>
+                            <div className="flex gap-1.5">
+                                {f.tools.map(d => (
+                                    <div key={d} className="w-5 h-5 border border-black/10 bg-[#F3F3EF] flex items-center justify-center">
+                                        <Favicon domain={d} size={10} />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </Slide>
     );
 }
 
+// S9 — The Trackr Difference: complete rewrite with 5 cards (2+2+1 layout)
 function S9() {
     const DIFFS = [
-        { title: "Custom to your org",            body: "Your stack is different from every other company. We build your implementation from scratch — not from a template." },
-        { title: "Pre-market intelligence",        body: "We track 500+ emerging tools every month. You get recommendations before they hit mass market — before your competitors." },
-        { title: "Reduces CAC, not just cost",     body: "The goal isn't to cut spend blindly. It's to reallocate budget from tools that waste time to tools that directly accelerate revenue." },
-        { title: "Shared workspace, live tracking",body: "Your Trackr workspace becomes your team's living knowledge base. Every tool researched, scored, and tracked going forward." },
+        {
+            title: "Built by operators, not researchers",
+            body: "Our team has implemented AI workflows inside real organizations — not studied them from the outside. We know what breaks in deployment, what ops teams actually use, and what gets abandoned after week one.",
+        },
+        {
+            title: "Custom to your org's reality",
+            body: "Your stack is different from every other company. We audit your current tools, map your workflows, identify gaps, and build a prioritized action plan from scratch — not from a template.",
+        },
+        {
+            title: "Pre-market tool intelligence",
+            body: "We track 500+ emerging tools every month before they hit Product Hunt. You get recommendations before your competitors hear about them.",
+        },
+        {
+            title: "AI adoption that actually sticks",
+            body: "The goal isn't to put more AI in your stack. It's to replace the processes your team avoids with tools they actually use — and train them to use those tools well.",
+        },
+        {
+            title: "Reduces CAC, not just SaaS cost",
+            body: "We reallocate budget from tools that waste time to tools that directly accelerate revenue. CFOs love us.",
+        },
     ];
     return (
         <Slide>
-            <Label>Not Like Any Other AI Consultant</Label>
-            <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-10"
-                style={{ fontSize: "clamp(36px,4.5vw,60px)" }}>
-                We deploy tools inside<br />organizations every day.
+            <Label>The Trackr Difference</Label>
+            <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-8"
+                style={{ fontSize: "clamp(28px,3.5vw,50px)" }}>
+                You don&apos;t just get software.<br />You get AI-native operators who&apos;ve<br />deployed this across 50+ organizations.
             </h2>
             <div className="grid grid-cols-2 gap-0 border border-black">
-                {DIFFS.map((d, i) => (
+                {DIFFS.slice(0, 4).map((d, i) => (
                     <div key={d.title}
-                        className={`p-7 ${i % 2 === 0 ? "border-r border-black" : ""} ${i < 2 ? "border-b border-black" : ""}`}>
-                        <h3 className="font-serif text-xl font-normal mb-3">{d.title}</h3>
+                        className={`p-6 ${i % 2 === 0 ? "border-r border-black" : ""} ${i < 2 ? "border-b border-black" : ""}`}>
+                        <h3 className="font-serif text-lg font-normal mb-2">{d.title}</h3>
                         <p className="font-mono text-xs text-black/55 leading-relaxed">{d.body}</p>
                     </div>
                 ))}
             </div>
+            {/* Fifth card — full width */}
+            <div className="border-l border-r border-b border-black p-6 bg-white">
+                <div className="flex items-start gap-8">
+                    <div className="flex-shrink-0">
+                        <h3 className="font-serif text-lg font-normal mb-2">{DIFFS[4].title}</h3>
+                        <p className="font-mono text-xs text-black/55 leading-relaxed max-w-[520px]">{DIFFS[4].body}</p>
+                    </div>
+                    <div className="flex-1 border-l border-black/10 pl-8">
+                        <div className="font-mono text-[9px] uppercase tracking-widest text-black/30 mb-2">Avg outcomes after 90 days</div>
+                        {[
+                            { label: "Redundant tools identified", val: "3–5" },
+                            { label: "SaaS spend recaptured",      val: "$12–40K/yr" },
+                            { label: "Research hours saved/week",  val: "8–14 hrs" },
+                        ].map(row => (
+                            <div key={row.label} className="flex items-center gap-3 mb-1.5">
+                                <span className="font-serif text-lg font-normal text-black">{row.val}</span>
+                                <span className="font-mono text-[10px] text-black/40">{row.label}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
         </Slide>
     );
 }
 
+// S10 — Enterprise AI Audit CTA: complete rewrite
 function S10() {
     return (
         <Slide>
@@ -960,28 +1088,31 @@ function S10() {
                     <span className="font-serif text-xl font-normal tracking-tight">Trackr</span>
                 </div>
                 <Label>Enterprise AI Audit</Label>
-                <h1 className="font-serif font-normal leading-[1.04] tracking-tight mb-6"
-                    style={{ fontSize: "clamp(42px,5.5vw,80px)" }}>
-                    The solution isn&apos;t<br />more research.
+                <h1 className="font-serif font-normal leading-[1.04] tracking-tight mb-5"
+                    style={{ fontSize: "clamp(36px,5vw,70px)" }}>
+                    We audit your entire AI stack,<br />eliminate the waste, and get you<br />to AI-native in 5 days.
                 </h1>
-                <p className="font-mono text-base text-black/50 max-w-[560px] mx-auto leading-relaxed mb-12">
-                    It&apos;s having AI architects who live inside this space — who know what&apos;s working before it hits mass market — build your custom stack and get you running in days, not months.
+                <p className="font-mono text-sm text-black/50 max-w-[620px] mx-auto leading-relaxed mb-4">
+                    This isn&apos;t a generic AI strategy deck. We sit inside your org, interview your department heads, evaluate every tool you pay for, and deliver a prioritized action plan with specific tool swaps, workflow redesigns, and ROI projections. Then we help you implement it.
                 </p>
-                <div className="flex gap-4 justify-center mb-14">
+                <p className="font-mono text-xs text-black/35 max-w-[540px] mx-auto mb-10 leading-relaxed">
+                    Used by RevOps leaders, VPs of Engineering, COOs, and department managers who need an outside expert to make sense of the AI landscape — fast.
+                </p>
+                <div className="flex gap-4 justify-center mb-10">
                     <a href="https://cal.com/adamwolfe/trackr" target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-2 bg-black text-white px-8 py-4 font-mono text-xs uppercase tracking-widest hover:bg-black/80 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none">
-                        Book an AI Stack Audit <ArrowRight className="w-3.5 h-3.5" />
+                        Book Your AI Stack Audit <ArrowRight className="w-3.5 h-3.5" />
                     </a>
                     <a href="https://trytrackr.com/audit" target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-2 border border-black bg-transparent px-8 py-4 font-mono text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-colors">
-                        View Audit Details
+                        See a Sample Audit Report
                     </a>
                 </div>
                 <div className="grid grid-cols-3 border border-black max-w-lg mx-auto">
                     {[
-                        { stat: "10 min", label: "to complete your intake" },
-                        { stat: "24 hrs", label: "our team reviews + responds" },
-                        { stat: "5 days", label: "prioritized action plan" },
+                        { stat: "10 min",  label: "Complete intake form" },
+                        { stat: "24 hrs",  label: "AI-native expert assigned" },
+                        { stat: "5 days",  label: "Full audit + action plan" },
                     ].map((x, i) => (
                         <div key={x.stat} className={`p-5 text-center ${i < 2 ? "border-r border-black" : ""}`}>
                             <div className="font-serif text-2xl font-normal mb-1">{x.stat}</div>
