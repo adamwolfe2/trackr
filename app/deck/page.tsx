@@ -842,7 +842,7 @@ function S4() {
 function S5() {
     return (
         <Slide>
-            <div className="grid grid-cols-[1fr_1.4fr] gap-14 items-start">
+            <div className="grid grid-cols-[1fr_1fr] gap-14 items-start">
                 <div>
                     <Label>Our Methodology</Label>
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-4"
