@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
+import { BulkResearchButton } from "@/components/research/bulk-research-modal";
 import { db } from "@/lib/db";
 import { tools, workspaceMembers, softwareSpend, subscriptions } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -70,10 +71,13 @@ export default async function ToolsPage() {
                     <h1 className="font-serif text-2xl sm:text-3xl font-normal">AI Tools Portfolio</h1>
                     <p className="font-mono text-sm text-neutral-500 mt-1">Your team&apos;s AI tool intelligence at a glance.</p>
                 </div>
-                <Link href="/submit" className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-sm bg-black text-white hover:bg-neutral-800 whitespace-nowrap">
-                    <PlusCircle className="h-4 w-4" />
-                    Add Tool
-                </Link>
+                <div className="flex items-center gap-2">
+                    <BulkResearchButton />
+                    <Link href="/submit" className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-sm bg-black text-white hover:bg-neutral-800 whitespace-nowrap">
+                        <PlusCircle className="h-4 w-4" />
+                        Add Tool
+                    </Link>
+                </div>
             </div>
 
             <ToolsView tools={toolsList} stats={stats} isEmpty={toolsList.length === 0} canSchedule={canSchedule} />
