@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { useClerk } from "@clerk/nextjs";
 import { Check, Loader2, Sparkles, ArrowRight, Search, X, PlusCircle } from "lucide-react";
 import { generateCompanyContext, completeOnboarding } from "@/lib/actions/onboarding";
 import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS, getLogoUrl } from "@/lib/constants/integrations";
@@ -28,6 +29,7 @@ export default function OnboardingPage() {
     const [isPending, startTransition] = useTransition();
     const searchParams = useSearchParams();
     const router = useRouter();
+    const { signOut } = useClerk();
     const plan = searchParams.get("plan") ?? "";
     const ref = searchParams.get("ref") ?? "";
 
@@ -218,10 +220,18 @@ export default function OnboardingPage() {
         <div className="min-h-screen bg-[#F3F3EF] flex flex-col">
             {/* Top bar */}
             <div className="border-b border-black bg-[#F3F3EF] px-6 py-4 flex items-center justify-between">
-                <span className="flex items-center gap-2 text-xl font-serif font-medium">
-                    <TrackrLogo size={22} />
-                    Trackr
-                </span>
+                <div className="flex items-center gap-6">
+                    <span className="flex items-center gap-2 text-xl font-serif font-medium">
+                        <TrackrLogo size={22} />
+                        Trackr
+                    </span>
+                    <button
+                        onClick={() => signOut({ redirectUrl: "/sign-in" })}
+                        className="font-mono text-[11px] text-black/40 hover:text-black underline underline-offset-2 transition-colors"
+                    >
+                        Use a different account
+                    </button>
+                </div>
                 <div
                     role="progressbar"
                     aria-valuenow={step}
