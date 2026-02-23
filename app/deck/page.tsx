@@ -164,10 +164,10 @@ function ToolDot({ domain }: { domain: string }) {
 function Slide({ children, className = "" }: { children: React.ReactNode; className?: string }) {
     return (
         <div
-            className={`w-full h-screen flex items-center justify-center overflow-hidden ${className}`}
-            style={{ padding: "72px 96px" }}
+            className={`w-full min-h-screen flex items-center justify-center ${className}`}
+            style={{ padding: "clamp(52px,5vh,72px) clamp(20px,5vw,96px)" }}
         >
-            <div className="w-full max-w-[1100px]">{children}</div>
+            <div className="w-full max-w-[1100px] py-4">{children}</div>
         </div>
     );
 }
@@ -646,7 +646,7 @@ function ProcessAnimation() {
 function S1({ goTo }: { goTo: (n: number) => void }) {
     return (
         <Slide>
-            <div className="flex items-start gap-16">
+            <div className="flex flex-col sm:flex-row items-start gap-8 sm:gap-16">
                 {/* Left */}
                 <div className="flex-1 min-w-0 pt-2">
                     <div className="flex items-center gap-2 mb-8">
@@ -680,7 +680,7 @@ function S1({ goTo }: { goTo: (n: number) => void }) {
                 </div>
 
                 {/* Right: Demo */}
-                <div className="flex-shrink-0 w-[400px]">
+                <div className="hidden sm:block flex-shrink-0 w-[400px]">
                     <div className="flex items-center gap-2 mb-2.5">
                         <div className="w-1.5 h-1.5 bg-black animate-pulse" />
                         <span className="font-mono text-[10px] uppercase tracking-widest text-black/40">
@@ -720,7 +720,7 @@ function S2() {
     ];
     return (
         <Slide>
-            <div className="grid grid-cols-[1fr_1.1fr] gap-14 items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_1.1fr] gap-8 sm:gap-14 items-start sm:items-center">
                 {/* Left */}
                 <div>
                     <Label>The Reality</Label>
@@ -778,9 +778,9 @@ function S3() {
                 style={{ fontSize: "clamp(36px,4.5vw,60px)" }}>
                 Three structural problems<br />every ops team faces.
             </h2>
-            <div className="grid grid-cols-3 gap-0 border border-black">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border border-black">
                 {REASONS.map((r, i) => (
-                    <div key={r.n} className={`p-8 ${i < 2 ? "border-r border-black" : ""}`}>
+                    <div key={r.n} className={`p-8 ${i < 2 ? "border-b sm:border-b-0 sm:border-r border-black" : ""}`}>
                         <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-4">{r.n}</div>
                         <h3 className="font-serif text-xl font-normal mb-4 leading-snug">{r.title}</h3>
                         <p className="font-mono text-xs text-black/55 leading-relaxed">{r.body}</p>
@@ -825,9 +825,9 @@ function S4() {
             <p className="font-mono text-sm text-black/55 leading-relaxed mb-10 max-w-[680px]">
                 This isn&apos;t a tool you set up yourself. We do it with you — auditing your stack, interviewing your team, identifying what to cut and what to add, and implementing the recommendations. When we&apos;re done, your team has a live intelligence workspace so you never need to start from scratch again.
             </p>
-            <div className="grid grid-cols-4 gap-0 border border-black">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-black">
                 {PHASES.map((p, i) => (
-                    <div key={p.n} className={`p-8 ${i < 3 ? "border-r border-black" : ""}`}>
+                    <div key={p.n} className={`p-6 sm:p-8 ${i % 2 === 0 && i < 3 ? "border-r border-black" : ""} ${i % 2 !== 0 && i < 3 ? "sm:border-r border-black" : ""} ${i < 2 ? "border-b sm:border-b-0 border-black" : ""}`}>
                         <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-3">{p.n}</div>
                         <h3 className="font-serif text-xl font-normal mb-4">{p.title}</h3>
                         <p className="font-mono text-xs text-black/55 leading-relaxed">{p.body}</p>
@@ -842,7 +842,7 @@ function S4() {
 function S5() {
     return (
         <Slide>
-            <div className="grid grid-cols-[1fr_1fr] gap-14 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr] gap-8 sm:gap-14 items-start">
                 <div>
                     <Label>Our Methodology</Label>
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-4"
@@ -868,7 +868,7 @@ function S5() {
                         ))}
                     </div>
                 </div>
-                <div>
+                <div className="hidden sm:block">
                     <ResearchAgentDemo widgetHeight={460} />
                 </div>
             </div>
@@ -882,18 +882,21 @@ function S6() {
         <Slide>
             <div className="w-full">
                 <Label>What We Find in Every Audit</Label>
-                <div className="flex items-end justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-4">
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight"
                         style={{ fontSize: "clamp(28px,3.5vw,48px)" }}>
                         Most companies are paying<br />for the same capability<br />three times.
                     </h2>
-                    <div className="flex-shrink-0 ml-8 border border-black bg-white px-5 py-3 max-w-[340px] shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
+                    <div className="hidden sm:block flex-shrink-0 sm:ml-8 border border-black bg-white px-5 py-3 max-w-[340px] shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
                         <p className="font-mono text-xs text-black/60 leading-relaxed">
                             In every audit we run, we map your entire software spend by department and owner. The overlap is almost always immediate — and the savings are real. This is what your action plan is built on.
                         </p>
                     </div>
+                    <p className="sm:hidden font-mono text-xs text-black/60 leading-relaxed border border-black bg-white px-4 py-3">
+                        In every audit we run, we map your entire software spend by department and owner. The overlap is almost always immediate — and the savings are real.
+                    </p>
                 </div>
-                <div style={{ height: 360 }}>
+                <div className="hidden sm:block" style={{ height: 360 }}>
                     <SpendTrackerDemo />
                 </div>
                 <div className="mt-3 border border-black/20 bg-white/60 px-5 py-3 font-mono text-xs text-black/50">
@@ -921,7 +924,7 @@ function S7() {
     return (
         <Slide>
             <Label>What We Leave Behind</Label>
-            <div className="grid grid-cols-[1fr_1fr] gap-10 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr] gap-8 sm:gap-10 items-start">
                 {/* Left: Ask Trackr AI hero */}
                 <div>
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-3"
@@ -1013,10 +1016,10 @@ function S8() {
             <p className="font-mono text-sm text-black/55 leading-relaxed mb-7 max-w-[680px]">
                 You&apos;re not buying a research tool. You&apos;re hiring operators who&apos;ve built AI infrastructure inside real organizations — and the tool is how we prove our work.
             </p>
-            <div className="grid grid-cols-2 gap-0 border border-black">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border border-black">
                 {DIFFS.slice(0, 4).map((d, i) => (
                     <div key={d.title}
-                        className={`p-6 ${i % 2 === 0 ? "border-r border-black" : ""} ${i < 2 ? "border-b border-black" : ""}`}>
+                        className={`p-6 ${i < 3 ? "border-b border-black" : ""} ${i === 2 ? "sm:border-b-0" : ""} ${i % 2 === 0 ? "sm:border-r sm:border-black" : ""}`}>
                         <h3 className="font-serif text-lg font-normal mb-2">{d.title}</h3>
                         <p className="font-mono text-xs text-black/55 leading-relaxed">{d.body}</p>
                     </div>
@@ -1068,7 +1071,7 @@ function S9() {
                 <p className="font-mono text-xs text-black/35 max-w-[540px] mx-auto mb-10 leading-relaxed">
                     For ops leaders, department heads, and founders who want to be AI-native — and want someone who&apos;s done it before to show them how.
                 </p>
-                <div className="flex gap-4 justify-center mb-10">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
                     <a href="https://cal.com/adamwolfe/trackr" target="_blank" rel="noopener noreferrer"
                         className="flex items-center gap-2 bg-black text-white px-8 py-4 font-mono text-xs uppercase tracking-widest hover:bg-black/80 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none">
                         Book Your AI Stack Audit <ArrowRight className="w-3.5 h-3.5" />
@@ -1078,13 +1081,13 @@ function S9() {
                         See a Sample Audit Report
                     </a>
                 </div>
-                <div className="grid grid-cols-3 border border-black max-w-lg mx-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-3 border border-black max-w-lg mx-auto">
                     {[
                         { stat: "10 min",  label: "Complete intake form" },
                         { stat: "24 hrs",  label: "AI-native expert assigned" },
                         { stat: "5 days",  label: "Full audit + action plan" },
                     ].map((x, i) => (
-                        <div key={x.stat} className={`p-5 text-center ${i < 2 ? "border-r border-black" : ""}`}>
+                        <div key={x.stat} className={`p-5 text-center ${i < 2 ? "border-b sm:border-b-0 sm:border-r border-black" : ""}`}>
                             <div className="font-serif text-2xl font-normal mb-1">{x.stat}</div>
                             <div className="font-mono text-[10px] text-black/40">{x.label}</div>
                         </div>
@@ -1145,8 +1148,8 @@ export default function DeckPage() {
                 }
             `}</style>
 
-            <div className="relative overflow-hidden select-none"
-                style={{ background: BG, height: "100vh", width: "100vw" }}>
+            <div className="relative overflow-x-hidden select-none"
+                style={{ background: BG, minHeight: "100vh", width: "100vw" }}>
 
                 {/* Progress bar */}
                 <div className="fixed top-0 left-0 z-50 h-[2px] bg-black transition-all duration-500"
