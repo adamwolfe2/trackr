@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 vi.mock("@clerk/nextjs/server", () => ({
     currentUser: vi.fn(),
@@ -49,8 +49,11 @@ const MOCK_MEMBER = { id: "mem_1", userId: "user_1", workspaceId: "ws_1" };
 const MOCK_TOOL = { id: "tool_1", workspaceId: "ws_1", name: "Linear" };
 
 describe("createAdCampaign", () => {
+    const originalAppUrl = process.env.NEXT_PUBLIC_APP_URL;
+
     beforeEach(() => {
         vi.resetAllMocks();
+        process.env.NEXT_PUBLIC_APP_URL = "https://trytrackr.com";
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
@@ -62,6 +65,10 @@ describe("createAdCampaign", () => {
         (db.delete as ReturnType<typeof vi.fn>).mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) });
 
         mockSessionCreate.mockResolvedValue({ url: "https://checkout.stripe.com/session_xyz" });
+    });
+
+    afterEach(() => {
+        process.env.NEXT_PUBLIC_APP_URL = originalAppUrl;
     });
 
     it("throws Unauthorized when not logged in", async () => {
