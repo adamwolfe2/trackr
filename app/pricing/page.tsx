@@ -2,6 +2,7 @@ import { Check, Minus } from "lucide-react";
 import Link from "next/link";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { EnterpriseAuditBanner } from "@/components/marketing/enterprise-audit-modal";
 import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { PLANS } from "@/lib/config/subscriptions";
@@ -238,6 +239,9 @@ export default async function PricingPage() {
                         </div>
                     ))}
                 </div>
+
+                {/* Enterprise Audit */}
+                <EnterpriseAuditBanner />
 
                 {/* FAQ */}
                 <div className="mb-24">
