@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { X, ArrowRight, CheckSquare, ExternalLink } from "lucide-react";
 
-const CAL_LINK = "https://cal.com/trackr/enterprise-audit";
+const CAL_LINK = "https://cal.com/adamwolfe/trackr";
 
 const AUDIT_POINTS = [
     "AI tool coverage mapped across every department",
