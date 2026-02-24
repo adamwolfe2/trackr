@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
         );
     }
 
-    if (!checkExtensionRateLimit(workspace.id, 30)) {
+    if (!await checkExtensionRateLimit(workspace.id, 30)) {
         return NextResponse.json(
             { error: "Rate limit exceeded" },
             { status: 429, headers }

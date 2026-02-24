@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
     if (!workspaceId) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
 
     // Rate limit: 5 research starts per minute per user
-    const rl = rateLimit(`research-start:${user.id}`, { limit: 5, windowSeconds: 60 });
+    const rl = await rateLimit(`research-start:${user.id}`, { limit: 5, windowSeconds: 60 });
     if (!rl.success) return NextResponse.json({ error: "Too many requests" }, { status: 429 });
 
     let body: unknown;

@@ -38,7 +38,7 @@ async function loginAction(formData: FormData) {
         headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
         headersList.get("x-real-ip") ??
         "unknown";
-    const rl = rateLimit(`admin-login:${ip}`, { limit: 5, windowSeconds: 300 });
+    const rl = await rateLimit(`admin-login:${ip}`, { limit: 5, windowSeconds: 300 });
     if (!rl.success) {
         redirect("/admin/analytics?error=rate_limited");
         return;

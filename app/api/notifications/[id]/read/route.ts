@@ -12,7 +12,7 @@ export async function PATCH(
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rl = rateLimit(`notifications-read:${user.id}`, { limit: 30, windowSeconds: 60 });
+    const rl = await rateLimit(`notifications-read:${user.id}`, { limit: 30, windowSeconds: 60 });
     if (!rl.success) {
         return NextResponse.json(
             { error: "Too many requests" },

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     if (!member) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
 
     // Rate limit: 30 searches per minute per authenticated user
-    const rl = rateLimit(`search:${user.id}`, { limit: 30, windowSeconds: 60 });
+    const rl = await rateLimit(`search:${user.id}`, { limit: 30, windowSeconds: 60 });
 
     if (!rl.success) {
         return NextResponse.json(

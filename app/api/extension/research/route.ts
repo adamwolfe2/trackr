@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Rate limit: 5 submissions per minute per workspace
-    const rl = rateLimit(`ext-research:${workspace.id}`, { limit: 5, windowSeconds: 60 });
+    const rl = await rateLimit(`ext-research:${workspace.id}`, { limit: 5, windowSeconds: 60 });
     if (!rl.success) {
         return NextResponse.json(
             { error: "Too many requests" },

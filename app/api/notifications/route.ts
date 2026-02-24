@@ -9,7 +9,7 @@ export async function GET() {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const rl = rateLimit(`notifications-get:${user.id}`, { limit: 60, windowSeconds: 60 });
+    const rl = await rateLimit(`notifications-get:${user.id}`, { limit: 60, windowSeconds: 60 });
     if (!rl.success) {
         return NextResponse.json(
             { error: "Too many requests" },

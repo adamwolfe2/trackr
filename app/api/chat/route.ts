@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    const rl = rateLimit(`chat:${user.id}`, { limit: 20, windowSeconds: 60 });
+    const rl = await rateLimit(`chat:${user.id}`, { limit: 20, windowSeconds: 60 });
 
     if (!rl.success) {
         return NextResponse.json(

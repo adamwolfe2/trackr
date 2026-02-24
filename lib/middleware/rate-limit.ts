@@ -1,8 +1,50 @@
 /**
- * Simple in-memory rate limiter for API routes.
- * For production scale, replace with Upstash Redis rate limiting.
- * This handles moderate traffic without external dependencies.
+ * Rate limiter for API routes.
+ *
+ * Uses Upstash Redis (sliding window) when KV_REST_API_URL + KV_REST_API_TOKEN
+ * are set — counts survive cold starts, scale across all Vercel instances.
+ *
+ * Falls back to in-memory when running locally without credentials.
  */
+
+import { Redis } from "@upstash/redis";
+import { Ratelimit } from "@upstash/ratelimit";
+
+// ── Upstash setup ─────────────────────────────────────────────────────────────
+
+let _redis: Redis | null = null;
+
+function getRedis(): Redis | null {
+    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null;
+    if (!_redis) {
+        _redis = new Redis({
+            url: process.env.KV_REST_API_URL,
+            token: process.env.KV_REST_API_TOKEN,
+        });
+    }
+    return _redis;
+}
+
+// Cache Ratelimit instances by "limit:windowSeconds" so we don't create
+// a new one on every request (each instance holds sliding-window state).
+const _limiters = new Map<string, Ratelimit>();
+
+function getUpstashLimiter(limit: number, windowSeconds: number): Ratelimit | null {
+    const redis = getRedis();
+    if (!redis) return null;
+
+    const key = `${limit}:${windowSeconds}`;
+    if (!_limiters.has(key)) {
+        _limiters.set(key, new Ratelimit({
+            redis,
+            limiter: Ratelimit.slidingWindow(limit, `${windowSeconds} s`),
+            prefix: "trackr:rl",
+        }));
+    }
+    return _limiters.get(key)!;
+}
+
+// ── In-memory fallback ────────────────────────────────────────────────────────
 
 interface RateLimitEntry {
     count: number;
@@ -11,14 +53,13 @@ interface RateLimitEntry {
 
 const store = new Map<string, RateLimitEntry>();
 
-// Cleanup stale entries every 5 minutes; also hard-cap at 50k entries to prevent unbounded growth
+// Cleanup stale entries every 5 minutes; hard-cap at 50k to prevent unbounded growth
 if (typeof setInterval !== "undefined") {
     setInterval(() => {
         const now = Date.now();
         for (const [key, entry] of store.entries()) {
             if (entry.resetAt < now) store.delete(key);
         }
-        // Safety cap: if still over limit after expiry cleanup, evict oldest keys
         if (store.size > 50_000) {
             const excess = store.size - 50_000;
             let deleted = 0;
@@ -30,24 +71,7 @@ if (typeof setInterval !== "undefined") {
     }, 5 * 60 * 1000);
 }
 
-interface RateLimitOptions {
-    /** Max requests per window */
-    limit: number;
-    /** Window duration in seconds */
-    windowSeconds: number;
-}
-
-interface RateLimitResult {
-    success: boolean;
-    limit: number;
-    remaining: number;
-    resetAt: number;
-}
-
-export function rateLimit(
-    identifier: string,
-    options: RateLimitOptions
-): RateLimitResult {
+function inMemoryRateLimit(identifier: string, options: RateLimitOptions): RateLimitResult {
     const { limit, windowSeconds } = options;
     const now = Date.now();
     const windowMs = windowSeconds * 1000;
@@ -69,6 +93,49 @@ export function rateLimit(
         remaining,
         resetAt: existing.resetAt,
     };
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+export interface RateLimitOptions {
+    /** Max requests per window */
+    limit: number;
+    /** Window duration in seconds */
+    windowSeconds: number;
+}
+
+export interface RateLimitResult {
+    success: boolean;
+    limit: number;
+    remaining: number;
+    /** Unix timestamp (ms) when the window resets */
+    resetAt: number;
+}
+
+export async function rateLimit(
+    identifier: string,
+    options: RateLimitOptions
+): Promise<RateLimitResult> {
+    const { limit, windowSeconds } = options;
+
+    // Prefer Upstash — persistent across cold starts and Vercel instances
+    const limiter = getUpstashLimiter(limit, windowSeconds);
+    if (limiter) {
+        try {
+            const r = await limiter.limit(identifier);
+            return {
+                success: r.success,
+                limit: r.limit,
+                remaining: r.remaining,
+                resetAt: r.reset, // already in milliseconds
+            };
+        } catch (err) {
+            console.error("[rate-limit] Upstash unavailable, falling back to in-memory:", err);
+        }
+    }
+
+    // In-memory fallback (local dev without credentials, or Upstash error)
+    return inMemoryRateLimit(identifier, options);
 }
 
 export function getRateLimitHeaders(result: RateLimitResult): Record<string, string> {

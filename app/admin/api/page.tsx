@@ -42,7 +42,7 @@ async function loginAction(formData: FormData) {
         headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
         headersList.get("x-real-ip") ??
         "unknown";
-    const rl = rateLimit(`admin-login:${ip}`, { limit: 5, windowSeconds: 300 });
+    const rl = await rateLimit(`admin-login:${ip}`, { limit: 5, windowSeconds: 300 });
     if (!rl.success) {
         const { redirect } = await import("next/navigation");
         redirect("/admin/api?error=rate_limited");

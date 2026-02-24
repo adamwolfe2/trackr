@@ -49,21 +49,16 @@ export function corsHeaders(req?: Request): Record<string, string> {
 }
 
 /**
- * Simple per-workspace rate limiter for extension routes.
- * In-memory — resets on cold start. Acceptable for extension API.
+ * Per-workspace rate limiter for extension routes.
+ * Delegates to the shared rateLimit() which uses Upstash Redis in production
+ * (persistent across cold starts) with an in-memory fallback for local dev.
  */
-const extensionRateMap = new Map<string, { count: number; reset: number }>();
+import { rateLimit } from "@/lib/middleware/rate-limit";
 
-export function checkExtensionRateLimit(workspaceId: string, maxPerMinute = 30): boolean {
-    const now = Date.now();
-    const entry = extensionRateMap.get(workspaceId);
-
-    if (!entry || now > entry.reset) {
-        extensionRateMap.set(workspaceId, { count: 1, reset: now + 60_000 });
-        return true;
-    }
-
-    if (entry.count >= maxPerMinute) return false;
-    entry.count++;
-    return true;
+export async function checkExtensionRateLimit(workspaceId: string, maxPerMinute = 30): Promise<boolean> {
+    const result = await rateLimit(`ext-workspace:${workspaceId}`, {
+        limit: maxPerMinute,
+        windowSeconds: 60,
+    });
+    return result.success;
 }
