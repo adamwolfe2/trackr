@@ -17,7 +17,7 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { updateToolStatus, deleteTool } from "@/lib/actions/tools";
+import { updateToolStatus, deleteTool, triggerResearch } from "@/lib/actions/tools";
 import { toast } from "sonner";
 
 interface KanbanTool {
@@ -53,8 +53,8 @@ const COLUMN_STATUS_MAP: Record<string, string> = {
     archived: "archived",
 };
 
-// Columns that cannot receive drops
-const LOCKED_DROP_TARGETS = new Set(["researching"]);
+// No columns are fully locked — researching column handled specially in handleDragEnd
+const LOCKED_DROP_TARGETS = new Set<string>();
 
 function ToolLogo({ name, logoUrl, websiteUrl }: { name: string; logoUrl?: string | null; websiteUrl?: string | null }) {
     const [hasError, setHasError] = useState(false);
@@ -208,11 +208,23 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
 
         const toolId = active.id as string;
         const columnId = over.id as string;
-
-        if (LOCKED_DROP_TARGETS.has(columnId)) return;
-
         const tool = tools.find(t => t.id === toolId);
         if (!tool) return;
+
+        // Dropping onto Researching column triggers research
+        if (columnId === "researching") {
+            if (tool.status === "researching" || tool.status === "queued") return;
+            const prevTools = [...tools];
+            setTools(prev => prev.map(t => t.id === toolId ? { ...t, status: "researching" } : t));
+            try {
+                await triggerResearch(toolId);
+                toast.success("Research started");
+            } catch {
+                setTools(prevTools);
+                toast.error("Failed to start research");
+            }
+            return;
+        }
 
         const newStatus = COLUMN_STATUS_MAP[columnId];
         if (!newStatus || tool.status === newStatus) return;

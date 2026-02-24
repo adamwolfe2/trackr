@@ -125,6 +125,41 @@ export async function deleteTool(toolId: string) {
 
 const VALID_TOOL_STATUSES = ["queued", "researching", "active", "failed", "paused", "archived"] as const;
 
+export async function triggerResearch(toolId: string) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const tool = await db.query.tools.findFirst({
+        where: and(eq(tools.id, toolId), eq(tools.workspaceId, workspaceId)),
+        columns: { id: true, status: true },
+    });
+    if (!tool) throw new Error("Tool not found or unauthorized");
+
+    // Already in-flight — nothing to do
+    if (tool.status === "researching" || tool.status === "queued") {
+        return { success: true };
+    }
+
+    await db.update(tools)
+        .set({ status: "queued" })
+        .where(eq(tools.id, toolId));
+
+    after(async () => {
+        try {
+            await performDeepResearch(toolId);
+        } catch (err) {
+            console.error(`[tools] triggerResearch failed for tool ${toolId}:`, err);
+        }
+    });
+
+    revalidatePath("/tools");
+    revalidatePath(`/tools/${toolId}`);
+    return { success: true };
+}
+
 export async function updateToolStatus(toolId: string, status: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
