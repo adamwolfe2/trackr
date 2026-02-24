@@ -64,12 +64,17 @@ export async function POST(req: Request) {
             await handleUserDeleted(evt);
         }
     } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        // Update the already-inserted record with the error
+        const fullError = err instanceof Error ? err.message : String(err);
+        // Log full detail to console/Sentry for debugging
+        console.error(`Clerk webhook error [${eventType}]:`, fullError);
+        // Sanitize before persisting — strip email addresses and truncate
+        const safeError = fullError
+            .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[EMAIL]")
+            .slice(0, 500);
+        // Update the already-inserted record with the sanitized error
         await db.update(webhookEvents)
-            .set({ error: message })
+            .set({ error: safeError })
             .where(and(eq(webhookEvents.source, 'clerk'), eq(webhookEvents.eventId, eventId)));
-        console.error(`Clerk webhook error [${eventType}]:`, message);
         return new Response('Webhook handler error', { status: 500 });
     }
 

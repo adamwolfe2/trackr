@@ -77,11 +77,16 @@ export async function POST(req: NextRequest) {
             }
         }
     } catch (err) {
-        const processingError = err instanceof Error ? err.message : String(err);
-        console.error(`Stripe webhook error [${event.type}]:`, processingError);
-        // Update the already-inserted record with the error
+        const fullError = err instanceof Error ? err.message : String(err);
+        // Log full detail to console/Sentry for debugging
+        console.error(`Stripe webhook error [${event.type}]:`, fullError);
+        // Sanitize before persisting — strip email addresses and truncate
+        const safeError = fullError
+            .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[EMAIL]")
+            .slice(0, 500);
+        // Update the already-inserted record with the sanitized error
         await db.update(webhookEvents)
-            .set({ error: processingError })
+            .set({ error: safeError })
             .where(and(eq(webhookEvents.source, 'stripe'), eq(webhookEvents.eventId, eventId)));
         return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 });
     }
