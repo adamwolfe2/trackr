@@ -17,7 +17,9 @@ export function ApiKeySection({
     currentApiKey: string | null;
     isOwnerOrAdmin: boolean;
 }) {
-    const [apiKey, setApiKey] = useState<string | null>(currentApiKey);
+    // Only hold the plaintext key in state after generation — never expose the stored hash
+    const hasExistingKey = !!currentApiKey;
+    const [newKey, setNewKey] = useState<string | null>(null);
     const [revealed, setRevealed] = useState(false);
     const [copied, setCopied] = useState(false);
     const [generating, setGenerating] = useState(false);
@@ -38,9 +40,9 @@ export function ApiKeySection({
     }, [hideCountdown]);
 
     const handleCopy = async () => {
-        if (!apiKey) return;
+        if (!newKey) return;
         try {
-            await navigator.clipboard.writeText(apiKey);
+            await navigator.clipboard.writeText(newKey);
             setCopied(true);
             toast.success("API key copied to clipboard");
             setTimeout(() => setCopied(false), 2000);
@@ -50,7 +52,7 @@ export function ApiKeySection({
     };
 
     const handleGenerate = async () => {
-        const confirmed = apiKey
+        const confirmed = hasExistingKey
             ? window.confirm(
                   "This will invalidate your current API key. Any Chrome Extension using the old key will stop working. Continue?"
               )
@@ -60,8 +62,8 @@ export function ApiKeySection({
 
         setGenerating(true);
         try {
-            const newKey = await regenerateApiKey();
-            setApiKey(newKey);
+            const generated = await regenerateApiKey();
+            setNewKey(generated);
             setRevealed(true);
             setJustGenerated(true);
             setHideCountdown(60);
@@ -73,12 +75,6 @@ export function ApiKeySection({
             setGenerating(false);
         }
     };
-
-    const displayValue = apiKey
-        ? revealed
-            ? apiKey
-            : maskApiKey(apiKey)
-        : "No API key generated yet";
 
     return (
         <div className="border border-black">
@@ -99,14 +95,16 @@ export function ApiKeySection({
                     <label className="font-mono text-xs uppercase tracking-widest block">
                         API Key
                     </label>
-                    <div className="flex gap-0">
-                        <div className="flex-1 border border-black px-4 py-2.5 font-mono text-sm bg-neutral-50 min-w-0 flex items-center overflow-hidden">
-                            <span className={`truncate ${!apiKey ? "text-neutral-400" : ""}`}>
-                                {displayValue}
-                            </span>
-                        </div>
-                        {apiKey && (
-                            <>
+
+                    {/* After generation: show the plaintext key with copy/reveal */}
+                    {justGenerated && newKey ? (
+                        <>
+                            <div className="flex gap-0">
+                                <div className="flex-1 border border-black px-4 py-2.5 font-mono text-sm bg-neutral-50 min-w-0 flex items-center overflow-hidden">
+                                    <span className="truncate">
+                                        {revealed ? newKey : maskApiKey(newKey)}
+                                    </span>
+                                </div>
                                 <button
                                     onClick={() => setRevealed(!revealed)}
                                     className="border border-l-0 border-black px-3 py-2.5 bg-white hover:bg-black hover:text-white transition-colors flex items-center"
@@ -129,15 +127,25 @@ export function ApiKeySection({
                                     )}
                                     {copied ? "Copied" : "Copy"}
                                 </button>
-                            </>
-                        )}
-                    </div>
-
-                    {justGenerated && (
-                        <p className="font-mono text-[10px] text-amber-600">
-                            Copy this key now. It will be hidden automatically
-                            {hideCountdown !== null ? ` in ${hideCountdown}s` : " after you leave this page"}.
-                        </p>
+                            </div>
+                            <p className="font-mono text-[10px] text-amber-600">
+                                Copy this key now. It will be hidden automatically
+                                {hideCountdown !== null ? ` in ${hideCountdown}s` : " after you leave this page"}.
+                            </p>
+                        </>
+                    ) : hasExistingKey ? (
+                        /* Key exists in DB but hasn't just been generated — show status only, not the hash */
+                        <div className="flex items-center gap-2 border border-black px-4 py-2.5 bg-neutral-50">
+                            <Check className="h-3.5 w-3.5 text-black flex-shrink-0" />
+                            <span className="font-mono text-sm text-neutral-600">
+                                API key configured — regenerate to get a new one
+                            </span>
+                        </div>
+                    ) : (
+                        /* No key yet */
+                        <div className="border border-black px-4 py-2.5 bg-neutral-50">
+                            <span className="font-mono text-sm text-neutral-400">No API key generated yet</span>
+                        </div>
                     )}
                 </div>
 
@@ -153,7 +161,7 @@ export function ApiKeySection({
                         />
                         {generating
                             ? "Generating..."
-                            : apiKey
+                            : hasExistingKey
                             ? "Regenerate Key"
                             : "Generate New Key"}
                     </button>
