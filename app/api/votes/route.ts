@@ -2,10 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { communityVotes } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
+import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
+
+// Alphanumeric slugs only — prevents injection via slug field
+const SLUG_RE = /^[a-z0-9-_]{1,200}$/i;
 
 // GET /api/votes — returns all vote counts or a single tool's counts
 export async function GET(req: NextRequest) {
     const slug = req.nextUrl.searchParams.get("slug");
+    if (slug && !SLUG_RE.test(slug)) {
+        return NextResponse.json({ error: "Invalid slug" }, { status: 400 });
+    }
 
     if (slug) {
         const row = await db.query.communityVotes?.findFirst({
@@ -29,9 +36,27 @@ export async function GET(req: NextRequest) {
 // POST /api/votes — cast or change a vote (no auth required)
 // body: { slug: string, type: 'up' | 'down', prevType?: 'up' | 'down' }
 export async function POST(req: NextRequest) {
+    // Rate-limit by IP — 20 votes per minute
+    const ip =
+        req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+        req.headers.get("x-real-ip") ??
+        "unknown";
+    const rl = rateLimit(`votes:${ip}`, { limit: 20, windowSeconds: 60 });
+    if (!rl.success) {
+        return NextResponse.json(
+            { error: "Too many requests" },
+            { status: 429, headers: getRateLimitHeaders(rl) }
+        );
+    }
+
     const body = await req.json().catch(() => null);
     if (!body || !body.slug || !["up", "down"].includes(body.type)) {
         return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
+
+    // Validate slug format
+    if (!SLUG_RE.test(String(body.slug))) {
+        return NextResponse.json({ error: "Invalid slug" }, { status: 400 });
     }
 
     const { slug, type, prevType } = body as {

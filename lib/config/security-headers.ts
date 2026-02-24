@@ -3,7 +3,32 @@
  * Exported as constants so they can be unit-tested independently.
  */
 
+/**
+ * Content-Security-Policy.
+ * - script-src: 'unsafe-inline' required for Next.js App Router hydration scripts.
+ * - img-src https: allows any HTTPS image (tool logos come from arbitrary CDNs).
+ * - connect-src https: wss: allows Clerk, Stripe, Sentry, and app API calls.
+ * - frame-ancestors 'self' blocks clickjacking (reinforces X-Frame-Options).
+ * - object-src 'none' blocks Flash / legacy plugin execution.
+ * - base-uri 'self' prevents <base> tag injection.
+ * - form-action 'self' prevents form-submission hijacking.
+ */
+const CSP = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://js.stripe.com",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https: wss:",
+    "frame-src 'self' https://js.stripe.com https://*.stripe.com https://*.clerk.accounts.dev",
+    "frame-ancestors 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+].join("; ");
+
 export const SECURITY_HEADERS = [
+    { key: "Content-Security-Policy", value: CSP },
     { key: "X-Frame-Options", value: "SAMEORIGIN" },
     { key: "X-Content-Type-Options", value: "nosniff" },
     { key: "X-XSS-Protection", value: "1; mode=block" },

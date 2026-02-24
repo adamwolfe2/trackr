@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { apiLogs, workspaces } from "@/lib/db/schema";
+import { rateLimit } from "@/lib/middleware/rate-limit";
 
 export const metadata: Metadata = {
     title: "Admin API Dashboard — Trackr",
@@ -33,6 +34,21 @@ function isAuthenticated(cookieValue: string | undefined): boolean {
 
 async function loginAction(formData: FormData) {
     "use server";
+
+    // Rate-limit login attempts per IP — 5 per 5 minutes
+    const { headers: getHeaders } = await import("next/headers");
+    const headersList = await getHeaders();
+    const ip =
+        headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+        headersList.get("x-real-ip") ??
+        "unknown";
+    const rl = rateLimit(`admin-login:${ip}`, { limit: 5, windowSeconds: 300 });
+    if (!rl.success) {
+        const { redirect } = await import("next/navigation");
+        redirect("/admin/api?error=rate_limited");
+        return;
+    }
+
     const password = formData.get("password") as string;
     const adminPassword = process.env.ADMIN_PASSWORD;
     if (!password || !adminPassword) return;

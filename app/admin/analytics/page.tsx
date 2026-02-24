@@ -8,6 +8,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHash, timingSafeEqual } from "crypto";
 import { PLANS, getPlanLimits } from "@/lib/config/subscriptions";
+import { rateLimit } from "@/lib/middleware/rate-limit";
 
 export const metadata: Metadata = {
     title: "Admin Analytics — Trackr",
@@ -29,6 +30,20 @@ async function isAuthenticated(): Promise<boolean> {
 
 async function loginAction(formData: FormData) {
     "use server";
+
+    // Rate-limit login attempts per IP — 5 per 5 minutes
+    const { headers: getHeaders } = await import("next/headers");
+    const headersList = await getHeaders();
+    const ip =
+        headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+        headersList.get("x-real-ip") ??
+        "unknown";
+    const rl = rateLimit(`admin-login:${ip}`, { limit: 5, windowSeconds: 300 });
+    if (!rl.success) {
+        redirect("/admin/analytics?error=rate_limited");
+        return;
+    }
+
     const password = formData.get("password") as string;
     const adminPassword = process.env.ADMIN_PASSWORD;
     if (!password || !adminPassword) return;
