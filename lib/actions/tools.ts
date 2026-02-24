@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { tools, reports, researchJobs, notes, subscriptions, ads, apiLogs } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { eq, and, count } from "drizzle-orm";
+import { eq, and, count, inArray, ne } from "drizzle-orm";
 import { performDeepResearch } from "@/lib/actions/research";
 import { ensureWorkspace } from "@/lib/db/ensure-workspace";
 
@@ -139,7 +139,7 @@ export async function triggerResearch(toolId: string) {
     if (!tool) throw new Error("Tool not found or unauthorized");
 
     // Already in-flight — nothing to do
-    if (tool.status === "researching" || tool.status === "queued") {
+    if (tool.status === "researching") {
         return { success: true };
     }
 
@@ -158,6 +158,47 @@ export async function triggerResearch(toolId: string) {
     revalidatePath("/tools");
     revalidatePath(`/tools/${toolId}`);
     return { success: true };
+}
+
+export async function triggerResearchBatch(toolIds: string[]) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    if (!toolIds.length) return { success: true, started: 0 };
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    // Verify tools belong to workspace and are not already researching
+    const eligible = await db.query.tools.findMany({
+        where: and(
+            inArray(tools.id, toolIds),
+            eq(tools.workspaceId, workspaceId),
+            ne(tools.status, "researching"),
+        ),
+        columns: { id: true },
+    });
+
+    if (eligible.length === 0) return { success: true, started: 0 };
+
+    const eligibleIds = eligible.map(t => t.id);
+
+    await db.update(tools)
+        .set({ status: "queued" })
+        .where(inArray(tools.id, eligibleIds));
+
+    for (const tool of eligible) {
+        after(async () => {
+            try {
+                await performDeepResearch(tool.id);
+            } catch (err) {
+                console.error(`[tools] triggerResearchBatch failed for tool ${tool.id}:`, err);
+            }
+        });
+    }
+
+    revalidatePath("/tools");
+    return { success: true, started: eligibleIds.length };
 }
 
 export async function updateToolStatus(toolId: string, status: string) {

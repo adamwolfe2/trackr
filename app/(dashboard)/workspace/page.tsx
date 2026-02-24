@@ -39,13 +39,19 @@ export default async function WorkspacePage() {
     });
 
     // Fetch active (non-expired) pending invitations for this workspace
-    const pendingInvites = await db.query.pendingInvitations.findMany({
-        where: and(
-            eq(pendingInvitations.workspaceId, currentMember.workspaceId),
-            gt(pendingInvitations.expiresAt, new Date())
-        ),
-        orderBy: [asc(pendingInvitations.createdAt)],
-    });
+    // Wrapped in try/catch — table may not exist in all environments yet
+    let pendingInvites: (typeof pendingInvitations.$inferSelect)[] = [];
+    try {
+        pendingInvites = await db.query.pendingInvitations.findMany({
+            where: and(
+                eq(pendingInvitations.workspaceId, currentMember.workspaceId),
+                gt(pendingInvitations.expiresAt, new Date())
+            ),
+            orderBy: [asc(pendingInvitations.createdAt)],
+        });
+    } catch {
+        // Degrade gracefully — workspace page still renders without pending invites
+    }
 
     // Resolve Clerk user data for all members (names, emails)
     let memberUserMap = new Map<string, { userId: string; firstName: string | null; lastName: string | null; email: string | null | undefined }>();

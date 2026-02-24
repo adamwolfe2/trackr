@@ -13,11 +13,18 @@ import { checkFeatureAccess } from "@/lib/middleware/require-subscription";
 
 export const maxDuration = 30;
 
+// AI SDK v6 sends UIMessage[] where content may be "" with text in parts[].text
+const UIMessageSchema = z.object({
+    role: z.string(),
+    content: z.string().optional().default(""),
+    parts: z.array(z.object({
+        type: z.string(),
+        text: z.string().optional(),
+    }).passthrough()).optional(),
+}).passthrough();
+
 const ChatSchema = z.object({
-    messages: z.array(z.object({
-        role: z.enum(["user", "assistant", "system"]),
-        content: z.string().max(4000),
-    })).min(1).max(50),
+    messages: z.array(UIMessageSchema).min(1).max(50),
 });
 
 export async function POST(req: NextRequest) {
@@ -57,7 +64,22 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const { messages } = parsed.data;
+    // Normalize UIMessage[] → CoreMessage[] (extract text from parts when content is empty)
+    const messages = parsed.data.messages
+        .filter(m => ["user", "assistant", "system"].includes(m.role))
+        .map(m => {
+            const text = m.content ||
+                m.parts?.filter((p: { type: string; text?: string }) => p.type === "text" && p.text)
+                    .map((p: { type: string; text?: string }) => p.text ?? "")
+                    .join("") ||
+                "";
+            return { role: m.role as "user" | "assistant" | "system", content: text };
+        });
+
+    if (messages.length === 0) {
+        return NextResponse.json({ error: "No valid messages" }, { status: 400 });
+    }
+
     const lastMessage = messages[messages.length - 1];
     const query = lastMessage?.content ?? "";
     const wsId = member.workspaceId;

@@ -17,7 +17,7 @@ import {
     useSensors,
 } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
-import { updateToolStatus, deleteTool, triggerResearch } from "@/lib/actions/tools";
+import { updateToolStatus, deleteTool, triggerResearch, triggerResearchBatch } from "@/lib/actions/tools";
 import { toast } from "sonner";
 
 interface KanbanTool {
@@ -160,10 +160,12 @@ function DraggableCard({ tool, onDelete }: { tool: KanbanTool; onDelete: (id: st
 function DroppableColumn({
     col,
     toolCount,
+    headerAction,
     children,
 }: {
     col: typeof COLUMNS[number];
     toolCount: number;
+    headerAction?: React.ReactNode;
     children: React.ReactNode;
 }) {
     const isLocked = LOCKED_DROP_TARGETS.has(col.id);
@@ -174,7 +176,10 @@ function DroppableColumn({
             {/* Column Header */}
             <div className="flex items-center justify-between px-0 pb-1.5 border-b-2 border-black">
                 <span className="text-[11px] font-mono font-bold uppercase tracking-widest">{col.label}</span>
-                <span className="text-[10px] font-mono bg-black text-white px-1.5 py-0.5">{toolCount}</span>
+                <div className="flex items-center gap-1.5">
+                    {headerAction}
+                    <span className="text-[10px] font-mono bg-black text-white px-1.5 py-0.5">{toolCount}</span>
+                </div>
             </div>
 
             {/* Drop Zone */}
@@ -213,7 +218,7 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
 
         // Dropping onto Researching column triggers research
         if (columnId === "researching") {
-            if (tool.status === "researching" || tool.status === "queued") return;
+            if (tool.status === "researching") return;
             const prevTools = [...tools];
             setTools(prev => prev.map(t => t.id === toolId ? { ...t, status: "researching" } : t));
             try {
@@ -245,6 +250,27 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
 
     const handleDelete = (id: string) => {
         setTools(prev => prev.filter(t => t.id !== id));
+    };
+
+    const [researchingAll, setResearchingAll] = useState(false);
+    const handleResearchAll = async () => {
+        const backlogTools = tools.filter(t =>
+            (COLUMNS[0].statuses as readonly string[]).includes(t.status) && t.status !== "researching"
+        );
+        if (backlogTools.length === 0) return;
+        setResearchingAll(true);
+        const prevTools = [...tools];
+        const ids = backlogTools.map(t => t.id);
+        setTools(prev => prev.map(t => ids.includes(t.id) ? { ...t, status: "researching" } : t));
+        try {
+            const result = await triggerResearchBatch(ids);
+            toast.success(`Research started for ${result.started} tool${result.started !== 1 ? "s" : ""}`);
+        } catch {
+            setTools(prevTools);
+            toast.error("Failed to start batch research");
+        } finally {
+            setResearchingAll(false);
+        }
     };
 
     const activeTool = activeId ? tools.find(t => t.id === activeId) : null;
@@ -315,9 +341,18 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                 <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0 snap-x snap-mandatory">
                     {COLUMNS.map((col) => {
                         const colTools = filteredTools.filter(t => (col.statuses as readonly string[]).includes(t.status));
+                        const backlogAction = col.id === "backlog" && colTools.length > 0 ? (
+                            <button
+                                onClick={handleResearchAll}
+                                disabled={researchingAll}
+                                className="text-[9px] font-mono uppercase tracking-widest border border-black px-1.5 py-0.5 hover:bg-black hover:text-white transition-colors disabled:opacity-40"
+                            >
+                                {researchingAll ? <Loader2 className="w-2.5 h-2.5 animate-spin inline" /> : "Research All"}
+                            </button>
+                        ) : undefined;
                         return (
                             <div key={col.id} className="flex-shrink-0 w-[240px] sm:w-[280px] lg:w-auto min-w-0 flex flex-col snap-start">
-                                <DroppableColumn col={col} toolCount={colTools.length}>
+                                <DroppableColumn col={col} toolCount={colTools.length} headerAction={backlogAction}>
                                     {colTools.map((tool) => (
                                         <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} />
                                     ))}
