@@ -53,13 +53,49 @@ const ReportSchema = z.object({
         sourceAgreement: z.string().describe("1-2 sentence summary of whether sources agree or disagree, and on what"),
     }).describe("Multi-source sentiment consensus — cross-reference all review sites, Reddit, Trustpilot, and competitor analyses"),
     marketIntel: z.object({
-        founded: z.string().optional().describe("Year founded or 'Unknown'"),
-        headquarters: z.string().optional().describe("HQ location or 'Unknown'"),
-        employeeCount: z.string().optional().describe("Approximate employee count range, e.g. '51-200'"),
-        funding: z.string().optional().describe("Total funding raised or 'Bootstrapped' or 'Public' or 'Unknown'"),
+        founded: z.string().describe("Year founded, or 'Unknown' if not found"),
+        headquarters: z.string().describe("HQ location, or 'Unknown' if not found"),
+        employeeCount: z.string().describe("Approximate employee count range e.g. '51-200', or 'Unknown' if not found"),
+        funding: z.string().describe("Total funding raised, 'Bootstrapped', 'Public', or 'Unknown'"),
         recentNews: z.array(z.string()).describe("2-3 recent notable developments, launches, or news items from the past year"),
     }).describe("Market intelligence about the company behind the tool"),
 });
+
+// Minimal report used when AI synthesis fails entirely — ensures tool always reaches active status
+function buildFallbackReport(toolName: string): z.infer<typeof ReportSchema> {
+    return {
+        summary: `${toolName} — research data collected. Re-run research to generate a full AI analysis.`,
+        scorecardSnapshot: {
+            features:          { score: 5, justification: "Manual review required — AI synthesis unavailable" },
+            pricing_value:     { score: 5, justification: "Manual review required — AI synthesis unavailable" },
+            ease_of_use:       { score: 5, justification: "Manual review required — AI synthesis unavailable" },
+            integration_depth: { score: 5, justification: "Manual review required — AI synthesis unavailable" },
+            support_quality:   { score: 5, justification: "Manual review required — AI synthesis unavailable" },
+            security:          { score: 5, justification: "Manual review required — AI synthesis unavailable" },
+            ai_capabilities:   { score: 5, justification: "Manual review required — AI synthesis unavailable" },
+        },
+        features: { list: [] },
+        pricing: [],
+        isPricingHidden: false,
+        pros: ["Research data collected — re-run to generate insights"],
+        cons: [],
+        competitors: [],
+        integrations: [],
+        categories: [],
+        sentimentConsensus: {
+            overall: "mixed",
+            confidence: 0,
+            sourceAgreement: "AI synthesis unavailable — re-run research to generate sentiment analysis.",
+        },
+        marketIntel: {
+            founded: "Unknown",
+            headquarters: "Unknown",
+            employeeCount: "Unknown",
+            funding: "Unknown",
+            recentNews: [],
+        },
+    };
+}
 
 type ResearchLog = { message: string; timestamp: string };
 
@@ -533,11 +569,7 @@ ${fullRecipe.evaluationCriteria ? `EVALUATION CRITERIA:\n${fullRecipe.evaluation
 ${fullRecipe.dealBreakers ? `DEAL BREAKERS (flag these prominently in cons):\n${fullRecipe.dealBreakers}` : ""}
 ` : `COMPANY CONTEXT: ${companyContext}`;
 
-        const openaiStart = Date.now();
-        const { object: reportData, usage } = await generateObject({
-            model: openai("gpt-4o-mini"),
-            schema: ReportSchema,
-            prompt: `
+        const synthesisPrompt = `
 You are a rigorous software procurement analyst evaluating ${tool.name} (${tool.websiteUrl}).
 You have access to data from ${totalDataSources.length} unique sources. Cross-reference all sources to form your analysis.
 
@@ -592,19 +624,59 @@ INSTRUCTIONS:
 - For competitors, use their domain name (e.g. notion.so, linear.app).
 - Evaluate through the lens of the company's recipe above: what works for their specific business units, and flag any deal breakers prominently.
 - For sentimentConsensus: cross-reference ALL sources (reviews, trust sites, Reddit, competitor analyses). Do sources agree? What's the confidence based on volume of data?
-- For marketIntel: extract company details from the about page, market research, and any other available sources. Use "Unknown" for fields you can't determine.
-            `.trim(),
-        });
-        logApiCall({
-            service: "openai",
-            endpoint: "gpt-4o-mini",
-            durationMs: Date.now() - openaiStart,
-            tokensIn: usage?.inputTokens,
-            tokensOut: usage?.outputTokens,
-            estimatedCost: estimateOpenAICost(usage?.inputTokens ?? 0, usage?.outputTokens ?? 0, "gpt-4o-mini"),
-            workspaceId: tool.workspaceId,
-            toolId,
-        });
+- For marketIntel: extract company details from the about page, market research, and any other available sources. Use "Unknown" for any field you cannot determine.
+        `.trim();
+
+        // Attempt synthesis — primary model, then fallback to gpt-4o with json mode,
+        // then a minimal data-only report so research never ends in a failed state.
+        let reportData: z.infer<typeof ReportSchema>;
+        const openaiStart = Date.now();
+        try {
+            const { object, usage } = await generateObject({
+                model: openai("gpt-4o-mini"),
+                schema: ReportSchema,
+                prompt: synthesisPrompt,
+            });
+            reportData = object;
+            logApiCall({
+                service: "openai",
+                endpoint: "gpt-4o-mini",
+                durationMs: Date.now() - openaiStart,
+                tokensIn: usage?.inputTokens,
+                tokensOut: usage?.outputTokens,
+                estimatedCost: estimateOpenAICost(usage?.inputTokens ?? 0, usage?.outputTokens ?? 0, "gpt-4o-mini"),
+                workspaceId: tool.workspaceId,
+                toolId,
+            });
+        } catch (primaryErr) {
+            const primaryMsg = primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
+            await logProgress(toolId, `Synthesis attempt 1 failed: ${primaryMsg.slice(0, 120)} — retrying with fallback model...`);
+            try {
+                const fallbackStart = Date.now();
+                // gpt-4o is more capable at complex schema compliance than gpt-4o-mini
+                const { object, usage } = await generateObject({
+                    model: openai("gpt-4o"),
+                    schema: ReportSchema,
+                    prompt: synthesisPrompt,
+                });
+                reportData = object;
+                logApiCall({
+                    service: "openai",
+                    endpoint: "gpt-4o",
+                    durationMs: Date.now() - fallbackStart,
+                    tokensIn: usage?.inputTokens,
+                    tokensOut: usage?.outputTokens,
+                    estimatedCost: estimateOpenAICost(usage?.inputTokens ?? 0, usage?.outputTokens ?? 0, "gpt-4o"),
+                    workspaceId: tool.workspaceId,
+                    toolId,
+                });
+                await logProgress(toolId, `Synthesis: Fallback (gpt-4o) succeeded.`);
+            } catch (fallbackErr) {
+                const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
+                await logProgress(toolId, `Synthesis: Both attempts failed (${fallbackMsg.slice(0, 80)}). Storing data-only report.`);
+                reportData = buildFallbackReport(tool.name);
+            }
+        }
 
         // ── Step 8: Store report ──────────────────────────────────────────
         const sentimentData = {
