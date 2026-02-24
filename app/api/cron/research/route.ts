@@ -68,6 +68,11 @@ export async function GET(req: Request) {
                 case "monthly":
                     next.setMonth(next.getMonth() + 1);
                     break;
+                default:
+                    // Unknown interval — default to weekly to avoid re-triggering immediately
+                    console.warn(`[api/cron/research] Unknown researchInterval "${tool.researchInterval}" for tool ${tool.id}, defaulting to weekly`);
+                    next.setDate(next.getDate() + 7);
+                    break;
             }
             await db
                 .update(tools)

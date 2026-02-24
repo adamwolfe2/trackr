@@ -60,9 +60,14 @@ export async function generateCompanyContext(websiteUrl: string): Promise<{ cont
 
         if (!content) return { context: "", error: "No readable content found on website" };
 
-        const { text } = await generateText({
-            model: openai("gpt-4o-mini"),
-            prompt: `Based on this website content, write a 2-3 sentence description that captures:
+        const aiController = new AbortController();
+        const aiTimeout = setTimeout(() => aiController.abort(), 20_000);
+        let text: string;
+        try {
+            const result = await generateText({
+                model: openai("gpt-4o-mini"),
+                abortSignal: aiController.signal,
+                prompt: `Based on this website content, write a 2-3 sentence description that captures:
 1. What the company does and their core product/service
 2. Their target market (B2B/B2C, industry, typical company size they sell to)
 3. Their likely priorities when evaluating software tools
@@ -71,7 +76,19 @@ Website content:
 ${content}
 
 Write only the description, no preamble or label.`,
-        });
+            });
+            text = result.text;
+        } catch (aiErr) {
+            const aiMsg = aiErr instanceof Error ? aiErr.message : "Unknown";
+            if (aiMsg.includes("aborted") || aiMsg.includes("abort")) {
+                console.error("[onboarding] generateText timed out after 20s");
+            } else {
+                console.error("[onboarding] generateText failed:", aiErr);
+            }
+            return { context: "", error: "Failed to generate context" };
+        } finally {
+            clearTimeout(aiTimeout);
+        }
 
         return { context: text };
     } catch {

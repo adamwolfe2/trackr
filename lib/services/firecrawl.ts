@@ -49,6 +49,9 @@ export class FirecrawlService {
             return { success: false, error: "FIRECRAWL_API_KEY is not configured" };
         }
 
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30_000);
+
         try {
             const response = await fetch(`${this.baseUrl}/scrape`, {
                 method: "POST",
@@ -60,7 +63,8 @@ export class FirecrawlService {
                     url,
                     formats: ["markdown", "html"],
                     onlyMainContent: true
-                })
+                }),
+                signal: controller.signal,
             });
 
             if (!response.ok) {
@@ -71,9 +75,15 @@ export class FirecrawlService {
             const data = await response.json();
             return { success: true, data: data.data };
         } catch (error: unknown) {
-            console.error("Firecrawl scrape failed:", error);
             const message = error instanceof Error ? error.message : "Unknown error";
+            if (message.includes("aborted") || message.includes("abort")) {
+                console.error(`Firecrawl scrape timed out after 30s for: ${url}`);
+                return { success: false, error: "Firecrawl scrape timed out" };
+            }
+            console.error("Firecrawl scrape failed:", error);
             return { success: false, error: message };
+        } finally {
+            clearTimeout(timeout);
         }
     }
 
@@ -85,6 +95,9 @@ export class FirecrawlService {
         if (!this.apiKey) return { success: false, error: "No API Key" };
 
         const { limit = 50, includeSubdomains = false, search, ignoreSitemap = true } = options;
+
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30_000);
 
         try {
             const response = await fetch(`${this.baseUrl}/map`, {
@@ -99,7 +112,8 @@ export class FirecrawlService {
                     includeSubdomains,
                     search,
                     ignoreSitemap
-                })
+                }),
+                signal: controller.signal,
             });
 
             // Firecrawl map endpoint returns { success: true, links: [] } or { data: [] } depending on version
@@ -114,9 +128,15 @@ export class FirecrawlService {
             const links: string[] = data.links ?? data.data ?? [];
             return { success: true, data: links };
         } catch (error: unknown) {
-            console.error("Firecrawl map failed:", error);
             const message = error instanceof Error ? error.message : "Unknown error";
+            if (message.includes("aborted") || message.includes("abort")) {
+                console.error(`Firecrawl map timed out after 30s for: ${url}`);
+                return { success: false, error: "Firecrawl map timed out" };
+            }
+            console.error("Firecrawl map failed:", error);
             return { success: false, error: message };
+        } finally {
+            clearTimeout(timeout);
         }
     }
 

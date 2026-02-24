@@ -83,7 +83,8 @@ Return results grouped by articleIndex (1-based). Include an entry for every art
         }
 
         return totalExtracted;
-    } catch {
+    } catch (extractErr) {
+        console.error(`[suggestions-pipeline] extractToolsFromFeedItems failed for workspace ${workspaceId}:`, extractErr);
         for (const item of items) {
             await db.update(feedItems).set({
                 extractedTools: [{ name: "__error", url: "", description: "", confidence: 0 }],
