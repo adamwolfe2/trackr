@@ -102,14 +102,19 @@ export async function inviteMember(formData: FormData) {
         ),
     });
 
+    let inviteId: string | undefined;
     if (!existingInvite) {
         // No active invite — create one with 7-day expiry
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        await db
+        const [newInvite] = await db
             .insert(pendingInvitations)
-            .values({ workspaceId, email, invitedByUserId: user.id, expiresAt });
+            .values({ workspaceId, email, invitedByUserId: user.id, expiresAt })
+            .returning({ id: pendingInvitations.id });
+        inviteId = newInvite?.id;
+    } else {
+        // Re-send existing invite with its token
+        inviteId = existingInvite.id;
     }
-    // If invite already exists, fall through to re-send the email (idempotent UX)
 
     // Send invite email via Resend if available
     try {
@@ -118,7 +123,7 @@ export async function inviteMember(formData: FormData) {
         });
         const { sendInviteEmail } = await import("@/lib/email/resend");
         const inviterName = [user.firstName, user.lastName].filter(Boolean).join(" ") || undefined;
-        await sendInviteEmail(email, workspace?.name || "a Trackr workspace", inviterName);
+        await sendInviteEmail(email, workspace?.name || "a Trackr workspace", inviterName, inviteId);
     } catch {
         // Email sending failure is non-fatal
     }

@@ -76,12 +76,16 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
 export async function sendInviteEmail(
     to: string,
     workspaceName: string,
-    inviterName?: string
+    inviterName?: string,
+    inviteId?: string,
 ) {
     if (!process.env.RESEND_API_KEY) return;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
     const resend = getResend();
     const invitedBy = inviterName ? ` by ${escapeHtml(inviterName)}` : "";
+    const acceptUrl = inviteId
+        ? `${appUrl}/invite/accept/${inviteId}`
+        : `${appUrl}/sign-up`;
     await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
@@ -97,7 +101,7 @@ export async function sendInviteEmail(
             <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
                 Trackr helps teams evaluate SaaS tools with AI-powered research, scoring, and spend tracking.
             </p>
-            ${emailButton(`${appUrl}/sign-up`, "Accept Invitation →")}
+            ${emailButton(acceptUrl, "Accept Invitation →")}
         `),
     }));
 }
