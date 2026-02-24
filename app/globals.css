@@ -83,6 +83,16 @@
   }
 }
 
+/* Kanban card enter animation — used when a tool finishes research and moves to Active */
+@keyframes kanban-card-in {
+  0%   { opacity: 0; transform: translateY(-10px); outline: 2px solid #000; outline-offset: 1px; }
+  35%  { opacity: 1; transform: translateY(0);     outline: 2px solid #000; outline-offset: 1px; }
+  100% { opacity: 1; transform: translateY(0);     outline: 2px solid transparent; outline-offset: 1px; }
+}
+.kanban-card-in {
+  animation: kanban-card-in 1.4s ease-out forwards;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

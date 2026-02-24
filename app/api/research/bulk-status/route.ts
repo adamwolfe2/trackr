@@ -35,6 +35,8 @@ export async function GET(req: Request) {
                 overallScore: tools.overallScore,
                 logoUrl: tools.logoUrl,
                 websiteUrl: tools.websiteUrl,
+                lastResearchedAt: tools.lastResearchedAt,
+                category: tools.category,
             })
             .from(tools)
             .where(

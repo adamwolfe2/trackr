@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Star, Loader2, X, Search, Clock } from "lucide-react";
 import {
@@ -111,7 +111,7 @@ function CardContent({ tool }: { tool: KanbanTool }) {
     );
 }
 
-function DraggableCard({ tool, onDelete }: { tool: KanbanTool; onDelete: (id: string) => void }) {
+function DraggableCard({ tool, onDelete, isNew }: { tool: KanbanTool; onDelete: (id: string) => void; isNew?: boolean }) {
     const [deleting, setDeleting] = useState(false);
     const isLocked = tool.status === "researching";
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -139,7 +139,7 @@ function DraggableCard({ tool, onDelete }: { tool: KanbanTool; onDelete: (id: st
             style={style}
             {...attributes}
             {...listeners}
-            className={`relative group ${isDragging ? "opacity-30" : ""} ${!isLocked ? "cursor-grab active:cursor-grabbing" : ""}`}
+            className={`relative group ${isDragging ? "opacity-30" : ""} ${!isLocked ? "cursor-grab active:cursor-grabbing" : ""} ${isNew ? "kanban-card-in" : ""}`}
         >
             <Link href={`/tools/${tool.id}`} onClick={(e) => isDragging && e.preventDefault()}>
                 <CardContent tool={tool} />
@@ -197,6 +197,65 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
     const [tools, setTools] = useState(initialTools);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
+    const [newlyActiveIds, setNewlyActiveIds] = useState<Set<string>>(new Set());
+
+    // Keep a ref so the polling interval always sees the latest tool list without re-mounting
+    const toolsRef = useRef(tools);
+    useEffect(() => { toolsRef.current = tools; }, [tools]);
+
+    // Real-time polling: every 5s check if any researching/queued tools have completed
+    useEffect(() => {
+        const poll = async () => {
+            const watching = toolsRef.current.filter(
+                t => t.status === "researching" || t.status === "queued"
+            );
+            if (watching.length === 0) return;
+
+            const ids = watching.map(t => t.id).join(",");
+            try {
+                const res = await fetch(`/api/research/bulk-status?ids=${ids}`, { cache: "no-store" });
+                if (!res.ok) return;
+                const updates = await res.json() as Array<{
+                    id: string;
+                    status: string;
+                    overallScore: string | null;
+                    logoUrl: string | null;
+                    category: string[] | null;
+                    lastResearchedAt: string | null;
+                }>;
+
+                const justCompleted: string[] = [];
+                setTools(prev => prev.map(t => {
+                    const u = updates.find(u => u.id === t.id);
+                    if (!u || u.status === t.status) return t;
+                    if (u.status === "active") justCompleted.push(u.id);
+                    return {
+                        ...t,
+                        status: u.status,
+                        overallScore: u.overallScore ?? t.overallScore,
+                        logoUrl: u.logoUrl ?? t.logoUrl,
+                        category: u.category ?? t.category,
+                        lastResearchedAt: u.lastResearchedAt ? new Date(u.lastResearchedAt) : t.lastResearchedAt,
+                    };
+                }));
+
+                if (justCompleted.length > 0) {
+                    setNewlyActiveIds(prev => new Set([...prev, ...justCompleted]));
+                    // Remove animation class after it finishes
+                    setTimeout(() => {
+                        setNewlyActiveIds(prev => {
+                            const next = new Set(prev);
+                            justCompleted.forEach(id => next.delete(id));
+                            return next;
+                        });
+                    }, 1600);
+                }
+            } catch { /* silent — polling is best-effort */ }
+        };
+
+        const interval = setInterval(poll, 5000);
+        return () => clearInterval(interval);
+    }, []); // mount-only — uses toolsRef to avoid stale closures
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -354,7 +413,7 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                             <div key={col.id} className="flex-shrink-0 w-[240px] sm:w-[280px] lg:w-auto min-w-0 flex flex-col snap-start">
                                 <DroppableColumn col={col} toolCount={colTools.length} headerAction={backlogAction}>
                                     {colTools.map((tool) => (
-                                        <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} />
+                                        <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} isNew={newlyActiveIds.has(tool.id)} />
                                     ))}
                                     {colTools.length === 0 && col.id === "backlog" && isEmpty ? (
                                         <div className="border border-dashed border-neutral-300 p-6 text-center space-y-4">
