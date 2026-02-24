@@ -84,10 +84,38 @@ For each article, generate a concise 2-3 sentence summary, a relevance score (0-
                     enrichedCount++;
                 }
             }
-        } catch {
-            // Mark items with fallback score to prevent infinite re-processing
+        } catch (batchErr) {
+            console.error(`[feed-enrichment] Batch enrichment failed for workspace ${workspaceId}:`, batchErr);
+            // Batch failed — try enriching each item individually so partial data is saved
             for (const item of batch) {
-                await db.update(feedItems).set({ relevanceScore: "0.3" }).where(eq(feedItems.id, item.id));
+                try {
+                    const single = await generateObject({
+                        model: openai("gpt-4o-mini"),
+                        schema: z.object({
+                            summary: z.string().describe("2-3 sentence summary of the article"),
+                            relevanceScore: z.number().min(0).max(1).describe("Relevance to the company: 0 = not relevant, 1 = highly relevant"),
+                            categories: z.array(z.string()).describe("1-3 topic categories"),
+                        }),
+                        prompt: `Analyze this article for relevance to: ${workspace.companyContext || workspace.name || "a B2B technology company"}
+
+Article: "${item.title}" — ${item.source || "unknown"}
+Snippet: ${item.summary || "No snippet available"}
+URL: ${item.url}
+
+Return a summary, relevance score (0-1), and 1-3 categories.`,
+                    });
+                    await db.update(feedItems).set({
+                        summary: single.object.summary,
+                        relevanceScore: String(single.object.relevanceScore),
+                        categories: single.object.categories,
+                    }).where(eq(feedItems.id, item.id));
+                    enrichedCount++;
+                } catch (itemErr) {
+                    console.error(`[feed-enrichment] Individual item failed (${item.url}):`, itemErr);
+                    // Mark with fallback score to prevent infinite re-processing
+                    await db.update(feedItems).set({ relevanceScore: "0.3" }).where(eq(feedItems.id, item.id));
+                    enrichedCount++;
+                }
             }
         }
     }

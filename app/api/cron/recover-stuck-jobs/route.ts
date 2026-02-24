@@ -3,6 +3,8 @@ import { researchJobs, tools, reports } from "@/lib/db/schema";
 import { eq, and, lte, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
+import { after } from "next/server";
+import { performDeepResearch } from "@/lib/actions/research";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -63,24 +65,44 @@ export async function GET(req: Request) {
             })
             .where(inArray(researchJobs.id, stuckJobIds));
 
-        // For each stuck tool, revert status:
-        // - If tool has at least one report → "active"
+        // For each stuck tool, revert status and decide whether to auto-retry:
+        // - If tool has at least one report → "active" (previous research is still valid)
+        // - If no report and stuck job count <= 2 → auto-retry via after()
         // - Otherwise → "failed" (so user sees retry button)
+        const toolsToRetry: string[] = [];
         for (const toolId of stuckToolIds) {
             const existingReport = await db.query.reports.findFirst({
                 where: eq(reports.toolId, toolId),
                 columns: { id: true },
             });
 
-            await db
-                .update(tools)
-                .set({ status: existingReport ? "active" : "failed" })
-                .where(eq(tools.id, toolId));
+            if (existingReport) {
+                await db.update(tools).set({ status: "active" }).where(eq(tools.id, toolId));
+            } else {
+                // Count how many times this tool has been attempted (including the stuck one)
+                const allJobs = await db.query.researchJobs.findMany({
+                    where: eq(researchJobs.toolId, toolId),
+                    columns: { id: true },
+                });
+                if (allJobs.length <= 2) {
+                    // First or second attempt — auto-retry
+                    toolsToRetry.push(toolId);
+                    await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+                } else {
+                    await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+                }
+            }
+        }
+
+        // Fire auto-retries outside the HTTP response window
+        for (const toolId of toolsToRetry) {
+            after(() => performDeepResearch(toolId));
         }
 
         return NextResponse.json({
             success: true,
             recovered: stuckJobs.length,
+            autoRetried: toolsToRetry.length,
             toolIds: stuckToolIds,
         });
     } catch (err) {

@@ -651,6 +651,8 @@ INSTRUCTIONS:
         } catch (primaryErr) {
             const primaryMsg = primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
             await logProgress(toolId, `Synthesis attempt 1 failed: ${primaryMsg.slice(0, 120)} — retrying with fallback model...`);
+            // Brief pause before retry — prevents hitting the same rate-limit window twice
+            await new Promise((r) => setTimeout(r, 1500));
             try {
                 const fallbackStart = Date.now();
                 // gpt-4o is more capable at complex schema compliance than gpt-4o-mini
@@ -713,21 +715,44 @@ INSTRUCTIONS:
         });
         const reportVersion = existingReports.length + 1;
 
-        await db.insert(reports).values({
-            toolId: tool.id,
-            version: reportVersion,
-            scorecardSnapshot: reportData.scorecardSnapshot,
-            summary: reportData.summary,
-            features: reportData.features,
-            pricing: reportData.pricing,
-            isPricingHidden: reportData.isPricingHidden,
-            pros: reportData.pros,
-            cons: reportData.cons,
-            competitors: reportData.competitors,
-            integrations: reportData.integrations ?? [],
-            rawScrapedData: rawData,
-            sentimentData: sentimentData,
-        });
+        try {
+            await db.insert(reports).values({
+                toolId: tool.id,
+                version: reportVersion,
+                scorecardSnapshot: reportData.scorecardSnapshot,
+                summary: reportData.summary,
+                features: reportData.features,
+                pricing: reportData.pricing,
+                isPricingHidden: reportData.isPricingHidden,
+                pros: reportData.pros,
+                cons: reportData.cons,
+                competitors: reportData.competitors,
+                integrations: reportData.integrations ?? [],
+                rawScrapedData: rawData,
+                sentimentData: sentimentData,
+            });
+        } catch (insertErr) {
+            // Report insert failed — log and attempt a minimal save so the tool
+            // reaches "active" status rather than staying stuck as "researching".
+            console.error(`[research] Report insert failed for tool ${toolId}:`, insertErr);
+            await logProgress(toolId, `Warning: Report save failed — storing minimal record. Re-run research to regenerate.`);
+            const minimal = buildFallbackReport(tool.name);
+            await db.insert(reports).values({
+                toolId: tool.id,
+                version: reportVersion,
+                scorecardSnapshot: minimal.scorecardSnapshot,
+                summary: `Research data collected but report save failed. Re-run to regenerate.`,
+                features: minimal.features,
+                pricing: [],
+                isPricingHidden: false,
+                pros: [],
+                cons: [],
+                competitors: [],
+                integrations: [],
+                rawScrapedData: rawData,
+                sentimentData: null,
+            });
+        }
 
         await logProgress(toolId, "Research complete. Report generated.");
 

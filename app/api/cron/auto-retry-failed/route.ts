@@ -63,7 +63,7 @@ export async function GET(req: Request) {
         const toolIds = [...toolIdSet];
 
         // For each candidate tool, count total research jobs.
-        // Only auto-retry if total job count === 1 (never retried before).
+        // Auto-retry up to 2 times (job count <= 2) before requiring manual intervention.
         const jobCounts = await db
             .select({ toolId: researchJobs.toolId, total: count() })
             .from(researchJobs)
@@ -71,7 +71,7 @@ export async function GET(req: Request) {
             .groupBy(researchJobs.toolId);
 
         const eligibleToolIds = jobCounts
-            .filter((row) => row.total === 1)
+            .filter((row) => row.total <= 2)
             .map((row) => row.toolId);
 
         if (eligibleToolIds.length === 0) {
