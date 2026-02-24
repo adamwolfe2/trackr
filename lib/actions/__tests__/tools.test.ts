@@ -140,7 +140,7 @@ describe("tools server actions", () => {
 
         it("throws Unauthorized when not logged in", async () => {
             (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-            await expect(submitTool(makeFormData("Linear", "https://linear.app"))).rejects.toThrow("Unauthorized");
+            await expect(submitTool(makeFormData("Linear", "https://linear.app"))).rejects.toThrow("Please sign in to add tools.");
         });
 
         it("throws when tool name is empty", async () => {

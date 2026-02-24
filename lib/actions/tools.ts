@@ -13,8 +13,13 @@ import { ensureWorkspace } from "@/lib/db/ensure-workspace";
 import { getWorkspaceId } from "@/lib/db/queries";
 
 export async function submitTool(formData: FormData) {
-    const user = await currentUser();
-    if (!user) throw new Error("Unauthorized");
+    let user;
+    try {
+        user = await currentUser();
+    } catch {
+        throw new Error("Authentication error — please refresh and try again.");
+    }
+    if (!user) throw new Error("Please sign in to add tools.");
 
     const name = (formData.get("name") as string)?.trim();
     const websiteUrl = (formData.get("website_url") as string)?.trim();

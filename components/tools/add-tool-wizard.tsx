@@ -47,7 +47,10 @@ export function AddToolWizard() {
                     (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")) {
                     throw err;
                 }
-                toast.error(err instanceof Error ? err.message : "Failed to submit tool. Please try again.");
+                const msg = err instanceof Error ? err.message : "";
+                // Next.js obfuscates real server errors in production with a generic message
+                const isGenericNextError = msg.includes("Server Components render") || msg.includes("omitted in production");
+                toast.error(isGenericNextError ? "Something went wrong submitting your tool. Please try again." : (msg || "Failed to submit tool. Please try again."));
             }
         });
     };
