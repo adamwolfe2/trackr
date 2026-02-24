@@ -11,6 +11,7 @@ import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 300; // allow after() in triggerResearch/triggerResearchBatch to complete
 
 export const metadata: Metadata = {
     title: "Tool Database — Trackr",

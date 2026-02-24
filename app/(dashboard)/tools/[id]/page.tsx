@@ -108,7 +108,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         }
     }
 
-    const isResearching = tool.status === "researching";
+    const isResearching = tool.status === "researching" || tool.status === "queued";
 
     const toolHostname = (() => {
         if (!tool.websiteUrl) return null;
@@ -305,7 +305,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
 
                 {/* Left Column (2/3) */}
                 <div className="md:col-span-2 space-y-5">
-                    {isResearching && <ResearchStream toolId={tool.id} />}
+                    {isResearching && <ResearchStream toolId={tool.id} initialStatus={tool.status} />}
 
                     {/* Executive Summary */}
                     <div className="border border-black p-5">

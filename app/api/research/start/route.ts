@@ -13,6 +13,8 @@ const StartResearchSchema = z.object({
     toolId: z.string().uuid("toolId must be a valid UUID"),
 });
 
+export const maxDuration = 300; // research pipeline takes 2-5 min; after() needs this headroom
+
 /**
  * POST /api/research/start
  *

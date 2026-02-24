@@ -30,9 +30,9 @@ function formatElapsed(seconds: number): string {
     return m > 0 ? `${m}:${s.toString().padStart(2, "0")}` : `${s}s`;
 }
 
-export function ResearchStream({ toolId }: { toolId: string }) {
+export function ResearchStream({ toolId, initialStatus }: { toolId: string; initialStatus?: string }) {
     const [logs, setLogs] = useState<{ message: string, timestamp: string }[]>([]);
-    const [status, setStatus] = useState("initializing");
+    const [status, setStatus] = useState(initialStatus ?? "initializing");
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [elapsed, setElapsed] = useState(0);
     const [networkError, setNetworkError] = useState(false);
@@ -40,6 +40,7 @@ export function ResearchStream({ toolId }: { toolId: string }) {
     const router = useRouter();
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const triggeredRef = useRef(false);
 
     useEffect(() => {
         const fetchLogs = async () => {
@@ -62,6 +63,16 @@ export function ResearchStream({ toolId }: { toolId: string }) {
                 if (data.status) setStatus(data.status);
                 if (data.errorMessage) setErrorMessage(data.errorMessage);
 
+                // Fallback: if still queued after first poll, after() may not have fired — trigger via API
+                if (data.status === "queued" && !triggeredRef.current) {
+                    triggeredRef.current = true;
+                    fetch(`/api/research/start`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ toolId }),
+                    }).catch(() => {/* best-effort */});
+                }
+
                 if (data.status === "active" || data.status === "failed") {
                     if (intervalRef.current) clearInterval(intervalRef.current);
                     if (timerRef.current) clearInterval(timerRef.current);
@@ -73,7 +84,7 @@ export function ResearchStream({ toolId }: { toolId: string }) {
             }
         };
 
-        // Poll every 2.5s (was 1s — reduced to cut server load)
+        // Poll every 2.5s
         fetchLogs();
         intervalRef.current = setInterval(fetchLogs, 2500);
 
@@ -92,13 +103,14 @@ export function ResearchStream({ toolId }: { toolId: string }) {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [logs]);
 
-    if (logs.length === 0 && status !== "researching") return null;
+    if (logs.length === 0 && status !== "researching" && status !== "queued" && status !== "initializing") return null;
 
     const currentStep = detectCurrentStep(logs);
     const isDone = status === "active";
     const isFailed = status === "failed";
 
     const statusLabel =
+        status === "queued" ? "QUEUED" :
         status === "researching" ? "RUNNING" :
         isDone ? "COMPLETE" :
         isFailed ? "FAILED" :
@@ -115,7 +127,7 @@ export function ResearchStream({ toolId }: { toolId: string }) {
                     )}
                 </div>
                 <span className={`font-mono text-xs uppercase tracking-widest border border-black px-2 py-0.5 ${
-                    status === "researching" ? "animate-pulse" :
+                    status === "queued" || status === "researching" ? "animate-pulse" :
                     isFailed ? "border-red-600 text-red-600" :
                     isDone ? "bg-black text-white" :
                     ""
@@ -168,10 +180,10 @@ export function ResearchStream({ toolId }: { toolId: string }) {
                     </div>
                 ))}
 
-                {status === "researching" && !networkError && (
+                {(status === "queued" || status === "researching") && !networkError && (
                     <div className="flex items-center gap-2 text-neutral-400 pt-1">
                         <Loader2 className="h-3 w-3 animate-spin" />
-                        <span>Processing...</span>
+                        <span>{status === "queued" ? "Starting research agents..." : "Processing..."}</span>
                     </div>
                 )}
 
