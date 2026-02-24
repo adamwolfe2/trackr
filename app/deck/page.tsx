@@ -194,6 +194,18 @@ function AnimatedScore({ score, run }: { score: number; run: boolean }) {
     return <>{val}</>;
 }
 
+function scoreBarColor(score: number): string {
+    if (score >= 80) return "#22c55e";
+    if (score >= 60) return "#f59e0b";
+    return "#ef4444";
+}
+
+function scoreDotClass(score: number): string {
+    if (score >= 80) return "bg-green-500";
+    if (score >= 60) return "bg-amber-500";
+    return "bg-red-500";
+}
+
 function ResearchAgentDemo({ autoPlay = true, widgetHeight = 480 }: { autoPlay?: boolean; widgetHeight?: number }) {
     const [toolIdx, setToolIdx] = useState(0);
     const [phase, setPhase] = useState<ResearchPhase>("idle");
@@ -368,14 +380,18 @@ function ResearchAgentDemo({ autoPlay = true, widgetHeight = 480 }: { autoPlay?:
                                     {tool.dimensions.map((dim, i) => (
                                         <div key={`${toolIdx}-${dim.label}`}>
                                             <div className="flex justify-between items-center mb-0.5">
-                                                <span className="font-mono text-[9px] text-black/50 uppercase tracking-wide">{dim.label}</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${scoreDotClass(dim.score)}`} />
+                                                    <span className="font-mono text-[9px] text-black/50 uppercase tracking-wide">{dim.label}</span>
+                                                </div>
                                                 <span className="font-mono text-[9px] font-medium">{dim.score}</span>
                                             </div>
                                             <div className="h-[2px] bg-black/08 border border-black/10">
-                                                <div className="h-full bg-black transition-all duration-500"
+                                                <div className="h-full transition-all duration-500"
                                                     style={{
                                                         width: `${dim.score}%`,
                                                         transitionDelay: `${0.12 + i * 0.055}s`,
+                                                        background: scoreBarColor(dim.score),
                                                     }} />
                                             </div>
                                         </div>
@@ -481,11 +497,11 @@ function SpendTrackerDemo() {
                 <div className="grid grid-cols-2 gap-3">
                     <div className="border border-black bg-white p-4">
                         <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/40 mb-1">AI Tools</div>
-                        <div className="font-serif text-2xl font-normal">${totalAi.toLocaleString()}</div>
+                        <div className="font-serif text-2xl font-normal text-green-700">${totalAi.toLocaleString()}</div>
                     </div>
                     <div className="border border-black bg-white p-4">
                         <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/40 mb-1">Legacy</div>
-                        <div className="font-serif text-2xl font-normal text-black/45">${totalLeg.toLocaleString()}</div>
+                        <div className="font-serif text-2xl font-normal" style={{ color: "#B45309" }}>${totalLeg.toLocaleString()}</div>
                     </div>
                 </div>
                 <div className="border border-black bg-white p-4 flex-1">
@@ -498,13 +514,15 @@ function SpendTrackerDemo() {
                                 (dept.id === "eng"  && t.dept === "Eng") ||
                                 (dept.id === "ops"  && t.dept === "Ops"))
                             .reduce((s, t) => s + t.cost, 0);
+                        const isOps = dept.id === "ops";
                         return (
                             <div key={dept.id}
                                 className="flex items-center gap-2 py-1.5 transition-all duration-500"
                                 style={{ opacity: !highlight || highlight === dept.id ? 1 : 0.3 }}>
                                 <div className="w-1.5 h-1.5 bg-black flex-shrink-0" />
                                 <span className="font-mono text-xs text-black/60 flex-1">{dept.label}</span>
-                                <span className="font-mono text-xs font-medium">${deptTotal.toLocaleString()}</span>
+                                <span className={`font-mono text-xs font-medium ${isOps ? "text-amber-600" : ""}`}>${deptTotal.toLocaleString()}</span>
+                                {isOps && <span className="font-mono text-[9px] text-amber-600">⚠ underinvested</span>}
                             </div>
                         );
                     })}
@@ -544,8 +562,8 @@ function SpendTrackerDemo() {
                                 <div>
                                     <span className={`font-mono text-[8px] uppercase tracking-widest px-1.5 py-0.5 border ${
                                         tool.type === "AI"
-                                            ? "border-black text-black bg-black/05"
-                                            : "border-black/20 text-black/35"
+                                            ? "bg-green-50 border-green-200 text-green-700"
+                                            : "bg-amber-50 border-amber-200 text-amber-700"
                                     }`}>
                                         {tool.type}
                                     </span>
@@ -646,20 +664,16 @@ function ProcessAnimation() {
 function S1() {
     return (
         <Slide>
-            <div className="flex flex-col sm:flex-row items-start gap-8 sm:gap-16">
+            <div className="flex flex-col sm:flex-row items-center gap-8 sm:gap-16">
                 {/* Left */}
                 <div className="flex-1 min-w-0 pt-2">
-                    <div className="flex items-center gap-2 mb-8">
-                        <TrackrLogo size={20} />
-                        <span className="font-serif text-lg font-normal tracking-tight">Trackr</span>
-                    </div>
                     <Label>The AI Tool Problem</Label>
                     <h1 className="font-serif font-normal leading-[1.05] tracking-tight mb-5"
                         style={{ fontSize: "clamp(32px,3.8vw,54px)" }}>
-                        Your competitors are<br />adopting AI faster than<br />you can evaluate it.
+                        Your competitors adopted<br />5 new AI tools while your<br />team was still evaluating one.
                     </h1>
                     <p className="font-mono text-sm text-black/55 leading-relaxed max-w-[440px]">
-                        Trackr gives your team AI-native experts and a research platform that finds, scores, and monitors every tool in your stack — so you never fall behind again.
+                        Most ops teams spend 14+ hours a week manually researching tools that are already outdated by the time they decide. Trackr eliminates that entirely.
                     </p>
                 </div>
 
@@ -668,7 +682,7 @@ function S1() {
                     <div className="flex items-center gap-2 mb-2.5">
                         <div className="w-1.5 h-1.5 bg-black animate-pulse" />
                         <span className="font-mono text-[10px] uppercase tracking-widest text-black/40">
-                            Live Demo — 3 Parallel Research Agents
+                            Live Demo — Real-Time Tool Evaluation
                         </span>
                     </div>
                     <ResearchAgentDemo widgetHeight={480} />
@@ -678,7 +692,7 @@ function S1() {
     );
 }
 
-// S2 — The Reality: updated headline + specific stat labels + new paragraph
+// S2 — The Reality
 function S2() {
     const PAIN_STATS = [
         {
@@ -688,7 +702,7 @@ function S2() {
         },
         {
             stat: "73%",
-            body: "of AI implementations fail because companies picked the wrong tool for the wrong problem.",
+            body: "of AI implementations fail because companies picked the wrong tool.",
             source: "McKinsey, 2025",
         },
         {
@@ -698,7 +712,7 @@ function S2() {
         },
         {
             stat: "$340B",
-            body: "wasted annually on redundant, underused, and invisible software — most approved without a proper evaluation.",
+            body: "wasted annually on redundant, underused, and invisible software.",
             source: "Gartner, 2025",
         },
     ];
@@ -708,16 +722,19 @@ function S2() {
                 {/* Left */}
                 <div>
                     <Label>The Reality</Label>
-                    <h2 className="font-serif font-normal leading-[1.06] tracking-tight"
+                    <h2 className="font-serif font-normal leading-[1.06] tracking-tight mb-4"
                         style={{ fontSize: "clamp(28px,3.4vw,48px)" }}>
-                        You don&apos;t have time to<br />research 8,000+ new AI<br />tools.
+                        8,000 new AI tools launched last year. Your team has no system to evaluate any of them.
                     </h2>
+                    <p className="font-mono text-xs text-black/50 leading-relaxed">
+                        The companies winning with AI aren&apos;t smarter — they just have a system. Here&apos;s what the rest of the market is dealing with:
+                    </p>
                 </div>
                 {/* Right: 2×2 pain stats */}
                 <div className="grid grid-cols-2 gap-0 border border-black">
                     {PAIN_STATS.map((s, i) => (
                         <div key={s.stat}
-                            className={`p-6 ${i % 2 === 0 ? "border-r border-black" : ""} ${i < 2 ? "border-b border-black" : ""}`}>
+                            className={`p-6 bg-white ${i % 2 === 0 ? "border-r border-black" : ""} ${i < 2 ? "border-b border-black" : ""}`}>
                             <div className="font-serif font-normal leading-none mb-2.5"
                                 style={{ fontSize: "clamp(28px,3vw,44px)" }}>
                                 {s.stat}
@@ -732,23 +749,26 @@ function S2() {
     );
 }
 
-// S3 — Why Companies Fall Behind on AI (replaces "cost of standing still")
+// S3 — Why Companies Fall Behind on AI
 function S3() {
     const REASONS = [
         {
             n: "01",
             title: "No dedicated AI researcher on the team",
-            body: "Tool decisions get made by whoever has bandwidth — which is no one. The result is ad hoc adoption, redundant subscriptions, and security blind spots.",
+            body: "Decisions happen based on who talks loudest in Slack, not data.",
+            highlight: false,
         },
         {
             n: "02",
             title: "No system to evaluate or compare tools",
-            body: "There's no scoring framework, no institutional memory, no way to objectively compare options. Decisions get made in Slack threads based on whoever made the loudest case.",
+            body: "No scoring framework means every evaluation starts from zero.",
+            highlight: true,
         },
         {
             n: "03",
             title: "No one proactively watching the market",
-            body: "The best tools don't reach your inbox. By the time a new capability is on your radar, your competitors have already been running it for 90 days.",
+            body: "By the time a tool reaches your radar, your competitors deployed it 90 days ago.",
+            highlight: false,
         },
     ];
     return (
@@ -756,14 +776,16 @@ function S3() {
             <Label>Why Companies Fall Behind on AI</Label>
             <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-10"
                 style={{ fontSize: "clamp(36px,4.5vw,60px)" }}>
-                Three structural problems<br />every ops team faces.
+                Every ops team has the<br />same three gaps. And<br />they&apos;re costing you.
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border border-black">
                 {REASONS.map((r, i) => (
-                    <div key={r.n} className={`p-8 ${i < 2 ? "border-b sm:border-b-0 sm:border-r border-black" : ""}`}>
-                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-4">{r.n}</div>
-                        <h3 className="font-serif text-xl font-normal mb-4 leading-snug">{r.title}</h3>
-                        <p className="font-mono text-xs text-black/55 leading-relaxed">{r.body}</p>
+                    <div key={r.n}
+                        className={`p-8 ${i < 2 ? "border-b sm:border-b-0 sm:border-r border-black" : ""}`}
+                        style={r.highlight ? { background: "#1a1a1a", color: "#F3F3EF" } : {}}>
+                        <div className={`font-mono text-[9px] uppercase tracking-[0.15em] mb-4 ${r.highlight ? "text-white/30" : "text-black/30"}`}>{r.n}</div>
+                        <h3 className={`font-serif text-xl font-normal mb-4 leading-snug ${r.highlight ? "text-white" : ""}`}>{r.title}</h3>
+                        <p className={`font-mono text-xs leading-relaxed ${r.highlight ? "text-white/60" : "text-black/55"}`}>{r.body}</p>
                     </div>
                 ))}
             </div>
@@ -778,21 +800,25 @@ function S4() {
             n: "01",
             title: "Stack Intake",
             body: "We map every tool your org pays for, who owns it, and what it's actually being used for.",
+            dark: false,
         },
         {
             n: "02",
             title: "Expert Audit",
-            body: "Our AI-native operators run every tool through our research agents — scoring each one across 7 dimensions and benchmarking against best-in-class alternatives.",
+            body: "Every tool goes through our research agents — scored across 7 dimensions, benchmarked against best-in-class alternatives.",
+            dark: false,
         },
         {
             n: "03",
             title: "Action Plan",
-            body: "We deliver a prioritized list: what to cut, what to swap, what to add, and in what order. Every recommendation is backed by agent-generated data, not opinion.",
+            body: "A prioritized list: what to cut, swap, and add — in order. Every recommendation backed by data, not opinion.",
+            dark: false,
         },
         {
             n: "04",
             title: "Handoff",
-            body: "We implement the plan with your team and leave your Trackr workspace fully populated — so your stack intelligence stays live after we leave.",
+            body: "Your Trackr workspace is fully populated. Stack intelligence stays live after we leave.",
+            dark: true,
         },
     ];
     return (
@@ -803,14 +829,16 @@ function S4() {
                 We come in. We fix it.<br />We leave you the system.
             </h2>
             <p className="font-mono text-sm text-black/55 leading-relaxed mb-10 max-w-[680px]">
-                We audit your stack, interview your team, and identify exactly what to cut and what to add. When we&apos;re done, your team has a live intelligence workspace that stays current — no ongoing dependency on us required.
+                We audit your stack, deliver a scored action plan, and hand off a live workspace — no ongoing dependency on us.
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-black">
                 {PHASES.map((p, i) => (
-                    <div key={p.n} className={`p-6 sm:p-8 ${i % 2 === 0 && i < 3 ? "border-r border-black" : ""} ${i % 2 !== 0 && i < 3 ? "sm:border-r border-black" : ""} ${i < 2 ? "border-b sm:border-b-0 border-black" : ""}`}>
-                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-3">{p.n}</div>
-                        <h3 className="font-serif text-xl font-normal mb-4">{p.title}</h3>
-                        <p className="font-mono text-xs text-black/55 leading-relaxed">{p.body}</p>
+                    <div key={p.n}
+                        className={`p-6 sm:p-8 ${i % 2 === 0 && i < 3 ? "border-r border-black" : ""} ${i % 2 !== 0 && i < 3 ? "sm:border-r border-black" : ""} ${i < 2 ? "border-b sm:border-b-0 border-black" : ""}`}
+                        style={p.dark ? { background: "#1a1a1a", color: "#F3F3EF" } : {}}>
+                        <div className={`font-mono text-[9px] uppercase tracking-[0.15em] mb-3 ${p.dark ? "text-white/30" : "text-black/30"}`}>{p.n}</div>
+                        <h3 className={`font-serif text-xl font-normal mb-4 ${p.dark ? "text-white" : ""}`}>{p.title}</h3>
+                        <p className={`font-mono text-xs leading-relaxed ${p.dark ? "text-white/60" : "text-black/55"}`}>{p.body}</p>
                     </div>
                 ))}
             </div>
@@ -818,7 +846,7 @@ function S4() {
     );
 }
 
-// S5 — Our Methodology: grid layout matching S7's proportions
+// S5 — Our Methodology
 function S5() {
     return (
         <Slide>
@@ -827,20 +855,20 @@ function S5() {
                     <Label>Our Methodology</Label>
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-4"
                         style={{ fontSize: "clamp(28px,3.5vw,48px)" }}>
-                        Every recommendation we make is backed by agent-generated data.
+                        While your team debates tools in Slack, our agents have already scored 8 competitors.
                     </h2>
                     <p className="font-mono text-xs text-black/55 leading-relaxed mb-5">
-                        Our AI research agents and human experts work in parallel. Agents crawl product sites, review platforms, community threads, and competitor pages simultaneously. Our operators interpret the results and apply them to your specific workflow context. The scorecard you see is how we ensure every recommendation is defensible — not just directional.
+                        Our agents and human operators work in parallel — crawling product sites, review platforms, competitor pages, and community threads simultaneously. The scorecard you see isn&apos;t directional. It&apos;s defensible.
                     </p>
                     <div className="border border-black bg-white p-4 shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
-                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/30 mb-3">What We Analyze</div>
+                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/50 mb-3 font-medium">What We Analyze</div>
                         {[
+                            "3 parallel AI agents running simultaneously",
                             "Product site, pricing page, changelog",
                             "G2, Capterra, TrustRadius, Trustpilot",
                             "Reddit + HackerNews community threads",
                             "Competitor pages + live pricing",
                             "LinkedIn pages + recent funding news",
-                            "3 parallel AI agents running simultaneously",
                         ].map(s => (
                             <div key={s} className="flex items-start gap-2 font-mono text-xs text-black/55 mb-1.5">
                                 <span className="w-1 h-1 bg-black flex-shrink-0 mt-1.5" /> {s}
@@ -856,7 +884,7 @@ function S5() {
     );
 }
 
-// S6 — What We Find in Every Audit (was S7): eyebrow + headline + callout reframed
+// S6 — What We Find in Every Audit
 function S6() {
     return (
         <Slide>
@@ -867,7 +895,8 @@ function S6() {
                         style={{ fontSize: "clamp(28px,3.5vw,48px)" }}>
                         Most companies are paying<br />for the same capability<br />three times.
                     </h2>
-                    <div className="hidden sm:block flex-shrink-0 sm:ml-8 border border-black bg-white px-5 py-3 max-w-[340px] shadow-[3px_3px_0_0_rgba(0,0,0,1)]">
+                    <div className="hidden sm:block flex-shrink-0 sm:ml-8 max-w-[320px]"
+                        style={{ borderLeft: "3px solid #1a1a1a", paddingLeft: "20px" }}>
                         <p className="font-mono text-xs text-black/60 leading-relaxed">
                             In every audit, redundancy surfaces fast. Tools bought by one team, duplicated by another, paid for by a third. We make the overlap visible and build your action plan around eliminating it.
                         </p>
@@ -879,8 +908,11 @@ function S6() {
                 <div className="hidden sm:block" style={{ height: 360 }}>
                     <SpendTrackerDemo />
                 </div>
-                <div className="mt-3 border border-black/20 bg-white/60 px-5 py-3 font-mono text-xs text-black/50">
-                    Companies using Trackr identify an average of <span className="font-medium text-black">3–5 redundant tools within the first 30 days.</span>
+                <div className="mt-4 border-t border-black/20 pt-4">
+                    <p className="font-mono text-sm font-semibold text-black">
+                        Companies using Trackr identify an average of{" "}
+                        <span className="font-bold">3–5 redundant tools within the first 30 days.</span>
+                    </p>
                 </div>
             </div>
         </Slide>
@@ -898,23 +930,35 @@ function S7() {
     return (
         <Slide>
             <div className="grid grid-cols-1 sm:grid-cols-[1fr_1fr] gap-8 sm:gap-10 items-start">
-                {/* Left: eyebrow + headline + body */}
+                {/* Left */}
                 <div>
                     <Label>What We Leave Behind</Label>
                     <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-3"
                         style={{ fontSize: "clamp(28px,3.2vw,44px)" }}>
-                        After the engagement,<br />your team doesn&apos;t start<br />from scratch. Ever.
+                        After we leave, your team has a permanent AI intelligence layer. Ask it anything. Any time.
                     </h2>
-                    <p className="font-mono text-xs text-black/55 leading-relaxed">
-                        We populate your Trackr workspace during the engagement. Every tool we evaluated, every score, every renewal date — it&apos;s all live when we hand off. Your team can research new tools, get swap recommendations, and stay current on the market without re-engaging us. This is how the value compounds after we leave.
+                    <p className="font-mono text-xs text-black/55 leading-relaxed mb-5">
+                        Every tool we evaluated, every score, every renewal date — all live in your workspace when we hand off. Your team can research new tools, get swap recommendations, and stay current without re-engaging us. The value compounds after we leave.
                     </p>
+                    <div className="space-y-2">
+                        {[
+                            "Renewal alerts before your tools auto-renew",
+                            "Instant answers on any tool in your stack",
+                            "New tool recommendations as the market evolves",
+                        ].map(b => (
+                            <div key={b} className="flex items-start gap-2 font-mono text-xs text-black/55">
+                                <span className="flex-shrink-0">→</span>
+                                <span>{b}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Right: Ask Trackr AI chat UI */}
                 <div className="border border-black bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] overflow-hidden">
-                    <div className="px-4 py-2.5 border-b border-black/10 bg-[#F3F3EF] flex items-center gap-2">
+                    <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: "#1a1a1a" }}>
                         <TrackrLogo size={12} />
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-black/50">Ask Trackr AI</span>
+                        <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "rgba(243,243,239,0.7)" }}>Ask Trackr AI</span>
                     </div>
                     <div className="p-4 space-y-4">
                         {CHAT_EXAMPLES.map((ex, i) => (
@@ -929,7 +973,12 @@ function S7() {
                                     <div className="w-4 h-4 border border-black/20 bg-[#F3F3EF] flex-shrink-0 flex items-center justify-center mt-0.5">
                                         <TrackrLogo size={8} />
                                     </div>
-                                    <p className="font-mono text-[10px] text-black/55 leading-snug">{ex.a}</p>
+                                    <p className="font-mono text-[10px] text-black/55 leading-snug border border-black/10 bg-[#F3F3EF] px-2 py-1.5 flex-1">
+                                        {ex.a}
+                                        {i === CHAT_EXAMPLES.length - 1 && (
+                                            <span className="inline-block w-[1px] h-2.5 bg-black/40 ml-0.5 animate-pulse align-middle" />
+                                        )}
+                                    </p>
                                 </div>
                             </div>
                         ))}
@@ -944,20 +993,24 @@ function S7() {
 function S8() {
     const DIFFS = [
         {
-            title: "Built by operators, not researchers",
-            body: "Our team has implemented AI workflows inside real organizations — not studied them from the outside. We know what breaks in deployment, what ops teams actually use, and what gets abandoned after week one.",
-        },
-        {
-            title: "Custom to your org's reality",
-            body: "Your stack is different from every other company. We audit your current tools, map your workflows, identify gaps, and build a prioritized action plan from scratch — not from a template.",
-        },
-        {
+            glyph: "◈",
             title: "Pre-market tool intelligence",
             body: "We track 500+ emerging tools every month before they hit Product Hunt. You get recommendations before your competitors hear about them.",
         },
         {
+            glyph: "⚙",
+            title: "Built by operators, not researchers",
+            body: "Our team has implemented AI workflows inside real organizations. We know what breaks in deployment and what gets abandoned after week one.",
+        },
+        {
+            glyph: "◎",
+            title: "Custom to your org's reality",
+            body: "Your stack is different from every other company. We audit your tools, map your workflows, and build a prioritized action plan from scratch — not from a template.",
+        },
+        {
+            glyph: "✓",
             title: "AI adoption that actually sticks",
-            body: "The goal isn't to put more AI in your stack. It's to replace the processes your team avoids with tools they actually use — and train them to use those tools well.",
+            body: "The goal isn't more AI in your stack. It's replacing processes your team avoids with tools they actually use — and training them to use those tools well.",
         },
     ];
     return (
@@ -965,20 +1018,23 @@ function S8() {
             <Label>The Trackr Difference</Label>
             <h2 className="font-serif font-normal leading-[1.05] tracking-tight mb-4"
                 style={{ fontSize: "clamp(28px,3.5vw,50px)" }}>
-                You don&apos;t just get software.<br />You get AI-native operators who&apos;ve<br />deployed this across 100+ organizations.
+                You don&apos;t just get software,<br />you get AI-native operators who&apos;ve<br />deployed this across <span className="font-bold">100+ organizations</span>.
             </h2>
-            <p className="font-mono text-sm text-black/55 leading-relaxed mb-7 max-w-[680px]">
+            <p className="font-mono text-base text-black/55 leading-relaxed mb-7 max-w-[680px]">
                 You&apos;re not buying a research tool. You&apos;re hiring operators who&apos;ve built AI infrastructure inside real organizations — and the tool is how we prove our work.
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-0 border border-black">
-                {DIFFS.map((d, i) => (
-                    <div key={d.title}
-                        className={`p-6 ${i < 3 ? "border-b border-black" : ""} ${i === 2 ? "sm:border-b-0" : ""} ${i % 2 === 0 ? "sm:border-r sm:border-black" : ""}`}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {DIFFS.map((d) => (
+                    <div key={d.title} className="border border-black p-6">
+                        <div className="font-mono text-lg text-black/40 mb-3">{d.glyph}</div>
                         <h3 className="font-serif text-lg font-normal mb-2">{d.title}</h3>
                         <p className="font-mono text-xs text-black/55 leading-relaxed">{d.body}</p>
                     </div>
                 ))}
             </div>
+            <p className="font-mono text-[10px] text-black/35 mt-4">
+                Trusted by ops teams at companies from 12 to 12,000 employees.
+            </p>
         </Slide>
     );
 }
@@ -987,20 +1043,48 @@ function S8() {
 function S9() {
     return (
         <Slide>
-            <div className="text-center">
+            <div className="text-center max-w-[580px] mx-auto">
                 <div className="flex items-center justify-center gap-3 mb-10">
                     <TrackrLogo size={22} />
                     <span className="font-serif text-xl font-normal tracking-tight">Trackr</span>
-                    <span className="font-mono text-sm text-black/25 ml-1">///</span>
                 </div>
                 <Label>Next Steps</Label>
                 <h1 className="font-serif font-normal leading-[1.04] tracking-tight mb-6"
                     style={{ fontSize: "clamp(36px,5vw,70px)" }}>
                     Let&apos;s talk about your stack.
                 </h1>
-                <p className="font-mono text-sm text-black/50 max-w-[540px] mx-auto leading-relaxed">
-                    We&apos;ll start with a walkthrough of what we&apos;re seeing in your current tools, where the biggest opportunities are, and what an engagement would look like for your org.
+                <p className="font-mono text-sm text-black/60 mb-1 leading-relaxed">
+                    30 minutes. We&apos;ll show you exactly what we&apos;d find in your stack.
                 </p>
+                <p className="font-mono text-sm text-black/40 mb-8 leading-relaxed">
+                    No pitch deck. No generic demo. Just your tools, scored.
+                </p>
+                <div className="mb-4">
+                    <a href="https://trytrackr.com"
+                        className="inline-block font-mono text-sm uppercase tracking-widest px-8 py-4 transition-colors"
+                        style={{ background: "#1a1a1a", color: "#F3F3EF" }}>
+                        Book a Free Stack Assessment →
+                    </a>
+                </div>
+                <p className="font-mono text-[11px] text-black/40 mb-10">
+                    Or email us:{" "}
+                    <a href="mailto:hello@trytrackr.com"
+                        className="underline underline-offset-2 hover:text-black transition-colors">
+                        hello@trytrackr.com
+                    </a>
+                </p>
+                <div className="grid grid-cols-3 gap-0 border border-black text-left">
+                    {[
+                        { n: "1", label: "Book 30-min call" },
+                        { n: "2", label: "We audit your stack live" },
+                        { n: "3", label: "You get a scored action plan" },
+                    ].map((step, i) => (
+                        <div key={step.n} className={`px-5 py-4 ${i < 2 ? "border-r border-black" : ""}`}>
+                            <div className="font-mono text-[9px] uppercase tracking-widest text-black/30 mb-1">{step.n}</div>
+                            <div className="font-mono text-[11px] text-black font-medium">{step.label}</div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </Slide>
     );
@@ -1096,8 +1180,13 @@ export default function DeckPage() {
                 <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex gap-2">
                     {Array.from({ length: TOTAL }, (_, i) => (
                         <button key={i} onClick={() => goTo(i + 1)}
-                            className="h-1.5 rounded-full transition-all bg-black"
-                            style={{ width: i + 1 === cur ? 16 : 6, opacity: i + 1 === cur ? 1 : 0.18 }} />
+                            className="h-2 transition-all"
+                            style={{
+                                width: i + 1 === cur ? 20 : 8,
+                                background: i + 1 === cur ? "#000" : "transparent",
+                                border: i + 1 === cur ? "1px solid #000" : "1px solid #999",
+                                borderRadius: "2px",
+                            }} />
                     ))}
                 </div>
 
