@@ -76,5 +76,7 @@ export function getRateLimitHeaders(result: RateLimitResult): Record<string, str
         "X-RateLimit-Limit": String(result.limit),
         "X-RateLimit-Remaining": String(result.remaining),
         "X-RateLimit-Reset": String(Math.ceil(result.resetAt / 1000)),
+        // RFC 6585 — tells clients exactly how many seconds to wait before retrying
+        "Retry-After": String(Math.max(0, Math.ceil((result.resetAt - Date.now()) / 1000))),
     };
 }

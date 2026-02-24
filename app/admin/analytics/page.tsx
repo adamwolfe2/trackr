@@ -55,8 +55,8 @@ async function loginAction(formData: FormData) {
         const { cookies: getCookies } = await import("next/headers");
         (await getCookies()).set("trackr-admin", token, {
             httpOnly: true,
-            secure: true,
-            maxAge: 60 * 60 * 24 * 7,
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 60 * 60 * 2, // 2 hours
             sameSite: "strict",
         });
     }

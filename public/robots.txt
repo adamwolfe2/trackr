@@ -1,0 +1,30 @@
+User-agent: *
+
+# Private authenticated routes — block all crawlers
+Disallow: /admin/
+Disallow: /api/
+Disallow: /onboarding/
+Disallow: /tools/
+Disallow: /feed/
+Disallow: /settings/
+Disallow: /billing/
+Disallow: /workspace/
+Disallow: /compare/
+Disallow: /stack/
+Disallow: /recommendations/
+Disallow: /submit/
+Disallow: /queue/
+Disallow: /discover/
+Disallow: /pain-points/
+Disallow: /notifications/
+
+# Public marketing & content routes
+Allow: /
+Allow: /pricing
+Allow: /research/
+Allow: /blog/
+Allow: /changelog
+Allow: /process
+Allow: /share/
+
+Sitemap: https://trytrackr.com/sitemap.xml

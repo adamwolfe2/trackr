@@ -13,6 +13,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import type { InferSelectModel } from "drizzle-orm";
 import { getPlanLimits } from "@/lib/config/subscriptions";
+import { isPrivateUrl } from "@/lib/utils/url-validation";
 import { sendResearchCompleteEmail, sendResearchFailedEmail } from "@/lib/email/resend";
 import { clerkClient } from "@clerk/nextjs/server";
 import { postMessage, researchCompleteBlocks, researchFailedBlocks } from "@/lib/services/slack";
@@ -142,6 +143,12 @@ export async function performDeepResearch(toolId: string) {
 
     if (!tool || !tool.websiteUrl) {
         return { success: false, error: "Tool not found or missing URL" };
+    }
+
+    // SSRF protection: block internal/private addresses before passing to Firecrawl
+    if (isPrivateUrl(tool.websiteUrl)) {
+        await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+        return { success: false, error: "Invalid URL — cannot research internal or private network addresses" };
     }
 
     // Capture previous score for delta display in completion email

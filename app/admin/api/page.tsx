@@ -62,8 +62,8 @@ async function loginAction(formData: FormData) {
         const { cookies } = await import("next/headers");
         (await cookies()).set("trackr-admin", token, {
             httpOnly: true,
-            secure: true,
-            maxAge: 60 * 60 * 24 * 7, // 7 days
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 60 * 60 * 2, // 2 hours
             sameSite: "strict",
         });
         const { redirect } = await import("next/navigation");

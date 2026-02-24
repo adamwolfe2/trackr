@@ -9,6 +9,7 @@ const withAnalyzer = withBundleAnalyzer({
 
 const nextConfig: NextConfig = {
   compress: true,
+  poweredByHeader: false,
   async headers() {
     const headers = [
       ...SECURITY_HEADERS,

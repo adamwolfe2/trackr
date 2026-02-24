@@ -5,7 +5,7 @@ import { generateEmbedding } from "@/lib/ai/embedding";
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { NextRequest, NextResponse } from "next/server";
-import { rateLimit } from "@/lib/middleware/rate-limit";
+import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
@@ -49,7 +49,10 @@ export async function POST(req: NextRequest) {
     const rl = rateLimit(`chat:${user.id}`, { limit: 20, windowSeconds: 60 });
 
     if (!rl.success) {
-        return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+        return NextResponse.json(
+            { error: "Too many requests" },
+            { status: 429, headers: getRateLimitHeaders(rl) }
+        );
     }
 
     let body: unknown;

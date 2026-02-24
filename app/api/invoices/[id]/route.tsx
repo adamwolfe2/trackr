@@ -17,9 +17,20 @@ export async function GET(
 
     const { id } = await params;
 
-    // Fetch Ad details
+    // Verify workspace membership first — this scopes the subsequent ad fetch
+    // so an attacker can't enumerate ad IDs across workspaces via timing differences
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+        columns: { workspaceId: true },
+    });
+
+    if (!member) {
+        return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Fetch Ad scoped to user's workspace — prevents cross-workspace enumeration
     const ad = await db.query.ads.findFirst({
-        where: eq(ads.id, id),
+        where: and(eq(ads.id, id), eq(ads.workspaceId, member.workspaceId)),
         with: {
             tool: true
         }
@@ -32,18 +43,6 @@ export async function GET(
     // Only allow invoices for paid campaigns
     if (ad.status !== "completed" && ad.status !== "active") {
         return new NextResponse("Invoice not available for this campaign", { status: 404 });
-    }
-
-    // Verify ownership
-    const member = await db.query.workspaceMembers.findFirst({
-        where: and(
-            eq(workspaceMembers.userId, user.id),
-            eq(workspaceMembers.workspaceId, ad.workspaceId)
-        )
-    });
-
-    if (!member) {
-        return new NextResponse("Unauthorized", { status: 401 });
     }
 
     try {

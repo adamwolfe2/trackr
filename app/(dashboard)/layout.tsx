@@ -7,6 +7,12 @@ import { db } from "@/lib/db"
 import { workspaceMembers, workspaces } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
+import type { Metadata } from "next"
+
+// Dashboard routes are authenticated — prevent search engines from indexing them
+export const metadata: Metadata = {
+    robots: { index: false, follow: false },
+};
 
 type MemberWithWorkspace = InferSelectModel<typeof workspaceMembers> & {
     workspace: InferSelectModel<typeof workspaces>;
