@@ -3,7 +3,17 @@
 import { useChat } from "@ai-sdk/react";
 import type { TextUIPart, UIMessage } from "ai";
 import { useState, useEffect, useRef } from "react";
-import { Send, Bot, User, Trash2 } from "lucide-react";
+import { Send, User, Trash2 } from "lucide-react";
+
+function TrackrIcon({ className }: { className?: string }) {
+    return (
+        <svg viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+            <rect x="0" y="0" width="12" height="2" fill="white" />
+            <rect x="0" y="4" width="12" height="2" fill="white" />
+            <rect x="0" y="8" width="12" height="2" fill="white" />
+        </svg>
+    );
+}
 import ReactMarkdown from "react-markdown";
 
 const STORAGE_KEY = "trackr-chat-messages";
@@ -76,7 +86,7 @@ export default function AskTrackrPage() {
                 <div className="border-b border-black px-5 py-3 flex items-center justify-between bg-white">
                     <div className="flex items-center gap-2">
                         <div className="w-5 h-5 bg-black flex items-center justify-center">
-                            <Bot className="w-3 h-3 text-white" />
+                            <TrackrIcon className="w-3 h-3" />
                         </div>
                         <span className="font-mono text-xs uppercase tracking-widest">Trackr Assistant</span>
                     </div>
@@ -142,7 +152,7 @@ export default function AskTrackrPage() {
                             >
                                 {m.role !== "user" && (
                                     <div className="w-6 h-6 bg-black flex items-center justify-center shrink-0 mt-0.5">
-                                        <Bot className="w-3.5 h-3.5 text-white" />
+                                        <TrackrIcon className="w-3.5 h-3.5" />
                                     </div>
                                 )}
                                 <div
@@ -189,7 +199,7 @@ export default function AskTrackrPage() {
                     {isLoading && (
                         <div className="flex gap-3 justify-start">
                             <div className="w-6 h-6 bg-black flex items-center justify-center shrink-0 mt-0.5">
-                                <Bot className="w-3.5 h-3.5 text-white" />
+                                <TrackrIcon className="w-3.5 h-3.5" />
                             </div>
                             <div className="border border-black px-4 py-3 bg-white font-mono text-xs text-neutral-400 flex items-center gap-2">
                                 <span className="inline-block w-1.5 h-1.5 bg-black animate-bounce" style={{ animationDelay: "0ms" }} />
@@ -202,7 +212,7 @@ export default function AskTrackrPage() {
                     {hasError && (
                         <div className="flex gap-3 justify-start">
                             <div className="w-6 h-6 bg-black flex items-center justify-center shrink-0 mt-0.5">
-                                <Bot className="w-3.5 h-3.5 text-white" />
+                                <TrackrIcon className="w-3.5 h-3.5" />
                             </div>
                             <div className="border border-red-500 px-4 py-3 bg-white font-mono text-xs text-red-600">
                                 {error?.message?.includes("429") || error?.message?.includes("rate")
