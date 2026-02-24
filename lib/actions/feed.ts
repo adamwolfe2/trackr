@@ -76,6 +76,7 @@ export async function updateFeedChannel(id: string, data: {
         .set({ ...data, updatedAt: new Date() })
         .where(and(eq(feedChannels.id, id), eq(feedChannels.workspaceId, workspaceId)));
     revalidatePath("/feed");
+    return { success: true };
 }
 
 export async function deleteFeedChannel(id: string) {
@@ -83,6 +84,7 @@ export async function deleteFeedChannel(id: string) {
     await db.delete(feedChannels)
         .where(and(eq(feedChannels.id, id), eq(feedChannels.workspaceId, workspaceId)));
     revalidatePath("/feed");
+    return { success: true };
 }
 
 // ── Feed Item Actions ───────────────────────────────────────────────────────

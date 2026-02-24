@@ -97,7 +97,13 @@ export async function GET(req: Request) {
         // Kick off research in the background for each tool.
         // after() ensures the cron returns quickly while research runs asynchronously.
         for (const toolId of toolsToRetry) {
-            after(() => performDeepResearch(toolId));
+            after(async () => {
+                try {
+                    await performDeepResearch(toolId);
+                } catch (err) {
+                    console.error(`[api/cron/auto-retry-failed] auto-retry failed for tool ${toolId}:`, err);
+                }
+            });
         }
 
         return NextResponse.json({

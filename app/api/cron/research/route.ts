@@ -82,7 +82,13 @@ export async function GET(req: Request) {
 
         // Kick off research in background (cron returns quickly)
         for (const tool of dueTools) {
-            after(() => performDeepResearch(tool.id));
+            after(async () => {
+                try {
+                    await performDeepResearch(tool.id);
+                } catch (err) {
+                    console.error(`[api/cron/research] background research failed for tool ${tool.id}:`, err);
+                }
+            });
         }
 
         return NextResponse.json({

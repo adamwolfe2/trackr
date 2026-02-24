@@ -96,7 +96,13 @@ export async function GET(req: Request) {
 
         // Fire auto-retries outside the HTTP response window
         for (const toolId of toolsToRetry) {
-            after(() => performDeepResearch(toolId));
+            after(async () => {
+                try {
+                    await performDeepResearch(toolId);
+                } catch (err) {
+                    console.error(`[api/cron/recover-stuck-jobs] auto-retry failed for tool ${toolId}:`, err);
+                }
+            });
         }
 
         return NextResponse.json({

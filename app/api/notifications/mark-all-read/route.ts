@@ -17,12 +17,17 @@ export async function POST() {
         );
     }
 
-    const notifications = await getNotifications();
-    const ids = notifications.map(n => n.id);
+    try {
+        const notifications = await getNotifications();
+        const ids = notifications.map(n => n.id);
 
-    if (ids.length > 0) {
-        await markNotificationsRead(ids);
+        if (ids.length > 0) {
+            await markNotificationsRead(ids);
+        }
+
+        return NextResponse.json({ success: true, marked: ids.length });
+    } catch (err) {
+        console.error("[api/notifications/mark-all-read]", err);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
-
-    return NextResponse.json({ success: true, marked: ids.length });
 }

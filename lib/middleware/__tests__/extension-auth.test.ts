@@ -88,24 +88,24 @@ describe("corsHeaders", () => {
 });
 
 describe("checkExtensionRateLimit", () => {
-    it("returns true for first request within limit", () => {
-        const result = checkExtensionRateLimit("ws_rl_test_1", 30);
+    it("returns true for first request within limit", async () => {
+        const result = await checkExtensionRateLimit("ws_rl_test_1", 30);
         expect(result).toBe(true);
     });
 
-    it("returns false after exceeding max requests", () => {
+    it("returns false after exceeding max requests", async () => {
         const wsId = "ws_rl_exceed_test";
         // First max requests should pass
         for (let i = 0; i < 3; i++) {
-            checkExtensionRateLimit(wsId, 3);
+            await checkExtensionRateLimit(wsId, 3);
         }
         // Next request should be rate limited
-        const result = checkExtensionRateLimit(wsId, 3);
+        const result = await checkExtensionRateLimit(wsId, 3);
         expect(result).toBe(false);
     });
 
-    it("uses 30 as default max per minute", () => {
-        const result = checkExtensionRateLimit("ws_rl_default_test");
+    it("uses 30 as default max per minute", async () => {
+        const result = await checkExtensionRateLimit("ws_rl_default_test");
         expect(result).toBe(true);
     });
 });

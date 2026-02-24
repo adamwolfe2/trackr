@@ -72,7 +72,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Kick off research in the background — returns immediately
-    after(() => performDeepResearch(toolId));
+    after(async () => {
+        try {
+            await performDeepResearch(toolId);
+        } catch (err) {
+            console.error("[api/research/start] background research failed:", err);
+        }
+    });
 
     return NextResponse.json({ success: true, message: "Research started" });
 }

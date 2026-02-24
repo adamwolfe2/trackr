@@ -53,6 +53,7 @@ export async function deletePainPoint(id: string) {
 
     await db.delete(painPoints).where(and(eq(painPoints.id, id), eq(painPoints.workspaceId, workspaceId)));
     revalidatePath("/pain-points");
+    return { success: true };
 }
 
 export async function batchAddPainPoints(items: Array<{ title: string; category?: string; description?: string }>) {

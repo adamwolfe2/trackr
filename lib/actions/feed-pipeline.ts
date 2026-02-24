@@ -56,8 +56,8 @@ async function ingestTopic(workspaceId: string, channelId: string, config: Chann
                 summary: item.content?.slice(0, 400) || null,
             }).onConflictDoNothing(); // relies on URL uniqueness per workspace
             count++;
-        } catch {
-            // Duplicate URL — skip silently
+        } catch (err) {
+            console.error("[feed-pipeline] Failed to insert feed item:", err);
         }
     }
     return count;
@@ -98,12 +98,13 @@ async function ingestRss(workspaceId: string, channelId: string, config: Channel
                     summary: entry.summary?.slice(0, 400) || null,
                 }).onConflictDoNothing();
                 count++;
-            } catch {
-                // Duplicate — skip
+            } catch (err) {
+                console.error("[feed-pipeline] Failed to insert RSS item:", err);
             }
         }
         return count;
-    } catch {
+    } catch (err) {
+        console.error("[feed-pipeline] RSS ingestion failed:", err);
         return 0;
     }
 }
@@ -177,8 +178,8 @@ export async function ingestAllChannels(workspaceId: string): Promise<number> {
         try {
             const count = await ingestChannel(ch.id);
             total += count;
-        } catch {
-            // Skip failing channel and continue
+        } catch (err) {
+            console.error(`[feed-pipeline] Channel ${ch.id} ingestion failed:`, err);
         }
     }
     return total;

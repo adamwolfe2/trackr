@@ -390,14 +390,14 @@ describe("performDeepResearch", () => {
 
     // ── Error handling ─────────────────────────────────────────────────────────
 
-    it("returns { success: false } when generateObject throws", async () => {
+    it("returns { success: true } with fallback report when generateObject throws", async () => {
+        // Both primary and fallback generateObject calls fail → buildFallbackReport → success
         (generateObject as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("AI error"));
         const result = await performDeepResearch("tool_1");
-        expect(result.success).toBe(false);
-        expect(result.error).toBe("AI error");
+        expect(result.success).toBe(true);
     });
 
-    it("sets tool status to 'failed' when research throws", async () => {
+    it("sets tool status to 'active' when synthesis falls back to minimal report", async () => {
         (generateObject as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("AI error"));
         await performDeepResearch("tool_1");
         const allSetCalls = (
@@ -405,11 +405,11 @@ describe("performDeepResearch", () => {
                 .map((r) => (r.value.set as ReturnType<typeof vi.fn>)?.mock?.calls ?? [])
                 .flat()
         );
-        const failedCall = allSetCalls.find((args) => args[0]?.status === "failed");
-        expect(failedCall).toBeDefined();
+        const activeCall = allSetCalls.find((args) => args[0]?.status === "active");
+        expect(activeCall).toBeDefined();
     });
 
-    it("marks researchJob as failed on error", async () => {
+    it("marks researchJob as complete when fallback report is used", async () => {
         (generateObject as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("fail"));
         await performDeepResearch("tool_1");
         const allSetCalls = (
@@ -417,8 +417,8 @@ describe("performDeepResearch", () => {
                 .map((r) => (r.value.set as ReturnType<typeof vi.fn>)?.mock?.calls ?? [])
                 .flat()
         );
-        const jobFailCall = allSetCalls.find((args) => args[0]?.status === "failed" && args[0]?.errorMessage);
-        expect(jobFailCall).toBeDefined();
+        const jobCompleteCall = allSetCalls.find((args) => args[0]?.status === "complete");
+        expect(jobCompleteCall).toBeDefined();
     });
 
     // ── Email & Slack notifications ────────────────────────────────────────────
@@ -463,20 +463,16 @@ describe("performDeepResearch", () => {
         expect(postMessage).not.toHaveBeenCalled();
     });
 
-    it("sends failure email when research errors and submittedBy is set", async () => {
+    it("sends success email (not failure email) when generateObject falls back to minimal report", async () => {
         (db.query.tools.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
             ...MOCK_TOOL,
             submittedBy: "user_clerk_1",
         });
+        // Both primary + fallback fail → buildFallbackReport → success path → success email
         (generateObject as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("synthesis failed"));
         await performDeepResearch("tool_1");
-        expect(sendResearchFailedEmail).toHaveBeenCalledTimes(1);
-        expect(sendResearchFailedEmail).toHaveBeenCalledWith(
-            "user@example.com",
-            "Linear",
-            "tool_1",
-            "synthesis failed",
-        );
+        expect(sendResearchFailedEmail).not.toHaveBeenCalled();
+        expect(sendResearchCompleteEmail).toHaveBeenCalledTimes(1);
     });
 
     it("sends Slack failure notification when workspace has Slack and research errors", async () => {

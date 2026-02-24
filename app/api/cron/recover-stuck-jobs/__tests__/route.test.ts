@@ -3,6 +3,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Set CRON_SECRET before importing the route
 process.env.CRON_SECRET = "test_secret_123";
 
+// Mock next/server after() to be a no-op in tests (throws outside request scope otherwise)
+vi.mock("next/server", async () => {
+    const actual = await vi.importActual<typeof import("next/server")>("next/server");
+    return { ...actual, after: vi.fn() };
+});
+
 vi.mock("@/lib/db", () => ({
     db: {
         query: {

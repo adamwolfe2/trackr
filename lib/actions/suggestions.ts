@@ -22,4 +22,5 @@ export async function dismissSuggestion(id: string) {
         .set({ status: "dismissed" })
         .where(and(eq(toolSuggestions.id, id), eq(toolSuggestions.workspaceId, workspaceId)));
     revalidatePath("/feed");
+    return { success: true };
 }

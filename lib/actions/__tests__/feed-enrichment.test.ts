@@ -149,8 +149,8 @@ describe("enrichFeedItems", () => {
         (db.query.feedItems.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(items);
         (generateObject as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("AI error"));
         const result = await enrichFeedItems("ws_1");
-        // Returns count (2 items were "processed" with fallback score)
-        expect(result).toBe(0); // count remains 0 since we went through the catch
+        // Batch fails, then each item is retried individually → all get fallback score
+        expect(result).toBe(2); // enrichedCount incremented once per item in fallback path
         // db.update called for each item with fallback score
         expect(db.update).toHaveBeenCalledTimes(2);
     });

@@ -123,7 +123,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     // Handle extra credit purchase
     if (session.metadata?.type === "extra_credits" && session.metadata.workspaceId) {
         const creditCount = parseInt(session.metadata.creditCount ?? "0", 10);
-        if (creditCount > 0) {
+        if (!isNaN(creditCount) && creditCount > 0) {
             await db.update(subscriptions)
                 .set({ creditBalance: sql`${subscriptions.creditBalance} + ${creditCount}`, updatedAt: new Date() })
                 .where(eq(subscriptions.workspaceId, session.metadata.workspaceId));
