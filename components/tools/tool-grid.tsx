@@ -39,7 +39,7 @@ function ToolIcon({ name, logoUrl, websiteUrl }: { name: string; logoUrl?: strin
 }
 
 const STATUS_DOT: Record<string, string> = {
-    active: "bg-black",
+    active: "bg-green-500",
     researching: "bg-neutral-400 animate-pulse",
     failed: "bg-red-400",
     queued: "bg-neutral-300",
