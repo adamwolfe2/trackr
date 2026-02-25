@@ -7,6 +7,7 @@ import { rateLimit } from "@/lib/middleware/rate-limit";
 import { after } from "next/server";
 import { performDeepResearch } from "@/lib/actions/research";
 import { getPlanLimits } from "@/lib/config/subscriptions";
+import { isPrivateUrl } from "@/lib/utils/url-validation";
 
 export async function OPTIONS(req: NextRequest) {
     return new NextResponse(null, { status: 204, headers: corsHeaders(req) });
@@ -62,6 +63,14 @@ export async function POST(req: NextRequest) {
     } catch {
         return NextResponse.json(
             { error: "Invalid URL format" },
+            { status: 400, headers }
+        );
+    }
+
+    // SSRF protection: block private/internal IPs and localhost
+    if (isPrivateUrl(parsedUrl.toString())) {
+        return NextResponse.json(
+            { error: "URL not allowed" },
             { status: 400, headers }
         );
     }

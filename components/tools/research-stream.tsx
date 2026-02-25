@@ -70,7 +70,7 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ toolId }),
-                    }).catch(() => {/* best-effort */});
+                    }).catch((err) => console.warn("[ResearchStream] fallback trigger failed:", err));
                 }
 
                 if (data.status === "active" || data.status === "failed") {

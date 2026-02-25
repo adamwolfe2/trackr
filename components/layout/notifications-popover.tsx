@@ -22,8 +22,12 @@ export function NotificationsPopover() {
 
     useEffect(() => {
         const fetchNotifications = async () => {
-            const data = await getNotifications();
-            setNotifications(data);
+            try {
+                const data = await getNotifications();
+                setNotifications(data);
+            } catch {
+                // Polling failure is silent — stale notifications remain visible
+            }
         };
 
         fetchNotifications();
@@ -93,7 +97,7 @@ export function NotificationsPopover() {
                             notifications.map((notification) => (
                                 <Link
                                     key={notification.id}
-                                    href={notification.link}
+                                    href={notification.link || "/dashboard"}
                                     onClick={() => setIsOpen(false)}
                                     className={`flex items-start gap-3 p-4 hover:bg-neutral-100 transition-colors ${notification.read ? "opacity-60" : ""}`}
                                 >

@@ -35,7 +35,12 @@ export async function addSoftwareSpend(formData: FormData) {
     const seatCount = parsedSeats !== null && (isNaN(parsedSeats) || parsedSeats < 0) ? null : parsedSeats;
 
     const renewalDateRaw = formData.get("renewalDate") as string;
-    const renewalDate = renewalDateRaw ? new Date(renewalDateRaw) : null;
+    let renewalDate: Date | null = null;
+    if (renewalDateRaw) {
+        const parsed = new Date(renewalDateRaw);
+        if (isNaN(parsed.getTime())) throw new Error("Invalid renewal date");
+        renewalDate = parsed;
+    }
 
     await db.insert(softwareSpend).values({
         workspaceId,

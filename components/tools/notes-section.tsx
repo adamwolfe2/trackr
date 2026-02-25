@@ -66,7 +66,15 @@ export function NotesSection({ toolId, notes = [] }: { toolId: string, notes?: {
 
                 {/* Input */}
                 <div className="border-t border-black">
-                    <form onSubmit={handleSubmit} className="flex">
+                    <form onSubmit={handleSubmit} className="flex flex-col">
+                        {content.length > 8000 && (
+                            <div className="px-4 pt-2 text-right">
+                                <span className={`font-mono text-[10px] ${content.length > 9500 ? "text-red-500" : "text-amber-500"}`}>
+                                    {content.length.toLocaleString()} / 10,000
+                                </span>
+                            </div>
+                        )}
+                        <div className="flex">
                         <textarea
                             placeholder="Add a note... (Enter to submit, Shift+Enter for new line)"
                             value={content}
@@ -88,6 +96,7 @@ export function NotesSection({ toolId, notes = [] }: { toolId: string, notes?: {
                         >
                             {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
                         </button>
+                        </div>
                     </form>
                 </div>
             </div>

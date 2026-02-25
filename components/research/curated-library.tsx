@@ -159,7 +159,19 @@ export function CuratedLibrary({ tools, templates, primaryCategories, hotToolSlu
                 ))}
             </div>
 
-            {/* Hot This Week */}
+            {/* Hot This Week — hidden when filters are active */}
+            {hotTools.length > 0 && activeTab === "tools" && (hasActiveFilters || search) && (
+                <div className="mb-4 flex items-center gap-2">
+                    <TrendingUp className="h-3 w-3 text-neutral-300" />
+                    <span className="font-mono text-[10px] text-neutral-400">
+                        Hot tools hidden while filters are active —{" "}
+                        <button onClick={clearFilters} className="underline underline-offset-2 hover:text-black">
+                            clear filters
+                        </button>{" "}
+                        to see them
+                    </span>
+                </div>
+            )}
             {hotTools.length > 0 && activeTab === "tools" && !hasActiveFilters && !search && (
                 <div className="mb-6">
                     <div className="flex items-center gap-2 mb-3">

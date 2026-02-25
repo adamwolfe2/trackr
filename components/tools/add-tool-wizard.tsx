@@ -121,7 +121,8 @@ export function AddToolWizard() {
                                 onChange={(e) => setUrl(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handlePreview()}
                                 autoFocus
-                                className="flex-1 border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none"
+                                disabled={isPreviewing}
+                                className="flex-1 border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none disabled:opacity-50"
                             />
                             <button
                                 onClick={handlePreview}
@@ -222,7 +223,8 @@ export function AddToolWizard() {
                         <button
                             type="button"
                             onClick={() => setStep(1)}
-                            className="border border-black px-6 py-3 font-mono text-sm bg-white hover:bg-black hover:text-white"
+                            disabled={isSubmitting}
+                            className="border border-black px-6 py-3 font-mono text-sm bg-white hover:bg-black hover:text-white disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                             Back
                         </button>

@@ -20,7 +20,12 @@ export const metadata: Metadata = {
 };
 
 export default async function WorkspacePage() {
-    const user = await currentUser();
+    let user;
+    try {
+        user = await currentUser();
+    } catch {
+        redirect("/sign-in");
+    }
     if (!user) redirect("/sign-in");
 
     const currentMember = await db.query.workspaceMembers.findFirst({
@@ -131,11 +136,11 @@ export default async function WorkspacePage() {
                                                 {avatarLetter}
                                             </div>
                                             <div className="min-w-0">
-                                                <div className="font-mono text-sm font-medium truncate">
+                                                <div className="font-mono text-sm font-medium truncate" title={displayName}>
                                                     {displayName}
                                                     {isCurrentUser && <span className="font-mono text-[10px] text-neutral-400 ml-2">(you)</span>}
                                                 </div>
-                                                <div className="font-mono text-[10px] text-neutral-400 truncate">
+                                                <div className="font-mono text-[10px] text-neutral-400 truncate" title={userData?.email ?? undefined}>
                                                     {userData?.email ?? `Joined ${new Date(member.joinedAt).toLocaleDateString()}`}
                                                 </div>
                                             </div>
@@ -150,6 +155,13 @@ export default async function WorkspacePage() {
                                 );
                             })}
                         </div>
+
+                        {/* Solo-member nudge */}
+                        {isOwnerOrAdmin && members.length === 1 && pendingInvites.length === 0 && (
+                            <p className="font-mono text-[11px] text-neutral-400 pt-1">
+                                Just you so far — invite teammates above to collaborate on research.
+                            </p>
+                        )}
 
                         {/* Pending Invitations */}
                         {isOwnerOrAdmin && pendingInvites.length > 0 && (

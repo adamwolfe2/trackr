@@ -56,7 +56,7 @@ export function ToolGrid({ tools }: { tools: GridTool[] }) {
     }
 
     return (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-px border border-black bg-black">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-px border border-black bg-black">
             {tools.map((tool) => (
                 <Link
                     key={tool.id}

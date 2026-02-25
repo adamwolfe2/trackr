@@ -335,7 +335,11 @@ export default function OnboardingPage() {
                                 >
                                     Continue <ArrowRight className="w-4 h-4" />
                                 </button>
-                                <span className="font-mono text-[10px] text-neutral-400">press Enter ↵</span>
+                                {!companyName.trim() ? (
+                                    <span className="font-mono text-[10px] text-neutral-400">Enter a company name to continue</span>
+                                ) : (
+                                    <span className="font-mono text-[10px] text-neutral-400">press Enter ↵</span>
+                                )}
                             </div>
                             <button
                                 onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}

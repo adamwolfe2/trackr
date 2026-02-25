@@ -23,7 +23,12 @@ export default async function DashboardLayout({
 }: {
     children: React.ReactNode
 }) {
-    const user = await currentUser()
+    let user = null;
+    try {
+        user = await currentUser();
+    } catch {
+        redirect("/sign-in");
+    }
 
     if (!user) {
         redirect("/sign-in")

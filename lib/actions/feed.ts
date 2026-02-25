@@ -9,7 +9,12 @@ import { revalidatePath } from "next/cache";
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 async function getWorkspaceId(): Promise<string> {
-    const user = await currentUser();
+    let user;
+    try {
+        user = await currentUser();
+    } catch {
+        throw new Error("Authentication error — please refresh and try again.");
+    }
     if (!user) throw new Error("Unauthorized");
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),

@@ -247,7 +247,8 @@ export function ScorecardClient({ savedRecipe }: ScorecardClientProps) {
                         value={recipe.systemContext}
                         onChange={(e) => setRecipe(prev => ({ ...prev, systemContext: e.target.value }))}
                         rows={4}
-                        className="w-full font-mono text-sm bg-transparent border-none outline-none resize-none placeholder:text-neutral-400 leading-relaxed"
+                        disabled={isPending}
+                        className="w-full font-mono text-sm bg-transparent border-none outline-none resize-none placeholder:text-neutral-400 leading-relaxed disabled:opacity-50"
                         placeholder="Describe your company: industry, business model, team composition, and what kinds of tools matter most across your organization..."
                     />
                 </div>

@@ -4,7 +4,12 @@ import { getNotifications } from "@/lib/actions/notifications";
 import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
 
 export async function GET() {
-    const user = await currentUser();
+    let user;
+    try {
+        user = await currentUser();
+    } catch {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     if (!user) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

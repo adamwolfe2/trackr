@@ -32,7 +32,12 @@ export default async function BillingPage({
 }: {
     searchParams: Promise<Record<string, string>>;
 }) {
-    const user = await currentUser();
+    let user;
+    try {
+        user = await currentUser();
+    } catch {
+        redirect("/sign-in");
+    }
     if (!user) redirect("/sign-in");
 
     const workspaceId = await getWorkspaceId(user.id);

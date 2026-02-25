@@ -22,7 +22,12 @@ export const maxDuration = 300; // research pipeline takes 2-5 min; after() need
  * Returns immediately so the client connection doesn't timeout on Vercel.
  */
 export async function POST(req: NextRequest) {
-    const user = await currentUser();
+    let user;
+    try {
+        user = await currentUser();
+    } catch {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const workspaceId = await getWorkspaceId(user.id);

@@ -436,7 +436,10 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                                         </div>
                                     ) : colTools.length === 0 ? (
                                         <div className="border border-dashed border-neutral-300 p-4 text-center text-[10px] font-mono text-neutral-400">
-                                            Empty
+                                            {col.id === "researching" ? "No tools being analyzed right now" :
+                                             col.id === "active" ? "No completed reports yet" :
+                                             col.id === "archived" ? "No archived tools" :
+                                             "Empty"}
                                         </div>
                                     ) : null}
                                 </DroppableColumn>
