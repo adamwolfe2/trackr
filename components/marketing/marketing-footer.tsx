@@ -48,6 +48,7 @@ export function MarketingFooter() {
                         <Link href="/sign-in" className="text-neutral-600 hover:text-black hover:underline">Sign In</Link>
                         <Link href="/privacy" className="text-neutral-600 hover:text-black hover:underline">Privacy Policy</Link>
                         <Link href="/terms" className="text-neutral-600 hover:text-black hover:underline">Terms of Service</Link>
+                        <Link href="/security" className="text-neutral-600 hover:text-black hover:underline">Security</Link>
                     </div>
 
                 </div>
