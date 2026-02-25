@@ -127,9 +127,9 @@ describe("completeOnboarding", () => {
         expect(result.success).toBe(true);
     });
 
-    it("returns success and redirectTo /tools for regular users", async () => {
+    it("returns success and redirectTo /submit for regular users", async () => {
         const result = await completeOnboarding(VALID_ONBOARDING_INPUT);
-        expect(result).toEqual({ success: true, redirectTo: "/tools" });
+        expect(result).toEqual({ success: true, redirectTo: "/submit" });
     });
 
     it("redirects to /settings/billing for plan='team'", async () => {
@@ -147,9 +147,9 @@ describe("completeOnboarding", () => {
         expect(result.redirectTo).toBe("/settings/billing");
     });
 
-    it("redirects to /tools for plan='free'", async () => {
+    it("redirects to /submit for plan='free'", async () => {
         const result = await completeOnboarding({ ...VALID_ONBOARDING_INPUT, plan: "free" });
-        expect(result.redirectTo).toBe("/tools");
+        expect(result.redirectTo).toBe("/submit");
     });
 
     it("skips insert for tools already in the stack (deduplication)", async () => {
