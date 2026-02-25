@@ -5,6 +5,9 @@ import { reports, tools } from '@/lib/db/schema';
 import { isNotNull, eq, and } from 'drizzle-orm';
 import { CURATED_TOOLS } from '@/data/tools.seed';
 import { TEMPLATES } from '@/data/templates.seed';
+import { COMPARISON_SLUGS } from '@/data/comparisons.seed';
+import { ICP_ROLES } from '@/data/icp-pages.seed';
+import { VS_COMPETITORS } from '@/data/vs-pages.seed';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://trytrackr.com';
@@ -131,6 +134,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'weekly',
             priority: 0.6,
         },
+        // Lead magnet pages
+        {
+            url: `${baseUrl}/scorecard`,
+            lastModified: new Date('2026-02-25'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/spend-report`,
+            lastModified: new Date('2026-02-25'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        },
+        {
+            url: `${baseUrl}/playbook`,
+            lastModified: new Date('2026-02-25'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        },
+        // Competitor displacement pages (/vs/[competitor])
+        ...VS_COMPETITORS.map((competitor) => ({
+            url: `${baseUrl}/vs/${competitor}`,
+            lastModified: new Date('2026-02-25'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        })),
+        // ICP landing pages (/for/[role])
+        ...ICP_ROLES.map((role) => ({
+            url: `${baseUrl}/for/${role}`,
+            lastModified: new Date('2026-02-25'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.75,
+        })),
+        // Programmatic comparison pages (/research/compare/[slug])
+        ...COMPARISON_SLUGS.map((slug) => ({
+            url: `${baseUrl}/research/compare/${slug}`,
+            lastModified: new Date('2026-02-25'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.85,
+        })),
         // Curated tool library pages
         ...CURATED_TOOLS.map((t) => ({
             url: `${baseUrl}/research/${t.slug}`,

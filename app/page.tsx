@@ -86,6 +86,14 @@ const jsonLd = {
       publisher: {
         "@id": "https://trytrackr.com/#organization",
       },
+      potentialAction: {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: "https://trytrackr.com/research?q={search_term_string}",
+        },
+        "query-input": "required name=search_term_string",
+      },
     },
     {
       "@type": "FAQPage",

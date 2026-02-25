@@ -20,7 +20,7 @@ const NAVIGATION_ITEMS = [
     { label: "Analytics", href: "/analytics", icon: BarChart3, group: "Navigation" },
     { label: "Pain Points", href: "/pain-points", icon: AlertCircle, group: "Navigation" },
     { label: "Compare", href: "/compare", icon: GitCompareArrows, group: "Navigation" },
-    { label: "Scorecard", href: "/scorecard", icon: SlidersHorizontal, group: "Navigation" },
+    { label: "Scorecard", href: "/settings/scorecard", icon: SlidersHorizontal, group: "Settings" },
     { label: "Advertise", href: "/advertise", icon: Sparkles, group: "Actions" },
     { label: "Referrals", href: "/referrals", icon: Gift, group: "Actions" },
     { label: "Submit a Tool", href: "/submit", icon: PlusCircle, group: "Actions" },

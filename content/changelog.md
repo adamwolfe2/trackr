@@ -6,6 +6,30 @@ All notable changes to Trackr are documented here.
 
 ## February 2026
 
+### 2026-02-25 — GTM Content & SEO Infrastructure
+
+**New Pages**
+- **54 blog posts** — Expanded content library to 54 posts covering AI tool evaluation, SaaS stack management, RevOps tools, comparison guides, and cost reduction playbooks.
+- **30 comparison pages** — Programmatic `/research/compare/[slug]` pages covering high-intent "X vs Y" searches: HubSpot vs Salesforce, Notion vs Confluence, Cursor vs GitHub Copilot, and 27 more.
+- **5 ICP landing pages** — Role-specific landing pages at `/for/ops-teams`, `/for/revops`, `/for/founders`, `/for/engineering`, `/for/chiefs-of-staff`.
+- **Lead magnet pages** — `/scorecard` (7-dimension template), `/spend-report` (2026 SaaS benchmark data), `/playbook` (AI-Native Ops Playbook, ~3,000 words).
+- **Competitor displacement pages** — `/vs/g2`, `/vs/vendr`, `/vs/spreadsheets`, `/vs/notion`, `/vs/gartner` with feature comparison tables.
+
+**SEO Infrastructure**
+- Sitemap expanded to include all comparison, ICP, VS, and lead magnet pages.
+- `SearchAction` added to WebSite JSON-LD for Google Sitelinks Searchbox eligibility.
+- Fixed robots.txt — removed `/scorecard` and `/analytics` from disallow list (public pages were being blocked).
+- Dashboard scorecard feature moved to `/settings/scorecard` to resolve route conflict with public marketing page.
+
+**Onboarding**
+- Post-onboarding redirect changed from `/tools` (empty state) to `/submit` (research form) — users reach Aha moment within 2 minutes of signup.
+- Step 1 now shows a sample report preview with dimension score bars to set expectations before users complete setup.
+- Step 3 scorecard copy clarified: "The recommended weights work well for most teams. You can always adjust from Settings later."
+
+---
+
+
+
 ### 2026-02-20 — Research Scheduling, CSV Exports, and UX Polish
 
 **New Features**
@@ -194,3 +218,84 @@ All notable changes to Trackr are documented here.
 - Pain points at `/pain-points` — document team needs for proactive tool suggestions.
 - Slack integration — post research completion notifications to a channel.
 - Chrome extension API — research tools directly from the browser.
+
+---
+
+## November 2025
+
+### 2025-11-25 — Feed, Notifications, and Team Features
+
+**New Features**
+- **AI News Feed** — Curated feed at `/feed` surfaces AI tool launches, category news, and product updates relevant to your stack. Powered by Tavily search with configurable topic channels.
+- **Feed channel management** — Create custom channels around keywords, tools, or topics. Subscribe to community channels shared across workspaces.
+- **In-app notifications** — Real-time notification bell with unread count for research completions, team activity, renewal alerts, and digest summaries.
+- **Weekly email digest** — Automated weekly email summarizing new reports, stack changes, and upcoming renewals.
+- **Renewal alerts** — Tools in the stack with renewal dates within 30 and 60 days trigger dashboard and email alerts.
+- **Team workspace sharing** — Invite teammates via email. Role-based access: Admin and Member. Shared research reports, notes, and pain points.
+- **Activity feed** — Dashboard Recent Activity log shows research completions, tool additions, and team member actions with timestamps.
+
+**Improvements**
+- Research queue at `/queue` shows live progress for in-flight research jobs with step-by-step status.
+- Discover page at `/discover` surfaces trending tools from the community library with category filtering.
+
+---
+
+### 2025-11-10 — AI Features and Analytics
+
+**New Features**
+- **Ask Trackr AI** — Conversational research assistant at `/ask`. Answers questions about tools in your stack using a RAG pipeline over your research reports. Powered by GPT-4o with Neon pgvector for embeddings.
+- **Analytics dashboard** — `/analytics` shows stack health over time: tools researched per month, average scores, score distribution, and top/bottom performers.
+- **Tool comparison** — Side-by-side comparison at `/compare` for any two tools in your stack with dimension-by-dimension breakdown.
+- **Kanban view** — Tools list supports Kanban board view organized by status: Evaluating, Active, Archived.
+- **Bulk research** — Select multiple tools and trigger research on all of them with one click.
+
+---
+
+## October 2025
+
+### 2025-10-20 — Scoring, Reports, and Recommendations
+
+**New Features**
+- **AI Nativeness Score** — Stack-level score (0–100) measuring the proportion of AI-native tools vs traditional software. Updated in real time as tools are added.
+- **Score history and delta** — Tool detail page shows score trend over multiple research runs with delta indicators (↑0.8 since last run).
+- **Recommendations engine** — Smart recommendations based on pain points, low-scoring tools, and stack gaps. Analyzes existing tools and suggests alternatives.
+- **Report sharing** — Generate a public share link for any research report. Shared reports include a Trackr branding footer.
+- **PDF export** — Download any research report as a formatted PDF. Available on Team and above.
+- **Public research library** — Community-curated tool library at `/research` with 28+ pre-researched tools, ratings, and community votes.
+- **Workflow templates** — Pre-built stack templates at `/research/templates` for common team configurations (RevOps stack, Engineering stack, etc.).
+
+**Improvements**
+- Research report quality significantly improved: deeper Reddit analysis, better pricing extraction, more nuanced competitive intel.
+- Scorecard weights now customizable per workspace (Startup plan and above).
+
+---
+
+### 2025-10-05 — Billing, Subscriptions, and Referrals
+
+**New Features**
+- **Stripe billing integration** — Paid plans (Team $50/mo, Startup $149/mo, Enterprise $349/mo) with Stripe Checkout, customer portal, and webhook sync.
+- **14-day free trial** — All paid plans start with a 14-day trial with full feature access. No credit card required.
+- **Plan gating** — Feature access controlled by plan level. Graceful upgrade prompts on gated features.
+- **Credit system** — Research credits per plan (3 free, 25 Team, 75 Startup, 200 Enterprise) with per-credit overage pricing.
+- **Referral program** — Referral links generate 5 credits per successful signup. Referrals dashboard at `/referrals`.
+
+---
+
+## September 2025
+
+### 2025-09-20 — Onboarding and Initial Public Launch
+
+**New Features**
+- **3-step onboarding** — Company setup → tool inventory selection → scorecard configuration. Draft state persisted in localStorage. Enter-key navigation between steps.
+- **AI context generation** — Auto-fill company context from website URL using Firecrawl. Context used by research agents to tailor every report.
+- **AI Nativeness preview** — Live preview of AI Nativeness Score during tool selection step of onboarding.
+- **Tool catalog** — 100+ integrations in the tool picker with logo grid, category filtering, and custom tool entry.
+- **Marketing site** — Homepage, pricing page, process page, about page, and blog with initial 34 posts.
+- **Changelog** — Public changelog at `/changelog` documenting all feature releases.
+
+**Initial Metrics**
+- Research pipeline: average 90 seconds end-to-end.
+- 7-dimension scorecard validated across 50+ tool categories.
+- 34 SEO blog posts published at launch.
+
+---
