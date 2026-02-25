@@ -326,6 +326,30 @@ export default function OnboardingPage() {
                             </div>
                         </div>
 
+                        {/* What you'll get preview */}
+                        <div className="mt-8 border border-black/20 bg-white p-4">
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-3">What your first report will include</p>
+                            <div className="space-y-2">
+                                {[
+                                    { label: "Core Capability", score: 8.4 },
+                                    { label: "Pricing Value", score: 7.1 },
+                                    { label: "AI Sophistication", score: 9.2 },
+                                ].map((dim) => (
+                                    <div key={dim.label} className="flex items-center gap-3">
+                                        <span className="font-mono text-[10px] text-neutral-500 w-28 flex-shrink-0">{dim.label}</span>
+                                        <div className="flex-1 h-1.5 bg-neutral-100">
+                                            <div className="h-full bg-black" style={{ width: `${dim.score * 10}%` }} />
+                                        </div>
+                                        <span className="font-mono text-[10px] font-bold w-6 text-right">{dim.score}</span>
+                                    </div>
+                                ))}
+                                <p className="font-mono text-[10px] text-neutral-400 mt-2">+ 4 more dimensions · pros & cons · pricing · competitive context</p>
+                            </div>
+                            <p className="font-mono text-[10px] text-neutral-500 mt-3 pt-3 border-t border-neutral-100">
+                                Generated in under 2 minutes. No manual research needed.
+                            </p>
+                        </div>
+
                         <div className="flex justify-between items-center mt-6">
                             <div className="flex items-center gap-3">
                                 <button
@@ -569,8 +593,11 @@ export default function OnboardingPage() {
                     <div className="w-full max-w-lg">
                         <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">Step 3 of 3</span>
                         <h1 className="text-3xl font-serif font-normal mb-2 leading-tight">Set up your scorecard.</h1>
-                        <p className="font-mono text-sm text-neutral-600 mb-8 leading-relaxed">
-                            Every tool is scored against these dimensions. Adjust weights to match what matters most to your team.
+                        <p className="font-mono text-sm text-neutral-600 mb-2 leading-relaxed">
+                            Every tool is scored against these 7 dimensions. The weights determine your overall score.
+                        </p>
+                        <p className="font-mono text-xs text-neutral-400 mb-8">
+                            The recommended weights work well for most teams. You can always adjust from Settings later.
                         </p>
 
                         <div className="space-y-4 mb-8">
@@ -606,14 +633,12 @@ export default function OnboardingPage() {
                             <p className={`font-mono text-sm ${totalWeight === 100 ? "text-black" : "text-red-500"}`}>
                                 Total: {totalWeight}% {totalWeight === 100 ? "\u2713" : "(must equal 100%)"}
                             </p>
-                            {totalWeight !== 100 && (
-                                <button
-                                    onClick={() => setDimensions(DEFAULT_SCORECARD_DIMENSIONS)}
-                                    className="font-mono text-xs text-neutral-400 hover:text-black underline underline-offset-2"
-                                >
-                                    Reset to defaults
-                                </button>
-                            )}
+                            <button
+                                onClick={() => setDimensions(DEFAULT_SCORECARD_DIMENSIONS)}
+                                className="font-mono text-xs text-neutral-500 hover:text-black underline underline-offset-2"
+                            >
+                                {totalWeight === 100 ? "Reset to defaults" : "Use recommended defaults"}
+                            </button>
                         </div>
 
                         <div className="flex justify-between items-center">

@@ -216,9 +216,11 @@ export async function completeOnboarding(input: {
     revalidatePath("/stack");
 
     // Return redirect URL — client handles navigation via router.push()
+    // Free users → /submit so they immediately research their first tool (Aha moment <2 min)
+    // Paid plan → /settings/billing to activate subscription
     const redirectTo = (plan && ["team", "startup", "enterprise"].includes(plan))
         ? "/settings/billing"
-        : "/tools";
+        : "/submit";
 
     return { success: true, redirectTo };
 }
