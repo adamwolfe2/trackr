@@ -33,7 +33,12 @@ export default async function ResearchLibraryPage({
 }: {
     searchParams: Promise<{ category?: string }>;
 }) {
-    const user = await currentUser();
+    let user = null;
+    try {
+        user = await currentUser();
+    } catch {
+        // Render page without auth context (logged-out view)
+    }
     const { category } = await searchParams;
     const activeCategory = category?.trim() || null;
 

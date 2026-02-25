@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { Clock, ChevronDown } from "lucide-react";
 import { updateResearchSchedule, type ResearchInterval } from "@/lib/actions/schedule";
 import { toast } from "sonner";
@@ -39,6 +39,14 @@ export function ResearchSchedulePicker({
     const [interval, setInterval] = useState<ResearchInterval>(currentInterval);
     const [isPending, startTransition] = useTransition();
     const [open, setOpen] = useState(false);
+
+    // Close dropdown on resize (prevents misaligned dropdown after orientation change)
+    useEffect(() => {
+        if (!open) return;
+        const handleResize = () => setOpen(false);
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, [open]);
 
     const handleSelect = (value: ResearchInterval) => {
         setOpen(false);
