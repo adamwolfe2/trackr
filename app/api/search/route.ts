@@ -12,7 +12,12 @@ const SearchSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-    const user = await currentUser();
+    let user;
+    try {
+        user = await currentUser();
+    } catch {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const member = await db.query.workspaceMembers.findFirst({
