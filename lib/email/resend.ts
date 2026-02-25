@@ -247,9 +247,9 @@ export async function scheduleDripSequence(to: string, firstName: string) {
                     That's 40-60 hours of research time — reading landing pages, comparing G2 reviews, building spreadsheets. Trackr reduces it to <strong>under 2 minutes per tool</strong>.
                 </p>
                 <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
-                    Your free plan includes 3 research runs per month. If you need more, each extra credit costs $2 — or upgrade to Pro for 20 runs/month.
+                    Your free plan includes 3 research reports per month. For unlimited tools + 25 reports/month, the Team plan is $50/month — or buy extra credits for $1.50 each.
                 </p>
-                ${emailButton(`${appUrl}/tools`, "View Your Research →")}
+                ${emailButton(`${appUrl}/submit`, "Research a Tool →")}
             `),
         },
         {
@@ -262,19 +262,20 @@ export async function scheduleDripSequence(to: string, firstName: string) {
                     A week in — how's it going?
                 </h1>
                 <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">
-                    Teams that use Trackr Pro can:
+                    Teams on the Team plan can:
                 </p>
                 <ul style="font-size: 13px; color: #333; line-height: 2; padding-left: 20px; margin: 0 0 24px;">
-                    <li>Run 20 research reports per month</li>
-                    <li>Invite teammates to share a workspace</li>
+                    <li>Run 25 research reports per month</li>
+                    <li>Invite up to 5 teammates to share a workspace</li>
                     <li>Get Slack notifications when research completes</li>
                     <li>Export reports to PDF for stakeholder reviews</li>
                     <li>Track monthly SaaS spend across all tools</li>
+                    <li>Schedule auto-research (weekly, bi-weekly, monthly)</li>
                 </ul>
                 <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
-                    Pro is $49/month. That's less than the cost of one hour of manual research time.
+                    The Team plan is $50/month — less than the cost of one hour of manual research time at $100/hr blended rate.
                 </p>
-                ${emailButton(`${appUrl}/pricing`, "Upgrade to Pro →")}
+                ${emailButton(`${appUrl}/pricing`, "Upgrade to Team →")}
             `),
         },
     ];
