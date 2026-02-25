@@ -25,7 +25,7 @@ interface Stats {
     monthlySpend: number;
 }
 
-export function ToolsView({ tools, stats, isEmpty, canSchedule = false }: { tools: Tool[]; stats: Stats; isEmpty: boolean; canSchedule?: boolean }) {
+export function ToolsView({ tools, stats, isEmpty, canSchedule = false, scoreDeltaMap = {} }: { tools: Tool[]; stats: Stats; isEmpty: boolean; canSchedule?: boolean; scoreDeltaMap?: Record<string, number> }) {
     const [view, setView] = useState<"kanban" | "grid">("kanban");
 
     return (
@@ -62,7 +62,7 @@ export function ToolsView({ tools, stats, isEmpty, canSchedule = false }: { tool
             {view === "kanban" ? (
                 <KanbanBoard tools={tools} stats={stats} isEmpty={isEmpty} />
             ) : (
-                <ToolGrid tools={tools} />
+                <ToolGrid tools={tools} scoreDeltaMap={scoreDeltaMap} />
             )}
         </div>
     );

@@ -99,6 +99,20 @@ export default async function DashboardPage() {
         limit: 5,
     });
 
+    // Top performers and needs attention
+    const topPerformers = await db.query.tools.findMany({
+        where: and(eq(tools.workspaceId, workspaceId), isNotNull(tools.overallScore), eq(tools.status, "active")),
+        orderBy: [desc(tools.overallScore)],
+        limit: 3,
+        columns: { id: true, name: true, overallScore: true, category: true },
+    });
+    const needsAttention = await db.query.tools.findMany({
+        where: and(eq(tools.workspaceId, workspaceId), eq(tools.status, "active"), isNotNull(tools.overallScore)),
+        orderBy: [tools.overallScore],
+        limit: 3,
+        columns: { id: true, name: true, overallScore: true, category: true },
+    });
+
     const reportsCountData = await db
         .select({ count: sql<number>`count(*)` })
         .from(reports)
@@ -271,6 +285,83 @@ export default async function DashboardPage() {
                         )}
                         <Link href="/stack" className="font-mono text-xs underline hover:text-neutral-600">
                             View Stack →
+                        </Link>
+                    </div>
+                </div>
+            )}
+
+            {/* Top Performers + Needs Attention */}
+            {topPerformers.length >= 2 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Top Performers */}
+                    <div className="border border-black">
+                        <div className="border-b border-black px-5 py-3">
+                            <h2 className="font-mono text-xs uppercase tracking-widest">Your Best Tools</h2>
+                        </div>
+                        <div className="divide-y divide-neutral-100">
+                            {topPerformers.map(tool => (
+                                <Link key={tool.id} href={`/tools/${tool.id}`} className="flex items-center justify-between px-5 py-3 hover:bg-neutral-100 transition-colors group">
+                                    <div>
+                                        <div className="font-mono text-sm">{tool.name}</div>
+                                        {tool.category && tool.category.length > 0 && (
+                                            <div className="font-mono text-[10px] text-neutral-400 uppercase">{tool.category[0]}</div>
+                                        )}
+                                    </div>
+                                    <span className="font-mono text-sm font-bold border border-black bg-black text-white px-2 py-0.5">
+                                        {Number(tool.overallScore).toFixed(1)}
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Needs Attention */}
+                    <div className="border border-black">
+                        <div className="border-b border-black px-5 py-3">
+                            <h2 className="font-mono text-xs uppercase tracking-widest text-neutral-500">Review These</h2>
+                        </div>
+                        <div className="divide-y divide-neutral-100">
+                            {needsAttention.map(tool => (
+                                <div key={tool.id} className="flex items-center justify-between px-5 py-3">
+                                    <div>
+                                        <div className="font-mono text-sm">{tool.name}</div>
+                                        {tool.category && tool.category.length > 0 && (
+                                            <div className="font-mono text-[10px] text-neutral-400 uppercase">{tool.category[0]}</div>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`font-mono text-sm border px-2 py-0.5 ${Number(tool.overallScore) < 5 ? "border-neutral-400 text-neutral-500" : "border-black text-black"}`}>
+                                            {Number(tool.overallScore).toFixed(1)}
+                                        </span>
+                                        <Link href={`/tools/${tool.id}`} className="font-mono text-[10px] border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors whitespace-nowrap">
+                                            Re-research
+                                        </Link>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ROI Summary Card */}
+            {stackEntries.length > 0 && stackInsights.timeSavedPerMonth > 0 && (
+                <div className="border border-black p-5">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-2">Estimated ROI from AI Stack</p>
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                        <span className="font-mono text-sm">
+                            ~{Math.round(stackInsights.timeSavedPerMonth)} hrs/mo saved
+                        </span>
+                        <span className="font-mono text-sm">
+                            ~${stackInsights.dollarValueSaved >= 1000
+                                ? `${Math.round(stackInsights.dollarValueSaved / 1000)}k`
+                                : Math.round(stackInsights.dollarValueSaved)}/yr value
+                        </span>
+                        <span className="font-mono text-xs text-neutral-500">
+                            AI Nativeness: {stackInsights.score}/100
+                        </span>
+                        <Link href="/stack/report" className="font-mono text-xs underline hover:text-neutral-600">
+                            View Full Report →
                         </Link>
                     </div>
                 </div>

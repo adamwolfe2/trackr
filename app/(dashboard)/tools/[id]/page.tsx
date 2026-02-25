@@ -155,6 +155,43 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         })),
     ].sort((a, b) => new Date(b.triggeredAt).getTime() - new Date(a.triggeredAt).getTime());
 
+    // Serialize report history (for enhanced History tab with score timeline)
+    const reportHistory = allReports.map((r, idx) => {
+        const snapshot = r.scorecardSnapshot as Record<string, { score: number }> | null;
+        const dimScores: Record<string, number> = {};
+        if (snapshot) {
+            for (const [k, v] of Object.entries(snapshot)) {
+                if (v && typeof v.score === "number") dimScores[k] = v.score;
+            }
+        }
+        // Compute overall from dimensions
+        const dimValues = Object.values(dimScores);
+        const overallScore = dimValues.length > 0
+            ? dimValues.reduce((a, b) => a + b, 0) / dimValues.length
+            : null;
+        // Compute deltas vs next entry (which is older due to desc ordering)
+        const prevReport = allReports[idx + 1];
+        const prevSnapshot = prevReport?.scorecardSnapshot as Record<string, { score: number }> | null;
+        const deltas: Record<string, number> = {};
+        if (prevSnapshot) {
+            for (const [k, v] of Object.entries(prevSnapshot)) {
+                if (v && typeof v.score === "number" && dimScores[k] !== undefined) {
+                    const d = parseFloat((dimScores[k] - v.score).toFixed(1));
+                    if (d !== 0) deltas[k] = d;
+                }
+            }
+        }
+        return {
+            id: r.id,
+            version: r.version ?? 1,
+            createdAt: r.createdAt.toISOString(),
+            overallScore,
+            dimScores,
+            deltas,
+            isCurrent: idx === 0,
+        };
+    });
+
     // Serialize report for client tabs
     const serializedReport = report ? {
         id: report.id,
@@ -346,6 +383,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                         report={serializedReport}
                         historyItems={historyItems}
                         notes={serializedNotes}
+                        reportHistory={reportHistory}
                     />
                 </div>
 

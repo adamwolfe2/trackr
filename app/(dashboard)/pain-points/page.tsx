@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getWorkspaceId } from "@/lib/db/queries";
-import { painPoints } from "@/lib/db/schema";
+import { painPoints, tools } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import type { Metadata } from "next";
 
@@ -21,10 +21,18 @@ export default async function PainPointsPage() {
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) redirect("/onboarding");
 
-    const points = await db.query.painPoints.findMany({
-        where: eq(painPoints.workspaceId, workspaceId),
-        orderBy: [desc(painPoints.createdAt)],
-    });
+    const [points, workspaceTools] = await Promise.all([
+        db.query.painPoints.findMany({
+            where: eq(painPoints.workspaceId, workspaceId),
+            orderBy: [desc(painPoints.createdAt)],
+        }),
+        db.query.tools.findMany({
+            where: eq(tools.workspaceId, workspaceId),
+            columns: { id: true, name: true, overallScore: true, category: true, status: true },
+        }),
+    ]);
 
-    return <PainPointsClient initialData={points} />;
+    const activeTools = workspaceTools.filter(t => t.status === "active");
+
+    return <PainPointsClient initialData={points} workspaceTools={activeTools} />;
 }

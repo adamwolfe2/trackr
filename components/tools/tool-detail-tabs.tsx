@@ -60,12 +60,23 @@ type Note = {
     workspaceMemberId: string;
 };
 
+type ReportHistoryEntry = {
+    id: string;
+    version: number;
+    createdAt: string;
+    overallScore: number | null;
+    dimScores: Record<string, number>;
+    deltas: Record<string, number>;
+    isCurrent: boolean;
+};
+
 interface Props {
     toolId: string;
     toolStatus: string;
     report: SerializedReport | null;
     historyItems: SerializedJob[];
     notes: Note[];
+    reportHistory?: ReportHistoryEntry[];
 }
 
 const TABS = [
@@ -141,7 +152,7 @@ function EmptyTabState({ toolStatus, tabName }: { toolStatus: string; tabName: s
     );
 }
 
-export function ToolDetailTabs({ toolId, toolStatus, report, historyItems, notes }: Props) {
+export function ToolDetailTabs({ toolId, toolStatus, report, historyItems, notes, reportHistory = [] }: Props) {
     const [activeTab, setActiveTab] = useState<TabId>("report");
 
     return (
@@ -427,33 +438,83 @@ export function ToolDetailTabs({ toolId, toolStatus, report, historyItems, notes
 
                 {/* History Tab */}
                 {activeTab === "history" && (
-                    <div>
-                        <h3 className="font-mono text-xs uppercase tracking-widest mb-4">Research & Update History</h3>
-                        {historyItems.length > 0 ? (
-                            <div className="space-y-3">
-                                {historyItems.map((item) => (
-                                    <div key={item.id} className="border border-black p-3 flex items-center justify-between">
-                                        <div>
-                                            <div className="font-mono text-xs font-bold">
-                                                {item.type === "job" ? `Research Job — ${item.status}` : `Report Generated (v${item.version})`}
-                                            </div>
-                                            <div className="font-mono text-[10px] text-neutral-400 mt-0.5">
-                                                {formatDistanceToNow(new Date(item.triggeredAt), { addSuffix: true })}
+                    <div className="space-y-6">
+                        {/* Score Timeline */}
+                        {reportHistory.length > 0 && (
+                            <div>
+                                <h3 className="font-mono text-xs uppercase tracking-widest mb-4">Score History</h3>
+                                <div className="space-y-3">
+                                    {reportHistory.map((entry) => (
+                                        <div key={entry.id} className="border border-black p-4">
+                                            <div className="flex items-start justify-between gap-3 flex-wrap">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-2 flex-wrap">
+                                                        <span className="font-mono text-xs font-bold">
+                                                            {new Date(entry.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                                        </span>
+                                                        <span className="font-mono text-[10px] text-neutral-400">v{entry.version}</span>
+                                                        {entry.isCurrent && (
+                                                            <span className="font-mono text-[10px] border border-black bg-black text-white px-1.5 py-0.5 uppercase">
+                                                                Current
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {/* Dimension deltas */}
+                                                    {Object.keys(entry.deltas).length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                            {Object.entries(entry.deltas).map(([dim, delta]) => (
+                                                                <span
+                                                                    key={dim}
+                                                                    className={`font-mono text-[10px] border px-1.5 py-0.5 ${delta > 0 ? "border-black text-black" : "border-neutral-400 text-neutral-500"}`}
+                                                                >
+                                                                    {dim.replace(/_/g, " ")} {delta > 0 ? "↑" : "↓"}{Math.abs(delta)}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                {entry.overallScore !== null && (
+                                                    <div className="text-right">
+                                                        <div className="font-mono text-2xl font-bold">{entry.overallScore.toFixed(1)}</div>
+                                                        <div className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest">score</div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
-                                        <span className={`font-mono text-[10px] uppercase border px-2 py-0.5 ${
-                                            item.status === "complete" ? "border-black bg-black text-white" :
-                                            item.status === "failed" ? "border-red-600 text-red-600" :
-                                            "border-neutral-300 text-neutral-500"
-                                        }`}>
-                                            {item.status ?? "saved"}
-                                        </span>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        ) : (
-                            <div className="py-10 text-center font-mono text-sm text-neutral-400">No history recorded yet.</div>
                         )}
+
+                        {/* Research Jobs & Reports Timeline */}
+                        <div>
+                            <h3 className="font-mono text-xs uppercase tracking-widest mb-4">Research & Update History</h3>
+                            {historyItems.length > 0 ? (
+                                <div className="space-y-3">
+                                    {historyItems.map((item) => (
+                                        <div key={item.id} className="border border-black p-3 flex items-center justify-between">
+                                            <div>
+                                                <div className="font-mono text-xs font-bold">
+                                                    {item.type === "job" ? `Research Job — ${item.status}` : `Report Generated (v${item.version})`}
+                                                </div>
+                                                <div className="font-mono text-[10px] text-neutral-400 mt-0.5">
+                                                    {formatDistanceToNow(new Date(item.triggeredAt), { addSuffix: true })}
+                                                </div>
+                                            </div>
+                                            <span className={`font-mono text-[10px] uppercase border px-2 py-0.5 ${
+                                                item.status === "complete" ? "border-black bg-black text-white" :
+                                                item.status === "failed" ? "border-red-600 text-red-600" :
+                                                "border-neutral-300 text-neutral-500"
+                                            }`}>
+                                                {item.status ?? "saved"}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-10 text-center font-mono text-sm text-neutral-400">No history recorded yet.</div>
+                            )}
+                        </div>
                     </div>
                 )}
 

@@ -28,6 +28,8 @@ interface CompareClientProps {
     preSelectedIds: string[];
 }
 
+const MAX_TOOLS = 3;
+
 // Searchable dropdown component
 function ToolSelector({
     tools,
@@ -130,7 +132,7 @@ function ToolSelector({
                                 >
                                     <span>{t.name}</span>
                                     {t.score !== null && (
-                                        <span className={`${t.id === selectedId ? "text-neutral-400" : "text-neutral-400"}`}>
+                                        <span className="text-neutral-400">
                                             {t.score.toFixed(1)}
                                         </span>
                                     )}
@@ -148,12 +150,11 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
     const router = useRouter();
     const [copiedUrl, setCopiedUrl] = useState(false);
     const [selectedToolIds, setSelectedToolIds] = useState<(string | null)[]>(() => {
-        const initial: (string | null)[] = [null, null];
-        if (preSelectedIds[0] && tools.some(t => t.id === preSelectedIds[0])) {
-            initial[0] = preSelectedIds[0];
-        }
-        if (preSelectedIds[1] && tools.some(t => t.id === preSelectedIds[1])) {
-            initial[1] = preSelectedIds[1];
+        const initial: (string | null)[] = [null, null, null];
+        for (let i = 0; i < MAX_TOOLS; i++) {
+            if (preSelectedIds[i] && tools.some(t => t.id === preSelectedIds[i])) {
+                initial[i] = preSelectedIds[i];
+            }
         }
         return initial;
     });
@@ -176,6 +177,7 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
     };
 
     const selectedTools = selectedToolIds.map(id => id ? tools.find(t => t.id === id) ?? null : null);
+    const selectedCount = selectedTools.filter(Boolean).length;
 
     const getPricingDisplay = (pricing: PricingEntry[] | string | null): React.ReactNode => {
         if (!pricing) return <span className="italic text-neutral-400">Unknown</span>;
@@ -204,15 +206,13 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
         return [];
     };
 
-    // Determine winner for score row
+    // Determine winner for score row (highest score wins)
     const getScoreWinner = (): number | null => {
-        const s0 = selectedTools[0]?.score ?? null;
-        const s1 = selectedTools[1]?.score ?? null;
-        if (s0 !== null && s1 !== null) {
-            if (s0 > s1) return 0;
-            if (s1 > s0) return 1;
-        }
-        return null;
+        const scores = selectedTools.map((t, i) => ({ idx: i, score: t?.score ?? null })).filter(s => s.score !== null);
+        if (scores.length < 2) return null;
+        const max = Math.max(...scores.map(s => s.score!));
+        const winners = scores.filter(s => s.score === max);
+        return winners.length === 1 ? winners[0].idx : null;
     };
 
     const scoreWinner = getScoreWinner();
@@ -241,10 +241,13 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
         );
     }
 
-    const noneSelected = selectedTools.every(t => !t);
-    const oneSelected = selectedTools.filter(t => t).length === 1;
-    const bothSelected = selectedTools.filter(t => t).length === 2;
+    const noneSelected = selectedCount === 0;
+    const oneSelected = selectedCount === 1;
     const disabledIds = selectedToolIds.filter(Boolean) as string[];
+
+    // Column grid classes
+    const gridCols = `grid-cols-${MAX_TOOLS + 1}`; // label + 3 data cols = 4
+    const labelBorder = "border-r border-black bg-neutral-50";
 
     return (
         <div className="space-y-6">
@@ -253,8 +256,9 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                 <div className="flex items-center gap-3">
                     <ArrowRightLeft className="h-5 w-5" strokeWidth={1.5} />
                     <h1 className="font-serif text-2xl font-normal">Compare Tools</h1>
+                    <span className="font-mono text-[10px] text-neutral-400 border border-neutral-200 px-2 py-0.5">Up to 3</span>
                 </div>
-                {bothSelected && (
+                {selectedCount >= 2 && (
                     <button
                         onClick={async () => {
                             await navigator.clipboard.writeText(window.location.href);
@@ -274,7 +278,7 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                 <div className="border border-black/20 p-6 text-center">
                     <ArrowRightLeft className="h-6 w-6 mx-auto mb-3 text-neutral-300" strokeWidth={1.5} />
                     <p className="font-mono text-xs text-neutral-500">
-                        Select two tools to compare side-by-side
+                        Select up to 3 tools to compare side-by-side
                     </p>
                 </div>
             )}
@@ -282,13 +286,13 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
             {/* One selected hint */}
             {oneSelected && (
                 <div className="border border-black/20 p-4 font-mono text-xs text-neutral-500">
-                    Select a second tool to compare
+                    Select a second tool to compare (you can add up to 3)
                 </div>
             )}
 
             {/* Tool Selectors */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[0, 1].map((index) => {
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {[0, 1, 2].map((index) => {
                     const tool = selectedTools[index];
                     return (
                         <div key={index} className="border border-black p-4 bg-white">
@@ -316,19 +320,19 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
             </div>
 
             {/* Comparison Table */}
-            {(oneSelected || bothSelected) && (
+            {selectedCount >= 1 && (
                 <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-                    <div className="min-w-[600px] sm:min-w-[700px] border border-black">
+                    <div className={`min-w-[700px] border border-black`}>
                         {/* Overall Score Row */}
-                        <div className="grid grid-cols-3 border-b border-black">
-                            <div className="p-4 border-r border-black bg-neutral-50">
+                        <div className={`grid ${gridCols} border-b border-black`}>
+                            <div className={`p-4 ${labelBorder}`}>
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Overall Score</span>
                             </div>
-                            {[0, 1].map((index) => {
+                            {[0, 1, 2].map((index) => {
                                 const tool = selectedTools[index];
-                                const isWinner = bothSelected && scoreWinner === index;
+                                const isWinner = selectedCount >= 2 && scoreWinner === index;
                                 return (
-                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                    <div key={index} className={`p-4 ${index < 2 ? "border-r border-black" : ""}`}>
                                         {tool ? (
                                             tool.score !== null ? (
                                                 <div className="space-y-2">
@@ -360,14 +364,14 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                         </div>
 
                         {/* Summary Row */}
-                        <div className="grid grid-cols-3 border-b border-black">
-                            <div className="p-4 border-r border-black bg-neutral-50">
+                        <div className={`grid ${gridCols} border-b border-black`}>
+                            <div className={`p-4 ${labelBorder}`}>
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Summary</span>
                             </div>
-                            {[0, 1].map((index) => {
+                            {[0, 1, 2].map((index) => {
                                 const tool = selectedTools[index];
                                 return (
-                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                    <div key={index} className={`p-4 ${index < 2 ? "border-r border-black" : ""}`}>
                                         {tool ? (
                                             <p className="font-mono text-xs text-neutral-600 leading-relaxed">
                                                 {tool.summary || <span className="italic text-neutral-400">No summary yet</span>}
@@ -381,15 +385,15 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                         </div>
 
                         {/* Features Row */}
-                        <div className="grid grid-cols-3 border-b border-black">
-                            <div className="p-4 border-r border-black bg-neutral-50">
+                        <div className={`grid ${gridCols} border-b border-black`}>
+                            <div className={`p-4 ${labelBorder}`}>
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Features</span>
                             </div>
-                            {[0, 1].map((index) => {
+                            {[0, 1, 2].map((index) => {
                                 const tool = selectedTools[index];
                                 const featuresList = tool ? getFeaturesList(tool.features) : [];
                                 return (
-                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                    <div key={index} className={`p-4 ${index < 2 ? "border-r border-black" : ""}`}>
                                         {tool ? (
                                             featuresList.length > 0 ? (
                                                 <ul className="space-y-1.5">
@@ -412,14 +416,14 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                         </div>
 
                         {/* Pricing Row */}
-                        <div className="grid grid-cols-3 border-b border-black">
-                            <div className="p-4 border-r border-black bg-neutral-50">
+                        <div className={`grid ${gridCols} border-b border-black`}>
+                            <div className={`p-4 ${labelBorder}`}>
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Pricing</span>
                             </div>
-                            {[0, 1].map((index) => {
+                            {[0, 1, 2].map((index) => {
                                 const tool = selectedTools[index];
                                 return (
-                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                    <div key={index} className={`p-4 ${index < 2 ? "border-r border-black" : ""}`}>
                                         {tool ? (
                                             <div className="font-mono text-xs">
                                                 {getPricingDisplay(tool.pricing)}
@@ -433,14 +437,14 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                         </div>
 
                         {/* Pros Row */}
-                        <div className="grid grid-cols-3 border-b border-black">
-                            <div className="p-4 border-r border-black bg-neutral-50">
+                        <div className={`grid ${gridCols} border-b border-black`}>
+                            <div className={`p-4 ${labelBorder}`}>
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Pros</span>
                             </div>
-                            {[0, 1].map((index) => {
+                            {[0, 1, 2].map((index) => {
                                 const tool = selectedTools[index];
                                 return (
-                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                    <div key={index} className={`p-4 ${index < 2 ? "border-r border-black" : ""}`}>
                                         {tool ? (
                                             tool.pros.length > 0 ? (
                                                 <ul className="space-y-1.5">
@@ -463,14 +467,14 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                         </div>
 
                         {/* Cons Row */}
-                        <div className="grid grid-cols-3 border-b border-black">
-                            <div className="p-4 border-r border-black bg-neutral-50">
+                        <div className={`grid ${gridCols} border-b border-black`}>
+                            <div className={`p-4 ${labelBorder}`}>
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Cons</span>
                             </div>
-                            {[0, 1].map((index) => {
+                            {[0, 1, 2].map((index) => {
                                 const tool = selectedTools[index];
                                 return (
-                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                    <div key={index} className={`p-4 ${index < 2 ? "border-r border-black" : ""}`}>
                                         {tool ? (
                                             tool.cons.length > 0 ? (
                                                 <ul className="space-y-1.5">
@@ -493,14 +497,14 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                         </div>
 
                         {/* Integrations Row */}
-                        <div className="grid grid-cols-3 border-b border-black">
-                            <div className="p-4 border-r border-black bg-neutral-50">
+                        <div className={`grid ${gridCols} border-b border-black`}>
+                            <div className={`p-4 ${labelBorder}`}>
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Integrations</span>
                             </div>
-                            {[0, 1].map((index) => {
+                            {[0, 1, 2].map((index) => {
                                 const tool = selectedTools[index];
                                 return (
-                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                    <div key={index} className={`p-4 ${index < 2 ? "border-r border-black" : ""}`}>
                                         {tool ? (
                                             tool.integrations.length > 0 ? (
                                                 <div className="space-y-2">
@@ -533,14 +537,14 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                         </div>
 
                         {/* Competitors Row */}
-                        <div className="grid grid-cols-3">
-                            <div className="p-4 border-r border-black bg-neutral-50">
+                        <div className={`grid ${gridCols}`}>
+                            <div className={`p-4 ${labelBorder}`}>
                                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Competitors</span>
                             </div>
-                            {[0, 1].map((index) => {
+                            {[0, 1, 2].map((index) => {
                                 const tool = selectedTools[index];
                                 return (
-                                    <div key={index} className={`p-4 ${index === 0 ? "border-r border-black" : ""}`}>
+                                    <div key={index} className={`p-4 ${index < 2 ? "border-r border-black" : ""}`}>
                                         {tool ? (
                                             tool.competitors.length > 0 ? (
                                                 <div className="flex flex-wrap gap-1.5">

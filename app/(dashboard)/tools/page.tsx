@@ -2,8 +2,8 @@ import Link from "next/link";
 import { PlusCircle } from "lucide-react";
 import { BulkResearchButton } from "@/components/research/bulk-research-modal";
 import { db } from "@/lib/db";
-import { tools, workspaceMembers, softwareSpend, subscriptions } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { tools, reports, workspaceMembers, softwareSpend, subscriptions } from "@/lib/db/schema";
+import { eq, desc, inArray } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { ToolsView } from "@/components/tools/tools-view";
@@ -65,6 +65,34 @@ export default async function ToolsPage() {
 
     const stats = { totalTools: toolsList.length, avgScore, researchedThisMonth, monthlySpend };
 
+    // Score delta map: compare current score to second-latest report
+    const scoreDeltaMap: Record<string, number> = {};
+    const toolIdsWithScores = toolsList.filter(t => t.overallScore !== null).map(t => t.id);
+    if (toolIdsWithScores.length > 0) {
+        const allReportsList = await db
+            .select({ toolId: reports.toolId, scorecardSnapshot: reports.scorecardSnapshot })
+            .from(reports)
+            .where(inArray(reports.toolId, toolIdsWithScores))
+            .orderBy(desc(reports.createdAt));
+        const reportsByTool = new Map<string, typeof allReportsList>();
+        for (const r of allReportsList) {
+            if (!reportsByTool.has(r.toolId)) reportsByTool.set(r.toolId, []);
+            reportsByTool.get(r.toolId)!.push(r);
+        }
+        for (const tool of toolsList) {
+            if (!tool.overallScore) continue;
+            const toolReports = reportsByTool.get(tool.id) ?? [];
+            if (toolReports.length < 2) continue;
+            const prevSnapshot = toolReports[1].scorecardSnapshot as Record<string, { score: number }> | null;
+            if (!prevSnapshot) continue;
+            const prevScores = Object.values(prevSnapshot).filter(v => typeof (v as { score?: number })?.score === "number").map(v => (v as { score: number }).score);
+            if (prevScores.length === 0) continue;
+            const prevAvg = prevScores.reduce((a, b) => a + b, 0) / prevScores.length;
+            const delta = parseFloat((Number(tool.overallScore) - prevAvg).toFixed(1));
+            if (Math.abs(delta) >= 0.05) scoreDeltaMap[tool.id] = delta;
+        }
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -74,6 +102,15 @@ export default async function ToolsPage() {
                 </div>
                 <div className="flex items-center gap-2">
                     <BulkResearchButton />
+                    {toolsList.length > 0 && (
+                        <a
+                            href="/api/export/tools"
+                            download="trackr-stack.csv"
+                            className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-sm bg-white hover:bg-neutral-100 whitespace-nowrap"
+                        >
+                            Export CSV
+                        </a>
+                    )}
                     <Link href="/submit" className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-sm bg-black text-white hover:bg-neutral-800 whitespace-nowrap">
                         <PlusCircle className="h-4 w-4" />
                         Add Tool
@@ -81,7 +118,7 @@ export default async function ToolsPage() {
                 </div>
             </div>
 
-            <ToolsView tools={toolsList} stats={stats} isEmpty={toolsList.length === 0} canSchedule={canSchedule} />
+            <ToolsView tools={toolsList} stats={stats} isEmpty={toolsList.length === 0} canSchedule={canSchedule} scoreDeltaMap={scoreDeltaMap} />
         </div>
     );
 }

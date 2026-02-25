@@ -7,13 +7,14 @@ export const metadata: Metadata = {
     title: "Analytics — Trackr",
     description: "Workspace usage analytics and research activity.",
 };
-import { tools, reports, researchJobs, workspaceMembers, painPoints } from "@/lib/db/schema";
+import { tools, reports, researchJobs, workspaceMembers, painPoints, softwareSpend } from "@/lib/db/schema";
 import { eq, sql, desc, gte, inArray, and } from "drizzle-orm";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getWorkspaceId } from "@/lib/db/queries";
 import AnalyticsClient from "./client";
 import { checkFeatureAccess } from "@/lib/middleware/require-subscription";
+import { computeStackInsights } from "@/lib/utils/stack-insights";
 
 export default async function AnalyticsPage() {
     const user = await currentUser();
@@ -148,6 +149,66 @@ export default async function AnalyticsPage() {
         .where(and(eq(painPoints.workspaceId, workspaceId), eq(painPoints.active, true)));
     const painPointCount = Number(activePainPoints[0]?.count ?? 0);
 
+    // ── Latest report per tool (for heatmap) ────────────────────────
+    const DIMENSIONS = ["features", "pricing_value", "ease_of_use", "integration_depth", "support_quality", "security", "ai_capabilities"] as const;
+    let heatmapData: { toolName: string; scores: Record<string, number> }[] = [];
+    if (toolIds.length > 0) {
+        const allReportSnapshots = await db
+            .select({ toolId: reports.toolId, scorecardSnapshot: reports.scorecardSnapshot })
+            .from(reports)
+            .where(inArray(reports.toolId, toolIds))
+            .orderBy(desc(reports.createdAt));
+        // Group by toolId, take first (latest) due to desc ordering
+        const latestReportMap = new Map<string, typeof allReportSnapshots[0]>();
+        for (const r of allReportSnapshots) {
+            if (!latestReportMap.has(r.toolId)) latestReportMap.set(r.toolId, r);
+        }
+        heatmapData = allTools
+            .filter(t => t.status === "active" && latestReportMap.has(t.id))
+            .slice(0, 15)
+            .map(t => {
+                const rpt = latestReportMap.get(t.id);
+                const snapshot = rpt?.scorecardSnapshot as Record<string, { score: number }> | null;
+                const scores: Record<string, number> = {};
+                if (snapshot) {
+                    for (const dim of DIMENSIONS) {
+                        if (snapshot[dim]) scores[dim] = snapshot[dim].score;
+                    }
+                }
+                return { toolName: t.name, scores };
+            });
+    }
+
+    // ── Spend analytics ─────────────────────────────────────────────
+    const spendEntries = await db.query.softwareSpend.findMany({
+        where: eq(softwareSpend.workspaceId, workspaceId),
+    });
+    const spendInsights = computeStackInsights(spendEntries);
+    const catMap = new Map<string, number>();
+    for (const e of spendEntries) {
+        if (e.status === "active") {
+            const cat = e.category ?? "Other";
+            catMap.set(cat, (catMap.get(cat) ?? 0) + (parseFloat(e.monthlyCost ?? "0") || 0));
+        }
+    }
+    const spendByCategory: { category: string; total: number }[] = [];
+    catMap.forEach((total, category) => spendByCategory.push({ category, total }));
+    spendByCategory.sort((a, b) => b.total - a.total);
+
+    // ── Research success rate ────────────────────────────────────────
+    let researchSuccessRate = 0;
+    if (toolIds.length > 0) {
+        const [successData, totalData] = await Promise.all([
+            db.select({ count: sql<string>`count(*)` }).from(researchJobs)
+                .where(and(inArray(researchJobs.toolId, toolIds), eq(researchJobs.status, "complete"))),
+            db.select({ count: sql<string>`count(*)` }).from(researchJobs)
+                .where(inArray(researchJobs.toolId, toolIds)),
+        ]);
+        const total = Number(totalData[0]?.count ?? 0);
+        const success = Number(successData[0]?.count ?? 0);
+        researchSuccessRate = total > 0 ? Math.round((success / total) * 100) : 0;
+    }
+
     // ── Compute stats ───────────────────────────────────────────────
     const scoredTools = allTools
         .filter((t) => t.overallScore !== null)
@@ -186,6 +247,16 @@ export default async function AnalyticsPage() {
             topResearched={topResearched}
             statusCounts={statusCounts}
             memberActivity={memberActivity}
+            heatmapData={heatmapData}
+            spendByCategory={spendByCategory}
+            totalMonthlySpend={spendInsights.totalActiveSpend}
+            aiNativeSpend={spendInsights.enrichedTools
+                .filter(t => t.classification === "ai-native")
+                .reduce((s, t) => s + t.monthlyCost, 0)}
+            traditionalSpend={spendInsights.enrichedTools
+                .filter(t => t.classification === "traditional")
+                .reduce((s, t) => s + t.monthlyCost, 0)}
+            researchSuccessRate={researchSuccessRate}
         />
     );
 }

@@ -76,7 +76,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
     // Read pre-selected tool IDs from searchParams
     const params = await searchParams;
     const preSelectedIds = params.tools
-        ? params.tools.split(",").filter(Boolean).slice(0, 2)
+        ? params.tools.split(",").filter(Boolean).slice(0, 3)
         : [];
 
     return <CompareClient tools={toolsWithReports} preSelectedIds={preSelectedIds} />;

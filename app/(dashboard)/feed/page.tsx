@@ -12,6 +12,7 @@ import { db } from "@/lib/db";
 import { feedChannels, feedItems, toolSuggestions, workspaceMembers } from "@/lib/db/schema";
 import { eq, and, desc, ne } from "drizzle-orm";
 import { FeedClient } from "./client";
+import { seedDefaultChannels } from "@/lib/actions/feed";
 
 export default async function FeedPage() {
     const user = await currentUser();
@@ -24,11 +25,24 @@ export default async function FeedPage() {
 
     const wsId = member.workspaceId;
 
-    const [channels, items, suggestions] = await Promise.all([
-        db.query.feedChannels.findMany({
-            where: eq(feedChannels.workspaceId, wsId),
-            orderBy: [desc(feedChannels.createdAt)],
-        }),
+    // Seed default channels if workspace has none
+    let channels = await db.query.feedChannels.findMany({
+        where: eq(feedChannels.workspaceId, wsId),
+        orderBy: [desc(feedChannels.createdAt)],
+    });
+    if (channels.length === 0) {
+        try {
+            await seedDefaultChannels(wsId);
+            channels = await db.query.feedChannels.findMany({
+                where: eq(feedChannels.workspaceId, wsId),
+                orderBy: [desc(feedChannels.createdAt)],
+            });
+        } catch {
+            // Seed failed gracefully — continue without default channels
+        }
+    }
+
+    const [items, suggestions] = await Promise.all([
         db.query.feedItems.findMany({
             where: eq(feedItems.workspaceId, wsId),
             orderBy: [desc(feedItems.createdAt)],

@@ -16,6 +16,37 @@ type PainPoint = {
     createdAt: Date;
 };
 
+type WorkspaceTool = {
+    id: string;
+    name: string;
+    overallScore: string | null;
+    category: string[] | null;
+    status: string;
+};
+
+const CATEGORY_KEYWORDS: Record<string, string[]> = {
+    Sales: ["crm", "sales", "outbound", "email", "lead", "pipeline", "revenue"],
+    Engineering: ["dev", "code", "api", "testing", "engineering", "development", "github", "deployment"],
+    Marketing: ["content", "seo", "social", "marketing", "ads", "email", "analytics", "campaign"],
+    Operations: ["ops", "automation", "workflow", "process", "operations", "productivity", "hr", "finance"],
+    Support: ["support", "customer", "helpdesk", "ticket", "chat", "service"],
+    Product: ["product", "roadmap", "design", "ux", "feedback", "analytics"],
+    Finance: ["finance", "accounting", "payment", "billing", "expense"],
+};
+
+function getMatchedTools(painPointCategory: string | null, workspaceTools: WorkspaceTool[]): WorkspaceTool[] {
+    if (!painPointCategory) return [];
+    const catLower = painPointCategory.toLowerCase();
+    const keywords = Object.entries(CATEGORY_KEYWORDS).find(([cat]) =>
+        cat.toLowerCase() === catLower
+    )?.[1] ?? [catLower];
+
+    return workspaceTools.filter(tool => {
+        const toolCategories = (tool.category ?? []).map(c => c.toLowerCase());
+        return keywords.some(kw => toolCategories.some(tc => tc.includes(kw)));
+    }).slice(0, 5);
+}
+
 type ParsedPainPoint = { title: string; category: string; description: string };
 
 const PAIN_POINTS_PROMPT = `I'm using Trackr to document our team's operational pain points. These will be used by AI research agents to proactively discover and recommend tools that solve our real problems.
@@ -54,7 +85,7 @@ Respond ONLY with this JSON array (no intro text, no explanation — just valid 
   }
 ]`;
 
-export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint[] }) {
+export function PainPointsClient({ initialData = [], workspaceTools = [] }: { initialData?: PainPoint[]; workspaceTools?: WorkspaceTool[] }) {
     const [isPending, startTransition] = useTransition();
     const [showForm, setShowForm] = useState(false);
     const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -519,6 +550,25 @@ export function PainPointsClient({ initialData = [] }: { initialData?: PainPoint
                                         <span className="font-mono text-[10px] text-neutral-400">
                                             Added {formatDistanceToNow(new Date(point.createdAt), { addSuffix: true })}
                                         </span>
+                                        {/* Matching tools in stack */}
+                                        {(() => {
+                                            const matched = getMatchedTools(point.category, workspaceTools);
+                                            if (matched.length === 0) return null;
+                                            return (
+                                                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                                    <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest">In your stack:</span>
+                                                    {matched.map(t => (
+                                                        <a
+                                                            key={t.id}
+                                                            href={`/tools/${t.id}`}
+                                                            className="font-mono text-[10px] border border-black px-1.5 py-0.5 hover:bg-black hover:text-white transition-colors"
+                                                        >
+                                                            {t.name}{t.overallScore ? ` ${Number(t.overallScore).toFixed(1)}` : ""}
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()}
                                     </div>
 
                                     <div className="shrink-0 flex items-center gap-1">

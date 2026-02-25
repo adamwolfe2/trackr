@@ -26,6 +26,16 @@ interface MemberActivity {
     toolCount: number;
 }
 
+interface SpendCategory {
+    category: string;
+    total: number;
+}
+
+interface HeatmapEntry {
+    toolName: string;
+    scores: Record<string, number>;
+}
+
 interface AnalyticsClientProps {
     totalTools: number;
     totalReports: number;
@@ -35,7 +45,23 @@ interface AnalyticsClientProps {
     topResearched: TopResearched[];
     statusCounts: StatusCounts;
     memberActivity: MemberActivity[];
+    heatmapData: HeatmapEntry[];
+    spendByCategory: SpendCategory[];
+    totalMonthlySpend: number;
+    aiNativeSpend: number;
+    traditionalSpend: number;
+    researchSuccessRate: number;
 }
+
+const DIMENSIONS = [
+    { key: "features", label: "Features" },
+    { key: "pricing_value", label: "Pricing" },
+    { key: "ease_of_use", label: "Ease of Use" },
+    { key: "integration_depth", label: "Integrations" },
+    { key: "support_quality", label: "Support" },
+    { key: "security", label: "Security" },
+    { key: "ai_capabilities", label: "AI" },
+] as const;
 
 function formatWeekLabel(weekStr: string): string {
     try {
@@ -44,6 +70,18 @@ function formatWeekLabel(weekStr: string): string {
     } catch {
         return weekStr;
     }
+}
+
+function scoreCellClass(score: number | undefined): string {
+    if (score === undefined) return "bg-neutral-50 text-neutral-300";
+    if (score < 4) return "bg-red-50 text-red-700 border border-red-100";
+    if (score <= 6.5) return "bg-yellow-50 text-yellow-700 border border-yellow-100";
+    return "bg-green-50 text-green-700 border border-green-100";
+}
+
+function formatDollar(amount: number): string {
+    if (amount >= 1000) return `$${Math.round(amount / 100) * 100 >= 1000 ? (amount / 1000).toFixed(1) + "k" : Math.round(amount)}`;
+    return `$${Math.round(amount)}`;
 }
 
 export default function AnalyticsClient({
@@ -55,6 +93,12 @@ export default function AnalyticsClient({
     topResearched,
     statusCounts,
     memberActivity,
+    heatmapData,
+    spendByCategory,
+    totalMonthlySpend,
+    aiNativeSpend,
+    traditionalSpend,
+    researchSuccessRate,
 }: AnalyticsClientProps) {
     const maxWeeklyCount = Math.max(...weeklyActivity.map((w) => w.count), 1);
     const totalStatus =
@@ -72,8 +116,17 @@ export default function AnalyticsClient({
         { label: "Failed", count: statusCounts.failed, pct: totalStatus > 0 ? (statusCounts.failed / totalStatus) * 100 : 0 },
     ];
 
+    // Score distribution buckets: 0-2, 2-4, 4-6, 6-8, 8-10
+    // topResearched has avgScore — use those for a rough distribution
+    // Actually we use overall averages — but we don't have individual tool scores passed here
+    // We'll skip score distribution histogram since we don't have per-tool scores in this component
+    // (the heatmapData has individual dimension scores we can derive from)
+
     // Sort members by tool count descending
     const sortedMembers = [...memberActivity].sort((a, b) => b.toolCount - a.toolCount);
+
+    const maxSpend = Math.max(...spendByCategory.map(c => c.total), 1);
+    const hasSpend = totalMonthlySpend > 0;
 
     return (
         <div className="space-y-8">
@@ -85,17 +138,19 @@ export default function AnalyticsClient({
                 </p>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-black">
+            {/* Stats Grid — 6 stats */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-0 border border-black">
                 {[
                     { label: "Total Tools", value: String(totalTools) },
                     { label: "Total Reports", value: String(totalReports) },
                     { label: "Avg Score", value: avgScore > 0 ? avgScore.toFixed(1) : "\u2014" },
                     { label: "Active Pain Points", value: String(activePainPoints) },
-                ].map((stat, i) => (
+                    { label: "Research Success", value: totalReports > 0 ? `${researchSuccessRate}%` : "\u2014" },
+                    { label: "Monthly Spend", value: hasSpend ? `$${Math.round(totalMonthlySpend)}` : "\u2014" },
+                ].map((stat, i, arr) => (
                     <div
                         key={stat.label}
-                        className={`p-5 ${i % 2 === 0 ? "border-r border-black" : ""} ${i < 3 ? "md:border-r" : ""} ${i < 2 ? "border-b md:border-b-0 border-black" : ""}`}
+                        className={`p-5 ${i < arr.length - 1 ? "border-r border-black" : ""} ${i < 2 ? "border-b lg:border-b-0 border-black" : ""} ${i >= 2 && i < 4 ? "md:border-b lg:border-b-0 border-black" : ""}`}
                     >
                         <div className="font-mono text-xs text-neutral-500 uppercase tracking-widest mb-1">
                             {stat.label}
@@ -212,6 +267,108 @@ export default function AnalyticsClient({
                         </div>
                     )}
                 </div>
+            </div>
+
+            {/* Spend Analytics Section */}
+            {hasSpend && (
+                <div className="border border-black">
+                    <div className="px-6 py-4 border-b border-black">
+                        <h2 className="font-mono text-xs uppercase tracking-widest text-neutral-500">
+                            Spend Analytics
+                        </h2>
+                    </div>
+                    <div className="p-6 space-y-6">
+                        {/* 3 stat tiles */}
+                        <div className="grid grid-cols-3 gap-0 border border-black">
+                            {[
+                                { label: "Total Monthly", value: formatDollar(totalMonthlySpend) },
+                                { label: "AI-Native Spend", value: formatDollar(aiNativeSpend) },
+                                { label: "Traditional Spend", value: formatDollar(traditionalSpend) },
+                            ].map((tile, i) => (
+                                <div key={tile.label} className={`p-4 ${i < 2 ? "border-r border-black" : ""}`}>
+                                    <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">{tile.label}</div>
+                                    <div className="font-serif text-2xl">{tile.value}</div>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Category bars */}
+                        {spendByCategory.length > 0 && (
+                            <div className="space-y-2">
+                                <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Spend by Category</p>
+                                {spendByCategory.map(cat => (
+                                    <div key={cat.category} className="flex items-center gap-3">
+                                        <span className="font-mono text-xs w-28 truncate text-neutral-600" title={cat.category}>{cat.category}</span>
+                                        <div className="flex-1 h-4 bg-neutral-100 border border-neutral-200">
+                                            <div
+                                                className="h-full bg-black"
+                                                style={{ width: `${(cat.total / maxSpend) * 100}%` }}
+                                            />
+                                        </div>
+                                        <span className="font-mono text-xs text-neutral-500 w-16 text-right">{formatDollar(cat.total)}/mo</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {!hasSpend && (
+                <div className="border border-dashed border-black/20 p-4 font-mono text-xs text-neutral-400">
+                    Add software spend data to see spend analytics →{" "}
+                    <a href="/stack" className="underline hover:text-black">Go to Stack</a>
+                </div>
+            )}
+
+            {/* Score Matrix Heatmap */}
+            <div className="border border-black">
+                <div className="px-6 py-4 border-b border-black">
+                    <h2 className="font-mono text-xs uppercase tracking-widest text-neutral-500">
+                        Score Matrix — Dimension Breakdown
+                    </h2>
+                </div>
+                {heatmapData.length > 0 ? (
+                    <div className="overflow-x-auto">
+                        <table className="w-full min-w-[700px]">
+                            <thead>
+                                <tr className="border-b border-black/20">
+                                    <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-400 w-40">Tool</th>
+                                    {DIMENSIONS.map(d => (
+                                        <th key={d.key} className="text-center px-2 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-400">{d.label}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {heatmapData.map(row => (
+                                    <tr key={row.toolName} className="border-b border-black/10 last:border-b-0">
+                                        <td className="px-4 py-2">
+                                            <span
+                                                className="font-mono text-xs truncate block max-w-[150px]"
+                                                title={row.toolName}
+                                            >
+                                                {row.toolName.length > 16 ? row.toolName.slice(0, 16) + "…" : row.toolName}
+                                            </span>
+                                        </td>
+                                        {DIMENSIONS.map(d => {
+                                            const score = row.scores[d.key];
+                                            return (
+                                                <td key={d.key} className="px-2 py-2 text-center">
+                                                    <span className={`font-mono text-[11px] px-1.5 py-0.5 inline-block ${scoreCellClass(score)}`}>
+                                                        {score !== undefined ? score.toFixed(1) : "—"}
+                                                    </span>
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <div className="p-8 text-center">
+                        <p className="font-mono text-xs text-neutral-400">Research tools to see dimension scores</p>
+                    </div>
+                )}
             </div>
 
             {/* Top Researched Tools */}

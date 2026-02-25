@@ -112,6 +112,25 @@ export async function toggleFeedItemSaved(id: string) {
     revalidatePath("/feed");
 }
 
+// ── Default channel seeding ─────────────────────────────────────────────────
+
+export async function seedDefaultChannels(workspaceId: string) {
+    const defaults = [
+        { name: "AI Tools & Automation", type: "topic" as const, config: { keywords: ["AI tools", "SaaS automation", "AI productivity"] } },
+        { name: "Tech Industry News", type: "topic" as const, config: { keywords: ["artificial intelligence", "software tools", "developer productivity"] } },
+        { name: "AI Startups & Launches", type: "topic" as const, config: { keywords: ["AI startup launch", "Product Hunt AI", "new AI product 2026"] } },
+    ];
+    await db.insert(feedChannels).values(
+        defaults.map(d => ({
+            workspaceId,
+            name: d.name,
+            type: d.type,
+            config: d.config,
+        }))
+    );
+    revalidatePath("/feed");
+}
+
 export async function markAllRead(channelId?: string) {
     const workspaceId = await getWorkspaceId();
     if (channelId) {

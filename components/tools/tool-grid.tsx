@@ -46,7 +46,7 @@ const STATUS_DOT: Record<string, string> = {
     archived: "bg-neutral-200",
 };
 
-export function ToolGrid({ tools }: { tools: GridTool[] }) {
+export function ToolGrid({ tools, scoreDeltaMap = {} }: { tools: GridTool[]; scoreDeltaMap?: Record<string, number> }) {
     if (tools.length === 0) {
         return (
             <div className="border border-dashed border-neutral-300 py-20 text-center">
@@ -78,10 +78,17 @@ export function ToolGrid({ tools }: { tools: GridTool[] }) {
 
                     {/* Score badge — only if scored */}
                     {tool.overallScore && (
-                        <span className="flex items-center gap-0.5 font-mono text-[9px] text-neutral-500">
-                            <Star className="w-2 h-2 fill-neutral-400 text-neutral-400" />
-                            {Number(tool.overallScore).toFixed(1)}
-                        </span>
+                        <div className="flex items-center gap-1">
+                            <span className="flex items-center gap-0.5 font-mono text-[9px] text-neutral-500">
+                                <Star className="w-2 h-2 fill-neutral-400 text-neutral-400" />
+                                {Number(tool.overallScore).toFixed(1)}
+                            </span>
+                            {scoreDeltaMap[tool.id] !== undefined && (
+                                <span className={`font-mono text-[8px] ${scoreDeltaMap[tool.id] > 0 ? "text-black" : "text-neutral-400"}`}>
+                                    {scoreDeltaMap[tool.id] > 0 ? "↑" : "↓"}{Math.abs(scoreDeltaMap[tool.id]).toFixed(1)}
+                                </span>
+                            )}
+                        </div>
                     )}
                 </Link>
             ))}

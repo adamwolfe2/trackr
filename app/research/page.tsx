@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { tools, reports } from "@/lib/db/schema";
-import { eq, desc, and, isNotNull, arrayContains } from "drizzle-orm";
+import { tools, reports, communityVotes } from "@/lib/db/schema";
+import { eq, desc, and, isNotNull, arrayContains, sql } from "drizzle-orm";
 import Link from "next/link";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
@@ -41,6 +41,20 @@ export default async function ResearchLibraryPage({
     }
     const { category } = await searchParams;
     const activeCategory = category?.trim() || null;
+
+    // Fetch dynamic stats
+    const [totalPublicReportsData] = await db
+        .select({ count: sql<string>`count(*)` })
+        .from(reports)
+        .where(eq(reports.isPublic, true));
+    const totalPublicReports = Number(totalPublicReportsData?.count ?? 0);
+
+    // Trending community votes (top 6 by net votes)
+    const trendingVotes = await db.query.communityVotes.findMany({
+        orderBy: [desc(communityVotes.upVotes)],
+        limit: 6,
+    });
+    const trendingVoteSlugs = trendingVotes.filter(v => v.upVotes > 0).map(v => v.toolSlug);
 
     // Fetch publicly published user-generated tools + their latest public report
     const publicTools = await db
@@ -124,7 +138,7 @@ export default async function ResearchLibraryPage({
                                 { label: "Curated Tools", value: CURATED_TOOLS.length.toString() },
                                 { label: "Categories", value: PRIMARY_CATEGORIES.length.toString() },
                                 { label: "Templates", value: TEMPLATES.length.toString() },
-                                { label: "Dimensions", value: "7" },
+                                { label: "Reports Generated", value: totalPublicReports > 0 ? `${totalPublicReports}+` : `${CURATED_TOOLS.length}+` },
                             ].map((stat) => (
                                 <div key={stat.label} className="bg-white px-4 py-3 text-center">
                                     <div className="font-mono text-xl font-bold">{stat.value}</div>
@@ -142,6 +156,35 @@ export default async function ResearchLibraryPage({
                         hotToolSlugs={HOT_TOOL_SLUGS}
                     />
                 </section>
+
+                {/* ── Trending in the Community ── */}
+                {trendingVoteSlugs.length > 0 && (
+                    <section className="py-10 border-t border-black/10">
+                        <div className="mb-5">
+                            <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Community Picks</p>
+                            <h2 className="font-serif text-2xl font-normal">Trending in the Community</h2>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {trendingVoteSlugs.map(slug => {
+                                const tool = CURATED_TOOLS.find(t => t.slug === slug);
+                                if (!tool) return null;
+                                const votes = trendingVotes.find(v => v.toolSlug === slug);
+                                return (
+                                    <Link
+                                        key={slug}
+                                        href={`/research/${slug}`}
+                                        className="flex items-center gap-2 border border-black px-3 py-2 bg-white hover:bg-[#F3F3EF] transition-colors"
+                                    >
+                                        <span className="font-serif text-sm">{tool.name}</span>
+                                        {votes && votes.upVotes > 0 && (
+                                            <span className="font-mono text-[10px] text-neutral-400">↑{votes.upVotes}</span>
+                                        )}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </section>
+                )}
 
                 {/* ── Community Reports ── */}
                 {publicTools.length > 0 && (
