@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -5,6 +6,11 @@ import { pendingInvitations, workspaceMembers, subscriptions } from "@/lib/db/sc
 import { eq, and, count } from "drizzle-orm";
 import Link from "next/link";
 import { getPlanLimits } from "@/lib/config/subscriptions";
+
+export const metadata: Metadata = {
+    title: "Accept Invitation — Trackr",
+    robots: { index: false, follow: false },
+};
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowLeft, ArrowRight, CheckCircle, Clock } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
-import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
+
+// Fully static — template content comes from seed data, no DB calls
+export const revalidate = false;
 import { TEMPLATES } from "@/data/templates.seed";
 import { CURATED_TOOLS } from "@/data/tools.seed";
 
@@ -37,7 +40,6 @@ export default async function TemplatePage({
     params: Promise<{ slug: string }>;
 }) {
     const { slug } = await params;
-    const user = await currentUser();
     const template = TEMPLATES.find((t) => t.slug === slug);
     if (!template) notFound();
 
@@ -69,7 +71,7 @@ export default async function TemplatePage({
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
-                <MarketingNavigation isLoggedIn={!!user} />
+                <MarketingNavigation />
 
                 <section className="py-16 border-t border-black/10">
                     <Link
@@ -146,10 +148,11 @@ export default async function TemplatePage({
                                                 href={`/research/${tool.slug}`}
                                                 className="flex items-center gap-3 group hover:bg-neutral-50 -mx-2 px-2 py-1.5 transition-colors"
                                             >
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img
+                                                <Image
                                                     src={`https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
                                                     alt={tool.name}
+                                                    width={24}
+                                                    height={24}
                                                     className="w-6 h-6 object-contain flex-shrink-0"
                                                 />
                                                 <div className="min-w-0 flex-1">

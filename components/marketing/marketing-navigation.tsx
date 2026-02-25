@@ -4,8 +4,12 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { TrackrLogo } from "@/components/common/trackr-logo";
+import { useAuth } from "@clerk/nextjs";
 
-export function MarketingNavigation({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
+export function MarketingNavigation({ isLoggedIn: isLoggedInProp }: { isLoggedIn?: boolean }) {
+    const { isSignedIn, isLoaded } = useAuth();
+    // Prefer the client-side Clerk auth state once loaded; fall back to server-side prop on first render
+    const isLoggedIn = isLoaded ? !!isSignedIn : (isLoggedInProp ?? false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [scrolled, setScrolled] = useState(false);
 

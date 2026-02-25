@@ -64,7 +64,7 @@ function ToolLogo({ name, logoUrl, websiteUrl }: { name: string; logoUrl?: strin
     if (!src) {
         return <span className="text-sm font-bold text-neutral-400 font-mono w-6 h-6 flex items-center justify-center">{name.charAt(0)}</span>;
     }
-    return <img src={src} alt={name} className="w-6 h-6 object-contain flex-shrink-0" onError={() => setHasError(true)} />;
+    return <img src={src} alt={name} className="w-6 h-6 object-contain flex-shrink-0" width={24} height={24} onError={() => setHasError(true)} />;
 }
 
 function CardContent({ tool }: { tool: KanbanTool }) {

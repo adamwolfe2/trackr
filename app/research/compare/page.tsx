@@ -5,10 +5,10 @@ import Link from "next/link";
 import { ArrowLeft, ExternalLink, Star } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
-import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 
-export const dynamic = "force-dynamic";
+// Revalidate every 60s — public tool reports update infrequently
+export const revalidate = 60;
 
 type ScorecardEntry = { score: number; justification: string };
 type PricingTier = { tier: string; price: string };
@@ -80,7 +80,6 @@ export default async function PublicComparePage({
 }: {
     searchParams: Promise<{ tools?: string }>;
 }) {
-    const user = await currentUser();
     const { tools: toolsParam } = await searchParams;
     const slugs = (toolsParam ?? "").split(",").map(s => s.trim()).filter(s => /^[a-z0-9-]+$/.test(s)).slice(0, 2);
 
@@ -112,7 +111,7 @@ export default async function PublicComparePage({
                 />
             )}
             <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
-                <MarketingNavigation isLoggedIn={!!user} />
+                <MarketingNavigation />
 
                 <section className="py-16 border-t border-black/10">
                     <Link
@@ -205,7 +204,7 @@ function ComparisonGrid({
                     <div className="flex items-center gap-2 mb-1">
                         {(left.tool.logoUrl || leftDomain) && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={left.tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${leftDomain}&sz=32`} alt={left.tool.name} className="w-5 h-5 object-contain" />
+                            <img src={left.tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${leftDomain}&sz=32`} alt={left.tool.name} className="w-5 h-5 object-contain" width={20} height={20} />
                         )}
                         <Link href={`/research/${left.tool.publicSlug}`} className="font-serif text-lg text-white hover:underline">{left.tool.name}</Link>
                     </div>
@@ -219,7 +218,7 @@ function ComparisonGrid({
                     <div className="flex items-center gap-2 mb-1">
                         {(right.tool.logoUrl || rightDomain) && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={right.tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${rightDomain}&sz=32`} alt={right.tool.name} className="w-5 h-5 object-contain" />
+                            <img src={right.tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${rightDomain}&sz=32`} alt={right.tool.name} className="w-5 h-5 object-contain" width={20} height={20} />
                         )}
                         <Link href={`/research/${right.tool.publicSlug}`} className="font-serif text-lg text-white hover:underline">{right.tool.name}</Link>
                     </div>

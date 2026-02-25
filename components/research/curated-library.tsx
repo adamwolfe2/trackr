@@ -191,6 +191,8 @@ export function CuratedLibrary({ tools, templates, primaryCategories, hotToolSlu
                                         src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
                                         alt={tool.name}
                                         className="w-5 h-5 object-contain flex-shrink-0"
+                                        width={20}
+                                        height={20}
                                         onError={(e) => {
                                             const img = e.target as HTMLImageElement;
                                             if (!img.src.includes("google.com")) {
@@ -456,6 +458,8 @@ function ToolCard({ tool, votes }: { tool: CuratedTool; votes?: { up: number; do
                             src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
                             alt={tool.name}
                             className="w-5 h-5 object-contain flex-shrink-0"
+                            width={20}
+                            height={20}
                             onError={(e) => {
                                 const img = e.target as HTMLImageElement;
                                 if (!img.src.includes("google.com")) {

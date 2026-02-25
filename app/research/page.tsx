@@ -4,7 +4,6 @@ import { eq, desc, and, isNotNull, arrayContains, sql } from "drizzle-orm";
 import Link from "next/link";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
-import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
 import { Star } from "lucide-react";
 import { CURATED_TOOLS, PRIMARY_CATEGORIES, HOT_TOOL_SLUGS } from "@/data/tools.seed";
@@ -24,7 +23,8 @@ export const metadata: Metadata = {
     },
 };
 
-export const dynamic = "force-dynamic";
+// Revalidate every 60s — community votes + public tools update infrequently
+export const revalidate = 60;
 
 type ScorecardEntry = { score: number; justification: string };
 
@@ -33,12 +33,6 @@ export default async function ResearchLibraryPage({
 }: {
     searchParams: Promise<{ category?: string }>;
 }) {
-    let user = null;
-    try {
-        user = await currentUser();
-    } catch {
-        // Render page without auth context (logged-out view)
-    }
     const { category } = await searchParams;
     const activeCategory = category?.trim() || null;
 
@@ -120,7 +114,7 @@ export default async function ResearchLibraryPage({
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
-                <MarketingNavigation isLoggedIn={!!user} />
+                <MarketingNavigation />
 
                 {/* ── Hero ── */}
                 <section className="py-16 border-t border-black/10">

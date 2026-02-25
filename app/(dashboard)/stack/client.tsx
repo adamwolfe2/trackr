@@ -773,6 +773,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                         <td className="px-4 py-3">
                                             <select
                                                 defaultValue={entry.status}
+                                                disabled={isPending}
                                                 onChange={(e) => {
                                                     const newStatus = e.target.value;
                                                     startTransition(async () => {
@@ -785,7 +786,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                         }
                                                     });
                                                 }}
-                                                className="border border-black px-2 py-1 font-mono text-xs bg-white focus:outline-none"
+                                                className={`border border-black px-2 py-1 font-mono text-xs bg-white focus:outline-none transition-opacity ${isPending ? "opacity-50 cursor-wait" : ""}`}
                                             >
                                                 {STATUS_OPTIONS.map(s => (
                                                     <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>

@@ -6,8 +6,10 @@ import Link from "next/link";
 import { ExternalLink, ArrowLeft, Star } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
-import { currentUser } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
+
+// Cache public tool pages for 5 minutes — fresh enough for community votes
+export const revalidate = 300;
 import { CURATED_TOOLS } from "@/data/tools.seed";
 import { SCORECARD_DIMENSION_LABELS } from "@/lib/types";
 import type { CuratedTool } from "@/lib/types";
@@ -90,12 +92,11 @@ export default async function PublicResearchPage({
     params: Promise<{ slug: string }>;
 }) {
     const { slug } = await params;
-    const user = await currentUser();
 
     // ── CURATED TOOL ────────────────────────────────────────────────────
     const curated = CURATED_TOOLS.find((t) => t.slug === slug);
     if (curated) {
-        return <CuratedToolPage tool={curated} isLoggedIn={!!user} />;
+        return <CuratedToolPage tool={curated} />;
     }
 
     // ── DB TOOL ─────────────────────────────────────────────────────────
@@ -214,7 +215,7 @@ export default async function PublicResearchPage({
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
-                <MarketingNavigation isLoggedIn={!!user} />
+                <MarketingNavigation />
 
                 <section className="py-16 border-t border-black/10">
                     <Link
@@ -490,7 +491,7 @@ export default async function PublicResearchPage({
 }
 
 // ── CURATED TOOL DETAIL PAGE ──────────────────────────────────────────────
-function CuratedToolPage({ tool, isLoggedIn }: { tool: CuratedTool; isLoggedIn: boolean }) {
+function CuratedToolPage({ tool }: { tool: CuratedTool }) {
     const jsonLd = {
         "@context": "https://schema.org",
         "@graph": [
@@ -542,7 +543,7 @@ function CuratedToolPage({ tool, isLoggedIn }: { tool: CuratedTool; isLoggedIn: 
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
-                <MarketingNavigation isLoggedIn={isLoggedIn} />
+                <MarketingNavigation />
 
                 <section className="py-16 border-t border-black/10">
                     <Link

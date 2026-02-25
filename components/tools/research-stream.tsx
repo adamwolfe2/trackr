@@ -48,7 +48,7 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
                 const res = await fetch(`/api/tools/${toolId}/logs`);
                 if (!res.ok) {
                     consecutiveFailsRef.current += 1;
-                    if (consecutiveFailsRef.current >= 4) setNetworkError(true);
+                    if (consecutiveFailsRef.current >= 2) setNetworkError(true);
                     return;
                 }
                 consecutiveFailsRef.current = 0;
@@ -80,7 +80,7 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
                 }
             } catch {
                 consecutiveFailsRef.current += 1;
-                if (consecutiveFailsRef.current >= 4) setNetworkError(true);
+                if (consecutiveFailsRef.current >= 2) setNetworkError(true);
             }
         };
 
