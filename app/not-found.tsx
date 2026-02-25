@@ -21,10 +21,10 @@ export default function NotFound() {
                         Back to Home
                     </Link>
                     <Link
-                        href="/tools"
+                        href="/research"
                         className="bg-white text-black px-6 py-3 font-mono text-sm uppercase tracking-wide hover:bg-neutral-100 transition-colors border border-black"
                     >
-                        View Tool Database
+                        Browse Tool Library
                     </Link>
                 </div>
             </div>
