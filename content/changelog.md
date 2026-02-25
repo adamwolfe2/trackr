@@ -6,6 +6,20 @@ All notable changes to Trackr are documented here.
 
 ## February 2026
 
+### 2026-02-25 — Integration Marketing Pages & Blog Expansion
+
+**New Pages**
+- **/chrome** — Chrome extension marketing page with feature breakdown, one-click research walkthrough, use cases, privacy policy note, and CTA. Linked from footer.
+- **/slack** — Slack integration marketing page with slash command docs, renewal alert specs, 3-step setup guide, and pricing note. Linked from footer.
+- **/partners** — Integrations hub page listing live integrations (Slack, Chrome) and in-development integrations (Notion), plus partner program types. Linked from footer as "Integrations."
+- **74 blog posts** — Expanded to 74 posts adding: AI analytics tools, AI recruiting tools, AI customer support tools, AI SEO tools, AI content creation, CRM/sales comparisons (HubSpot vs Salesforce vs Pipedrive), support tool comparisons (Intercom vs Zendesk vs Freshdesk), design tool comparisons (Figma vs Sketch vs Adobe XD), and 12 operations/procurement how-to guides.
+
+**SEO**
+- Sitemap updated to include `/chrome`, `/slack`, `/partners`.
+- Footer expanded with Chrome Extension, Slack Integration, and Integrations links.
+
+---
+
 ### 2026-02-25 — GTM Content & SEO Infrastructure
 
 **New Pages**
