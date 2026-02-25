@@ -30,6 +30,8 @@ export function MarketingFooter() {
                         <Link href="/research" className="text-neutral-600 hover:text-black hover:underline">AI Tool Library</Link>
                         <Link href="/changelog" className="text-neutral-600 hover:text-black hover:underline">Changelog</Link>
                         <Link href="/audit" className="text-neutral-600 hover:text-black hover:underline">AI Audit</Link>
+                        <Link href="/chrome" className="text-neutral-600 hover:text-black hover:underline">Chrome Extension</Link>
+                        <Link href="/slack" className="text-neutral-600 hover:text-black hover:underline">Slack Integration</Link>
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -37,6 +39,7 @@ export function MarketingFooter() {
                         <Link href="/about" className="text-neutral-600 hover:text-black hover:underline">About</Link>
                         <Link href="/blog" className="text-neutral-600 hover:text-black hover:underline">Blog</Link>
                         <Link href="/contact" className="text-neutral-600 hover:text-black hover:underline">Contact</Link>
+                        <Link href="/partners" className="text-neutral-600 hover:text-black hover:underline">Integrations</Link>
                     </div>
 
                     <div className="flex flex-col gap-4">
