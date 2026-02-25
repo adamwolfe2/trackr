@@ -1,9 +1,10 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { pendingInvitations, workspaceMembers } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { pendingInvitations, workspaceMembers, subscriptions } from "@/lib/db/schema";
+import { eq, and, count } from "drizzle-orm";
 import Link from "next/link";
+import { getPlanLimits } from "@/lib/config/subscriptions";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -92,6 +93,35 @@ export default async function InviteAcceptPage({
     });
 
     if (!existing) {
+        // Enforce member count limit before accepting
+        const [subscription, [{ value: currentMemberCount }]] = await Promise.all([
+            db.query.subscriptions.findFirst({
+                where: eq(subscriptions.workspaceId, invitation.workspaceId),
+                columns: { planId: true, status: true },
+            }),
+            db.select({ value: count() })
+                .from(workspaceMembers)
+                .where(eq(workspaceMembers.workspaceId, invitation.workspaceId)),
+        ]);
+
+        const plan = getPlanLimits(subscription ?? undefined);
+        if (plan.limits.members !== Infinity && currentMemberCount >= plan.limits.members) {
+            return (
+                <InvitePage>
+                    <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-2">Invitation</p>
+                    <h1 className="font-serif text-2xl font-normal mb-4">Workspace is full</h1>
+                    <p className="font-mono text-sm text-neutral-600 mb-6">
+                        <strong>{invitation.workspace?.name ?? "This workspace"}</strong> has reached its member limit
+                        ({plan.limits.members} seat{plan.limits.members !== 1 ? "s" : ""} on the {plan.name} plan).
+                        Ask your team admin to upgrade before accepting this invite.
+                    </p>
+                    <Link href="/" className="font-mono text-xs uppercase tracking-widest hover:underline">
+                        Go to Trackr →
+                    </Link>
+                </InvitePage>
+            );
+        }
+
         await db
             .insert(workspaceMembers)
             .values({

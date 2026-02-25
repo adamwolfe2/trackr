@@ -91,6 +91,7 @@ const VALID_MESSAGES = [{ role: "user" as const, content: "What tools do we use 
 describe("POST /api/chat", () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        process.env.OPENAI_API_KEY = "sk-test-key";
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "usr_1" });
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
         (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);

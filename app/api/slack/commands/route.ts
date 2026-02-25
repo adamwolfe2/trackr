@@ -6,6 +6,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { after } from "next/server";
 import { performDeepResearch } from "@/lib/actions/research";
 import { getPlanLimits } from "@/lib/config/subscriptions";
+import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,18 @@ export async function POST(req: Request) {
     const command = params.get("command");
     const text = (params.get("text") || "").trim();
     const channelId = params.get("channel_id") || "";
+
+    // Rate limit: 10 commands per 5 minutes per Slack channel
+    // Slack signature is already verified above — this prevents abuse from legit-but-spammy users
+    if (channelId) {
+        const rl = await rateLimit(`slack-cmd:${channelId}`, { limit: 10, windowSeconds: 300 });
+        if (!rl.success) {
+            return NextResponse.json({
+                response_type: "ephemeral",
+                text: "Too many requests. Please wait a few minutes before running another command.",
+            }, { headers: getRateLimitHeaders(rl) });
+        }
+    }
 
     if (command === "/trackr") {
         const subcommand = text.split(" ")[0]?.toLowerCase();

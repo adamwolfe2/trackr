@@ -3,12 +3,19 @@ import { tools, researchJobs, workspaceMembers } from "@/lib/db/schema";
 import { and, eq, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
+import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const user = await currentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    // Rate limit: 60 req/min per user (polling endpoint — generous limit)
+    const rl = await rateLimit(`tool-logs:${user.id}`, { limit: 60, windowSeconds: 60 });
+    if (!rl.success) {
+        return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: getRateLimitHeaders(rl) });
+    }
 
     const member = await db.query.workspaceMembers.findFirst({
         where: eq(workspaceMembers.userId, user.id),

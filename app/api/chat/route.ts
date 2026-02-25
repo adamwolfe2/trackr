@@ -28,6 +28,11 @@ const ChatSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+    if (!process.env.OPENAI_API_KEY) {
+        console.error("[api/chat] OPENAI_API_KEY is not configured");
+        return NextResponse.json({ error: "AI service is not configured" }, { status: 503 });
+    }
+
     let user;
     try {
         user = await currentUser();
