@@ -437,9 +437,9 @@ describe("scheduleDripSequence", () => {
         await expect(scheduleDripSequence("user@example.com", "Adam")).resolves.toBeUndefined();
     });
 
-    it("initiates 3 drip email sends (d1, d3, d7)", async () => {
+    it("initiates 4 drip email sends (d1, d3, d7, d14)", async () => {
         await scheduleDripSequence("user@example.com", "Adam");
-        expect(mockEmailsSend).toHaveBeenCalledTimes(3);
+        expect(mockEmailsSend).toHaveBeenCalledTimes(4);
     });
 
     it("includes first name in the d1 drip subject", async () => {

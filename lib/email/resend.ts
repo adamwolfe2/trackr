@@ -211,8 +211,9 @@ export async function scheduleDripSequence(to: string, firstName: string) {
     const d1 = new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString();
     const d3 = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
     const d7 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const d14 = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
-    const drips: Array<{ type: 'd1' | 'd3' | 'd7'; subject: string; scheduledAt: string; html: string }> = [
+    const drips: Array<{ type: 'd1' | 'd3' | 'd7' | 'd14'; subject: string; scheduledAt: string; html: string }> = [
         {
             type: 'd1',
             scheduledAt: d1,
@@ -276,6 +277,35 @@ export async function scheduleDripSequence(to: string, firstName: string) {
                     The Team plan is $50/month — less than the cost of one hour of manual research time at $100/hr blended rate.
                 </p>
                 ${emailButton(`${appUrl}/pricing`, "Upgrade to Team →")}
+            `),
+        },
+        {
+            type: 'd14',
+            scheduledAt: d14,
+            subject: `${firstName}, two weeks with Trackr — here's what you're missing`,
+            html: emailWrapper(`
+                <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Day 14 — Still on free?</p>
+                <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                    Two weeks in, ${name}.
+                </h1>
+                <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">
+                    If you've used Trackr this month, you know the core loop — submit a URL, get a scored report in under 2 minutes. Teams that stick with Trackr typically research 10-20 tools per quarter. That's $2,000–$5,000 in ops team time at a $100/hr blended rate.
+                </p>
+                <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 8px;">
+                    The free plan covers 3 reports/month. Here's what Team unlocks for $50/month:
+                </p>
+                <ul style="font-size: 13px; color: #333; line-height: 2; padding-left: 20px; margin: 0 0 24px;">
+                    <li><strong>25 research reports/month</strong> — enough for full quarterly evaluations</li>
+                    <li><strong>Auto-research scheduling</strong> — weekly, bi-weekly, or monthly re-research</li>
+                    <li><strong>Slack notifications</strong> — research results delivered where your team works</li>
+                    <li><strong>3-way comparison</strong> — evaluate finalists side-by-side</li>
+                    <li><strong>CSV export</strong> — your full stack in one download</li>
+                    <li><strong>5 workspace members</strong> — share research with your team</li>
+                </ul>
+                <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
+                    $50/month is less than 30 minutes of manual research time. Most teams save that in the first week.
+                </p>
+                ${emailButton(`${appUrl}/settings/billing`, "Upgrade to Team — $50/mo →")}
             `),
         },
     ];
