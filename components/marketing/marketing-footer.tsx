@@ -19,7 +19,7 @@ export function MarketingFooter() {
                 </div>
 
                 {/* Links */}
-                <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-8 font-mono text-sm">
+                <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-8 font-mono text-sm">
 
                     <div className="flex flex-col gap-4">
                         <span className="font-bold text-black uppercase tracking-wider">Product</span>
@@ -32,6 +32,18 @@ export function MarketingFooter() {
                         <Link href="/audit" className="text-neutral-600 hover:text-black hover:underline">AI Audit</Link>
                         <Link href="/chrome" className="text-neutral-600 hover:text-black hover:underline">Chrome Extension</Link>
                         <Link href="/slack" className="text-neutral-600 hover:text-black hover:underline">Slack Integration</Link>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <span className="font-bold text-black uppercase tracking-wider">For Teams</span>
+                        <Link href="/for/ops-teams" className="text-neutral-600 hover:text-black hover:underline">Ops Teams</Link>
+                        <Link href="/for/revops" className="text-neutral-600 hover:text-black hover:underline">RevOps</Link>
+                        <Link href="/for/founders" className="text-neutral-600 hover:text-black hover:underline">Founders</Link>
+                        <Link href="/for/engineering" className="text-neutral-600 hover:text-black hover:underline">Engineering</Link>
+                        <Link href="/for/chiefs-of-staff" className="text-neutral-600 hover:text-black hover:underline">Chiefs of Staff</Link>
+                        <Link href="/for/marketing-teams" className="text-neutral-600 hover:text-black hover:underline">Marketing</Link>
+                        <Link href="/for/finance-teams" className="text-neutral-600 hover:text-black hover:underline">Finance</Link>
+                        <Link href="/for/it-leaders" className="text-neutral-600 hover:text-black hover:underline">IT Leaders</Link>
                     </div>
 
                     <div className="flex flex-col gap-4">
