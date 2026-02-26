@@ -205,7 +205,12 @@ export default async function IcpPage({
 
                 {/* ── Other ICP pages ── */}
                 <section className="py-8 border-t border-black/10 mb-16">
-                    <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-5">Also built for</p>
+                    <div className="flex items-center justify-between mb-5">
+                        <p className="font-mono text-xs uppercase tracking-widest text-neutral-400">Also built for</p>
+                        <Link href="/for" className="font-mono text-xs text-neutral-500 hover:text-black hover:underline">
+                            See all teams →
+                        </Link>
+                    </div>
                     <div className="flex flex-wrap gap-2">
                         {ICP_PAGES.filter((p) => p.role !== role).map((p) => (
                             <Link
