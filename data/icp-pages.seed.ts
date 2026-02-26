@@ -355,6 +355,177 @@ export const ICP_PAGES: IcpPage[] = [
         testimonialQuote: "Every department brings me tool requests and every Q4 I'm drowning in renewals. Trackr is the first tool I've found that actually helps me be systematic about it — and give the CEO a real answer instead of 'I'll look into it.'",
         testimonialAttribution: "Chief of Staff, 100-person tech company",
     },
+    {
+        role: "marketing-teams",
+        title: "Trackr for Marketing Teams — Research AI Marketing Tools in 2 Minutes",
+        description: "Marketing teams use Trackr to evaluate AI writing, SEO, content, and analytics tools. Get scored reports in 2 minutes — not 2 weeks of vendor demos.",
+        headline: "Stop spending weeks evaluating marketing tools",
+        subheadline: "Research any AI marketing tool in 2 minutes. Compare content platforms, SEO tools, and analytics software side-by-side. Make the business case in an afternoon.",
+        painPoints: [
+            {
+                title: "The AI tool landscape changes every week",
+                description: "New AI writing tools, SEO platforms, and content generators launch constantly. By the time you've finished evaluating one, three more have launched. Staying current on the marketing AI landscape is a full-time job.",
+            },
+            {
+                title: "Making the business case takes longer than the evaluation",
+                description: "You've found the right tool but need a scored scorecard to get budget approval. Building that comparison doc from scratch — pricing, features, alternatives — takes two days of research time.",
+            },
+            {
+                title: "Renewals sneak up mid-campaign",
+                description: "Your current tool renews in 30 days. You're mid-campaign and don't have time to evaluate alternatives. You renew without negotiating because you're out of time.",
+            },
+        ],
+        features: [
+            {
+                title: "Research any marketing tool in 2 minutes",
+                description: "Submit any URL — Jasper, Surfer SEO, Canva, Semrush, Klaviyo — and get a scored 7-dimension report with current pricing, pros/cons, and competitive alternatives. No demo calls required.",
+            },
+            {
+                title: "Compare tools side-by-side",
+                description: "Run research on 3-5 finalists and compare them on consistent dimensions. Trackr's compare view puts pricing, feature scores, and AI sophistication ratings side-by-side — built for budget presentations.",
+            },
+            {
+                title: "Track your full marketing stack",
+                description: "Every tool your team uses — email, SEO, content, analytics, social — tracked in one place with monthly cost, renewal dates, and score. Identify overlap before budget season.",
+            },
+        ],
+        stat: {
+            value: "7 dims",
+            label: "Consistent scoring across every tool",
+        },
+        faqs: [
+            {
+                q: "Does Trackr cover AI marketing tools specifically?",
+                a: "Yes — Trackr's research engine and curated library cover AI writing tools, SEO platforms, email marketing software, social media tools, analytics platforms, and creative AI tools. Submit any tool URL for a custom research report.",
+            },
+            {
+                q: "Can I share Trackr reports with my CMO for budget approval?",
+                a: "Yes — Trackr reports export as PDFs and generate shareable URLs. The scored 7-dimension format makes internal presentations straightforward — you have a defensible, structured evaluation rather than a subjective recommendation.",
+            },
+            {
+                q: "How current is Trackr's pricing data?",
+                a: "Trackr's research agents scrape vendor sites at report generation time. Pricing data reflects what the vendor currently publishes — more current than review sites, which often show outdated pricing.",
+            },
+        ],
+        ctaText: "Research your marketing stack",
+        ctaSubtext: "Free to start. 3 research reports per month.",
+        testimonialQuote: "I used to spend 2-3 days building comparison docs for tool budget requests. Now I run a Trackr report on each finalist, export the comparison to PDF, and have everything I need for the business case in under an hour.",
+        testimonialAttribution: "VP Marketing, B2B SaaS company",
+    },
+    {
+        role: "finance-teams",
+        title: "Trackr for Finance Teams — SaaS Spend Visibility and Renewal Intelligence",
+        description: "Finance teams use Trackr to track SaaS spend, surface redundant tools, and build the data layer for annual software budget planning.",
+        headline: "SaaS spend visibility your finance team can trust",
+        subheadline: "Track every software subscription, surface overlap and waste, and build the data layer for defensible budget decisions — without chasing down spreadsheets from every department.",
+        painPoints: [
+            {
+                title: "No single source of truth for software spend",
+                description: "SaaS subscriptions live across credit cards, invoices, and departmental shadow IT. Finance has partial visibility at best. The actual software budget is discovered at year-end, not managed throughout the year.",
+            },
+            {
+                title: "Renewal decisions made without ROI data",
+                description: "A $150K annual renewal comes up for approval. The stakeholder says 'we use it constantly.' Finance has no way to verify utilization, compare alternatives, or assess whether the price is market-rate.",
+            },
+            {
+                title: "Budget season built on guesswork",
+                description: "Software budget planning requires data from every team about what they're using and what they want. Getting that data is a quarter-long project. Trackr is the system that makes it available year-round.",
+            },
+        ],
+        features: [
+            {
+                title: "Centralized stack and spend tracking",
+                description: "One place for every tool, its monthly cost, renewal date, and owner. Finance gets the aggregated view. Teams maintain their section. Annual software spend becomes a real number, not an estimate.",
+            },
+            {
+                title: "60-day renewal alerts",
+                description: "Renewal dates tracked automatically with 60-day alerts. Enough lead time to research alternatives, benchmark pricing, and negotiate before auto-renewal locks you in for another year.",
+            },
+            {
+                title: "Scored intelligence for renewal decisions",
+                description: "Run a research report on any tool in 2 minutes. Get current pricing, competitive alternatives, and a 7-dimension score. Give stakeholders real data instead of blank-check approvals.",
+            },
+        ],
+        stat: {
+            value: "30%",
+            label: "Typical SaaS spend identified as waste or overlap",
+        },
+        faqs: [
+            {
+                q: "Can Trackr integrate with our expense management tools?",
+                a: "Trackr supports CSV export for spend data. Full integration with expense management platforms is on the roadmap. Currently, teams typically maintain Trackr as their stack intelligence layer and reconcile with finance tooling quarterly.",
+            },
+            {
+                q: "How do we get department heads to add their tools?",
+                a: "Trackr workspaces support multiple members with different permissions. Many finance teams assign department admins who maintain their section of the stack. The research automation incentivizes participation — teams get scored reports in 2 minutes on tools they're evaluating.",
+            },
+            {
+                q: "Is Trackr useful for SaaS audit or negotiation prep?",
+                a: "Yes — Trackr's spend tracking, renewal calendar, and competitive intelligence are exactly the data layer needed for a SaaS audit or vendor negotiation. Current market pricing from Trackr reports gives finance a benchmark before renewal conversations.",
+            },
+        ],
+        ctaText: "Get SaaS spend visibility",
+        ctaSubtext: "Free to start. No credit card required.",
+        testimonialQuote: "I had no idea we were paying for three different AI writing tools until Trackr surfaced the overlap. That's $24K a year in redundant subscriptions we're now consolidating.",
+        testimonialAttribution: "VP Finance, 200-person SaaS company",
+    },
+    {
+        role: "it-leaders",
+        title: "Trackr for IT Leaders — AI Tool Governance and Security Evaluation",
+        description: "IT leaders use Trackr to evaluate security posture, compliance readiness, and integration depth of AI tools before employee adoption runs ahead of policy.",
+        headline: "AI tool governance before shadow IT becomes a problem",
+        subheadline: "Evaluate security posture, data handling, and integration compliance before AI tools reach employees. Build a scored, defensible evaluation process — not a spreadsheet.",
+        painPoints: [
+            {
+                title: "AI tool adoption is outpacing security review",
+                description: "Employees are using AI tools before IT has reviewed them. Data handling policies, SSO compatibility, and compliance posture are unknown. The risk is real and growing every quarter.",
+            },
+            {
+                title: "Security evaluations are time-consuming and inconsistent",
+                description: "Every AI tool evaluation requires the same security checklist: data retention, SOC 2 status, GDPR compliance, API access controls. Running this manually for every tool request takes hours and produces inconsistent outputs.",
+            },
+            {
+                title: "Business wants speed, IT wants control",
+                description: "Teams request tools fast. IT's review process slows things down. The result: shadow IT. Tools get adopted before review, and IT discovers them on the credit card statement.",
+            },
+        ],
+        features: [
+            {
+                title: "Security dimension in every report",
+                description: "Trackr's 7-dimension scorecard includes a dedicated security dimension — evaluating data handling, SOC 2 status, enterprise SSO support, and access control capabilities for any tool in under 2 minutes.",
+            },
+            {
+                title: "Consistent evaluation framework",
+                description: "Every tool evaluated against the same 7-dimension scorecard. The output is a defensible, comparable evaluation that IT can approve or reject based on consistent criteria — not a one-off judgment call.",
+            },
+            {
+                title: "Central registry of approved tools",
+                description: "Your Trackr stack becomes the approved tool registry. Teams see which tools are researched and scored. IT maintains a single source of truth for what's approved, what's under review, and what's retired.",
+            },
+        ],
+        stat: {
+            value: "2 min",
+            label: "Security-aware tool evaluation, any tool",
+        },
+        faqs: [
+            {
+                q: "Does Trackr include SOC 2 and compliance checks?",
+                a: "Trackr's security dimension evaluates publicly available compliance information — SOC 2 status, GDPR compliance, data residency options, and enterprise SSO support. For formal security review, Trackr provides the initial intelligence layer; dedicated security review tools handle deeper assessment.",
+            },
+            {
+                q: "Can we use Trackr to enforce a software approval process?",
+                a: "Yes — many IT teams use Trackr as the first step in a tool approval workflow. A requester submits the tool to Trackr, shares the report with IT, and IT evaluates the security score and integration depth before approving. The structured output speeds up the review without reducing rigor.",
+            },
+            {
+                q: "How does Trackr handle sensitive stack information?",
+                a: "Your workspace data is private by default. Tool reports are not shared externally unless you explicitly enable public sharing. Enterprise workspaces support role-based access controls for sensitive stack information.",
+            },
+        ],
+        ctaText: "Build your tool governance layer",
+        ctaSubtext: "Free to start. Enterprise plans available.",
+        testimonialQuote: "We were reactive on AI tool adoption — finding out about tools after employees had already put data into them. Trackr gave us a consistent evaluation framework and now we're ahead of the curve instead of chasing it.",
+        testimonialAttribution: "Director of IT, 300-person fintech company",
+    },
 ];
 
 export const ICP_ROLES = ICP_PAGES.map((p) => p.role);
