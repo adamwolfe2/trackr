@@ -167,8 +167,30 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                             );
                         })()}
 
+                        {/* Compare alternatives */}
+                        <div className="mt-12 pt-8 border-t border-black/10">
+                            <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-4">How Trackr compares</p>
+                            <div className="flex flex-wrap gap-2">
+                                {[
+                                    { label: "Trackr vs G2", href: "/vs/g2" },
+                                    { label: "Trackr vs Capterra", href: "/vs/capterra" },
+                                    { label: "Trackr vs ChatGPT", href: "/vs/chatgpt" },
+                                    { label: "Trackr vs Spreadsheets", href: "/vs/spreadsheets" },
+                                    { label: "See all comparisons", href: "/vs" },
+                                ].map((c) => (
+                                    <Link
+                                        key={c.href}
+                                        href={c.href}
+                                        className="font-mono text-xs border border-black px-3 py-1.5 hover:bg-neutral-100 transition-colors"
+                                    >
+                                        {c.label} →
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* CTA Banner */}
-                        <div className="mt-16 pt-8 border-t border-black/10">
+                        <div className="mt-12 pt-8 border-t border-black/10">
                             <div className="border border-black bg-black text-white p-8 md:p-10">
                                 <p className="font-mono text-xs uppercase tracking-wider text-neutral-400 mb-3">
                                     Stop researching manually
