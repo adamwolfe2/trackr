@@ -132,10 +132,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
 
     const workspaceId = session.metadata?.workspaceId;
-    if (!workspaceId) return;
+    if (!workspaceId) {
+        console.error('[stripe-webhook] CRITICAL: workspaceId missing from checkout metadata', {
+            sessionId: session.id, customerId: session.customer, metadata: session.metadata,
+        });
+        return;
+    }
 
     const subscriptionId = session.subscription as string;
-    if (!subscriptionId) return;
+    if (!subscriptionId) {
+        console.error('[stripe-webhook] CRITICAL: subscriptionId missing from completed checkout', {
+            sessionId: session.id, workspaceId,
+        });
+        return;
+    }
 
     // Retrieve the full subscription to get period and item details
     const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
