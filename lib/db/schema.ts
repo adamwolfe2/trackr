@@ -424,4 +424,42 @@ export const communityVotes = pgTable('community_votes', {
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+// Audit Submissions — prospects from /audit form
+export const auditSubmissions = pgTable('audit_submissions', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    // Contact
+    contactEmail: text('contact_email').notNull(),
+    contactName: text('contact_name'),
+    callOwnerEmail: text('call_owner_email'), // Trackr team member receiving the scorecard
+    // Company info
+    companyName: text('company_name').notNull(),
+    companyWebsite: text('company_website'),
+    industry: text('industry'),
+    companySize: text('company_size'),
+    role: text('role'),
+    revenue: text('revenue'),
+    // AI readiness
+    aiToolCount: text('ai_tool_count'),
+    dailyAdoptionPct: text('daily_adoption_pct'),
+    hasAIManager: text('has_ai_manager'),
+    monthlySpend: text('monthly_spend'),
+    biggestBottleneck: text('biggest_bottleneck'),
+    teamsNeedingAI: text('teams_needing_ai').array().default([]),
+    failedAI: text('failed_ai'),
+    successDefinition: text('success_definition'),
+    // Current stack
+    currentTools: text('current_tools').array().default([]),
+    toolFrustrations: text('tool_frustrations'),
+    manualProcesses: text('manual_processes'),
+    // Scorecard output
+    scorecard: jsonb('scorecard'),
+    status: text('status').default('pending').notNull(), // pending | processing | complete | failed
+    errorMessage: text('error_message'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    completedAt: timestamp('completed_at'),
+}, (table) => [
+    index('audit_submissions_created_at_idx').on(table.createdAt),
+    index('audit_submissions_contact_email_idx').on(table.contactEmail),
+]);
+
 export * from './referrals-schema';

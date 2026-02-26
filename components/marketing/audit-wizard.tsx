@@ -7,6 +7,7 @@ import { INTEGRATIONS, getLogoUrl } from "@/lib/constants/integrations";
 // ── Types ──────────────────────────────────────────────────────────────────
 type Step1Data = {
     companyName: string;
+    contactEmail: string;
     website: string;
     industry: string;
     companySize: string;
@@ -73,15 +74,25 @@ function Step1({ data, onChange }: { data: Step1Data; onChange: (d: Partial<Step
                     />
                 </div>
                 <div>
-                    <label className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 block mb-2">Company Website</label>
+                    <label className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 block mb-2">Your Work Email *</label>
                     <input
-                        type="text"
-                        value={data.website}
-                        onChange={(e) => onChange({ website: e.target.value })}
-                        placeholder="acme.com"
+                        type="email"
+                        value={data.contactEmail}
+                        onChange={(e) => onChange({ contactEmail: e.target.value })}
+                        placeholder="you@company.com"
                         className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none"
                     />
                 </div>
+            </div>
+            <div>
+                <label className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 block mb-2">Company Website</label>
+                <input
+                    type="text"
+                    value={data.website}
+                    onChange={(e) => onChange({ website: e.target.value })}
+                    placeholder="acme.com"
+                    className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none"
+                />
             </div>
 
             <div>
@@ -514,11 +525,15 @@ function Step4({ step1, step2 }: { step1: Step1Data; step2: Step2Data }) {
 // ── Main Wizard ──────────────────────────────────────────────────────────────
 const STEPS = ["Organization", "AI Readiness", "Current Stack", "Book Call"];
 
-export function AuditWizard() {
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function AuditWizard({ callOwnerEmail }: { callOwnerEmail?: string }) {
     const [currentStep, setCurrentStep] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const [step1, setStep1] = useState<Step1Data>({
-        companyName: "", website: "", industry: "", companySize: "", role: "", revenue: "",
+        companyName: "", contactEmail: "", website: "", industry: "", companySize: "", role: "", revenue: "",
     });
     const [step2, setStep2] = useState<Step2Data>({
         aiToolCount: "", dailyAdoptionPct: "", hasAIManager: "", monthlySpend: "",
@@ -529,10 +544,58 @@ export function AuditWizard() {
     });
 
     const canProceed = () => {
-        if (currentStep === 0) return step1.companyName.trim().length > 0;
+        if (currentStep === 0) return step1.companyName.trim().length > 0 && EMAIL_RE.test(step1.contactEmail);
         if (currentStep === 1) return step2.successDefinition.trim().length > 0;
         return true;
     };
+
+    async function handleNext() {
+        if (currentStep === 2) {
+            // Submit form before showing the booking step
+            setIsSubmitting(true);
+            setSubmitError(null);
+            try {
+                const res = await fetch("/api/audit/submit", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        contactEmail: step1.contactEmail,
+                        companyName: step1.companyName,
+                        companyWebsite: step1.website || undefined,
+                        industry: step1.industry || undefined,
+                        companySize: step1.companySize || undefined,
+                        role: step1.role || undefined,
+                        revenue: step1.revenue || undefined,
+                        callOwnerEmail: callOwnerEmail || undefined,
+                        aiToolCount: step2.aiToolCount || undefined,
+                        dailyAdoptionPct: step2.dailyAdoptionPct || undefined,
+                        hasAIManager: step2.hasAIManager || undefined,
+                        monthlySpend: step2.monthlySpend || undefined,
+                        biggestBottleneck: step2.biggestBottleneck || undefined,
+                        teamsNeedingAI: step2.teamsNeedingAI.length > 0 ? step2.teamsNeedingAI : undefined,
+                        failedAI: step2.failedAI || undefined,
+                        successDefinition: step2.successDefinition || undefined,
+                        currentTools: step3.currentTools.length > 0 ? step3.currentTools : undefined,
+                        toolFrustrations: step3.toolFrustrations || undefined,
+                        manualProcesses: step3.manualProcesses || undefined,
+                    }),
+                });
+                if (!res.ok) {
+                    const json = await res.json().catch(() => ({}));
+                    setSubmitError((json as { error?: string }).error || "Submission failed. Please try again.");
+                    setIsSubmitting(false);
+                    return;
+                }
+                setCurrentStep(3);
+            } catch {
+                setSubmitError("Network error. Please check your connection and try again.");
+            } finally {
+                setIsSubmitting(false);
+            }
+        } else {
+            setCurrentStep((p) => p + 1);
+        }
+    }
 
     return (
         <div className="border border-black bg-white">
@@ -563,7 +626,7 @@ export function AuditWizard() {
                     {currentStep === 0 && "This helps our architects understand your business context before your call."}
                     {currentStep === 1 && "Be honest — this is where we find the biggest opportunities."}
                     {currentStep === 2 && "Select everything you're using. We'll identify overlap, gaps, and tools to cut."}
-                    {currentStep === 3 && "You're all set. Pick a time and an AI architect will join you live."}
+                    {currentStep === 3 && "You're all set. Your scorecard is being generated and will be ready before your call."}
                 </p>
             </div>
 
@@ -577,23 +640,34 @@ export function AuditWizard() {
 
             {/* Navigation */}
             {currentStep < 3 && (
-                <div className="px-6 py-4 border-t border-black flex items-center justify-between">
+                <div className="px-6 py-4 border-t border-black flex items-center justify-between gap-4">
                     <button
                         type="button"
                         onClick={() => setCurrentStep((p) => p - 1)}
-                        disabled={currentStep === 0}
+                        disabled={currentStep === 0 || isSubmitting}
                         className="flex items-center gap-2 font-mono text-xs uppercase tracking-wide text-neutral-500 hover:text-black disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" /> Back
                     </button>
-                    <button
-                        type="button"
-                        onClick={() => setCurrentStep((p) => p + 1)}
-                        disabled={!canProceed()}
-                        className="flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-xs uppercase tracking-wide hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors border border-black"
-                    >
-                        {currentStep === 2 ? "Book My Call" : "Continue"} <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex flex-col items-end gap-1">
+                        {submitError && (
+                            <p className="font-mono text-[10px] text-red-600 text-right">{submitError}</p>
+                        )}
+                        <button
+                            type="button"
+                            onClick={handleNext}
+                            disabled={!canProceed() || isSubmitting}
+                            className="flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-xs uppercase tracking-wide hover:bg-neutral-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors border border-black"
+                        >
+                            {isSubmitting ? (
+                                <>Generating scorecard…</>
+                            ) : currentStep === 2 ? (
+                                <>Book My Call <ArrowRight className="w-3.5 h-3.5" /></>
+                            ) : (
+                                <>Continue <ArrowRight className="w-3.5 h-3.5" /></>
+                            )}
+                        </button>
+                    </div>
                 </div>
             )}
         </div>

@@ -404,3 +404,125 @@ export async function sendRenewalAlertEmail(
         `),
     }));
 }
+
+// ── Audit Scorecard Email ─────────────────────────────────────────────────────
+
+import type { AuditScorecard } from "@/lib/actions/audit";
+
+interface AuditEmailPayload {
+    submission: {
+        contactEmail: string;
+        contactName: string | null;
+        callOwnerEmail: string | null;
+        companyName: string;
+        companyWebsite: string | null;
+        role: string | null;
+    };
+    scorecard: AuditScorecard;
+}
+
+export async function sendAuditScorecardEmail({ submission, scorecard }: AuditEmailPayload) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    const ADAM_EMAIL = "adamwolf102@gmail.com";
+    const to = submission.callOwnerEmail?.trim() || ADAM_EMAIL;
+    const cc = to !== ADAM_EMAIL ? [ADAM_EMAIL] : [];
+
+    const score = scorecard.aiNativeScore.score;
+    const companyName = escapeHtml(scorecard.companyName);
+    const contactName = escapeHtml(submission.contactName || "there");
+    const role = escapeHtml(submission.role || "");
+
+    const scoreColor = score >= 61 ? "#16a34a" : score >= 41 ? "#d97706" : "#dc2626";
+
+    const painPointsHtml = scorecard.painPoints
+        .map(p => `
+            <tr>
+                <td style="padding: 10px 8px; border-bottom: 1px solid #e5e5e0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #666; white-space: nowrap; vertical-align: top;">${escapeHtml(p.area)}</td>
+                <td style="padding: 10px 8px; border-bottom: 1px solid #e5e5e0; font-size: 13px; color: #333; line-height: 1.5;">${escapeHtml(p.description)}</td>
+            </tr>`)
+        .join("");
+
+    const stackHtml = scorecard.currentStack
+        .map(t => `
+            <tr>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e5e0; font-size: 13px; font-weight: bold;">${escapeHtml(t.name)}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e5e0; font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.05em;">${escapeHtml(t.aiRole)}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #e5e5e0; font-size: 12px; color: #555;">${escapeHtml(t.usageNotes)}</td>
+            </tr>`)
+        .join("");
+
+    const recsHtml = scorecard.recommendations
+        .map((r, i) => `
+            <div style="margin-bottom: 16px; padding: 14px; border-left: 3px solid #000; background: #fff;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                    <span style="font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em;">${i + 1}. ${escapeHtml(r.title)}</span>
+                    <span style="font-size: 10px; padding: 2px 6px; border: 1px solid #000; white-space: nowrap; margin-left: 8px;">Impact: ${escapeHtml(r.impact)}</span>
+                </div>
+                <p style="font-size: 13px; color: #444; line-height: 1.5; margin: 0;">${escapeHtml(r.description)}</p>
+            </div>`)
+        .join("");
+
+    const html = emailWrapper(`
+        <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">AI Readiness Audit · Trackr</p>
+        <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 26px; margin: 0 0 4px; line-height: 1.2;">
+            ${companyName}
+        </h1>
+        <p style="font-size: 13px; color: #666; margin: 0 0 24px;">${contactName}${role ? ` · ${role}` : ""}${submission.companyWebsite ? ` · <a href="${escapeHtml(submission.companyWebsite)}" style="color: #000;">${escapeHtml(submission.companyWebsite)}</a>` : ""}</p>
+
+        <!-- Score -->
+        <div style="border: 2px solid #000; padding: 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 20px;">
+            <div style="font-size: 52px; font-weight: 900; color: ${scoreColor}; line-height: 1; min-width: 80px;">${score}<span style="font-size: 20px; color: #999;">/100</span></div>
+            <div>
+                <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin-bottom: 4px;">AI-Native Score</div>
+                <div style="font-size: 13px; color: #333; line-height: 1.4;">${escapeHtml(scorecard.aiNativeScore.summary)}</div>
+            </div>
+        </div>
+
+        <!-- Pain Points -->
+        <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 17px; margin: 0 0 12px; border-bottom: 2px solid #000; padding-bottom: 8px;">Pain Points</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+            <tbody>${painPointsHtml}</tbody>
+        </table>
+
+        <!-- Current Stack -->
+        <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 17px; margin: 0 0 12px; border-bottom: 2px solid #000; padding-bottom: 8px;">Current Stack</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+            <thead>
+                <tr>
+                    <th style="text-align: left; padding: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #000;">Tool</th>
+                    <th style="text-align: left; padding: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #000;">AI Role</th>
+                    <th style="text-align: left; padding: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid #000;">Notes</th>
+                </tr>
+            </thead>
+            <tbody>${stackHtml}</tbody>
+        </table>
+
+        <!-- Recommendations -->
+        <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 17px; margin: 0 0 12px; border-bottom: 2px solid #000; padding-bottom: 8px;">Recommendations</h2>
+        <div style="margin-bottom: 24px;">${recsHtml}</div>
+
+        <!-- Future target -->
+        <div style="background: #000; color: #F3F3EF; padding: 16px; margin-bottom: 24px;">
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.6; margin-bottom: 4px;">Target AI-Native Score</div>
+            <div style="font-size: 32px; font-weight: 900; margin-bottom: 6px;">${scorecard.futureAINativeTarget.targetScore}/100</div>
+            <div style="font-size: 13px; opacity: 0.85; line-height: 1.4;">${escapeHtml(scorecard.futureAINativeTarget.summary)}</div>
+        </div>
+
+        <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">
+            On the call, walk through this scorecard, prioritize the highest-impact changes, and map out what implementation with Trackr looks like.
+        </p>
+        ${emailButton("https://trytrackr.com", "Open Trackr →")}
+    `);
+
+    const resend = getResend();
+    await sendWithRetry(() =>
+        resend.emails.send({
+            from: FROM,
+            to,
+            ...(cc.length > 0 ? { cc } : {}),
+            subject: `AI Audit Scorecard – ${scorecard.companyName} (Score: ${score}/100)`,
+            html,
+        })
+    );
+}
