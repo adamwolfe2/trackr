@@ -11,6 +11,7 @@ import { performDeepResearch } from "@/lib/actions/research";
 import { ensureWorkspace } from "@/lib/db/ensure-workspace";
 
 import { getWorkspaceId } from "@/lib/db/queries";
+import { captureEvent } from "@/lib/analytics/posthog-server";
 
 export async function submitTool(formData: FormData) {
     let user;
@@ -93,6 +94,17 @@ export async function submitTool(formData: FormData) {
         } catch (err) {
             console.error(`[tools] Background research failed for tool ${newTool.id}:`, err);
         }
+    });
+
+    // Track tool submission (after response, non-blocking)
+    const captureUserId = user.id;
+    after(async () => {
+        await captureEvent(captureUserId, "tool_submitted", {
+            tool_name: name,
+            tool_url: websiteUrl,
+            tool_id: newTool.id,
+            workspace_id: workspaceId,
+        });
     });
 
     revalidatePath("/tools");

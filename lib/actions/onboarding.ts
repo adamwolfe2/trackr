@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { db } from "@/lib/db";
 import { workspaces, softwareSpend } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -10,6 +11,7 @@ import { openai } from "@ai-sdk/openai";
 import { generateText } from "ai";
 import { ensureWorkspace } from "@/lib/db/ensure-workspace";
 import { trackReferralSignup } from "@/lib/actions/referrals";
+import { captureEvent } from "@/lib/analytics/posthog-server";
 import { z } from "zod";
 
 /** Scrape company website and auto-generate a context description */
@@ -214,6 +216,20 @@ export async function completeOnboarding(input: {
     revalidatePath("/tools");
     revalidatePath("/workspace");
     revalidatePath("/stack");
+
+    // Fire PostHog event after response — non-blocking
+    const captureUserId = user.id;
+    const captureWorkspaceId = workspaceId;
+    after(async () => {
+        await captureEvent(captureUserId, "onboarding_completed", {
+            company_name: companyName,
+            tool_count: selectedTools.length,
+            plan: plan ?? "free",
+            has_ref_code: !!refCode,
+            workspace_id: captureWorkspaceId,
+            is_new_workspace: created,
+        });
+    });
 
     // Return redirect URL — client handles navigation via router.push()
     // Free users → /submit so they immediately research their first tool (Aha moment <2 min)

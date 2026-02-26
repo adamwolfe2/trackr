@@ -12,6 +12,7 @@ import { db } from "@/lib/db";
 import { auditSubmissions } from "@/lib/db/schema";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { processAuditSubmission } from "@/lib/actions/audit";
+import { captureEvent } from "@/lib/analytics/posthog-server";
 import { z } from "zod";
 
 const AuditSubmitSchema = z.object({
@@ -95,6 +96,19 @@ export async function POST(req: NextRequest) {
     // Process scorecard in background — survives request timeout
     after(async () => {
         await processAuditSubmission(submission.id);
+    });
+
+    // Track audit submission (email = distinct_id for anonymous leads)
+    after(async () => {
+        await captureEvent(data.contactEmail, "audit_submitted", {
+            company_name: data.companyName,
+            company_size: data.companySize ?? null,
+            industry: data.industry ?? null,
+            role: data.role ?? null,
+            monthly_spend: data.monthlySpend ?? null,
+            ai_tool_count: data.aiToolCount ?? null,
+            submission_id: submission.id,
+        });
     });
 
     return NextResponse.json({ success: true, id: submission.id });

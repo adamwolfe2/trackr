@@ -1,11 +1,13 @@
 "use server";
 
+import { after } from "next/server";
 import { stripe } from "@/lib/services/stripe";
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { workspaceMembers, subscriptions } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import type { PlanSlug, BillingInterval } from "@/lib/config/subscriptions";
+import { captureEvent } from "@/lib/analytics/posthog-server";
 
 type PaidPlanSlug = Exclude<PlanSlug, "free">;
 
@@ -70,6 +72,17 @@ export async function createCheckoutSession(
     if (!session.url) {
         throw new Error("Failed to create checkout session");
     }
+
+    // Track checkout initiation after response — non-blocking
+    const captureUserId = user.id;
+    after(async () => {
+        await captureEvent(captureUserId, "checkout_initiated", {
+            plan,
+            interval,
+            workspace_id: workspaceId,
+            session_id: session.id,
+        });
+    });
 
     return { url: session.url };
 }

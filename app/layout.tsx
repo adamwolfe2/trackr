@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Newsreader, Geist_Mono } from "next/font/google";
 import { AnalyticsProvider } from "@/components/analytics-provider";
+import { PostHogProvider } from "@/components/posthog-provider";
 import { Toaster } from "sonner";
 
 const newsreader = Newsreader({
@@ -67,7 +68,8 @@ export default function RootLayout({
           <script src="https://cdn.idpixel.app/v1/idp-analytics-699619edfcc4a49a660c15bb.min.js" defer />
         </head>
         <body className={cn(newsreader.variable, geistMono.variable, "font-serif antialiased min-h-screen bg-background text-foreground selection:bg-black selection:text-white")}>
-          <AnalyticsProvider>
+          <PostHogProvider>
+            <AnalyticsProvider>
               {children}
               <Toaster
                 position="bottom-right"
@@ -82,6 +84,7 @@ export default function RootLayout({
                 }}
               />
             </AnalyticsProvider>
+          </PostHogProvider>
         </body>
       </html>
     </ClerkProvider>

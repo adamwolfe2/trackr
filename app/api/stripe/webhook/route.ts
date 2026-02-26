@@ -7,6 +7,7 @@ import type Stripe from "stripe";
 import { clerkClient } from "@clerk/nextjs/server";
 import { sendTrialEndingEmail, cancelDripForUser } from "@/lib/email/resend";
 import { getPlanLimits } from "@/lib/config/subscriptions";
+import { captureEvent } from "@/lib/analytics/posthog-server";
 
 export async function POST(req: NextRequest) {
     const body = await req.text();
@@ -191,6 +192,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
                 },
             });
     }
+
+    // Track subscription start — use userId from metadata as distinct_id for user-level funnel
+    const distinctId = session.metadata?.userId ?? workspaceId;
+    await captureEvent(distinctId, "subscription_started", {
+        plan: session.metadata?.plan,
+        interval: session.metadata?.interval,
+        workspace_id: workspaceId,
+        subscription_id: subscriptionId,
+        status: stripeSubscription.status,
+    });
 }
 
 async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
@@ -215,6 +226,14 @@ async function handleSubscriptionUpdated(sub: Stripe.Subscription) {
             updatedAt: new Date(),
         })
         .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));
+
+    await captureEvent(existing.workspaceId, "subscription_updated", {
+        workspace_id: existing.workspaceId,
+        subscription_id: subscriptionId,
+        old_status: existing.status,
+        new_status: sub.status,
+        plan_id: planId,
+    });
 
     // Cancel drip emails for the workspace owner on upgrade to paid plan
     if (sub.status === 'active' && existing.status !== 'active') {
@@ -251,15 +270,32 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
             updatedAt: new Date(),
         })
         .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));
+
+    await captureEvent(existing.workspaceId, "subscription_canceled", {
+        workspace_id: existing.workspaceId,
+        subscription_id: subscriptionId,
+    });
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
     const subscriptionId = getSubscriptionIdFromInvoice(invoice);
     if (!subscriptionId) return;
 
+    const existing = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.stripeSubscriptionId, subscriptionId),
+        columns: { workspaceId: true },
+    });
+
     await db.update(subscriptions)
         .set({ status: "past_due", updatedAt: new Date() })
         .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));
+
+    if (existing?.workspaceId) {
+        await captureEvent(existing.workspaceId, "payment_failed", {
+            workspace_id: existing.workspaceId,
+            subscription_id: subscriptionId,
+        });
+    }
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
