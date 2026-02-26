@@ -59,7 +59,8 @@ export default async function VsPage({
                 "@type": "BreadcrumbList",
                 itemListElement: [
                     { "@type": "ListItem", position: 1, name: "Home", item: "https://trytrackr.com" },
-                    { "@type": "ListItem", position: 2, name: `Trackr vs ${page.competitorName}`, item: `https://trytrackr.com/vs/${competitor}` },
+                    { "@type": "ListItem", position: 2, name: "Comparisons", item: "https://trytrackr.com/vs" },
+                    { "@type": "ListItem", position: 3, name: `Trackr vs ${page.competitorName}`, item: `https://trytrackr.com/vs/${competitor}` },
                 ],
             },
         ],
@@ -219,7 +220,12 @@ export default async function VsPage({
                 {/* ── Related comparisons ── */}
                 {relatedPages.length > 0 && (
                     <section className="py-8 border-t border-black/10 mb-16">
-                        <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-5">Also compare</p>
+                        <div className="flex items-center justify-between mb-5">
+                            <p className="font-mono text-xs uppercase tracking-widest text-neutral-400">Also compare</p>
+                            <Link href="/vs" className="font-mono text-xs text-neutral-500 hover:text-black hover:underline">
+                                See all comparisons →
+                            </Link>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-px border border-black bg-black">
                             {relatedPages.map((p) => (
                                 <Link
