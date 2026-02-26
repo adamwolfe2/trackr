@@ -190,7 +190,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'monthly' as const,
             priority: 0.8,
         })),
-        // ICP landing pages (/for/[role])
+        // ICP hub + landing pages (/for)
+        {
+            url: `${baseUrl}/for`,
+            lastModified: new Date('2026-02-25'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        },
         ...ICP_ROLES.map((role) => ({
             url: `${baseUrl}/for/${role}`,
             lastModified: new Date('2026-02-25'),
