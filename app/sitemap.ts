@@ -177,7 +177,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'monthly' as const,
             priority: 0.8,
         },
-        // Competitor displacement pages (/vs/[competitor])
+        // VS hub + competitor displacement pages
+        {
+            url: `${baseUrl}/vs`,
+            lastModified: new Date('2026-02-25'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.85,
+        },
         ...VS_COMPETITORS.map((competitor) => ({
             url: `${baseUrl}/vs/${competitor}`,
             lastModified: new Date('2026-02-25'),
