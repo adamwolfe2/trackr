@@ -6,6 +6,13 @@ All notable changes to Trackr are documented here.
 
 ## February 2026
 
+### 2026-02-25 — Drip Email, VS Pages, Comparisons & ICP Expansion
+- **Day 14 drip email**: Added 2-week conversion nudge to the automated email sequence targeting free users who haven't upgraded (now 4 drips: D+1, D+3, D+7, D+14)
+- **VS competitor pages**: Added 5 new displacement pages — Capterra, Spendflo, TrustRadius, Software Advice, ChatGPT (10 total at `/vs/[competitor]`)
+- **Comparison pages**: 6 new side-by-side comparisons — Claude vs ChatGPT, Notion vs Linear, Salesforce vs Attio, Instantly vs Apollo, Clay vs Clearbit, Canva vs Midjourney (36 total at `/research/compare/[slug]`)
+- **ICP landing pages**: 3 new buyer persona pages — Marketing Teams, Finance Teams, IT Leaders (8 total at `/for/[role]`)
+- **Blog**: 20 additional SEO posts covering SaaS stack audits, license management, automation platform comparisons, and role-specific tool guides (94 total)
+
 ### 2026-02-25 — Integration Marketing Pages & Blog Expansion
 
 **New Pages**
