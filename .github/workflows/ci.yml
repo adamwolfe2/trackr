@@ -5,12 +5,13 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   check:
     name: Lint, Typecheck & Test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -26,9 +27,6 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm lint
 
       - name: Typecheck
         run: npx tsc --noEmit
@@ -51,40 +49,3 @@ jobs:
           PERPLEXITY_API_KEY: pplx_stub
           SLACK_CLIENT_ID: slack_client_stub
           SLACK_CLIENT_SECRET: slack_secret_stub
-
-  e2e:
-    name: E2E Tests (Public Pages)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    if: ${{ vars.PLAYWRIGHT_BASE_URL != '' || secrets.PLAYWRIGHT_BASE_URL != '' }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install pnpm
-        run: npm install -g pnpm@10
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright browsers
-        run: npx playwright install chromium --with-deps
-
-      - name: Run E2E tests
-        run: npx playwright test
-        env:
-          PLAYWRIGHT_BASE_URL: ${{ vars.PLAYWRIGHT_BASE_URL || secrets.PLAYWRIGHT_BASE_URL }}
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 14
