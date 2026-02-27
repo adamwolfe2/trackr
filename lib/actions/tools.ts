@@ -58,34 +58,30 @@ export async function submitTool(formData: FormData) {
     ]);
     const logoUrl = (preview && "image" in preview && preview.image) ? preview.image : null;
 
-    // 3. Check limit + insert atomically
-    const newTool = await db.transaction(async (tx) => {
-        const subscription = await tx.query.subscriptions.findFirst({
-            where: eq(subscriptions.workspaceId, workspaceId)
-        });
-
-        const limits = getPlanLimits(subscription);
-
-        const [{ value: toolCount }] = await tx.select({ value: count() })
-            .from(tools)
-            .where(eq(tools.workspaceId, workspaceId));
-
-        if (limits.limits.tools !== Infinity && toolCount >= limits.limits.tools) {
-            throw new Error(`Tool limit reached (${limits.limits.tools} tools on ${limits.name} plan). Upgrade to Team for unlimited tools.`);
-        }
-
-        const [inserted] = await tx.insert(tools).values({
-            workspaceId,
-            name,
-            websiteUrl,
-            logoUrl,
-            status: "queued",
-            submittedBy: user.id,
-            embedding,
-        }).returning();
-
-        return inserted;
+    // 3. Check limit then insert (neon-http driver does not support transactions)
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspaceId),
     });
+
+    const limits = getPlanLimits(subscription);
+
+    const [{ value: toolCount }] = await db.select({ value: count() })
+        .from(tools)
+        .where(eq(tools.workspaceId, workspaceId));
+
+    if (limits.limits.tools !== Infinity && toolCount >= limits.limits.tools) {
+        throw new Error(`Tool limit reached (${limits.limits.tools} tools on ${limits.name} plan). Upgrade to Team for unlimited tools.`);
+    }
+
+    const [newTool] = await db.insert(tools).values({
+        workspaceId,
+        name,
+        websiteUrl,
+        logoUrl,
+        status: "queued",
+        submittedBy: user.id,
+        embedding,
+    }).returning();
 
     // 4. Kick off research in the background (runs after redirect is sent)
     after(async () => {
@@ -125,15 +121,13 @@ export async function deleteTool(toolId: string) {
 
     if (!tool) throw new Error("Tool not found or unauthorized");
 
-    // Atomic deletion — all related records in a single transaction
-    await db.transaction(async (tx) => {
-        await tx.delete(apiLogs).where(eq(apiLogs.toolId, toolId));
-        await tx.delete(ads).where(eq(ads.toolId, toolId));
-        await tx.delete(notes).where(eq(notes.toolId, toolId));
-        await tx.delete(reports).where(eq(reports.toolId, toolId));
-        await tx.delete(researchJobs).where(eq(researchJobs.toolId, toolId));
-        await tx.delete(tools).where(eq(tools.id, toolId));
-    });
+    // Delete all related records then the tool (neon-http driver does not support transactions)
+    await db.delete(apiLogs).where(eq(apiLogs.toolId, toolId));
+    await db.delete(ads).where(eq(ads.toolId, toolId));
+    await db.delete(notes).where(eq(notes.toolId, toolId));
+    await db.delete(reports).where(eq(reports.toolId, toolId));
+    await db.delete(researchJobs).where(eq(researchJobs.toolId, toolId));
+    await db.delete(tools).where(eq(tools.id, toolId));
 
     revalidatePath("/tools");
     revalidatePath("/dashboard");
@@ -279,26 +273,24 @@ export async function publishReport(reportId: string) {
         return { published: false, slug: null };
     }
 
-    // Generate unique slug inside the transaction to prevent race conditions
+    // Generate unique slug then publish (neon-http driver does not support transactions)
     let slug = baseSlug;
-    await db.transaction(async (tx) => {
-        let attempt = 2;
-        while (true) {
-            const existing = await tx.query.tools.findFirst({
-                where: eq(tools.publicSlug, slug),
-                columns: { id: true },
-            });
-            if (!existing) break;
-            slug = `${baseSlug}-${attempt++}`;
-            if (attempt > 50) throw new Error("Could not generate a unique slug");
-        }
-        // Unpublish any other reports for this tool
-        await tx.update(reports).set({ isPublic: false }).where(eq(reports.toolId, tool.id));
-        // Publish this report
-        await tx.update(reports).set({ isPublic: true }).where(eq(reports.id, reportId));
-        // Set slug on tool
-        await tx.update(tools).set({ publicSlug: slug }).where(eq(tools.id, tool.id));
-    });
+    let attempt = 2;
+    while (true) {
+        const existing = await db.query.tools.findFirst({
+            where: eq(tools.publicSlug, slug),
+            columns: { id: true },
+        });
+        if (!existing) break;
+        slug = `${baseSlug}-${attempt++}`;
+        if (attempt > 50) throw new Error("Could not generate a unique slug");
+    }
+    // Unpublish any other reports for this tool
+    await db.update(reports).set({ isPublic: false }).where(eq(reports.toolId, tool.id));
+    // Publish this report
+    await db.update(reports).set({ isPublic: true }).where(eq(reports.id, reportId));
+    // Set slug on tool
+    await db.update(tools).set({ publicSlug: slug }).where(eq(tools.id, tool.id));
 
     revalidatePath(`/tools/${tool.id}`);
     revalidatePath(`/research/${slug}`);
