@@ -419,9 +419,10 @@ interface AuditEmailPayload {
         role: string | null;
     };
     scorecard: AuditScorecard;
+    shareUrl?: string;
 }
 
-export async function sendAuditScorecardEmail({ submission, scorecard }: AuditEmailPayload) {
+export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl }: AuditEmailPayload) {
     if (!process.env.RESEND_API_KEY) return;
 
     const ADAM_EMAIL = "adamwolfe102@gmail.com";
@@ -512,6 +513,16 @@ export async function sendAuditScorecardEmail({ submission, scorecard }: AuditEm
         <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">
             On the call, walk through this scorecard, prioritize the highest-impact changes, and map out what implementation with Trackr looks like.
         </p>
+
+        ${shareUrl ? `
+        <!-- Share link -->
+        <div style="border: 2px solid #000; padding: 16px; margin-bottom: 20px; background: #F3F3EF;">
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin-bottom: 8px;">Share This Scorecard</div>
+            <p style="font-size: 12px; color: #444; margin: 0 0 10px; line-height: 1.4;">Forward this link to share the scorecard publicly — no login required.</p>
+            <a href="${shareUrl}" style="font-size: 12px; color: #000; word-break: break-all; font-family: monospace;">${shareUrl}</a>
+        </div>
+        ` : ""}
+
         ${emailButton("https://trytrackr.com", "Open Trackr →")}
     `);
 

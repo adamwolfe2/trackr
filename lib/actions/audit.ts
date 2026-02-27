@@ -158,12 +158,17 @@ export async function processAuditSubmission(id: string): Promise<void> {
             prompt: buildPrompt(submission, enrichmentContext),
         });
 
-        // 3. Send email
-        await sendAuditScorecardEmail({ submission, scorecard });
+        // 3. Generate share token
+        const { randomUUID } = await import("crypto");
+        const shareToken = randomUUID().replace(/-/g, "");
 
-        // 4. Persist
+        // 4. Send email (include share link)
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
+        await sendAuditScorecardEmail({ submission, scorecard, shareUrl: `${appUrl}/audit/share/${shareToken}` });
+
+        // 5. Persist
         await db.update(auditSubmissions)
-            .set({ status: "complete", scorecard, completedAt: new Date() })
+            .set({ status: "complete", scorecard, shareToken, completedAt: new Date() })
             .where(eq(auditSubmissions.id, id));
 
     } catch (err) {

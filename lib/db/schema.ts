@@ -455,6 +455,7 @@ export const auditSubmissions = pgTable('audit_submissions', {
     scorecard: jsonb('scorecard'),
     status: text('status').default('pending').notNull(), // pending | processing | complete | failed
     errorMessage: text('error_message'),
+    shareToken: text('share_token').unique(), // Set when scorecard completes — enables public share URL
     createdAt: timestamp('created_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
 }, (table) => [
