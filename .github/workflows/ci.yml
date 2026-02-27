@@ -20,21 +20,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: pnpm lint
 
       - name: Typecheck
         run: npx tsc --noEmit
 
       - name: Run unit tests
-        run: npm run test
+        run: pnpm test
         env:
-          # Stub env vars so modules don't crash on import in test environment
           DATABASE_URL: postgresql://test:test@localhost:5432/test
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_stub
           CLERK_SECRET_KEY: sk_test_stub
@@ -55,9 +58,6 @@ jobs:
     name: E2E Tests (Public Pages)
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Only run E2E when we have a deployed URL to test against
-    # Set PLAYWRIGHT_BASE_URL as a repo secret pointing to the Vercel preview or production URL
-    # Without it, this job is skipped (avoids needing a full local Next.js build in CI)
     if: ${{ vars.PLAYWRIGHT_BASE_URL != '' || secrets.PLAYWRIGHT_BASE_URL != '' }}
 
     steps:
@@ -68,10 +68,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
