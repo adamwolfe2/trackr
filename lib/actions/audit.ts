@@ -4,7 +4,7 @@
  * Called in the background after a prospect submits the /audit form.
  * 1. Firecrawl scrape of company website
  * 2. GPT-4o structured scorecard generation
- * 3. Email scorecard to callOwnerEmail (or contactEmail) + CC adamwolf102@gmail.com
+ * 3. Email scorecard to callOwnerEmail (or contactEmail) + CC adamwolfe102@gmail.com
  * 4. Persist scorecard in DB
  */
 

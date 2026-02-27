@@ -424,7 +424,7 @@ interface AuditEmailPayload {
 export async function sendAuditScorecardEmail({ submission, scorecard }: AuditEmailPayload) {
     if (!process.env.RESEND_API_KEY) return;
 
-    const ADAM_EMAIL = "adamwolf102@gmail.com";
+    const ADAM_EMAIL = "adamwolfe102@gmail.com";
     const to = submission.callOwnerEmail?.trim() || ADAM_EMAIL;
     const cc = to !== ADAM_EMAIL ? [ADAM_EMAIL] : [];
 
