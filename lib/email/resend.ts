@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { dripEmails } from "@/lib/db/schema";
 import { and, eq, isNull } from "drizzle-orm";
 
-const FROM = "Trackr <noreply@trytrackr.com>";
+const FROM = "Trackr <noreply@send.trytrackr.com>";
 const MAX_RETRIES = 3;
 
 async function sendWithRetry(
