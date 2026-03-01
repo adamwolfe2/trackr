@@ -830,6 +830,180 @@ That foundation — completed in 2 minutes before your first vendor call — cha
         ],
         ctaText: "Research Gong independently in 2 minutes",
     },
+    {
+        competitor: "microsoft-copilot",
+        competitorName: "Microsoft Copilot",
+        competitorTagline: "AI assistant built into Microsoft 365",
+        title: "Trackr vs Microsoft Copilot — Purpose-Built Tool Research vs General AI | Trackr",
+        description: "Microsoft Copilot answers general questions. Trackr researches, scores, and tracks AI tools for your stack — with 7-dimension reports in 2 minutes.",
+        headline: "Copilot answers questions. Trackr researches tools.",
+        subheadline: "Microsoft 365 Copilot is a general-purpose AI assistant. Trackr is purpose-built for evaluating AI tools — scoring them across 7 dimensions with live data, competitive context, and stack-level spend tracking.",
+        switchNarrative: `Microsoft 365 Copilot is embedded in Teams, Word, Excel, and Outlook, and it's excellent at what it does: drafting documents, summarizing meetings, generating Excel formulas, and answering questions in your document context. It's a productivity assistant.
+
+Trackr is not a general assistant. It's a research agent specifically designed to evaluate SaaS tools. When you submit a tool URL to Trackr, the system pulls current pricing from the vendor site, surfaces community feedback from Reddit and practitioner forums, identifies alternatives, and scores the tool across 7 dimensions with written justifications. This structured output is what you need when you're deciding whether to buy a tool — not a chat interface.
+
+The comparison matters because many teams try to use general AI chatbots (Copilot, ChatGPT, Perplexity) as tool research tools. The limitations are real: general AI lacks live internet data, can't track your stack, can't set renewal alerts, and can't enforce a consistent evaluation framework across tools. Trackr was built specifically for this workflow.`,
+        featureTable: [
+            { feature: "Purpose-built tool evaluation", trackr: true, competitor: false },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "Live vendor pricing data", trackr: "Pulled at research time", competitor: false },
+            { feature: "Stack tracking and spend management", trackr: true, competitor: false },
+            { feature: "Renewal alerts", trackr: "60-day automatic alerts", competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: "In every report", competitor: false },
+            { feature: "Microsoft 365 document assistance", trackr: false, competitor: true },
+            { feature: "Meeting summarization", trackr: false, competitor: true },
+        ],
+        advantages: [
+            { title: "Structured evaluation, not open-ended chat", description: "Copilot gives you a chat interface. Trackr gives you a scored report: 7 dimensions, pros and cons, competitive alternatives, and current pricing. Structured output is what you need for a procurement decision." },
+            { title: "Live data, not training data", description: "Copilot's knowledge has a training cutoff and may not reflect current pricing or recent product changes. Trackr pulls live data from the vendor's current website, community platforms, and pricing databases at the moment you research." },
+            { title: "Stack visibility beyond the moment", description: "Copilot doesn't track what you've evaluated or what you're paying. Trackr builds a persistent record of your full AI tool stack — spend, renewal dates, scores, and evaluation history." },
+        ],
+        faqs: [
+            { q: "Can't I just ask Copilot to research a tool for me?", a: "You can, and it may produce a useful starting point. The limitations are: Copilot doesn't pull live pricing data, doesn't enforce a consistent evaluation framework, can't track your stack or set renewal alerts, and may have outdated information. Trackr is built specifically for this workflow." },
+            { q: "Does Trackr replace Microsoft 365?", a: "No. Microsoft 365 and Copilot are general-purpose productivity tools that most teams use for email, documents, and collaboration. Trackr is specifically for AI tool research and stack management. They serve different functions." },
+            { q: "Who uses both Copilot and Trackr?", a: "Most Trackr customers use Microsoft 365. Copilot assists with daily productivity tasks. Trackr handles structured tool evaluation and stack management. They're complementary, not competing." },
+        ],
+        ctaText: "Try purpose-built tool research",
+    },
+    {
+        competitor: "clickup",
+        competitorName: "ClickUp",
+        competitorTagline: "All-in-one productivity and project management platform",
+        title: "Trackr vs ClickUp — AI Tool Intelligence vs Project Management | Trackr",
+        description: "ClickUp manages your projects. Trackr manages your AI tool evaluations — with scored reports, stack tracking, and renewal intelligence. Different tools, different jobs.",
+        headline: "ClickUp tracks your tasks. Trackr tracks your AI stack.",
+        subheadline: "ClickUp is a project management and docs platform. Trackr is purpose-built for AI tool research, evaluation scoring, and stack-level spend tracking. Many teams use ClickUp to manage their tool evaluation project — and Trackr to actually do the evaluation.",
+        switchNarrative: `Teams often try to run tool evaluations in ClickUp or Notion using custom templates, spreadsheet-style databases, and manual research. The process works — people fill in feature columns, add review links, and score tools in custom fields. It's flexible, familiar, and already paid for.
+
+The problem is that the manual research layer is what takes 8 hours. You still need to visit the vendor site, read G2 reviews, browse Reddit threads, find competitor comparison content, and figure out pricing. ClickUp can organize the output, but it can't generate it.
+
+Trackr generates the evaluation output in 2 minutes. Current pricing, pros and cons, 7-dimension scores with written justifications, and competitive alternatives — delivered as a report. You can still use ClickUp to manage the evaluation process, track decisions, and get approvals. But the core research that typically takes most of a day is handled by Trackr's AI agents instead.`,
+        featureTable: [
+            { feature: "AI-generated tool research", trackr: true, competitor: false },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: "Manual custom fields" },
+            { feature: "Live vendor pricing data", trackr: true, competitor: false },
+            { feature: "Renewal date alerts", trackr: true, competitor: "Manual reminders only" },
+            { feature: "Stack-level spend tracking", trackr: true, competitor: "Manual entry" },
+            { feature: "Project and task management", trackr: false, competitor: true },
+            { feature: "Document and wiki creation", trackr: false, competitor: true },
+            { feature: "Evaluation time per tool", trackr: "2 minutes", competitor: "4–8 hours" },
+        ],
+        advantages: [
+            { title: "Research in 2 minutes vs 8 hours", description: "Trackr's AI agents generate a complete evaluation in under 2 minutes. ClickUp helps you organize the evaluation — but the research still takes hours. Trackr eliminates the hours." },
+            { title: "Consistent scoring across all tools", description: "When you score tools manually in ClickUp, consistency depends on whoever filled in the fields. Trackr applies the same 7-dimension framework to every tool — making comparisons meaningful." },
+            { title: "Automatic renewal intelligence", description: "ClickUp can hold your contract dates as task due dates, but it won't pull current competitive data at renewal time. Trackr's renewal alerts come with fresh research intelligence — not just a calendar ping." },
+        ],
+        faqs: [
+            { q: "Can I use ClickUp and Trackr together?", a: "Yes, many teams do. Use ClickUp to manage the evaluation project — tracking stakeholders, approvals, and timelines. Use Trackr to generate the actual research reports. Trackr exports to PDF and CSV for easy attachment to your ClickUp tasks." },
+            { q: "Does Trackr replace spreadsheet-based tool tracking?", a: "For most teams, yes. Trackr provides a purpose-built interface for tool tracking, spend management, and renewal alerts that's far more reliable than a manually maintained spreadsheet." },
+            { q: "Is Trackr a project management tool?", a: "No. Trackr is specifically an AI tool research and stack management platform. It doesn't track tasks, manage team projects, or replace general productivity software like ClickUp." },
+        ],
+        ctaText: "Research AI tools in 2 minutes",
+    },
+    {
+        competitor: "monday",
+        competitorName: "Monday.com",
+        competitorTagline: "Work management and team collaboration platform",
+        title: "Trackr vs Monday.com — AI Tool Research vs Work Management | Trackr",
+        description: "Monday.com manages your team's work. Trackr manages your AI tool evaluations — automatically researching, scoring, and tracking every tool in your stack.",
+        headline: "Monday.com manages work. Trackr manages your tool stack.",
+        subheadline: "Monday.com is a team collaboration and work management platform. Trackr researches, scores, and tracks every AI tool you evaluate or use — with AI-powered reports in 2 minutes and automatic renewal alerts.",
+        switchNarrative: `Many teams manage tool evaluations in Monday.com using boards, custom statuses, and item pages for each tool under consideration. It's a reasonable workflow — Monday.com is flexible and your team is already in it.
+
+The bottleneck is always the research itself. Someone needs to find the pricing, read the reviews, identify the alternatives, and fill in the evaluation criteria. That person spends a day on research that ends up in a board that most stakeholders won't read deeply. The evaluation quality is bounded by how much time that person had.
+
+Trackr's AI research pipeline changes the constraint. Submit a tool URL and in 2 minutes you have: current pricing, independent community sentiment, 7-dimension scores with justifications, pros and cons, and competitive alternatives. That report is the foundation your Monday.com board item builds on — not the other way around.`,
+        featureTable: [
+            { feature: "AI-generated tool research reports", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: "Manual entry" },
+            { feature: "Renewal tracking with alerts", trackr: true, competitor: "Reminders only" },
+            { feature: "Spend tracking across tool stack", trackr: true, competitor: "Manual data entry" },
+            { feature: "Competitive alternatives in every report", trackr: true, competitor: false },
+            { feature: "Work management and project boards", trackr: false, competitor: true },
+            { feature: "Team collaboration features", trackr: "Workspaces + comments", competitor: true },
+            { feature: "Research time per tool", trackr: "2 minutes", competitor: "Full research day" },
+        ],
+        advantages: [
+            { title: "AI handles the research burden", description: "The value of Monday.com boards is organizing information — but someone still needs to produce the information. Trackr generates scored research reports automatically, removing the manual research burden from your evaluation workflow." },
+            { title: "Structured output for better decisions", description: "Trackr's 7-dimension framework produces consistent, comparable evaluations. Manual Monday.com board items vary by whoever filled them in. Consistency makes multi-tool comparisons meaningful." },
+            { title: "Purpose-built for tool stack management", description: "Monday.com is a general work management tool. Trackr is specifically designed for AI tool research, spend tracking, and renewal management — with features built for that workflow." },
+        ],
+        faqs: [
+            { q: "Should I use Monday.com or Trackr for tool evaluations?", a: "Both serve different functions. Trackr generates the research and scoring. Monday.com can manage the process — tracking approvals, stakeholders, and timelines. Many teams use Monday.com to manage tool evaluation projects while using Trackr to produce the actual evaluations." },
+            { q: "Can Trackr integrate with Monday.com?", a: "Trackr exports reports as PDF and CSV that can be attached to Monday.com items. Direct integration is on the roadmap. The Slack integration can push research summaries to channels your team monitors in conjunction with Monday.com workflows." },
+        ],
+        ctaText: "Research any tool in 2 minutes",
+    },
+    {
+        competitor: "ramp",
+        competitorName: "Ramp",
+        competitorTagline: "Corporate card and spend management platform",
+        title: "Trackr vs Ramp — Tool Intelligence vs Spend Management | Trackr",
+        description: "Ramp tracks what you're spending on SaaS. Trackr tells you whether you should be spending it — with AI tool research and stack intelligence in 2 minutes.",
+        headline: "Ramp tracks your SaaS spend. Trackr helps you evaluate what's worth keeping.",
+        subheadline: "Ramp identifies what you're paying for SaaS. Trackr helps you decide what to keep, cut, or replace — with AI-powered tool research, 7-dimension scoring, and renewal intelligence.",
+        switchNarrative: `Ramp and Trackr serve complementary roles in the software procurement lifecycle. Understanding the overlap and the gap is important for teams evaluating both.
+
+Ramp is a corporate card platform with spend management features. It shows you what you're paying across vendors, flags duplicate subscriptions, and can surface underutilized tools based on SSO signals or card activity. The data Ramp provides answers "what are we spending?" — which is an important question for any team managing a SaaS budget.
+
+Trackr answers "should we be spending it?" When Ramp shows you a $2,400/month bill for a tool you're not sure you need, Trackr researches that tool: current market pricing, whether better alternatives exist, what the community says about ROI, and whether the renewal is defensible. Trackr also fills the gap upstream — researching tools before you buy them, so you make better purchasing decisions in the first place.`,
+        featureTable: [
+            { feature: "AI tool research and evaluation", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Renewal date tracking and alerts", trackr: true, competitor: "Partial (card transaction signals)" },
+            { feature: "SaaS spend visibility from card transactions", trackr: false, competitor: true },
+            { feature: "Competitive alternatives analysis", trackr: true, competitor: false },
+            { feature: "Corporate card and expense management", trackr: false, competitor: true },
+            { feature: "Pre-purchase evaluation support", trackr: true, competitor: false },
+            { feature: "Tool benchmarking and scoring", trackr: true, competitor: false },
+        ],
+        advantages: [
+            { title: "Intelligence, not just visibility", description: "Ramp shows you what you're spending. Trackr tells you whether it's worth spending. The research layer — scoring tools against alternatives, surfacing community feedback, and providing renewal context — is what Trackr adds." },
+            { title: "Pre-purchase evaluation, not post-purchase tracking", description: "Ramp's value is in managing spend on tools you've already purchased. Trackr's primary value is in the evaluation phase — helping you make better decisions before committing to a tool and contract." },
+            { title: "Evaluation framework for every renewal", description: "Ramp can alert you to an upcoming renewal. Trackr gives you a fresh research report at renewal time — current pricing, competitive alternatives, and community feedback — so you renew with current intelligence, not just a calendar reminder." },
+        ],
+        faqs: [
+            { q: "Can I use both Ramp and Trackr?", a: "Yes, they're complementary. Ramp manages your SaaS spend and corporate card transactions. Trackr handles tool research, evaluation scoring, and renewal intelligence. Many operations and finance teams use both as part of a complete vendor management workflow." },
+            { q: "Does Trackr show me my SaaS spending like Ramp does?", a: "Trackr includes manual spend tracking — you can log what you're paying for each tool. But Trackr doesn't have Ramp's card integration for automatic spend detection. For comprehensive spend visibility, Ramp or similar platforms are the right tool." },
+            { q: "Is Trackr cheaper than Ramp?", a: "Different pricing models. Ramp's core spend management is free; Trackr starts free with paid tiers for advanced research features. The cost comparison matters less than understanding which job each tool does in your vendor management workflow." },
+        ],
+        ctaText: "Research your SaaS stack intelligently",
+    },
+    {
+        competitor: "apollo",
+        competitorName: "Apollo.io",
+        competitorTagline: "Sales intelligence and outreach platform",
+        title: "Trackr for Apollo Evaluation — Research Apollo Before You Buy | Trackr",
+        description: "Evaluating Apollo.io for your sales team? Trackr generates an independent scored report in 2 minutes — current pricing, alternatives like ZoomInfo and Clay, and 7-dimension analysis.",
+        headline: "Evaluating Apollo? Get a scored report before the first demo.",
+        subheadline: "Trackr researches Apollo.io's current pricing, surfaces community feedback from sales practitioners, identifies alternatives like ZoomInfo, Clay, and Lusha, and delivers a 7-dimension scorecard — in 2 minutes, before any vendor contact.",
+        switchNarrative: `Apollo.io is one of the most-evaluated tools in the sales intelligence and sequencing category. The market is competitive — ZoomInfo, Clay, Lusha, Hunter, Outreach, and Salesloft all compete for overlapping use cases — which makes the evaluation complex. Knowing what Apollo actually does well vs. the alternatives is harder than it should be.
+
+Apollo's data accuracy and database size are frequently discussed in sales practitioner communities with mixed results by company type, geography, and target segment. The platform has evolved significantly from a simple prospecting tool to a full sales engagement platform. Understanding which Apollo you're buying — and whether the full platform or just the database is the right fit — requires research that most evaluators don't do before the first demo.
+
+Trackr generates that research in 2 minutes. You'll see how Apollo's contact database compares to ZoomInfo and Lusha, how the sequencing features compare to dedicated tools like Outreach, what the community says about data accuracy across different market segments, and what you should realistically expect to pay vs. the published pricing. That foundation makes your evaluation conversations with Apollo's sales team substantively better.`,
+        featureTable: [
+            { feature: "Independent Apollo pricing research", trackr: true, competitor: "Sales-quoted" },
+            { feature: "Data accuracy community analysis", trackr: "In research report", competitor: false },
+            { feature: "Alternatives (ZoomInfo, Clay, Lusha, Outreach)", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Contact database and prospecting", trackr: false, competitor: true },
+            { feature: "Email sequencing and cadences", trackr: false, competitor: true },
+            { feature: "AI-powered outreach features", trackr: false, competitor: true },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "3–5 week trial" },
+        ],
+        advantages: [
+            { title: "Research Apollo independently before the trial", description: "Most Apollo evaluations start with a trial and only later surface questions about data accuracy, pricing tiers, and alternatives. Trackr gives you independent intelligence first — so your trial is structured around answering the right questions." },
+            { title: "Compare Apollo vs ZoomInfo vs Clay in 10 minutes", description: "Submit all three to Trackr and get scored reports on the same 7-dimension framework. Use the comparison to determine which platforms are worth a deeper trial before committing sales team time." },
+            { title: "Re-evaluate at annual renewal", description: "The sales intelligence market changes fast. Apollo's pricing, data quality, and feature set evolve constantly. Trackr can re-research Apollo at any interval — so your renewal decision is based on current market intelligence." },
+        ],
+        faqs: [
+            { q: "Does Trackr have Apollo's actual pricing?", a: "Apollo's pricing is partially published and partially custom-quoted. Trackr's research reflects published pricing plus community-reported actual prices for common configurations. This gives you a realistic expectation range before engaging their sales team." },
+            { q: "Can Trackr compare Apollo vs ZoomInfo?", a: "Yes — submit both URLs to Trackr and use the compare feature for side-by-side 7-dimension scoring. This is the fastest way to align your team on which platforms to take to a full trial." },
+            { q: "Is Trackr useful for evaluating non-AI sales tools?", a: "Yes. Trackr researches any SaaS tool — including traditional sales intelligence, CRM, and outreach platforms. The AI in Trackr is in the research pipeline, not a restriction on what can be researched." },
+        ],
+        ctaText: "Research Apollo independently in 2 minutes",
+    },
 ];
 
 export const VS_COMPETITORS = VS_PAGES.map((p) => p.competitor);

@@ -766,6 +766,152 @@ export const ICP_PAGES: IcpPage[] = [
         testimonialQuote: "We evaluated four CLM platforms and needed documentation for our CFO approval. Trackr gave us consistent scored reports on all four that we could put directly into our business case. Saved us 20+ hours of formatting work.",
         testimonialAttribution: "General Counsel, 250-person SaaS company",
     },
+    {
+        role: "procurement",
+        title: "Trackr for Procurement Teams — AI Tool Research and Vendor Intelligence",
+        description: "Procurement teams use Trackr to evaluate vendors faster, build defensible business cases, and manage SaaS renewals with AI-powered research in 2 minutes.",
+        headline: "Procurement intelligence that keeps up with your evaluation pipeline.",
+        subheadline: "AI-powered tool research in 2 minutes. Consistent 7-dimension scoring across every vendor. Renewal alerts with live competitive intelligence — built for modern procurement workflows.",
+        painPoints: [
+            {
+                title: "Vendor evaluations take weeks and still feel incomplete",
+                description: "The standard procurement process — RFP, demos, reference calls, internal review — takes 4–8 weeks per tool. By the time the process completes, requirements may have shifted and the team has already lost confidence in the recommendation.",
+            },
+            {
+                title: "Business cases lack independent scoring",
+                description: "CFO approvals require defensible justification. But most vendor comparisons are built from vendor-provided materials — feature lists, case studies, and pricing quotes that reflect the best possible framing of each tool's capabilities.",
+            },
+            {
+                title: "SaaS renewal cycles create recurring scrambles",
+                description: "Enterprise software contracts renew on schedules that rarely align with procurement bandwidth. Renewals surface with insufficient lead time to re-evaluate the market, negotiate effectively, or consider alternatives.",
+            },
+        ],
+        features: [
+            {
+                title: "AI research reports in 2 minutes",
+                description: "Submit any vendor URL. Trackr's agents generate a scored research report — current pricing, 7-dimension evaluation, pros/cons, competitive alternatives, and community feedback from independent sources.",
+            },
+            {
+                title: "Consistent scoring framework across all vendors",
+                description: "The same 7-dimension scorecard applies to every tool you evaluate, producing comparable reports that make multi-vendor comparisons structured and defensible — not dependent on whoever produced the analysis.",
+            },
+            {
+                title: "Renewal calendar with advance intelligence",
+                description: "Track all contract renewal dates across your tech stack. Get 60-day alerts with enough lead time to run fresh competitive research, brief stakeholders, and negotiate from a position of current market knowledge.",
+            },
+        ],
+        stat: {
+            value: "87%",
+            label: "Of procurement teams report AI tool evaluations as their fastest-growing category",
+        },
+        faqs: [
+            { q: "How does Trackr fit into an existing procurement process?", a: "Trackr is the research layer before your formal procurement workflow begins. Submit tool candidates to Trackr during initial discovery — use the scored reports to shortlist vendors before investing in formal RFPs and demos. Trackr also integrates at the renewal stage, providing fresh intelligence when contracts come up for re-evaluation." },
+            { q: "Can Trackr help build vendor comparison matrices?", a: "Yes. Trackr's 7-dimension reports apply the same scoring framework to every vendor, making cross-vendor comparison matrices straightforward to build. Export reports as PDF or CSV and attach them to your business case or vendor review documentation." },
+            { q: "How does Trackr handle vendors with undisclosed pricing?", a: "For tools with opaque pricing — common in enterprise SaaS — Trackr's research pipeline surfaces community-reported pricing benchmarks, disclosed price ranges from third-party sources, and contextual analysis of what similar companies report paying. The report provides realistic range expectations, not just vendor-quoted list prices." },
+            { q: "Is Trackr useful for non-AI software categories?", a: "Yes. Despite the name, Trackr researches any SaaS tool — CRM, ERP, HR platforms, security tools, analytics, and AI-specific tools. The research agents evaluate based on current market data, not category-specific rules." },
+        ],
+        ctaText: "Streamline your vendor evaluation process",
+        ctaSubtext: "Free to start. Team plans for procurement workflows.",
+        testimonialQuote: "We cut our initial vendor shortlisting process from 3 weeks to 3 days. Trackr gives us independent scores we can put directly into our approval docs without the 'but that's from the vendor' pushback.",
+        testimonialAttribution: "Senior Procurement Manager, enterprise software company",
+    },
+    {
+        role: "vp-strategy",
+        title: "Trackr for Strategy Leaders — AI Tool Intelligence for Executive Decision-Making",
+        description: "VPs of Strategy and Chief of Staff use Trackr to research AI tools for the business, evaluate build vs. buy decisions, and maintain AI stack intelligence across the organization.",
+        headline: "Strategy requires current intelligence. Trackr provides it.",
+        subheadline: "Research any AI or SaaS tool in 2 minutes. Get independent scoring, competitive context, and renewal intelligence across your full stack — with the depth and consistency executive decisions require.",
+        painPoints: [
+            {
+                title: "AI tool evaluations arrive from every direction",
+                description: "Your team surfaces five new AI tools a week. Sales wants to evaluate a sequencer. Engineering wants a code assistant. Finance wants a forecasting tool. Each evaluation requires independent research — and there's no centralized, consistent framework to evaluate across them.",
+            },
+            {
+                title: "Build vs. buy decisions lack structured intelligence",
+                description: "When leadership asks 'should we build this or buy it?', the answer depends on a clear-eyed view of what existing products do and at what cost. That intelligence rarely exists in a structured form that executives can evaluate.",
+            },
+            {
+                title: "The AI stack is fragmented and ungoverned",
+                description: "Individual teams make tool decisions independently. By the time strategy leadership gets visibility, there are overlapping tools, redundant subscriptions, and no record of why decisions were made — making consolidation or review impossible.",
+            },
+        ],
+        features: [
+            {
+                title: "Executive-quality research reports in 2 minutes",
+                description: "Submit any tool URL and get an AI-generated report with 7-dimension scoring, independent community analysis, competitive alternatives, and current pricing — structured to brief leadership without hours of preparation.",
+            },
+            {
+                title: "Stack-level visibility across the organization",
+                description: "Track every tool across functions — who's using it, what you're paying, and when contracts renew. Get a single view of your AI stack without requiring every team to submit a status update.",
+            },
+            {
+                title: "Structured record of every evaluation decision",
+                description: "Every research report is timestamped and archived. When leadership asks 'why did we choose X over Y?', the answer is in Trackr — including what alternatives were considered and what the scores showed at the time.",
+            },
+        ],
+        stat: {
+            value: "3.2x",
+            label: "More AI tools added to enterprise stacks annually vs. 2023",
+        },
+        faqs: [
+            { q: "Can Trackr support company-wide AI strategy reviews?", a: "Yes. Trackr's workspace feature allows you to track the full AI stack across teams, with spend data, renewal calendars, and research history. This gives strategy leaders the visibility to run structured quarterly reviews of the AI portfolio." },
+            { q: "How does Trackr help with build vs. buy decisions?", a: "Trackr generates a comprehensive market view of any solution category — what tools exist, what they score across 7 dimensions, their pricing, and what the community says about ROI. That intelligence is the starting point for any credible build vs. buy analysis." },
+            { q: "Is Trackr useful at the executive level or just for individual evaluators?", a: "Both. Individual contributors use Trackr to generate initial research. Strategy leaders use the workspace view to get portfolio-level visibility, run renewal reviews, and build structured AI stack governance." },
+        ],
+        ctaText: "Build an AI-ready tool intelligence layer",
+        ctaSubtext: "Free to start. Enterprise plans for org-wide visibility.",
+        testimonialQuote: "I use Trackr to stay current on AI tools before anyone on my team asks for my opinion. When a VP brings a tool recommendation to my desk, I've already seen the independent score.",
+        testimonialAttribution: "VP of Strategy, Series C SaaS company",
+    },
+    {
+        role: "security-leaders",
+        title: "Trackr for Security Leaders — AI Tool Security Evaluation and Vendor Risk",
+        description: "CISOs and security leaders use Trackr to evaluate AI tools for security posture, data handling practices, and compliance risks — before procurement commits.",
+        headline: "Every AI tool your company adopts is a security decision.",
+        subheadline: "Trackr helps security leaders evaluate AI and SaaS tools for security posture, data handling transparency, and vendor risk — with independent research in 2 minutes and a structured 7-dimension framework.",
+        painPoints: [
+            {
+                title: "AI tool procurement moves faster than security review",
+                description: "Teams adopt AI tools on credit cards before security has a chance to evaluate them. By the time security is involved, the tool is embedded in workflows and user data has already been processed through an unreviewed vendor's systems.",
+            },
+            {
+                title: "Security evaluation of AI tools requires specialized knowledge",
+                description: "AI tools introduce distinct risk vectors — training on customer data, unclear retention policies, third-party AI model dependencies, and regulatory uncertainty. Evaluating these requires more than a standard vendor questionnaire.",
+            },
+            {
+                title: "No consistent framework for AI tool risk assessment",
+                description: "Security teams evaluate tools inconsistently — different criteria for different tools, driven by whoever has bandwidth. Without a standardized framework, risk comparisons across tools are impossible and audit documentation is weak.",
+            },
+        ],
+        features: [
+            {
+                title: "Security dimension in every research report",
+                description: "Every Trackr report includes a security and compliance dimension — covering data handling transparency, SOC 2 status, enterprise security features, and known privacy concerns surfaced from community and compliance sources.",
+            },
+            {
+                title: "Independent vendor analysis before procurement commits",
+                description: "Trackr gives security leaders an independent research baseline on any tool — before the vendor sales process begins. Use the report to structure vendor security questionnaires and due diligence around the actual risk vectors for each tool.",
+            },
+            {
+                title: "Centralized AI tool inventory for security governance",
+                description: "Track every AI tool deployed across the organization with a persistent record of when each was evaluated, what the security assessment showed, and what the current compliance posture is. Use this for audit documentation and board reporting.",
+            },
+        ],
+        stat: {
+            value: "61%",
+            label: "Of CISOs report AI tool shadow adoption as a top security concern",
+        },
+        faqs: [
+            { q: "Does Trackr assess a tool's security posture specifically?", a: "Trackr's 7-dimension framework includes a security and compliance dimension that covers data handling policies, SOC 2 / ISO 27001 certification status, enterprise security features, and community-reported concerns. It's an initial assessment tool — not a replacement for a formal security audit or vendor questionnaire." },
+            { q: "Can Trackr help with AI tool governance policy?", a: "Trackr provides the inventory and evaluation framework that underpins a governance policy. Security leaders use Trackr to build the approved tool list, document evaluation criteria, and track the AI stack for policy enforcement." },
+            { q: "How does Trackr handle AI tools with opaque data practices?", a: "When a tool's data handling practices are unclear or poorly documented, Trackr flags this in the report with appropriate context. Opacity in AI tool data practices is itself a risk signal — Trackr identifies it as part of the security dimension." },
+            { q: "Can I share Trackr reports with my security team?", a: "Yes. Reports are shareable within your workspace and can be exported as PDF for distribution to security teams, procurement, and legal. Enterprise plans support team workspaces with role-based access." },
+        ],
+        ctaText: "Build a secure AI tool evaluation process",
+        ctaSubtext: "Free to start. Enterprise plans for security governance.",
+        testimonialQuote: "We now require a Trackr report before any AI tool can be expensed. It gives our team a consistent baseline and flags the data handling questions we need answered before procurement commits.",
+        testimonialAttribution: "CISO, 800-person enterprise software company",
+    },
 ];
 
 export const ICP_ROLES = ICP_PAGES.map((p) => p.role);

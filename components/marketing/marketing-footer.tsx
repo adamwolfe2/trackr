@@ -49,6 +49,9 @@ export function MarketingFooter() {
                         <Link href="/for/customer-success" className="text-neutral-600 hover:text-black hover:underline">Customer Success</Link>
                         <Link href="/for/hr-leaders" className="text-neutral-600 hover:text-black hover:underline">HR Leaders</Link>
                         <Link href="/for/legal-teams" className="text-neutral-600 hover:text-black hover:underline">Legal Teams</Link>
+                        <Link href="/for/procurement" className="text-neutral-600 hover:text-black hover:underline">Procurement</Link>
+                        <Link href="/for/security-leaders" className="text-neutral-600 hover:text-black hover:underline">Security Leaders</Link>
+                        <Link href="/for/vp-strategy" className="text-neutral-600 hover:text-black hover:underline">VP Strategy</Link>
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -68,6 +71,8 @@ export function MarketingFooter() {
                         <Link href="/vs/spreadsheets" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Spreadsheets</Link>
                         <Link href="/vs/notion" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Notion</Link>
                         <Link href="/vs/gartner" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Gartner</Link>
+                        <Link href="/vs/microsoft-copilot" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Copilot</Link>
+                        <Link href="/vs/ramp" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Ramp</Link>
                         <Link href="/vs" className="text-neutral-600 hover:text-black hover:underline font-medium">All comparisons →</Link>
                     </div>
 
