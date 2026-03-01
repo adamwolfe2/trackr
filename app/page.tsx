@@ -102,6 +102,8 @@ const jsonLd = {
         { "@type": "Question", name: "How accurate are the research reports?", acceptedAnswer: { "@type": "Answer", text: "Reports are sourced from 25+ real data points — official sites, review platforms, Reddit threads, and competitive analysis. Every claim is grounded in real data, not hallucinated." } },
         { "@type": "Question", name: "Is my data private?", acceptedAnswer: { "@type": "Answer", text: "Yes. Your workspace data is isolated and never shared between accounts. Research reports are private to your workspace unless you explicitly create a share link." } },
         { "@type": "Question", name: "Can I try paid features before committing?", acceptedAnswer: { "@type": "Answer", text: "All paid plans include a 14-day free trial with full access. No credit card required to start. Cancel anytime during the trial." } },
+        { "@type": "Question", name: "What types of tools can I research with Trackr?", acceptedAnswer: { "@type": "Answer", text: "Any SaaS or AI tool with a public website. Submit a URL and Trackr evaluates it across 7 dimensions: features, pricing value, ease of use, integration depth, support quality, security, and AI capabilities. The research library also includes 150+ pre-built scorecards for popular tools." } },
+        { "@type": "Question", name: "Can multiple team members collaborate on tool research?", acceptedAnswer: { "@type": "Answer", text: "Yes. All research reports live in a shared team workspace. Team members can add notes, vote on tools, share report links externally, and collaborate on the software evaluation process. Team plans support 5 members; Startup plans support 15; Enterprise plans are unlimited." } },
       ],
     },
   ],

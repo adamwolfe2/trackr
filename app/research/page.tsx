@@ -264,11 +264,55 @@ export default async function ResearchLibraryPage({
                     </section>
                 )}
 
+                {/* ── Start from a Template ── */}
+                <section className="py-10 border-t border-black/10">
+                    <div className="mb-5">
+                        <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Evaluation Templates</p>
+                        <h2 className="font-serif text-2xl font-normal">Start from a Template</h2>
+                        <p className="font-mono text-xs text-neutral-500 mt-1 max-w-xl">
+                            Pre-built evaluation frameworks for common stack decisions. Import a template to get a structured scorecard instantly.
+                        </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Link
+                            href="/research/templates"
+                            className="inline-flex items-center gap-2 border border-black px-5 py-3 font-mono text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
+                        >
+                            Browse All Templates →
+                        </Link>
+                        <Link
+                            href="/sign-up"
+                            className="inline-flex items-center gap-2 bg-black text-white px-5 py-3 font-mono text-xs uppercase tracking-widest hover:bg-neutral-800 transition-colors border border-black"
+                        >
+                            Import a Template Free →
+                        </Link>
+                    </div>
+                </section>
+
+                {/* ── Compare Tools Side-by-Side ── */}
+                <section className="py-10 border-t border-black/10">
+                    <div className="mb-5">
+                        <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Tool Comparison</p>
+                        <h2 className="font-serif text-2xl font-normal">Compare Tools Side-by-Side</h2>
+                        <p className="font-mono text-xs text-neutral-500 mt-1 max-w-xl">
+                            Shortlisted two or more tools? Compare them head-to-head across all 7 scorecard dimensions in a single view.
+                        </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                        <Link
+                            href="/research/compare"
+                            className="inline-flex items-center gap-2 border border-black px-5 py-3 font-mono text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
+                        >
+                            Open Compare Tool →
+                        </Link>
+                    </div>
+                </section>
+
                 {/* ── CTA ── */}
                 <div className="my-16 border border-black bg-black text-white p-8">
                     <p className="font-mono text-xs uppercase tracking-wider text-neutral-400 mb-3">Research any tool</p>
                     <h3 className="font-serif text-2xl font-normal mb-3 text-white">
-                        Don't see the tool you're evaluating?
+                        Don&apos;t see the tool you&apos;re evaluating?
                     </h3>
                     <p className="font-mono text-sm text-neutral-400 mb-6 max-w-md">
                         Submit any tool URL. Research agents produce a scored report in under 2 minutes.
