@@ -30,7 +30,41 @@ export default async function BlogIndex() {
     const user = await currentUser();
     const posts = getAllPosts();
 
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Blog",
+                "@id": "https://trytrackr.com/blog",
+                name: "Trackr Blog",
+                description: "Guides, insights, and tool recommendations for ops teams evaluating AI tools.",
+                url: "https://trytrackr.com/blog",
+                publisher: {
+                    "@type": "Organization",
+                    name: "Trackr",
+                    url: "https://trytrackr.com",
+                },
+            },
+            {
+                "@type": "ItemList",
+                name: "Trackr Blog Articles",
+                numberOfItems: posts.length,
+                itemListElement: posts.slice(0, 20).map((post, i) => ({
+                    "@type": "ListItem",
+                    position: i + 1,
+                    url: `https://trytrackr.com/blog/${post.slug}`,
+                    name: post.title,
+                })),
+            },
+        ],
+    };
+
     return (
+        <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
         <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
             <MarketingNavigation isLoggedIn={!!user} />
 
@@ -95,5 +129,6 @@ export default async function BlogIndex() {
 
             <MarketingFooter />
         </main>
+        </>
     );
 }

@@ -12,10 +12,10 @@ import { CuratedLibrary } from "@/components/research/curated-library";
 
 export const metadata: Metadata = {
     title: "AI Tool Library — Trackr",
-    description: "Browse scorecards for 60+ AI tools. Research reports, templates, and competitive intelligence for teams evaluating SaaS.",
+    description: "Browse scorecards for 150+ AI tools. Research reports, templates, and competitive intelligence for teams evaluating SaaS.",
     openGraph: {
         title: "AI Tool Library — Trackr",
-        description: "Scorecards for 60+ AI tools — features, pricing, pros, cons, and competitive analysis.",
+        description: "Scorecards for 150+ AI tools — features, pricing, pros, cons, and competitive analysis.",
         images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr AI Tool Library" }],
     },
     alternates: {
@@ -124,7 +124,7 @@ export default async function ResearchLibraryPage({
                             The AI Stack Intelligence Library
                         </h1>
                         <p className="font-mono text-base text-neutral-600 max-w-xl mb-6">
-                            Scorecards for 60+ AI tools. Research reports, stack templates, and competitive intelligence — all in one place.
+                            Scorecards for 150+ AI tools. Research reports, stack templates, and competitive intelligence — all in one place.
                         </p>
                         {/* Stats row */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-px border border-black bg-black w-full max-w-lg">

@@ -44,6 +44,11 @@ export function MarketingFooter() {
                         <Link href="/for/marketing-teams" className="text-neutral-600 hover:text-black hover:underline">Marketing</Link>
                         <Link href="/for/finance-teams" className="text-neutral-600 hover:text-black hover:underline">Finance</Link>
                         <Link href="/for/it-leaders" className="text-neutral-600 hover:text-black hover:underline">IT Leaders</Link>
+                        <Link href="/for/product-managers" className="text-neutral-600 hover:text-black hover:underline">Product Managers</Link>
+                        <Link href="/for/sales-leaders" className="text-neutral-600 hover:text-black hover:underline">Sales Leaders</Link>
+                        <Link href="/for/customer-success" className="text-neutral-600 hover:text-black hover:underline">Customer Success</Link>
+                        <Link href="/for/hr-leaders" className="text-neutral-600 hover:text-black hover:underline">HR Leaders</Link>
+                        <Link href="/for/legal-teams" className="text-neutral-600 hover:text-black hover:underline">Legal Teams</Link>
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -52,6 +57,18 @@ export function MarketingFooter() {
                         <Link href="/blog" className="text-neutral-600 hover:text-black hover:underline">Blog</Link>
                         <Link href="/contact" className="text-neutral-600 hover:text-black hover:underline">Contact</Link>
                         <Link href="/partners" className="text-neutral-600 hover:text-black hover:underline">Integrations</Link>
+                    </div>
+
+                    <div className="flex flex-col gap-4">
+                        <span className="font-bold text-black uppercase tracking-wider">Compare</span>
+                        <Link href="/vs/g2" className="text-neutral-600 hover:text-black hover:underline">Trackr vs G2</Link>
+                        <Link href="/vs/capterra" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Capterra</Link>
+                        <Link href="/vs/chatgpt" className="text-neutral-600 hover:text-black hover:underline">Trackr vs ChatGPT</Link>
+                        <Link href="/vs/vendr" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Vendr</Link>
+                        <Link href="/vs/spreadsheets" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Spreadsheets</Link>
+                        <Link href="/vs/notion" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Notion</Link>
+                        <Link href="/vs/gartner" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Gartner</Link>
+                        <Link href="/vs" className="text-neutral-600 hover:text-black hover:underline font-medium">All comparisons →</Link>
                     </div>
 
                     <div className="flex flex-col gap-4">
