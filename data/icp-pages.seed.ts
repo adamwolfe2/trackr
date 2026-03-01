@@ -526,6 +526,246 @@ export const ICP_PAGES: IcpPage[] = [
         testimonialQuote: "We were reactive on AI tool adoption — finding out about tools after employees had already put data into them. Trackr gave us a consistent evaluation framework and now we're ahead of the curve instead of chasing it.",
         testimonialAttribution: "Director of IT, 300-person fintech company",
     },
+    {
+        role: "product-managers",
+        title: "Trackr for Product Managers — AI Tool Research for Product Teams",
+        description: "Product managers use Trackr to evaluate project management, analytics, and roadmap tools in 2 minutes. Stop spending days on tool research. Start shipping.",
+        headline: "Product managers research tools. Trackr makes it 10x faster.",
+        subheadline: "Evaluate any PM tool in 2 minutes. Get scored reports on project management, analytics, roadmap, and collaboration tools — so you can make confident stack decisions and get back to building.",
+        painPoints: [
+            {
+                title: "Tool evaluations interrupt your roadmap",
+                description: "Every time someone asks 'should we use Linear or Jira?', that's a 6-hour detour from actual product work. Demos, G2 rabbit holes, Slack polls — all for a decision that still feels uncertain.",
+            },
+            {
+                title: "Your team has opinions, not data",
+                description: "Engineering wants Linear. Design wants Figma + Notion. Marketing wants Asana. Everyone has a preference. Nobody has a scored comparison with current pricing and integration analysis.",
+            },
+            {
+                title: "Tool decisions don't age well",
+                description: "The analytics tool you chose 18 months ago has been lapped by three new entrants. You have no systematic way to know when to re-evaluate — until the contract renewal forces the conversation.",
+            },
+        ],
+        features: [
+            {
+                title: "Research any PM tool in 2 minutes",
+                description: "Submit any URL — Linear, Jira, Notion, Asana, ClickUp, Mixpanel, Amplitude. Trackr's agents research current pricing, pull G2 and Reddit feedback, identify alternatives, and return a 7-dimension scored report.",
+            },
+            {
+                title: "Side-by-side tool comparison",
+                description: "Research two or three tools, then use Trackr's comparison view to evaluate them side-by-side. Share the comparison with your team so decisions are made on data, not whoever talks loudest.",
+            },
+            {
+                title: "Stack renewal alerts",
+                description: "Never let a tool auto-renew without a decision. Trackr tracks renewal dates and alerts you with enough lead time to re-evaluate the market and negotiate — or cancel without penalty.",
+            },
+        ],
+        stat: {
+            value: "2 min",
+            label: "Average research time vs. 6+ hours manual",
+        },
+        faqs: [
+            { q: "Can Trackr research developer tools too?", a: "Yes — Trackr researches tools across every category. Submit any URL including developer platforms, observability tools, CI/CD systems, or any other tool your team evaluates." },
+            { q: "Can I share reports with engineering or design?", a: "Yes — reports are shareable with everyone in your workspace. Add team members so engineering can review the integration depth section and design can assess the feature depth before the decision is finalized." },
+            { q: "Does Trackr track tools I'm not actively evaluating?", a: "Yes — your full current stack lives in Trackr's spend tracker. You can log every tool, its cost, and its renewal date, and set alerts for renewals 30–90 days out." },
+        ],
+        ctaText: "Research your next tool decision",
+        ctaSubtext: "Free to start. No credit card required.",
+        testimonialQuote: "I used to spend half a day on every tool evaluation. Now I submit the URL, get the report in 2 minutes, and spend the rest of the time actually discussing the decision with my team instead of sourcing data.",
+        testimonialAttribution: "Senior Product Manager, Series B SaaS company",
+    },
+    {
+        role: "sales-leaders",
+        title: "Trackr for Sales Leaders — AI Tool Research for Revenue Teams",
+        description: "Sales VPs and revenue leaders use Trackr to evaluate CRM, sales engagement, intelligence, and enablement tools in 2 minutes — with scored reports and alternatives.",
+        headline: "Your sales stack is your competitive advantage. Trackr helps you build it right.",
+        subheadline: "Research any sales tool in 2 minutes. Score CRM, sales engagement, revenue intelligence, and enablement tools across 7 dimensions — so every stack decision is backed by data, not vendor demos.",
+        painPoints: [
+            {
+                title: "Vendor demos are designed to sell, not inform",
+                description: "By the time you've done three Salesforce demos and two HubSpot presentations, you're in negotiation mode before you've completed your evaluation. Sales tool vendors are excellent at shaping the evaluation in their favor.",
+            },
+            {
+                title: "Your reps have tool fatigue",
+                description: "Every tool added to the sales stack has an adoption curve that costs quota-carrying time. Adding the wrong tool is worse than adding no tool. Yet most sales tool decisions are made with insufficient research.",
+            },
+            {
+                title: "The revenue intelligence category moves fast",
+                description: "Gong, Chorus, Clari, Salesloft, Outreach — the competitive landscape changes every six months. The tool you evaluated last year may not be the best option today, but you have no systematic way to stay current.",
+            },
+        ],
+        features: [
+            {
+                title: "Research any sales tool in 2 minutes",
+                description: "Submit any CRM, sales engagement, intelligence, or enablement tool URL. Trackr's research agents pull current pricing, surface real user feedback from sales practitioners, identify alternatives, and return a scored 7-dimension report.",
+            },
+            {
+                title: "Independent analysis before vendor engagement",
+                description: "Complete a full research report before scheduling the first demo. Go into vendor conversations informed about current pricing, known limitations, and competitive alternatives — not shaped by the vendor's narrative.",
+            },
+            {
+                title: "Monitor your sales stack spend",
+                description: "Track every tool in your revenue tech stack with monthly cost, seat count, and renewal dates. Identify overlap between tools and surface tools that may be underperforming against newer alternatives.",
+            },
+        ],
+        stat: {
+            value: "40%",
+            label: "Average sales teams that have tool overlap in their stack",
+        },
+        faqs: [
+            { q: "Can Trackr research sales tools that don't publish pricing?", a: "Yes — Trackr's research pulls from community sources, practitioner forums, and third-party benchmarks to surface realistic pricing ranges even when vendors don't publish rates publicly. The report includes context on what similar companies typically pay." },
+            { q: "How does Trackr handle fast-moving categories like revenue intelligence?", a: "You can set any tool to auto-research on a weekly, bi-weekly, or monthly schedule. Trackr re-runs the full pipeline and alerts you when the score changes significantly — so you always have current intelligence without manual effort." },
+            { q: "Can I share research with my CRO or CFO to justify a purchase?", a: "Yes — Trackr reports are shareable and printable. The structured format (score, pros/cons, competitive analysis, pricing) is designed to be decision-ready for stakeholder review without additional formatting work." },
+        ],
+        ctaText: "Build a data-driven sales stack",
+        ctaSubtext: "Free to start. First research report in under 2 minutes.",
+        testimonialQuote: "We evaluated six sales engagement platforms last quarter. Without Trackr, that would have been a 6-week process. We had scored reports on all six in a morning and went into demos knowing exactly what to ask.",
+        testimonialAttribution: "VP of Sales, 120-person B2B SaaS company",
+    },
+    {
+        role: "customer-success",
+        title: "Trackr for Customer Success Teams — AI Tool Research for CS Leaders",
+        description: "Customer success leaders use Trackr to evaluate CS platforms, health scoring tools, and support software in 2 minutes — with scored reports and competitive alternatives.",
+        headline: "The right CS stack retains customers. Trackr helps you build it.",
+        subheadline: "Research any customer success, support, or engagement tool in 2 minutes. Score Gainsight, ChurnZero, Intercom, and alternatives across 7 dimensions — before a single vendor demo.",
+        painPoints: [
+            {
+                title: "CS platform decisions have multi-year consequences",
+                description: "Gainsight or ChurnZero? Intercom or Zendesk? These are 2–3 year commitments with significant implementation costs. Getting the evaluation right the first time matters enormously.",
+            },
+            {
+                title: "The CS tool landscape is fragmenting",
+                description: "Customer health scoring, digital CS, community platforms, support ticketing, onboarding automation — the CS stack has exploded. Most CS leaders are evaluating more tools than ever with less time than ever.",
+            },
+            {
+                title: "Churn is expensive. Wrong tools make it worse.",
+                description: "If your CS platform doesn't surface at-risk accounts early enough, the cost isn't just the subscription — it's the customers you lose. Tool decisions in CS have direct revenue consequences.",
+            },
+        ],
+        features: [
+            {
+                title: "Research any CS tool in 2 minutes",
+                description: "Submit Gainsight, ChurnZero, Totango, Intercom, Zendesk, or any other CS tool URL. Get a scored report with current pricing, community feedback from CS practitioners, and alternatives — in under 2 minutes.",
+            },
+            {
+                title: "Compare CS platforms side-by-side",
+                description: "Research multiple CS platforms and compare them across the same 7-dimension framework. Bring structured comparisons to your CRO or CFO instead of a deck built from vendor marketing materials.",
+            },
+            {
+                title: "Track your CS stack renewal dates",
+                description: "Log every CS tool with its cost and renewal date. Trackr alerts you 30–60 days before renewals so you have time to re-evaluate alternatives and negotiate from a position of knowledge.",
+            },
+        ],
+        stat: {
+            value: "3x",
+            label: "Faster evaluation cycle compared to traditional methods",
+        },
+        faqs: [
+            { q: "Does Trackr evaluate support tools as well as CS platforms?", a: "Yes — Trackr researches tools across the full customer-facing stack: CS platforms (Gainsight, ChurnZero), support ticketing (Zendesk, Intercom, Freshdesk), community platforms, onboarding tools, and more." },
+            { q: "Can I use Trackr to build a business case for a CS platform upgrade?", a: "Yes — Trackr reports include a scored evaluation, pros/cons, competitive alternatives, and pricing context. That structure is well-suited for building a business case document without starting from scratch." },
+            { q: "My CS team is small. Is Trackr still useful?", a: "Absolutely — Trackr's free plan covers 3 research reports per month. For a small CS team evaluating tools once a quarter, the free tier often provides everything you need." },
+        ],
+        ctaText: "Research your CS stack intelligently",
+        ctaSubtext: "Free to start. No implementation required.",
+        testimonialQuote: "We were about to sign a 2-year Gainsight contract when I ran it through Trackr. The competitive analysis surfaced ChurnZero as a stronger fit for our ARR band. That 2-minute report saved us 6 figures.",
+        testimonialAttribution: "Head of Customer Success, 80-person SaaS company",
+    },
+    {
+        role: "hr-leaders",
+        title: "Trackr for HR Leaders — AI Tool Research for People Teams",
+        description: "HR leaders and CHROs use Trackr to evaluate HRIS, ATS, performance management, and people analytics tools — with AI-powered scoring and competitive alternatives in 2 minutes.",
+        headline: "HR tech decisions affect every employee. Make them with data.",
+        subheadline: "Research any HR tool in 2 minutes. Score HRIS, ATS, performance management, and learning platforms across 7 dimensions — so you stop relying on vendor demos and start evaluating with independent intelligence.",
+        painPoints: [
+            {
+                title: "HRIS decisions take months and affect everyone",
+                description: "Workday, BambooHR, Rippling, Gusto — an HRIS migration touches every employee and every HR workflow. The stakes of getting this decision wrong are high, and the evaluation process is notoriously vendor-controlled.",
+            },
+            {
+                title: "The HR tech landscape is overwhelming",
+                description: "HRIS, ATS, L&D, engagement surveys, performance management, payroll, benefits administration — each category has 10+ vendors. HR teams are expected to evaluate all of them without dedicated research resources.",
+            },
+            {
+                title: "No framework for comparing tools across categories",
+                description: "You can compare two ATS systems, but how do you compare an ATS against a broader HRIS that includes recruiting? Trackr's 7-dimension framework applies consistently across categories.",
+            },
+        ],
+        features: [
+            {
+                title: "Research any HR tool in 2 minutes",
+                description: "Submit any HRIS, ATS, performance, or L&D tool URL. Trackr's research agents pull current pricing, surface HR practitioner feedback from Reddit and G2, identify alternatives, and return a scored report.",
+            },
+            {
+                title: "Compare HR platforms with one framework",
+                description: "Research Workday, Rippling, and BambooHR across the same 7-dimension scorecard. Bring structured comparisons to your CEO or CFO instead of vendor-produced comparison matrices.",
+            },
+            {
+                title: "Track your HR tech stack and renewals",
+                description: "Log every HR tool with its cost and renewal date. Identify overlap between tools — especially useful in companies that have grown through acquisition and have duplicate HR systems.",
+            },
+        ],
+        stat: {
+            value: "60+",
+            label: "Average number of HR tech tools in a 500-person company",
+        },
+        faqs: [
+            { q: "Can Trackr research niche HR tools like specific ATS platforms?", a: "Yes — Trackr researches any tool with a website, including niche ATS platforms, specialized L&D tools, and emerging HR tech products that haven't yet built large G2 review bases. The report will have less community sentiment data for very new tools, but the feature analysis and pricing research is still valuable." },
+            { q: "Does Trackr understand HR-specific evaluation criteria?", a: "Trackr's 7-dimension framework covers the core criteria most relevant to HR tools: Core Capability, Ease of Use, Integration Depth, Pricing Value, AI Sophistication, Community & Support, and Scalability. For HR-specific customization, the scorecard recipe feature on Startup+ plans lets you weight these dimensions to match your priorities." },
+            { q: "Is Trackr GDPR compliant?", a: "Trackr stores workspace and tool data in a SOC2-compliant cloud environment. We do not store employee data. Your tool research and stack data are private to your workspace by default." },
+        ],
+        ctaText: "Research your HR tech stack intelligently",
+        ctaSubtext: "Free to start. Enterprise plans available.",
+        testimonialQuote: "HR tech vendors are very good at demos. Trackr gave our team independent research before we engaged any of them, which completely changed how we ran our ATS evaluation. We asked better questions, pushed back more effectively, and made a faster decision.",
+        testimonialAttribution: "CHRO, 400-person B2B company",
+    },
+    {
+        role: "legal-teams",
+        title: "Trackr for Legal and Compliance Teams — AI Tool Research for Legal Tech",
+        description: "Legal teams and GCs use Trackr to evaluate contract management, e-signature, CLM, and compliance tools — with AI-powered scoring and independent analysis in 2 minutes.",
+        headline: "Legal tech decisions deserve the same rigor as legal work.",
+        subheadline: "Research any legal, compliance, or contract management tool in 2 minutes. Score CLM platforms, e-signature tools, and legal research software across 7 dimensions — independently, before the vendor sales cycle begins.",
+        painPoints: [
+            {
+                title: "Legal software evaluations are unusually vendor-driven",
+                description: "CLM vendors, e-signature platforms, and legal research tools all use high-touch sales processes designed to create urgency and limit your ability to make independent comparisons. Docusign vs Adobe Sign vs PandaDoc shouldn't require a 6-week evaluation cycle.",
+            },
+            {
+                title: "Compliance tools are high-stakes and difficult to evaluate",
+                description: "A compliance tool failure can mean regulatory fines or missed obligations. Yet legal and compliance tool evaluations often rely on vendor-provided feature lists and reference calls that vendors curate. Independent analysis is hard to find.",
+            },
+            {
+                title: "Legal team tool decisions often lack structured documentation",
+                description: "When legal purchases a CLM platform, the decision rationale often lives in someone's email. Two years later at renewal, nobody can reconstruct why you chose that platform over the alternatives.",
+            },
+        ],
+        features: [
+            {
+                title: "Research any legal or compliance tool in 2 minutes",
+                description: "Submit any CLM, e-signature, legal research, compliance management, or contract analysis tool URL. Get a scored report with independent analysis, community feedback, and competitive alternatives.",
+            },
+            {
+                title: "Defensible documentation of the evaluation",
+                description: "Trackr reports create a structured audit trail of every tool decision — scores, pros/cons, alternatives considered, and the date of the evaluation. Useful for renewal justification and internal governance.",
+            },
+            {
+                title: "Track legal tech renewals with alerts",
+                description: "Log your full legal tech stack with costs and renewal dates. Get alerts 30–60 days before renewals — with enough lead time to re-evaluate alternatives or negotiate terms.",
+            },
+        ],
+        stat: {
+            value: "73%",
+            label: "Of legal teams report evaluating new tools in the past 12 months",
+        },
+        faqs: [
+            { q: "Does Trackr understand legal-specific tools like CLM platforms?", a: "Trackr's AI research pipeline evaluates any SaaS tool, including specialized legal tech like CLM (ContractPodAi, Ironclad, DocuSign CLM), e-signature (Adobe Sign, PandaDoc), and legal research platforms. The 7-dimension framework applies across categories." },
+            { q: "Can I use Trackr to document tool decisions for compliance purposes?", a: "Trackr reports include a timestamped record of the evaluation — scores, data sources, pros/cons, and alternatives reviewed. This structured documentation can support internal audit and governance requirements." },
+            { q: "How does Trackr handle tools where pricing isn't public?", a: "For tools with opaque pricing (common in enterprise legal tech), Trackr's research pulls from community benchmarks, disclosed pricing ranges, and practitioner forums to provide realistic range estimates with appropriate context." },
+        ],
+        ctaText: "Build a defensible legal tech evaluation process",
+        ctaSubtext: "Free to start. Team plans for collaborative evaluation.",
+        testimonialQuote: "We evaluated four CLM platforms and needed documentation for our CFO approval. Trackr gave us consistent scored reports on all four that we could put directly into our business case. Saved us 20+ hours of formatting work.",
+        testimonialAttribution: "General Counsel, 250-person SaaS company",
+    },
 ];
 
 export const ICP_ROLES = ICP_PAGES.map((p) => p.role);

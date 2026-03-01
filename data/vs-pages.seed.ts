@@ -476,6 +476,360 @@ Third, general AI assistants don't maintain your stack context. Each conversatio
         ],
         ctaText: "Get structured research, not ad-hoc answers",
     },
+    {
+        competitor: "zylo",
+        competitorName: "Zylo",
+        competitorTagline: "Enterprise SaaS management platform",
+        title: "Trackr vs Zylo — AI Tool Intelligence vs SaaS Management | Trackr",
+        description: "Zylo costs $30K+/year and requires a dedicated implementation. Trackr gives your team AI-powered tool research and stack intelligence, free to start, in 2 minutes.",
+        headline: "Zylo is enterprise SaaS management. Trackr is AI tool intelligence.",
+        subheadline: "Zylo discovers shadow IT and manages licenses. Trackr researches, scores, and helps you decide what to buy — before the license exists.",
+        switchNarrative: `Zylo and Trackr occupy different parts of the SaaS management lifecycle. Understanding which you need — and when — matters before you invest in either.
+
+Zylo is a discovery and governance platform. It connects to your financial systems, scans credit card statements, identifies shadow SaaS usage, and gives IT and finance a consolidated view of what's being paid for. Its core value is visibility into existing spend. For enterprises with hundreds of untracked subscriptions, that visibility can pay for itself in the first quarter.
+
+Trackr is a pre-purchase intelligence layer. Before you decide to add a tool to your stack, Trackr researches it — scoring it across 7 dimensions, surfacing alternatives, and giving your team a consistent evaluation framework. Trackr also tracks your known stack, monitors renewals, and helps you understand the AI nativeness of each tool relative to modern alternatives.
+
+The gap Zylo doesn't fill is evaluation quality. Knowing you're paying for 80 tools is the first step. Understanding which 40 are worth keeping, which 15 have better alternatives, and what new tools are worth adding — that's the Trackr layer. Many mature procurement functions use both: Zylo for the financial governance layer, Trackr for the evaluation intelligence layer.`,
+        featureTable: [
+            { feature: "AI tool research (2-minute reports)", trackr: true, competitor: false },
+            { feature: "Shadow SaaS discovery", trackr: false, competitor: true },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "Spend tracking", trackr: "Manual entry", competitor: "Auto-discovered" },
+            { feature: "Renewal calendar", trackr: true, competitor: true },
+            { feature: "Competitive alternatives", trackr: "In every report", competitor: false },
+            { feature: "Stack overlap detection", trackr: true, competitor: "Partial" },
+            { feature: "Self-serve setup", trackr: "Minutes", competitor: "Weeks (implementation required)" },
+            { feature: "Starting price", trackr: "Free", competitor: "$30K+/year" },
+        ],
+        advantages: [
+            {
+                title: "Free to start, no implementation required",
+                description: "Zylo requires a dedicated implementation engagement and enterprise contract. Trackr is free to start — submit your first tool URL and get a full research report in under 2 minutes.",
+            },
+            {
+                title: "Research intelligence before you buy",
+                description: "Zylo helps you manage what you already have. Trackr helps you decide what to get — with AI-powered research, scoring, and competitive analysis before the purchase decision is made.",
+            },
+            {
+                title: "The evaluation layer Zylo doesn't provide",
+                description: "Zylo tells you what tools exist in your stack and what they cost. Trackr tells you whether they're the right tools — with scored reports, pros/cons, and specific recommendations for improvement.",
+            },
+        ],
+        faqs: [
+            { q: "Can Trackr replace Zylo?", a: "For most mid-market companies: yes. Zylo's core value is shadow SaaS discovery, which matters most at 500+ employees with complex procurement. For teams under that size, Trackr's manual spend tracking plus AI research intelligence covers the critical use cases without the enterprise price tag." },
+            { q: "Does Trackr integrate with financial systems?", a: "Not directly — Trackr uses manually-entered spend data. For teams that need automated financial reconciliation, a dedicated SaaS management platform may add value alongside Trackr." },
+            { q: "What size company should use Trackr vs Zylo?", a: "Trackr is purpose-built for teams of 10–500 evaluating and managing their AI and SaaS stack. Zylo is designed for enterprises (500+) with significant shadow IT and complex procurement workflows." },
+        ],
+        ctaText: "Try Trackr free — no implementation required",
+    },
+    {
+        competitor: "torii",
+        competitorName: "Torii",
+        competitorTagline: "SaaS operations management platform",
+        title: "Trackr vs Torii — AI Research vs SaaS Operations | Trackr",
+        description: "Torii automates SaaS operations and license management. Trackr gives your team the intelligence layer to decide what belongs in your stack in the first place.",
+        headline: "Torii manages your stack. Trackr helps you build the right one.",
+        subheadline: "Torii is an operations platform for managing existing SaaS. Trackr is the intelligence layer for deciding what to buy — with AI research in 2 minutes and scored 7-dimension reports.",
+        switchNarrative: `Torii is a SaaS operations platform focused on automation, employee onboarding/offboarding, and license lifecycle management. It connects to your identity provider (Okta, Azure AD), discovers app usage, and automates the provisioning and deprovisioning of licenses at scale.
+
+The core job Torii does is operational: routing license requests, enforcing policies, and reducing manual IT workload on software provisioning. For IT teams drowning in manual access requests, it delivers real operational leverage.
+
+What Torii doesn't provide is evaluation intelligence. When a new tool request comes in, Torii manages the workflow. Trackr tells you whether the tool is worth approving — with current market research, a scored evaluation, competitive alternatives, and specific recommendations tied to your existing stack.
+
+Teams using Torii for operational automation often still rely on scattered Google Docs or Notion pages for the evaluation side. Trackr fills that gap: a consistent, AI-powered evaluation layer that produces the same quality of analysis whether the requester is an engineer submitting a dev tool or a marketer requesting a content platform.`,
+        featureTable: [
+            { feature: "AI-powered tool research", trackr: true, competitor: false },
+            { feature: "License lifecycle automation", trackr: false, competitor: true },
+            { feature: "Employee onboarding/offboarding", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives in reports", trackr: true, competitor: false },
+            { feature: "Spend tracking", trackr: "Manual", competitor: "Automated" },
+            { feature: "Renewal alerts", trackr: true, competitor: true },
+            { feature: "Tool evaluation framework", trackr: "Structured scorecard", competitor: false },
+            { feature: "Pricing transparency", trackr: "Free to start", competitor: "Request pricing" },
+        ],
+        advantages: [
+            {
+                title: "Evaluation intelligence, not just workflow routing",
+                description: "Torii routes tool requests through a workflow. Trackr answers the harder question: is this tool actually the right choice? Every Trackr report includes a scored evaluation, pros/cons, and competitive alternatives.",
+            },
+            {
+                title: "No identity provider integration required",
+                description: "Torii requires Okta, Azure AD, or similar. Trackr works independently — submit any tool URL and get a research report immediately, no integrations needed.",
+            },
+            {
+                title: "Built for the evaluation stage",
+                description: "Torii is purpose-built for post-purchase operations. Trackr is purpose-built for the evaluation stage — and maintains context across your full stack as it evolves.",
+            },
+        ],
+        faqs: [
+            { q: "Can Trackr and Torii be used together?", a: "Yes — and it's a natural pairing. Use Trackr to evaluate whether a tool should be approved. Use Torii to manage the provisioning workflow after approval. The two cover different stages of the tool lifecycle." },
+            { q: "Does Trackr automate software provisioning?", a: "No — Trackr focuses on research and intelligence, not provisioning automation. If your team needs automated license management, onboarding workflows, and SSO-based app discovery, Torii is designed for that." },
+            { q: "Is Torii a Trackr competitor?", a: "Indirect. They serve different stages of the SaaS lifecycle. Trackr covers the evaluation and intelligence layer. Torii covers the operational layer. The two are more complementary than competitive for mature IT teams." },
+        ],
+        ctaText: "Research tools before you provision them",
+    },
+    {
+        competitor: "productiv",
+        competitorName: "Productiv",
+        competitorTagline: "SaaS intelligence and engagement platform",
+        title: "Trackr vs Productiv — AI Tool Research vs SaaS Engagement Analytics | Trackr",
+        description: "Productiv measures how employees actually use SaaS tools. Trackr helps you decide which tools are worth buying and keeping — with AI research and scoring in 2 minutes.",
+        headline: "Productiv measures usage. Trackr evaluates value.",
+        subheadline: "Productiv shows you engagement data on tools you already have. Trackr helps you decide which tools to add, renew, or replace — with AI-powered research and 7-dimension scoring.",
+        switchNarrative: `Productiv is a SaaS engagement analytics platform. It integrates with your SSO provider, measures how employees actually use each tool (login frequency, feature adoption, active users), and surfaces underutilized software. For enterprises making renewal decisions based on actual usage data, it provides signal that spreadsheets can't.
+
+The core question Productiv answers is: "How much is this tool actually being used?" That's valuable. Renewal decisions made with real engagement data are better than those made on gut feel or account manager claims.
+
+What Productiv doesn't answer is: "Is this the right tool — and what are the alternatives?" That's Trackr's domain. Before a renewal decision, Trackr can research the current market, score the incumbent tool across 7 dimensions, identify whether better alternatives exist, and give your team a defensible recommendation. Productiv tells you the utilization. Trackr tells you whether the utilization is going into the right tool.
+
+For teams with the budget for both: Productiv surfaces that Tool X has 15% active user engagement. Trackr tells you whether you should replace Tool X with a better-scoring alternative, what that alternative costs, and what the migration considerations are.`,
+        featureTable: [
+            { feature: "AI tool evaluation reports", trackr: true, competitor: false },
+            { feature: "SaaS usage/engagement analytics", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives", trackr: "In every report", competitor: false },
+            { feature: "Feature adoption tracking", trackr: false, competitor: true },
+            { feature: "Renewal recommendations", trackr: "Research-backed", competitor: "Usage-backed" },
+            { feature: "Stack spend tracking", trackr: true, competitor: true },
+            { feature: "Self-serve start", trackr: "Free, instant", competitor: "Enterprise contract" },
+        ],
+        advantages: [
+            {
+                title: "Research-backed renewal decisions",
+                description: "Productiv tells you engagement is low. Trackr tells you what to do about it — with current market research on alternatives, scored comparisons, and specific migration recommendations.",
+            },
+            {
+                title: "Pre-purchase intelligence",
+                description: "Productiv only works on tools you already have access to. Trackr researches tools before you buy them — giving you scoring, competitive context, and recommendations before the purchase decision.",
+            },
+            {
+                title: "Accessible to teams of any size",
+                description: "Productiv requires enterprise SSO integration and contract pricing. Trackr is free to start and designed for teams evaluating and tracking 10–500 tools without enterprise procurement overhead.",
+            },
+        ],
+        faqs: [
+            { q: "Should I use Trackr instead of Productiv?", a: "Depends on your primary problem. If you need engagement analytics on existing tools, Productiv provides depth Trackr doesn't. If you need AI-powered research intelligence for evaluating and deciding on tools, Trackr is purpose-built for that. Many teams benefit from both." },
+            { q: "Can Trackr measure tool adoption?", a: "Trackr tracks which tools are in your stack and their renewal dates, but doesn't measure employee usage depth. For adoption analytics, a dedicated platform like Productiv provides more granular engagement data." },
+        ],
+        ctaText: "Add research intelligence to your renewal process",
+    },
+    {
+        competitor: "sastrify",
+        competitorName: "Sastrify",
+        competitorTagline: "SaaS procurement and optimization platform",
+        title: "Trackr vs Sastrify — AI Tool Research vs SaaS Procurement | Trackr",
+        description: "Sastrify handles SaaS procurement and negotiation. Trackr gives your team the research intelligence to decide what to buy — with AI-powered scoring in 2 minutes.",
+        headline: "Sastrify optimizes what you buy. Trackr helps you decide what to buy.",
+        subheadline: "Sastrify is a procurement platform that reduces SaaS costs through negotiation and benchmarking. Trackr is the AI intelligence layer for evaluating whether you're buying the right tools.",
+        switchNarrative: `Sastrify is a SaaS procurement optimization platform popular in Europe. It provides visibility into your SaaS spend, benchmarks your contract prices against market rates, and supports negotiation through their procurement team and data. Like Vendr, its core value is downstream — after the buying decision is made.
+
+The gap in Sastrify's offering is pre-purchase evaluation intelligence. Sastrify can tell you whether you're paying a fair price for your CRM. Trackr can tell you whether you have the right CRM — and if not, what the current best alternatives are and why.
+
+For growing companies in Europe where Sastrify is most commonly deployed, Trackr complements the procurement function by providing the research depth that procurement teams typically lack. A procurement analyst can use Trackr to generate a scored evaluation of any tool in 2 minutes — producing the kind of structured analysis that used to require hours of vendor research.`,
+        featureTable: [
+            { feature: "AI-powered tool research", trackr: true, competitor: false },
+            { feature: "Contract price benchmarking", trackr: false, competitor: true },
+            { feature: "SaaS negotiation support", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives", trackr: "In every report", competitor: false },
+            { feature: "Spend visibility", trackr: "Manual entry", competitor: "Automated discovery" },
+            { feature: "Renewal management", trackr: true, competitor: true },
+            { feature: "Self-serve, no contract needed", trackr: true, competitor: false },
+        ],
+        advantages: [
+            { title: "Intelligence before procurement", description: "Sastrify optimizes contracts after you've decided to buy. Trackr helps you decide whether to buy — and whether the tool you're evaluating is actually the best option in the category." },
+            { title: "Free to start with no sales process", description: "Sastrify requires a sales engagement and contract. Trackr is free to start — first tool researched in under 2 minutes, no procurement process required." },
+            { title: "Consistent evaluation across all categories", description: "Trackr applies the same 7-dimension framework to every tool — from CRM to design to developer tooling — so your team has consistent intelligence regardless of category." },
+        ],
+        faqs: [
+            { q: "Can Trackr replace Sastrify?", a: "For the procurement optimization piece (price benchmarking, negotiation): no. Sastrify has specialized data and a team for that. For pre-purchase evaluation intelligence and stack tracking: yes — Trackr provides more depth on the research side." },
+            { q: "Is Sastrify available outside Europe?", a: "Sastrify serves European markets primarily. Trackr is available globally with no regional restrictions." },
+        ],
+        ctaText: "Research tools before procurement begins",
+    },
+    {
+        competitor: "zluri",
+        competitorName: "Zluri",
+        competitorTagline: "SaaS management and automation platform",
+        title: "Trackr vs Zluri — AI Tool Intelligence vs SaaS Operations | Trackr",
+        description: "Zluri manages SaaS access, provisioning, and spend. Trackr gives your team AI-powered tool research and scoring — free to start, 2-minute reports.",
+        headline: "Zluri runs your SaaS operations. Trackr builds your SaaS intelligence.",
+        subheadline: "Zluri automates app provisioning, access management, and license renewals. Trackr gives your team the research and scoring intelligence to make better tool decisions before they become operational problems.",
+        switchNarrative: `Zluri is a SaaS management platform with strong automation capabilities: app discovery via SSO, automated onboarding/offboarding workflows, and spend tracking. Like similar platforms, it focuses on the operational layer — managing what's already in your stack.
+
+The evaluation question — should this tool be in the stack at all, and is it the best option in its category — is the problem Trackr solves. Before a tool becomes a line item in Zluri, someone has to decide it's worth buying. Trackr provides that decision-support layer with AI-powered research, consistent scoring, and competitive analysis.
+
+For teams growing quickly and adding tools faster than they can evaluate them, Trackr's structured research pipeline reduces the evaluation burden. Submit a URL, get a 7-dimension report with pros, cons, and alternatives in under 2 minutes. That report can then inform the Zluri provisioning decision — whether to approve, delay, or recommend an alternative.`,
+        featureTable: [
+            { feature: "AI-powered tool research reports", trackr: true, competitor: false },
+            { feature: "SSO-based app discovery", trackr: false, competitor: true },
+            { feature: "Automated provisioning workflows", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive tool alternatives", trackr: true, competitor: false },
+            { feature: "Spend tracking", trackr: "Manual", competitor: "Automated" },
+            { feature: "Works without identity provider", trackr: true, competitor: "Limited" },
+            { feature: "Free tier", trackr: true, competitor: false },
+        ],
+        advantages: [
+            { title: "No SSO integration required", description: "Zluri's core discovery relies on SSO/IdP integration. Trackr works immediately — submit any tool URL and get a complete research report, no integrations needed." },
+            { title: "Evaluation before provisioning", description: "Zluri manages the provisioning workflow. Trackr gives you the intelligence to decide whether to provision at all — with current market data, competitive analysis, and a scored recommendation." },
+            { title: "Research any tool in any category", description: "Trackr's AI agents research tools across every category — from sales to security to analytics — with consistent scoring regardless of how obscure the tool is." },
+        ],
+        faqs: [
+            { q: "Do Trackr and Zluri serve the same market?", a: "Overlapping but different. Both target SaaS-heavy teams. Zluri focuses on IT/operations teams managing access and provisioning. Trackr focuses on the evaluation and intelligence layer — helping any team member research, score, and track tools." },
+            { q: "Can I use both Zluri and Trackr?", a: "Yes — they complement each other well. Use Trackr to evaluate whether a tool should be added. Use Zluri to manage the provisioning and lifecycle after it's approved." },
+        ],
+        ctaText: "Research tools before you provision them",
+    },
+    {
+        competitor: "perplexity",
+        competitorName: "Perplexity",
+        competitorTagline: "AI-powered search engine and research assistant",
+        title: "Trackr vs Perplexity — Structured Tool Research vs AI Search | Trackr",
+        description: "Perplexity answers general research questions. Trackr delivers structured, scored tool evaluations — same framework every time, with persistent stack intelligence.",
+        headline: "Perplexity searches the web. Trackr evaluates your stack.",
+        subheadline: "Perplexity is a general-purpose AI search engine. Trackr is purpose-built for SaaS tool evaluation — delivering consistent 7-dimension scorecards with competitive analysis, pricing intelligence, and stack tracking.",
+        switchNarrative: `Perplexity is a powerful general-purpose research tool. For broad questions about a software category or a quick overview of a tool's positioning, it's genuinely useful — and faster than Google for synthesis tasks. Many ops and IT teams use it as a starting point for tool research.
+
+The limitations appear when you try to use Perplexity for systematic tool evaluation. First, the output format varies by prompt — you'll get a different structure, depth, and focus depending on how you phrase the question. Making consistent comparisons across 10 tools evaluated at different times by different team members is nearly impossible.
+
+Second, Perplexity lacks stack context. It doesn't know which tools your team already uses, what your scoring priorities are, or what alternatives are most relevant to your specific situation. Every query starts from zero.
+
+Third, Perplexity is a point-in-time answer engine, not a persistent intelligence layer. Trackr maintains your full stack — tracking what you've researched, when tools were last updated, upcoming renewals, and spend. The stack gets more valuable over time.
+
+For teams that currently use Perplexity for tool research, Trackr provides the structured output layer: consistent scoring, persistent history, and team collaboration features that general AI search engines aren't designed to provide.`,
+        featureTable: [
+            { feature: "Consistent 7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Purpose-built for tool evaluation", trackr: true, competitor: false },
+            { feature: "General research questions", trackr: false, competitor: true },
+            { feature: "Persistent stack history", trackr: true, competitor: false },
+            { feature: "Team collaboration on reports", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Spend tracking", trackr: true, competitor: false },
+            { feature: "Structured report output", trackr: "Always", competitor: "Varies by prompt" },
+        ],
+        advantages: [
+            { title: "Consistent output every time", description: "Perplexity produces different formats depending on how you prompt it. Trackr always delivers the same 7-dimension structure — so reports from 3 months ago are directly comparable to reports generated today." },
+            { title: "Persistent stack intelligence", description: "Perplexity has no memory of your stack. Trackr tracks every tool you've researched, monitors renewals, flags overlap, and builds an intelligence layer that compounds over time." },
+            { title: "Built for team evaluation workflows", description: "Perplexity is a single-user research tool. Trackr supports team workspaces — shared reports, collaborative notes, multi-member evaluation workflows, and shared stack tracking." },
+        ],
+        faqs: [
+            { q: "Should I use Trackr instead of Perplexity?", a: "For systematic tool evaluation: yes. Trackr provides structure, consistency, and persistence that Perplexity can't. For general research questions, market overviews, or broad category research: Perplexity is still excellent. Use both — Perplexity for exploration, Trackr for evaluation." },
+            { q: "Does Trackr use Perplexity under the hood?", a: "Trackr's research pipeline optionally uses Perplexity's sonar-reasoning-pro model as one of several research agents. The output is combined with Firecrawl web scraping, Tavily search, and GPT-4o synthesis to produce the final scored report." },
+        ],
+        ctaText: "Get structured research, not search results",
+    },
+    {
+        competitor: "hubspot",
+        competitorName: "HubSpot",
+        competitorTagline: "CRM, marketing, and sales platform",
+        title: "Trackr for HubSpot Research — Evaluate HubSpot Before You Buy | Trackr",
+        description: "Evaluating HubSpot for your team? Trackr researches HubSpot in 2 minutes — scoring it across 7 dimensions with pricing, pros/cons, and alternatives like Salesforce, Attio, and Pipedrive.",
+        headline: "Evaluating HubSpot? Get a scored report in 2 minutes.",
+        subheadline: "Trackr's AI agents scrape HubSpot's current pricing, pull reviews from G2 and Reddit, analyze Salesforce and Attio as alternatives, and deliver a 7-dimension scored report — without a single vendor call.",
+        switchNarrative: `HubSpot is one of the most-evaluated tools in the market. Sales teams, marketing teams, and RevOps leaders evaluate it constantly — and it's a difficult purchase to get wrong. The contract is significant, the migration cost is high, and the alternative landscape (Salesforce, Pipedrive, Attio, Close, Apollo) changes year over year.
+
+The problem with evaluating HubSpot the traditional way is the process itself. You schedule a demo. An account executive gives you the optimistic version. You read G2 reviews of varying vintage and relevance. Someone in a Slack community shares their experience from three years ago. You build a spreadsheet that falls apart when compared across vendors.
+
+Trackr replaces that process with a 2-minute AI research report. Submit HubSpot's URL and Trackr's agents pull current pricing across all tiers, surface community feedback from Reddit and TrustRadius, identify the strongest alternatives for your use case, and score HubSpot across 7 dimensions — all without a vendor call.
+
+The result is a scored evaluation your team can align on, compare against Salesforce or Attio with one more submission, and revisit at renewal time without starting the research process from scratch.`,
+        featureTable: [
+            { feature: "Current HubSpot pricing analysis", trackr: true, competitor: "Self-reported" },
+            { feature: "Independent scoring (not vendor-influenced)", trackr: true, competitor: false },
+            { feature: "Competitive alternatives identified", trackr: true, competitor: false },
+            { feature: "Community sentiment (Reddit/G2/TrustRadius)", trackr: true, competitor: false },
+            { feature: "Comparison with Salesforce/Attio", trackr: "One click", competitor: "Hours of research" },
+            { feature: "Renewal reminders", trackr: true, competitor: false },
+            { feature: "Team collaboration on evaluation", trackr: true, competitor: false },
+            { feature: "Cost: evaluation", trackr: "Free", competitor: "6–8 hours of research" },
+        ],
+        advantages: [
+            { title: "No vendor call required", description: "HubSpot's sales process is designed to gather information and create urgency. Trackr lets you complete a full evaluation independently — current pricing, feature analysis, and competitive comparison — without engaging the sales team until you're ready." },
+            { title: "Compare HubSpot vs alternatives in minutes", description: "Submit HubSpot, Salesforce, and Attio to Trackr. Get three scored reports in under 10 minutes. Compare them side-by-side with Trackr's compare feature to make a defensible recommendation." },
+            { title: "Revisit at renewal with current data", description: "HubSpot's pricing and features change. Trackr re-researches your tools on schedule — weekly, bi-weekly, or monthly — so your team has current intelligence at renewal time, not a report from when you first evaluated." },
+        ],
+        faqs: [
+            { q: "Can Trackr replace a HubSpot demo?", a: "For initial research and scoring: yes. Trackr's report covers pricing, features, pros/cons, and alternatives. For hands-on testing and custom configuration discussions, a demo still has value — but Trackr lets you go into that demo informed rather than starting from zero." },
+            { q: "Does Trackr evaluate HubSpot's competitors too?", a: "Yes — Trackr researches any tool you submit. Submit Salesforce, Attio, Pipedrive, and Close alongside HubSpot to get scored comparisons across the same 7-dimension framework." },
+            { q: "Is Trackr affiliated with HubSpot?", a: "No — Trackr is an independent AI research tool. Reports are generated by AI agents pulling public data, not by HubSpot's team or marketing materials." },
+        ],
+        ctaText: "Research HubSpot in 2 minutes",
+    },
+    {
+        competitor: "salesforce",
+        competitorName: "Salesforce",
+        competitorTagline: "Enterprise CRM and cloud platform",
+        title: "Trackr for Salesforce Research — Evaluate Salesforce Before You Buy | Trackr",
+        description: "Evaluating Salesforce? Trackr generates a scored 7-dimension report in 2 minutes — current pricing, pros/cons, and alternatives like HubSpot, Attio, and Pipedrive.",
+        headline: "Evaluating Salesforce? Get a scored report before the first demo.",
+        subheadline: "Trackr researches Salesforce's current pricing across editions, surfaces independent community feedback, identifies alternatives like HubSpot and Attio, and delivers a 7-dimension scorecard — in 2 minutes, no vendor contact required.",
+        switchNarrative: `Salesforce is the most expensive wrong answer in enterprise software. When an org commits to Salesforce, they're committing to a multi-year implementation, significant admin overhead, and a contract that typically grows year over year. Getting the evaluation right the first time matters.
+
+The traditional Salesforce evaluation process is compromised by the same dynamics that affect most enterprise software decisions: you're relying on a highly incentivized sales team for most of your information. By the time you've completed three demos and received a custom proposal, you're in negotiation mode, not evaluation mode.
+
+Trackr changes the timeline. In 2 minutes, you have an independent assessment of Salesforce: current pricing across Essentials, Professional, Enterprise, and Unlimited tiers, community feedback from Reddit and TrustRadius that reflects what Salesforce customers actually experience, alternatives like HubSpot (simpler and faster to implement), Attio (modern and developer-friendly), and Pipedrive (more affordable for SMB), and a scored comparison across 7 dimensions.
+
+That foundation lets your team enter the Salesforce sales process with clarity about what you're evaluating and why — rather than being shaped by the evaluation by your account executive.`,
+        featureTable: [
+            { feature: "Independent Salesforce pricing research", trackr: true, competitor: "Self-reported" },
+            { feature: "Community feedback (Reddit/G2/TrustRadius)", trackr: true, competitor: false },
+            { feature: "Alternatives compared (HubSpot, Attio, Pipedrive)", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Implementation cost context", trackr: "In research report", competitor: false },
+            { feature: "Side-by-side comparison with HubSpot", trackr: "Instant", competitor: "Weeks" },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Evaluation cost", trackr: "Free (2 minutes)", competitor: "20+ hours of research" },
+        ],
+        advantages: [
+            { title: "Enter the sales process informed", description: "Most Salesforce evaluations start with a demo. Trackr lets you research Salesforce independently first — understanding pricing, limitations, and alternatives before you engage the account team." },
+            { title: "Compare Salesforce vs HubSpot in 10 minutes", description: "Submit both to Trackr. Get scored reports on the same 7-dimension framework. Compare implementation complexity, pricing value, integration depth, and AI sophistication side-by-side before committing to either sales process." },
+            { title: "Re-evaluate at every renewal", description: "Salesforce contracts typically auto-renew with price increases. Trackr monitors your renewal dates and can re-research the current market at any cadence — so you always have current intelligence before the negotiation window opens." },
+        ],
+        faqs: [
+            { q: "Can Trackr tell me if Salesforce is right for my company?", a: "Trackr generates an independent scored evaluation with current market data. The report covers pricing, feature depth, community feedback, and competitive alternatives — giving your team the information to make that judgment. Whether Salesforce is right depends on your specific requirements, which your team is best positioned to evaluate." },
+            { q: "Does Trackr research Salesforce implementation partners?", a: "Trackr researches the Salesforce product itself — pricing, features, community feedback, and competitive alternatives. Implementation partner research requires a different evaluation framework not currently in Trackr's pipeline." },
+        ],
+        ctaText: "Research Salesforce independently in 2 minutes",
+    },
+    {
+        competitor: "gong",
+        competitorName: "Gong",
+        competitorTagline: "Revenue intelligence and conversation analytics platform",
+        title: "Trackr for Gong Research — Evaluate Gong Before You Buy | Trackr",
+        description: "Evaluating Gong for your revenue team? Trackr researches Gong in 2 minutes — scoring it against Chorus, Clari, Salesloft, and other alternatives with current pricing and independent analysis.",
+        headline: "Evaluating Gong? Research it independently before the demo.",
+        subheadline: "Trackr's agents pull current Gong pricing, surface community feedback from revenue practitioners, identify alternatives like Chorus and Clari, and score Gong across 7 dimensions — in under 2 minutes.",
+        switchNarrative: `Gong is a significant investment. Revenue intelligence platforms typically cost $1,200–$1,800 per user per year, and the evaluation cycle is long — multiple stakeholders, multi-week trials, and complex ROI modeling. Getting the evaluation right matters, especially when alternatives like Chorus (now Zoominfo), Clari, Salesloft, and Outreach each cover overlapping use cases.
+
+The challenge with Gong's evaluation process is information asymmetry. Gong's sales team is excellent and highly prepared. Your evaluation team is starting from scratch each time. By the time you've attended three demos and two ROI workshops, the decision has been substantially shaped by Gong's framing.
+
+Trackr gives revenue and sales ops teams an independent starting point. Submit Gong's URL and get a current assessment: what the product actually does (vs. what the demo emphasizes), how the community rates it after implementation, what Chorus and Clari offer as alternatives, and where Gong scores across the 7 dimensions most relevant to revenue intelligence tools.
+
+That foundation — completed in 2 minutes before your first vendor call — changes the dynamic of the evaluation process and helps you ask better questions when you do engage the sales team.`,
+        featureTable: [
+            { feature: "Independent Gong pricing research", trackr: true, competitor: "Sales-quoted only" },
+            { feature: "Post-implementation community feedback", trackr: true, competitor: false },
+            { feature: "Alternatives (Chorus, Clari, Salesloft)", trackr: true, competitor: false },
+            { feature: "7-dimension evaluation score", trackr: true, competitor: false },
+            { feature: "AI sophistication analysis", trackr: "In every report", competitor: false },
+            { feature: "Stack integration analysis", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "6–8 weeks" },
+        ],
+        advantages: [
+            { title: "Independent intelligence before the sales process", description: "Gong's sales team is highly skilled at shaping the narrative. Trackr gives your team an independent baseline — current pricing, community feedback, and competitive alternatives — before the first demo." },
+            { title: "Compare Gong vs Chorus vs Clari in 15 minutes", description: "Submit all three to Trackr. Get scored reports across the same framework. Use Trackr's side-by-side comparison to align your team on the finalists before going deep in any vendor's sales process." },
+            { title: "Revisit at contract renewal", description: "Revenue intelligence is a fast-moving category. Trackr re-researches Gong on any schedule you set — so when your contract comes up for renewal, you have current market intelligence to inform the negotiation." },
+        ],
+        faqs: [
+            { q: "Does Trackr know Gong's actual pricing?", a: "Gong doesn't publish pricing publicly, so Trackr's research reflects the best available public information — community reports, third-party benchmarks, and disclosed pricing ranges. The report gives you a realistic range and context for what similar companies pay." },
+            { q: "Can I compare Gong vs Salesloft in Trackr?", a: "Yes — submit both URLs to Trackr and use the compare feature to see side-by-side scores across 7 dimensions. This is the fastest way to build a structured comparison before going deep in either vendor's trial." },
+        ],
+        ctaText: "Research Gong independently in 2 minutes",
+    },
 ];
 
 export const VS_COMPETITORS = VS_PAGES.map((p) => p.competitor);
