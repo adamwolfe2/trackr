@@ -453,9 +453,15 @@ export const auditSubmissions = pgTable('audit_submissions', {
     manualProcesses: text('manual_processes'),
     // Scorecard output
     scorecard: jsonb('scorecard'),
+    talkingPoints: jsonb('talking_points'), // AI-generated call prep array
     status: text('status').default('pending').notNull(), // pending | processing | complete | failed
     errorMessage: text('error_message'),
     shareToken: text('share_token').unique(), // Set when scorecard completes — enables public share URL
+    // CRM fields
+    salesRepNotes: text('sales_rep_notes'), // rep's call prep notes, editable
+    assignedRep: text('assigned_rep'), // rep email/name who owns this lead
+    preBuiltWorkspaceId: uuid('pre_built_workspace_id').references(() => workspaces.id),
+    inviteToken: text('invite_token').unique(), // used to track invite state
     createdAt: timestamp('created_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
 }, (table) => [

@@ -411,6 +411,7 @@ import type { AuditScorecard } from "@/lib/actions/audit";
 
 interface AuditEmailPayload {
     submission: {
+        id?: string;
         contactEmail: string;
         contactName: string | null;
         callOwnerEmail: string | null;
@@ -420,9 +421,10 @@ interface AuditEmailPayload {
     };
     scorecard: AuditScorecard;
     shareUrl?: string;
+    adminUrl?: string;
 }
 
-export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl }: AuditEmailPayload) {
+export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl, adminUrl }: AuditEmailPayload) {
     if (!process.env.RESEND_API_KEY) return;
 
     const ADAM_EMAIL = "adamwolfe102@gmail.com";
@@ -461,6 +463,16 @@ export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl 
                     <span style="font-size: 10px; padding: 2px 6px; border: 1px solid #000; white-space: nowrap; margin-left: 8px;">Impact: ${escapeHtml(r.impact)}</span>
                 </div>
                 <p style="font-size: 13px; color: #444; line-height: 1.5; margin: 0;">${escapeHtml(r.description)}</p>
+            </div>`)
+        .join("");
+
+    const talkingPointsHtml = (scorecard.talkingPoints ?? [])
+        .map((tp, i) => `
+            <div style="margin-bottom: 14px; padding: 12px; border: 1px solid #000; background: #fff;">
+                <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin-bottom: 6px;">${i + 1}. ${escapeHtml(tp.topic)}</div>
+                <div style="font-size: 12px; color: #555; margin-bottom: 6px;"><strong>Found:</strong> ${escapeHtml(tp.observation)}</div>
+                <div style="font-size: 12px; color: #000; margin-bottom: 6px;"><strong>Ask:</strong> "${escapeHtml(tp.question)}"</div>
+                <div style="font-size: 12px; color: #16a34a;"><strong>Opportunity:</strong> ${escapeHtml(tp.opportunity)}</div>
             </div>`)
         .join("");
 
@@ -510,20 +522,26 @@ export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl 
             <div style="font-size: 13px; opacity: 0.85; line-height: 1.4;">${escapeHtml(scorecard.futureAINativeTarget.summary)}</div>
         </div>
 
+        <!-- Call Prep: Talking Points -->
+        ${talkingPointsHtml ? `
+        <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 17px; margin: 0 0 12px; border-bottom: 2px solid #000; padding-bottom: 8px;">Call Prep: Talking Points</h2>
+        <div style="margin-bottom: 24px;">${talkingPointsHtml}</div>
+        ` : ""}
+
         <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">
             On the call, walk through this scorecard, prioritize the highest-impact changes, and map out what implementation with Trackr looks like.
         </p>
 
         ${shareUrl ? `
-        <!-- Share link -->
+        <!-- Share link (for screen share on call — do not send to prospect) -->
         <div style="border: 2px solid #000; padding: 16px; margin-bottom: 20px; background: #F3F3EF;">
-            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin-bottom: 8px;">Share This Scorecard</div>
-            <p style="font-size: 12px; color: #444; margin: 0 0 10px; line-height: 1.4;">Forward this link to share the scorecard publicly — no login required.</p>
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin-bottom: 8px;">Scorecard Share Link (Screen Share on Call)</div>
+            <p style="font-size: 12px; color: #444; margin: 0 0 10px; line-height: 1.4;">Open this during your call to reveal the scorecard live. Do not send directly to the prospect before the call.</p>
             <a href="${shareUrl}" style="font-size: 12px; color: #000; word-break: break-all; font-family: monospace;">${shareUrl}</a>
         </div>
         ` : ""}
 
-        ${emailButton("https://trytrackr.com", "Open Trackr →")}
+        ${adminUrl ? emailButton(adminUrl, "Manage This Lead →") : emailButton("https://trytrackr.com", "Open Trackr →")}
     `);
 
     const resend = getResend();
@@ -533,6 +551,105 @@ export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl 
             to,
             ...(cc.length > 0 ? { cc } : {}),
             subject: `AI Audit Scorecard – ${scorecard.companyName} (Score: ${score}/100)`,
+            html,
+        })
+    );
+}
+
+// ── Prospect Teaser Email ─────────────────────────────────────────────────────
+
+interface ProspectTeaserPayload {
+    submission: {
+        contactEmail: string;
+        contactName: string | null;
+        companyName: string;
+    };
+    score: number;
+}
+
+function getTeaserCopy(score: number): { subject: string; hook: string; angle: string } {
+    if (score <= 20) {
+        return {
+            subject: "Your AI readiness report is ready for your call",
+            hook: "We found significant gaps in your AI stack — and specific steps to close them fast.",
+            angle: "Our team has identified the exact areas holding you back and built a custom roadmap for your call.",
+        };
+    }
+    if (score <= 40) {
+        return {
+            subject: "We found 5 opportunities your competitors may be closing",
+            hook: "You have momentum — but there are critical gaps that could widen the gap between you and AI-native competitors.",
+            angle: "Your report identifies the highest-leverage moves to take in the next 90 days before the window closes.",
+        };
+    }
+    if (score <= 60) {
+        return {
+            subject: "Good progress — and 3 gaps holding you back",
+            hook: "You're in the top half, but three specific blockers are keeping you from compounding your AI advantage.",
+            angle: "Your scorecard pinpoints exactly where you're leaking value and what to prioritize first.",
+        };
+    }
+    if (score <= 80) {
+        return {
+            subject: "You're ahead of 80% of companies. Here's the last 20%.",
+            hook: "You're operating at a high level — and the nuanced gaps in your stack are exactly what separate good from exceptional.",
+            angle: "Your report reveals the high-leverage optimizations that most companies never reach.",
+        };
+    }
+    return {
+        subject: "You're in rare company. 2 things worth your attention.",
+        hook: "You're operating at near AI-native level. Two specific insights came up that are worth a short conversation.",
+        angle: "Your call will be a focused, high-value session — not a basics walkthrough.",
+    };
+}
+
+export async function sendProspectTeaserEmail({ submission, score }: ProspectTeaserPayload) {
+    if (!process.env.RESEND_API_KEY) return;
+
+    const calLink = "https://cal.com/adamwolfe/trackr";
+    const { subject, hook, angle } = getTeaserCopy(score);
+    const firstName = escapeHtml(submission.contactName?.split(" ")[0] || "there");
+    const companyName = escapeHtml(submission.companyName);
+
+    const html = emailWrapper(`
+        <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">AI Readiness Audit · Trackr</p>
+        <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 20px; line-height: 1.3;">
+            Hi ${firstName},
+        </h1>
+
+        <p style="font-size: 14px; color: #333; line-height: 1.7; margin: 0 0 16px;">
+            ${hook}
+        </p>
+
+        <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 16px;">
+            Your full AI readiness report for <strong>${companyName}</strong> is ready and will be reviewed together on your call.
+        </p>
+
+        <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 24px;">
+            ${angle}
+        </p>
+
+        <!-- What to expect -->
+        <div style="border-left: 3px solid #000; padding: 14px 16px; margin-bottom: 24px; background: #fff;">
+            <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin-bottom: 10px;">On the call, you'll get:</div>
+            <ul style="font-size: 13px; color: #333; line-height: 1.9; padding-left: 18px; margin: 0;">
+                <li>Your custom AI readiness scorecard walkthrough</li>
+                <li>A pre-built workspace with your tools already loaded</li>
+                <li>A 90-day prioritized roadmap specific to your stack</li>
+            </ul>
+        </div>
+
+        ${emailButton(calLink, "Add to Calendar →")}
+
+        <p style="font-size: 13px; color: #777; margin: 20px 0 0; line-height: 1.5;">See you there,<br><strong>Adam</strong><br>Trackr</p>
+    `);
+
+    const resend = getResend();
+    await sendWithRetry(() =>
+        resend.emails.send({
+            from: FROM,
+            to: submission.contactEmail,
+            subject,
             html,
         })
     );

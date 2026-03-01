@@ -9,10 +9,10 @@
  */
 
 import { db } from "@/lib/db";
-import { auditSubmissions } from "@/lib/db/schema";
+import { auditSubmissions, workspaces, softwareSpend } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
-import { sendAuditScorecardEmail } from "@/lib/email/resend";
+import { sendAuditScorecardEmail, sendProspectTeaserEmail } from "@/lib/email/resend";
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
@@ -54,6 +54,12 @@ const AuditScorecardSchema = z.object({
         targetScore: z.number().int().min(0).max(100),
         summary: z.string(),
     }),
+    talkingPoints: z.array(z.object({
+        topic: z.string(),
+        observation: z.string(),
+        question: z.string(),
+        opportunity: z.string(),
+    })).min(3).max(5),
 });
 
 export type AuditScorecard = z.infer<typeof AuditScorecardSchema>;
@@ -81,6 +87,8 @@ CURRENT STACK: Classify each tool as AI-native, AI-assisted, or Non-AI core infr
 RECOMMENDATIONS: 3–7 prioritized by ROI. Each must have title, impact, difficulty, and a 1–2 sentence description tied to their specific situation.
 
 BRANDING: Extract logoUrl and primaryColor from website metadata if available in the scraped context. If not found, set primaryColor to "#F3F3EF" (Trackr's cream).
+
+TALKING POINTS: Generate 3–5 call preparation talking points. Each must have: topic (short label), observation (what the data shows about their current situation), question (an opener to ask the prospect on the call), opportunity (what we can specifically help with).
 
 STYLE: Be factual and conservative. Do not fabricate revenue numbers. If website data is sparse, focus on form responses. Keep all text concise — executives should absorb this in under 2 minutes.`;
 
@@ -125,6 +133,39 @@ ${enrichment ? `SCRAPED WEBSITE CONTEXT (from ${sub.companyWebsite}):
 ${enrichment}` : "WEBSITE CONTEXT: Website not scraped (URL not provided or scrape failed). Base scorecard on form data only."}`;
 }
 
+// ── Scorecard config builder ──────────────────────────────────────────────────
+
+function buildScorecardConfig(bottleneck: string | null): Record<string, number> {
+    const b = (bottleneck ?? "").toLowerCase();
+    if (b.includes("sales") || b.includes("lead")) {
+        return { aiSophistication: 25, coreCapability: 20, integrationDepth: 20, pricingValue: 15, easeOfUse: 10, scalability: 7, communitySupport: 3 };
+    }
+    if (b.includes("ops") || b.includes("operation")) {
+        return { scalability: 25, integrationDepth: 20, easeOfUse: 20, coreCapability: 15, pricingValue: 12, aiSophistication: 5, communitySupport: 3 };
+    }
+    if (b.includes("support") || b.includes("customer")) {
+        return { easeOfUse: 25, communitySupport: 20, integrationDepth: 20, coreCapability: 15, aiSophistication: 10, pricingValue: 7, scalability: 3 };
+    }
+    if (b.includes("content") || b.includes("marketing")) {
+        return { aiSophistication: 30, coreCapability: 25, easeOfUse: 20, integrationDepth: 10, pricingValue: 8, communitySupport: 5, scalability: 2 };
+    }
+    if (b.includes("data") || b.includes("analytics")) {
+        return { coreCapability: 25, integrationDepth: 25, scalability: 20, aiSophistication: 15, pricingValue: 10, easeOfUse: 3, communitySupport: 2 };
+    }
+    // default balanced
+    return { coreCapability: 20, aiSophistication: 20, integrationDepth: 15, easeOfUse: 15, pricingValue: 15, scalability: 10, communitySupport: 5 };
+}
+
+// ── Workspace slug helper ─────────────────────────────────────────────────────
+
+function slugify(name: string): string {
+    return name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 40);
+}
+
 // ── Main pipeline ─────────────────────────────────────────────────────────────
 
 export async function processAuditSubmission(id: string): Promise<void> {
@@ -162,13 +203,45 @@ export async function processAuditSubmission(id: string): Promise<void> {
         const { randomUUID } = await import("crypto");
         const shareToken = randomUUID().replace(/-/g, "");
 
-        // 4. Send email (include share link)
-        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
-        await sendAuditScorecardEmail({ submission, scorecard, shareUrl: `${appUrl}/audit/share/${shareToken}` });
+        // 4. Pre-build workspace
+        const slug = slugify(submission.companyName) + "-" + randomUUID().slice(0, 4);
+        const [workspace] = await db.insert(workspaces).values({
+            name: submission.companyName,
+            slug,
+            companyContext: enrichmentContext.slice(0, 2000) || null,
+            scorecardConfig: buildScorecardConfig(submission.biggestBottleneck),
+            onboardingCompleted: false,
+        }).returning();
 
-        // 5. Persist
+        // Seed software_spend from currentTools[]
+        if (submission.currentTools?.length) {
+            await db.insert(softwareSpend).values(
+                submission.currentTools.map(t => ({
+                    workspaceId: workspace.id,
+                    toolName: t,
+                    status: "active" as const,
+                    monthlyCost: "0",
+                }))
+            );
+        }
+
+        // 5. Send emails — rep gets full scorecard, prospect gets teaser
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
+        const shareUrl = `${appUrl}/audit/share/${shareToken}`;
+        const adminUrl = `${appUrl}/admin/leads/${id}`;
+        await sendAuditScorecardEmail({ submission, scorecard, shareUrl, adminUrl });
+        await sendProspectTeaserEmail({ submission, score: scorecard.aiNativeScore.score });
+
+        // 6. Persist
         await db.update(auditSubmissions)
-            .set({ status: "complete", scorecard, shareToken, completedAt: new Date() })
+            .set({
+                status: "complete",
+                scorecard,
+                talkingPoints: scorecard.talkingPoints,
+                shareToken,
+                preBuiltWorkspaceId: workspace.id,
+                completedAt: new Date(),
+            })
             .where(eq(auditSubmissions.id, id));
 
     } catch (err) {
