@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle, X, Minus } from "lucide-react";
+import { CheckCircle, X, Minus, ArrowRight } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import type { Metadata } from "next";
 import { VS_PAGES, VS_COMPETITORS } from "@/data/vs-pages.seed";
+import { ICP_PAGES } from "@/data/icp-pages.seed";
 
 // Fully static
 export const revalidate = false;
@@ -213,6 +214,27 @@ export default async function VsPage({
                                 <h3 className="font-mono text-sm font-bold mb-2">{faq.q}</h3>
                                 <p className="font-mono text-xs text-neutral-600 leading-relaxed">{faq.a}</p>
                             </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* ── Trackr by role ── */}
+                <section className="py-8 border-t border-black/10">
+                    <div className="flex items-center justify-between mb-5">
+                        <p className="font-mono text-xs uppercase tracking-widest text-neutral-400">Trackr for your team</p>
+                        <Link href="/for" className="font-mono text-xs text-neutral-500 hover:text-black hover:underline">
+                            See all roles →
+                        </Link>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {ICP_PAGES.slice(0, 6).map((p) => (
+                            <Link
+                                key={p.role}
+                                href={`/for/${p.role}`}
+                                className="inline-flex items-center gap-2 border border-black px-3 py-1.5 font-mono text-xs hover:bg-neutral-100 transition-colors"
+                            >
+                                {p.role.replace(/-/g, " ")} <ArrowRight className="w-3 h-3" />
+                            </Link>
                         ))}
                     </div>
                 </section>

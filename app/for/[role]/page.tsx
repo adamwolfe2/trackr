@@ -5,6 +5,7 @@ import { MarketingNavigation } from "@/components/marketing/marketing-navigation
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import type { Metadata } from "next";
 import { ICP_PAGES, ICP_ROLES } from "@/data/icp-pages.seed";
+import { VS_PAGES } from "@/data/vs-pages.seed";
 
 // Fully static
 export const revalidate = false;
@@ -199,6 +200,27 @@ export default async function IcpPage({
                                 <h3 className="font-mono text-sm font-bold mb-2">{faq.q}</h3>
                                 <p className="font-mono text-xs text-neutral-600 leading-relaxed">{faq.a}</p>
                             </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* ── Compare Trackr vs alternatives ── */}
+                <section className="py-8 border-t border-black/10">
+                    <div className="flex items-center justify-between mb-5">
+                        <p className="font-mono text-xs uppercase tracking-widest text-neutral-400">How Trackr compares</p>
+                        <Link href="/vs" className="font-mono text-xs text-neutral-500 hover:text-black hover:underline">
+                            All comparisons →
+                        </Link>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {VS_PAGES.slice(0, 6).map((p) => (
+                            <Link
+                                key={p.competitor}
+                                href={`/vs/${p.competitor}`}
+                                className="inline-flex items-center gap-2 border border-black px-3 py-1.5 font-mono text-xs hover:bg-neutral-100 transition-colors"
+                            >
+                                Trackr vs {p.competitorName} →
+                            </Link>
                         ))}
                     </div>
                 </section>

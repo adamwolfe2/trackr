@@ -116,6 +116,22 @@ const faqs = [
         q: "Do you offer annual billing?",
         a: "Yes — annual billing saves you roughly 20%. You can toggle between monthly and annual on the billing page.",
     },
+    {
+        q: "How accurate are the AI research reports?",
+        a: "Reports are sourced from 25+ real data points per tool — the vendor's own site, pricing pages, G2, Capterra, TrustRadius, ProductHunt, Reddit, and competitive analysis. Every score is grounded in real data, not hallucinated. We also show the raw sources so your team can verify.",
+    },
+    {
+        q: "Can I share reports with people outside my team?",
+        a: "Yes. Every research report has a Share Report button that generates a public link. No login required for the recipient. Share individual tool evaluations with vendors, stakeholders, or executives.",
+    },
+    {
+        q: "Is my data private?",
+        a: "Yes. Your workspace data — tools, reports, stack, and spend — is isolated per workspace and never shared between accounts. Research reports are private unless you create a share link. We are SOC2 compliant.",
+    },
+    {
+        q: "Can Trackr research any type of software tool?",
+        a: "Yes. Submit any URL — B2B SaaS, AI tools, open-source software, developer tools, or niche vertical software. Our agents are not limited to a category. If a website exists, Trackr can research it.",
+    },
 ];
 
 function PricingJsonLd() {
@@ -238,6 +254,46 @@ export default async function PricingPage() {
                             </Link>
                         </div>
                     ))}
+                </div>
+
+                {/* What Trackr Replaces */}
+                <div className="mb-24 border border-black">
+                    <div className="border-b border-black px-8 py-5">
+                        <h2 className="text-2xl font-serif font-normal">What Trackr replaces</h2>
+                        <p className="font-mono text-xs text-neutral-500 mt-1">One subscription eliminates 4 hours of manual research per tool evaluation.</p>
+                    </div>
+                    <div className="grid md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-black">
+                        {[
+                            {
+                                label: "Manual G2 / Capterra browsing",
+                                value: "2–3 hrs per tool",
+                                trackr: "2 min automated",
+                                detail: "Agents scrape G2, Capterra, TrustRadius, Reddit, and ProductHunt simultaneously."
+                            },
+                            {
+                                label: "Spreadsheet-based tool tracking",
+                                value: "Never up to date",
+                                trackr: "Auto-refreshes every 30 days",
+                                detail: "Scheduled research keeps every tool in your stack current without any manual effort."
+                            },
+                            {
+                                label: "Vendor sales calls for pricing",
+                                value: "3–5 calls per tool",
+                                trackr: "Pricing scraped at generation",
+                                detail: "Current pricing tiers and positioning scraped directly from vendor sites on every research run."
+                            },
+                        ].map((item) => (
+                            <div key={item.label} className="p-6">
+                                <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-3">{item.label}</div>
+                                <div className="flex items-center gap-3 mb-3">
+                                    <div className="font-mono text-xs text-neutral-500 line-through">{item.value}</div>
+                                    <Minus className="w-3 h-3 text-neutral-300 flex-shrink-0" />
+                                    <div className="font-mono text-xs font-semibold text-black">{item.trackr}</div>
+                                </div>
+                                <p className="font-mono text-[10px] text-neutral-500 leading-relaxed">{item.detail}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Enterprise Audit */}
