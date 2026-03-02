@@ -463,6 +463,7 @@ export const auditSubmissions = pgTable('audit_submissions', {
     assignedRep: text('assigned_rep'), // rep email/name who owns this lead
     preBuiltWorkspaceId: uuid('pre_built_workspace_id').references(() => workspaces.id),
     inviteToken: text('invite_token').unique(), // used to track invite state
+    arcCode: text('arc_code'), // architect attribution code
     createdAt: timestamp('created_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
 }, (table) => [
@@ -471,3 +472,4 @@ export const auditSubmissions = pgTable('audit_submissions', {
 ]);
 
 export * from './referrals-schema';
+export * from './architect-schema';

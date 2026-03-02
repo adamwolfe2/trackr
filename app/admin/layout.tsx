@@ -14,6 +14,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     <a href="/admin/api" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
                         API
                     </a>
+                    <span className="font-mono text-neutral-300 text-xs">|</span>
+                    <a href="/admin/architects" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
+                        Architects
+                    </a>
                 </nav>
                 {children}
             </div>

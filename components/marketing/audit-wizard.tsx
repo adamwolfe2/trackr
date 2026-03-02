@@ -527,7 +527,7 @@ const STEPS = ["Organization", "AI Readiness", "Current Stack", "Book Call"];
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function AuditWizard({ callOwnerEmail }: { callOwnerEmail?: string }) {
+export function AuditWizard({ callOwnerEmail, arcCode }: { callOwnerEmail?: string; arcCode?: string }) {
     const [currentStep, setCurrentStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -578,6 +578,7 @@ export function AuditWizard({ callOwnerEmail }: { callOwnerEmail?: string }) {
                         currentTools: step3.currentTools.length > 0 ? step3.currentTools : undefined,
                         toolFrustrations: step3.toolFrustrations || undefined,
                         manualProcesses: step3.manualProcesses || undefined,
+                        arcCode: arcCode || undefined,
                     }),
                 });
                 if (!res.ok) {

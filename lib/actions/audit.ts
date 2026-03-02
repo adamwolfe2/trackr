@@ -9,7 +9,7 @@
  */
 
 import { db } from "@/lib/db";
-import { auditSubmissions, workspaces, softwareSpend } from "@/lib/db/schema";
+import { auditSubmissions, workspaces, softwareSpend, architects, architectReferrals } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { sendAuditScorecardEmail, sendProspectTeaserEmail } from "@/lib/email/resend";
@@ -223,6 +223,25 @@ export async function processAuditSubmission(id: string): Promise<void> {
                     monthlyCost: "0",
                 }))
             );
+        }
+
+        // 4b. Create architect referral if arcCode is present
+        if (submission.arcCode) {
+            const architect = await db.query.architects.findFirst({
+                where: eq(architects.arcCode, submission.arcCode),
+            });
+            if (architect && architect.status === "active") {
+                await db.insert(architectReferrals).values({
+                    architectId: architect.id,
+                    workspaceId: workspace.id,
+                    auditSubmissionId: submission.id,
+                    status: "lead",
+                });
+                // Increment total clients count
+                await db.update(architects)
+                    .set({ totalClients: architect.totalClients + 1 })
+                    .where(eq(architects.id, architect.id));
+            }
         }
 
         // 5. Send emails — rep gets full scorecard, prospect gets teaser

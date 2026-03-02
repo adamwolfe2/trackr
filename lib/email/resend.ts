@@ -654,3 +654,159 @@ export async function sendProspectTeaserEmail({ submission, score }: ProspectTea
         })
     );
 }
+
+// ── Architect Emails ─────────────────────────────────────────────────────────
+
+export async function sendArchitectApplicationReceived(to: string, firstName: string) {
+    if (!process.env.RESEND_API_KEY) return;
+    const resend = getResend();
+    await sendWithRetry(() =>
+        resend.emails.send({
+            from: FROM,
+            to,
+            subject: "Application received — Trackr AI Architect Program",
+            html: emailWrapper(`
+                <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                    Application received.
+                </h1>
+                <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 16px;">
+                    Hi ${escapeHtml(firstName)},
+                </p>
+                <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 16px;">
+                    Thank you for applying to the Trackr AI Architect Program. We review applications within 48 hours and will follow up with next steps.
+                </p>
+                <p style="font-size: 13px; color: #777; margin: 20px 0 0; line-height: 1.5;">
+                    — The Trackr Team
+                </p>
+            `),
+        })
+    );
+}
+
+export async function sendArchitectApplicationNotification(applicationId: string, name: string, role: string) {
+    if (!process.env.RESEND_API_KEY) return;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+    const reviewUrl = `${appUrl}/admin/architects/${applicationId}`;
+    const resend = getResend();
+    await sendWithRetry(() =>
+        resend.emails.send({
+            from: FROM,
+            to: "adamwolfe102@gmail.com",
+            subject: `New Architect Application: ${name} (${role})`,
+            html: emailWrapper(`
+                <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                    New architect application
+                </h1>
+                <div style="border: 1px solid #000; padding: 16px; margin-bottom: 20px;">
+                    <p style="font-size: 13px; color: #333; margin: 0 0 8px;"><strong>Name:</strong> ${escapeHtml(name)}</p>
+                    <p style="font-size: 13px; color: #333; margin: 0;"><strong>Role:</strong> ${escapeHtml(role)}</p>
+                </div>
+                ${emailButton(reviewUrl, "Review Application")}
+            `),
+        })
+    );
+}
+
+export async function sendArchitectApproved(to: string, firstName: string, arcCode: string, onboardingUrl: string) {
+    if (!process.env.RESEND_API_KEY) return;
+    const resend = getResend();
+    await sendWithRetry(() =>
+        resend.emails.send({
+            from: FROM,
+            to,
+            subject: "You're approved — Trackr AI Architect Program",
+            html: emailWrapper(`
+                <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                    Welcome to the program, ${escapeHtml(firstName)}.
+                </h1>
+                <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 16px;">
+                    Your application has been approved. Here's what's next:
+                </p>
+                <div style="border: 1px solid #000; padding: 16px; margin-bottom: 20px;">
+                    <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin: 0 0 8px;">Your Referral Code</p>
+                    <p style="font-size: 20px; font-weight: bold; color: #000; letter-spacing: 0.15em; margin: 0;">${escapeHtml(arcCode)}</p>
+                </div>
+                <div style="border-left: 3px solid #000; padding: 14px 16px; margin-bottom: 24px;">
+                    <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin-bottom: 10px;">Next steps</div>
+                    <ol style="font-size: 13px; color: #333; line-height: 1.9; padding-left: 18px; margin: 0;">
+                        <li>Sign in to your architect dashboard</li>
+                        <li>Complete Stripe Connect setup (to receive payouts)</li>
+                        <li>Share your referral link: trytrackr.com/audit?arc=${escapeHtml(arcCode)}</li>
+                        <li>Earn 20% recurring on every client payment</li>
+                    </ol>
+                </div>
+                ${emailButton(onboardingUrl, "Open Your Dashboard")}
+                <p style="font-size: 13px; color: #777; margin: 20px 0 0; line-height: 1.5;">
+                    — The Trackr Team
+                </p>
+            `),
+        })
+    );
+}
+
+export async function sendArchitectRejected(to: string, firstName: string) {
+    if (!process.env.RESEND_API_KEY) return;
+    const resend = getResend();
+    await sendWithRetry(() =>
+        resend.emails.send({
+            from: FROM,
+            to,
+            subject: "Architect Program — Application Update",
+            html: emailWrapper(`
+                <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                    Application update
+                </h1>
+                <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 16px;">
+                    Hi ${escapeHtml(firstName)},
+                </p>
+                <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 16px;">
+                    Thank you for your interest in the Trackr AI Architect Program. After reviewing your application, we're unable to approve it at this time.
+                </p>
+                <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 16px;">
+                    We encourage you to reapply in the future as the program evolves and your experience grows. If you have questions, reply to this email.
+                </p>
+                <p style="font-size: 13px; color: #777; margin: 20px 0 0; line-height: 1.5;">
+                    — The Trackr Team
+                </p>
+            `),
+        })
+    );
+}
+
+export async function sendCommissionEarned(to: string, firstName: string, clientWorkspaceId: string, commissionAmount: number, totalEarnings: number) {
+    if (!process.env.RESEND_API_KEY) return;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+    const resend = getResend();
+    await sendWithRetry(() =>
+        resend.emails.send({
+            from: FROM,
+            to,
+            subject: `Commission earned: $${(commissionAmount / 100).toFixed(2)}`,
+            html: emailWrapper(`
+                <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                    Commission paid.
+                </h1>
+                <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 16px;">
+                    Hi ${escapeHtml(firstName)},
+                </p>
+                <div style="border: 1px solid #000; padding: 16px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.08em;">This commission</span>
+                        <span style="font-size: 18px; font-weight: bold; color: #000;">$${(commissionAmount / 100).toFixed(2)}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.08em;">Lifetime earnings</span>
+                        <span style="font-size: 14px; color: #333;">$${(totalEarnings / 100).toFixed(2)}</span>
+                    </div>
+                </div>
+                <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 20px;">
+                    The funds have been transferred to your Stripe Connect account.
+                </p>
+                ${emailButton(`${appUrl}/architect/commissions`, "View Commissions")}
+                <p style="font-size: 13px; color: #777; margin: 20px 0 0; line-height: 1.5;">
+                    — The Trackr Team
+                </p>
+            `),
+        })
+    );
+}

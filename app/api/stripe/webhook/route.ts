@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/services/stripe";
 import { db } from "@/lib/db";
-import { subscriptions, ads, workspaceMembers, webhookEvents } from "@/lib/db/schema";
+import { subscriptions, ads, workspaceMembers, webhookEvents, architectReferrals, architects, architectCommissions } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 import { clerkClient } from "@clerk/nextjs/server";
-import { sendTrialEndingEmail, cancelDripForUser } from "@/lib/email/resend";
+import { sendTrialEndingEmail, cancelDripForUser, sendCommissionEarned } from "@/lib/email/resend";
 import { getPlanLimits } from "@/lib/config/subscriptions";
 import { captureEvent } from "@/lib/analytics/posthog-server";
 
@@ -312,6 +312,91 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         await db.update(subscriptions)
             .set({ status: "active", updatedAt: new Date() })
             .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));
+    }
+
+    // Architect commission: check if this workspace has an active architect referral
+    if (existing) {
+        try {
+            const referral = await db.query.architectReferrals.findFirst({
+                where: and(
+                    eq(architectReferrals.workspaceId, existing.workspaceId),
+                    eq(architectReferrals.status, "active"),
+                ),
+            });
+
+            if (referral) {
+                const architect = await db.query.architects.findFirst({
+                    where: and(
+                        eq(architects.id, referral.architectId),
+                        eq(architects.status, "active"),
+                    ),
+                });
+
+                if (architect) {
+                    const invoiceAmount = invoice.amount_paid; // cents
+                    const commissionRate = 20;
+                    const commissionAmount = Math.floor(invoiceAmount * commissionRate / 100);
+                    const invoiceId = invoice.id;
+
+                    if (commissionAmount > 0 && invoiceId) {
+                        // Create commission record
+                        const [commission] = await db.insert(architectCommissions).values({
+                            architectId: architect.id,
+                            referralId: referral.id,
+                            stripeInvoiceId: invoiceId,
+                            invoiceAmount,
+                            commissionRate,
+                            commissionAmount,
+                            status: "pending",
+                        }).returning();
+
+                        // If architect has completed Stripe Connect, transfer immediately
+                        if (architect.stripeOnboardingComplete && architect.stripeConnectAccountId) {
+                            try {
+                                const transfer = await stripe.transfers.create({
+                                    amount: commissionAmount,
+                                    currency: "usd",
+                                    destination: architect.stripeConnectAccountId,
+                                    metadata: {
+                                        commissionId: commission.id,
+                                        architectId: architect.id,
+                                        invoiceId,
+                                    },
+                                });
+
+                                await db.update(architectCommissions)
+                                    .set({
+                                        status: "paid",
+                                        stripeTransferId: transfer.id,
+                                        paidAt: new Date(),
+                                    })
+                                    .where(eq(architectCommissions.id, commission.id));
+
+                                // Update architect lifetime earnings
+                                await db.update(architects)
+                                    .set({ totalEarnings: architect.totalEarnings + commissionAmount })
+                                    .where(eq(architects.id, architect.id));
+
+                                // Notify architect
+                                await sendCommissionEarned(
+                                    architect.email,
+                                    architect.firstName,
+                                    existing.workspaceId,
+                                    commissionAmount,
+                                    architect.totalEarnings + commissionAmount,
+                                );
+                            } catch (transferErr) {
+                                console.error("[webhook] Stripe transfer failed for architect", architect.id, transferErr);
+                                // Commission stays as "pending" — can be retried
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (commErr) {
+            // Non-critical: log but don't fail the webhook
+            console.error("[webhook] Architect commission processing failed", commErr);
+        }
     }
 }
 

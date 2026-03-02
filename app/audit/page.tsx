@@ -47,8 +47,13 @@ const URGENCY_STATS = [
     },
 ];
 
-export default async function AuditPage() {
+export default async function AuditPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ arc?: string }>;
+}) {
     const user = await currentUser();
+    const { arc: arcCode } = await searchParams;
 
     return (
         <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
@@ -148,7 +153,7 @@ export default async function AuditPage() {
                         10 minutes. Our AI architects review your answers before your call so every minute is spent on strategy, not discovery.
                     </p>
                 </div>
-                <AuditWizard />
+                <AuditWizard arcCode={arcCode} />
             </section>
 
             <MarketingFooter />
