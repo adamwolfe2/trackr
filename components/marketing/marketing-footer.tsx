@@ -60,6 +60,11 @@ export function MarketingFooter() {
                         <Link href="/blog" className="text-neutral-600 hover:text-black hover:underline">Blog</Link>
                         <Link href="/contact" className="text-neutral-600 hover:text-black hover:underline">Contact</Link>
                         <Link href="/partners" className="text-neutral-600 hover:text-black hover:underline">Integrations</Link>
+                        <Link href="/apply" className="text-neutral-600 hover:text-black hover:underline">AI Architects</Link>
+                        <span className="font-bold text-black uppercase tracking-wider mt-4">Get Started</span>
+                        <Link href="/sign-up" className="text-neutral-600 hover:text-black hover:underline">Create Account</Link>
+                        <Link href="/sign-in" className="text-neutral-600 hover:text-black hover:underline">Sign In</Link>
+                        <Link href="/security" className="text-neutral-600 hover:text-black hover:underline">Security</Link>
                     </div>
 
                     <div className="flex flex-col gap-4">
@@ -74,15 +79,6 @@ export function MarketingFooter() {
                         <Link href="/vs/microsoft-copilot" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Copilot</Link>
                         <Link href="/vs/ramp" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Ramp</Link>
                         <Link href="/vs" className="text-neutral-600 hover:text-black hover:underline font-medium">All comparisons →</Link>
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                        <span className="font-bold text-black uppercase tracking-wider">Get Started</span>
-                        <Link href="/sign-up" className="text-neutral-600 hover:text-black hover:underline">Create Account</Link>
-                        <Link href="/sign-in" className="text-neutral-600 hover:text-black hover:underline">Sign In</Link>
-                        <Link href="/privacy" className="text-neutral-600 hover:text-black hover:underline">Privacy Policy</Link>
-                        <Link href="/terms" className="text-neutral-600 hover:text-black hover:underline">Terms of Service</Link>
-                        <Link href="/security" className="text-neutral-600 hover:text-black hover:underline">Security</Link>
                     </div>
 
                 </div>
