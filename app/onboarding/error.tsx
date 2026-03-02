@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import Link from "next/link";
 
 export default function OnboardingError({
@@ -10,9 +9,6 @@ export default function OnboardingError({
     error: Error & { digest?: string };
     reset: () => void;
 }) {
-    useEffect(() => {
-        console.error(error);
-    }, [error]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#F3F3EF] text-center space-y-6 px-4">

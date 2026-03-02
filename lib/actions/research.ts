@@ -819,22 +819,55 @@ INSTRUCTIONS:
 
     } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "Unknown error";
-        await logProgress(toolId, `Error: ${message}`);
-        await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+        await logProgress(toolId, `Unexpected error: ${message.slice(0, 120)} — attempting emergency fallback report...`);
 
-        // Refund credit if we deducted one but research didn't complete
+        // NEVER leave a tool in "failed" state if we can avoid it.
+        // Attempt to save a fallback report and mark the tool active so the user
+        // always sees something useful. Only fall back to "failed" if even this
+        // last-resort save throws.
+        let savedFallback = false;
+        try {
+            const fallback = buildFallbackReport(tool?.name ?? "Unknown Tool");
+            const existingReports = await db.query.reports.findMany({
+                where: eq(reports.toolId, toolId),
+                columns: { id: true },
+            });
+            await db.insert(reports).values({
+                toolId,
+                version: existingReports.length + 1,
+                scorecardSnapshot: fallback.scorecardSnapshot,
+                summary: `Research encountered an error. A minimal report was generated — re-run research for full analysis.`,
+                features: fallback.features,
+                pricing: [],
+                isPricingHidden: false,
+                pros: ["Re-run research to generate full analysis"],
+                cons: [],
+                competitors: [],
+                integrations: [],
+                rawScrapedData: {},
+                sentimentData: null,
+            });
+            await db.update(tools).set({
+                status: "active",
+                overallScore: "5.0",
+                lastResearchedAt: new Date(),
+            }).where(eq(tools.id, toolId));
+            savedFallback = true;
+            await logProgress(toolId, "Emergency fallback report saved — re-run research to generate full analysis.");
+        } catch {
+            // Absolute last resort — at least mark tool as failed so UI doesn't spin forever
+            await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId)).catch(() => null);
+        }
+
+        // Refund credit if we deducted one but research didn't complete successfully
         if (creditDeducted) {
-            try {
-                await db.update(subscriptions)
-                    .set({
-                        creditBalance: sql`${subscriptions.creditBalance} + 1`,
-                        updatedAt: new Date(),
-                    })
-                    .where(eq(subscriptions.workspaceId, tool.workspaceId));
-                console.log(`[research] Refunded 1 credit to workspace ${tool.workspaceId} after research failure`);
-            } catch (refundErr) {
-                console.error(`[research] Failed to refund credit for workspace ${tool.workspaceId}:`, refundErr);
-            }
+            await db.update(subscriptions)
+                .set({
+                    creditBalance: sql`${subscriptions.creditBalance} + 1`,
+                    updatedAt: new Date(),
+                })
+                .where(eq(subscriptions.workspaceId, tool.workspaceId))
+                .catch(() => null);
         }
 
         // Mark researchJob as failed
@@ -843,37 +876,34 @@ INSTRUCTIONS:
                 status: "failed",
                 completedAt: new Date(),
                 errorMessage: message,
-            }).where(eq(researchJobs.id, researchJob.id));
+            }).where(eq(researchJobs.id, researchJob.id)).catch(() => null);
         }
 
-        // Send failure email to submitter (fire and forget)
-        if (tool?.submittedBy) {
-            try {
-                const clerk = await clerkClient();
-                const clerkUser = await clerk.users.getUser(tool.submittedBy);
-                const email = clerkUser.emailAddresses[0]?.emailAddress;
-                if (email) {
-                    await sendResearchFailedEmail(email, tool.name, toolId, message);
-                }
-            } catch (emailErr) {
-                console.warn(`[research] Failed to send failed email for tool ${toolId}:`, emailErr);
+        // Send notifications only if we couldn't save any report at all
+        if (!savedFallback) {
+            if (tool?.submittedBy) {
+                try {
+                    const clerk = await clerkClient();
+                    const clerkUser = await clerk.users.getUser(tool.submittedBy);
+                    const email = clerkUser.emailAddresses[0]?.emailAddress;
+                    if (email) {
+                        await sendResearchFailedEmail(email, tool.name, toolId, message);
+                    }
+                } catch { /* non-critical */ }
+            }
+
+            if (tool?.workspace?.slackEnabled && tool.workspace.slackChannelId) {
+                try {
+                    await postMessage(
+                        tool.workspace.slackChannelId,
+                        `Research failed: ${tool.name}`,
+                        researchFailedBlocks(tool.name, toolId, message),
+                        tool.workspace.slackBotToken ?? undefined,
+                    );
+                } catch { /* non-critical */ }
             }
         }
 
-        // Send Slack failure notification
-        if (tool?.workspace?.slackEnabled && tool.workspace.slackChannelId) {
-            try {
-                await postMessage(
-                    tool.workspace.slackChannelId,
-                    `Research failed: ${tool.name}`,
-                    researchFailedBlocks(tool.name, toolId, message),
-                    tool.workspace.slackBotToken ?? undefined,
-                );
-            } catch (slackErr) {
-                console.warn(`[research] Failed to send Slack failure notification for tool ${toolId}:`, slackErr);
-            }
-        }
-
-        return { success: false, error: message };
+        return { success: savedFallback, error: savedFallback ? undefined : message };
     }
 }

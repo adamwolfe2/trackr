@@ -1,4 +1,4 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
@@ -6,7 +6,7 @@ import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
 // Routes that handle their own auth (API key, HMAC, webhook signature, etc.)
 // Each of these MUST implement its own authentication — see route files
 
-/** Prefix-matched: any path starting with these bypasses Clerk */
+/** Prefix-matched: any path starting with these bypasses Clerk entirely */
 const BYPASS_PREFIXES = [
     "/api/extension/",       // API key auth (extension-auth.ts)
     "/api/cron/",            // CRON_SECRET verification
@@ -20,6 +20,39 @@ const BYPASS_EXACT = [
     "/api/stripe/webhook",   // Stripe webhook signature
     "/api/webhooks/clerk",   // Svix signature verification (Clerk user.created etc.)
 ];
+
+/**
+ * Public routes — everything NOT listed here requires a valid Clerk session.
+ * auth.protect() redirects unauthenticated users to /sign-in at the edge,
+ * before any layout/page code runs.
+ */
+const isPublicRoute = createRouteMatcher([
+    "/",
+    "/about",
+    "/pricing",
+    "/blog(.*)",
+    "/changelog",
+    "/chrome",
+    "/contact",
+    "/deck",
+    "/for(.*)",
+    "/partners",
+    "/playbook",
+    "/privacy",
+    "/process",
+    "/research(.*)",
+    "/scorecard(.*)",
+    "/security",
+    "/slack",
+    "/spend-report",
+    "/terms",
+    "/vs(.*)",
+    "/sign-in(.*)",
+    "/sign-up(.*)",
+    "/share(.*)",
+    "/invite(.*)",
+    "/.well-known(.*)",
+]);
 
 function getIp(req: NextRequest): string {
     return (
@@ -57,6 +90,10 @@ async function applyRateLimit(req: NextRequest, userId: string | null | undefine
 const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const isBuilding = process.env.NEXT_PHASE === "phase-production-build";
 const clerk = hasClerkKey ? clerkMiddleware(async (auth, req: NextRequest) => {
+    // Protect non-public routes at the edge — redirects to /sign-in before page renders
+    if (!isPublicRoute(req)) {
+        await auth.protect();
+    }
     const { userId } = await auth();
     const rl = await applyRateLimit(req, userId);
     if (rl && !rl.success) {
