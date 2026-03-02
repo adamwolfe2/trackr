@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { config as loadEnv } from "dotenv";
+
+// Load .env.local so real Clerk/DB keys are available when starting the dev server
+loadEnv({ path: ".env.local", override: false });
 
 /**
  * E2E tests for Trackr.
