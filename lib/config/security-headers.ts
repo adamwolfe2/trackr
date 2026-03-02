@@ -15,16 +15,16 @@
  */
 const CSP = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://js.stripe.com",
+    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://clerk.trytrackr.com https://*.clerk.accounts.dev",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     "connect-src 'self' https: wss:",
-    "frame-src 'self' https://js.stripe.com https://*.stripe.com https://*.clerk.accounts.dev",
+    "frame-src 'self' https://js.stripe.com https://*.stripe.com https://*.clerk.accounts.dev https://clerk.trytrackr.com",
     "frame-ancestors 'self'",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    "form-action 'self' https://clerk.trytrackr.com https://*.clerk.accounts.dev",
 ].join("; ");
 
 export const SECURITY_HEADERS = [
