@@ -57,6 +57,10 @@ const isPublicRoute = createRouteMatcher([
     "/apple-icon.png",
     "/advertise",
     "/advertise/(.*)",
+    "/apply(.*)",
+    "/audit(.*)",
+    "/legal(.*)",
+    "/api/architect/apply",
 ]);
 
 function getIp(req: NextRequest): string {
