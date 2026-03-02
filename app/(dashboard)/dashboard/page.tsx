@@ -380,9 +380,18 @@ export default async function DashboardPage() {
                     </div>
                     <div className="p-4">
                         {recentTools.length === 0 ? (
-                            <div className="py-10 text-center">
+                            <div className="py-10 text-center space-y-3">
                                 <p className="font-mono text-sm text-neutral-400">No tools tracked yet.</p>
-                                <Link href="/submit" className="font-mono text-xs text-black underline mt-1 inline-block">Submit a tool →</Link>
+                                <p className="font-mono text-[11px] text-neutral-400 max-w-xs mx-auto">Try researching a tool your team uses — scores arrive in under 2 minutes.</p>
+                                <div className="flex flex-wrap gap-2 justify-center pt-1">
+                                    {["linear.app", "notion.so", "slack.com", "figma.com"].map(domain => (
+                                        <Link key={domain} href={`/submit?url=https://${domain}`}
+                                            className="font-mono text-[10px] border border-neutral-300 px-2 py-1 hover:border-black hover:text-black text-neutral-500 transition-colors">
+                                            {domain}
+                                        </Link>
+                                    ))}
+                                </div>
+                                <Link href="/submit" className="font-mono text-xs text-black underline mt-1 inline-block">Submit any tool →</Link>
                             </div>
                         ) : (
                             <div className="divide-y divide-neutral-100">

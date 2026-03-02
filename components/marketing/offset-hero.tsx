@@ -2,6 +2,7 @@
 
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -192,13 +193,12 @@ function IntegrationMarquee() {
                 {duped.map((logo, i) => (
                     <div key={`${logo.domain}-${i}`} className="flex flex-col items-center gap-0.5 w-9 flex-shrink-0">
                         <div className="w-7 h-7 border border-black/10 bg-white flex items-center justify-center">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <Image
                                 src={`https://www.google.com/s2/favicons?domain=${logo.domain}&sz=32`}
                                 alt={logo.label}
                                 width={16}
                                 height={16}
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                unoptimized
                             />
                         </div>
                         <span className="font-mono text-[8px] text-neutral-400 whitespace-nowrap">{logo.label}</span>
@@ -335,10 +335,9 @@ function HeroDemo() {
                 {/* URL input */}
                 <div className="bg-white border-b border-black px-4 py-3 flex items-center gap-3">
                     {phase !== "idle" ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={currentTool.favicon} alt="" width={16} height={16}
+                        <Image src={currentTool.favicon} alt="" width={16} height={16}
                             className="flex-shrink-0 opacity-80 w-4 h-4"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                            unoptimized />
                     ) : (
                         <div className="w-4 h-4 flex-shrink-0" />
                     )}
@@ -624,13 +623,12 @@ function HeroDemo() {
                                                 className="flex items-center gap-3 px-5 py-2.5 hover:bg-[#F3F3EF] transition-colors cursor-pointer group"
                                             >
                                                 <div className="w-6 h-6 border border-black/20 bg-white flex items-center justify-center flex-shrink-0">
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img
+                                                    <Image
                                                         src={`https://www.google.com/s2/favicons?domain=${step.domain}&sz=32`}
                                                         alt=""
                                                         width={14}
                                                         height={14}
-                                                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                                                        unoptimized
                                                     />
                                                 </div>
                                                 <div className="flex-1 min-w-0">

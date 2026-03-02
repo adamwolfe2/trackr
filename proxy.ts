@@ -52,6 +52,11 @@ const isPublicRoute = createRouteMatcher([
     "/share(.*)",
     "/invite(.*)",
     "/.well-known(.*)",
+    "/sitemap.xml",
+    "/robots.txt",
+    "/apple-icon.png",
+    "/advertise",
+    "/advertise/(.*)",
 ]);
 
 function getIp(req: NextRequest): string {
@@ -90,11 +95,17 @@ async function applyRateLimit(req: NextRequest, userId: string | null | undefine
 const hasClerkKey = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const isBuilding = process.env.NEXT_PHASE === "phase-production-build";
 const clerk = hasClerkKey ? clerkMiddleware(async (auth, req: NextRequest) => {
-    // Protect non-public routes at the edge — redirects to /sign-in before page renders
-    if (!isPublicRoute(req)) {
-        await auth.protect();
-    }
     const { userId } = await auth();
+    if (!isPublicRoute(req) && !userId) {
+        // API routes return 401 JSON — never redirect (redirects break API clients)
+        if (req.nextUrl.pathname.startsWith("/api/")) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        // Page routes redirect to sign-in
+        const signInUrl = new URL("/sign-in", req.url);
+        signInUrl.searchParams.set("redirect_url", req.url);
+        return NextResponse.redirect(signInUrl);
+    }
     const rl = await applyRateLimit(req, userId);
     if (rl && !rl.success) {
         return NextResponse.json(

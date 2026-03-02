@@ -29,7 +29,10 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['lucide-react', 'date-fns'],
-  }
+  },
+  turbopack: {
+    root: __dirname,
+  },
 };
 
 export default withSentryConfig(withAnalyzer(nextConfig), {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { NotesSection } from "@/components/tools/notes-section";
 
@@ -99,8 +100,7 @@ function SourceLinks({ sources }: { sources: ReviewSource[] }) {
                     <a key={i} href={src.url} target="_blank" rel="noopener noreferrer"
                         className="flex items-center justify-between p-2 border border-black hover:bg-neutral-100 transition-colors">
                         <div className="flex items-center gap-2 min-w-0">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=16`} alt="" className="w-4 h-4 flex-shrink-0" />
+                            <Image src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=16`} alt="" width={16} height={16} className="w-4 h-4 flex-shrink-0" unoptimized />
                             <span className="font-mono text-xs truncate">{src.title}</span>
                         </div>
                         <span className="font-mono text-[10px] text-neutral-400 flex-shrink-0 ml-2">{hostname}</span>
