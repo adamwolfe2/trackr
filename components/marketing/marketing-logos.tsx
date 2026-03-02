@@ -1,20 +1,51 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 
 const LOGOS = [
-  { name: "Linear", abbr: "Li" },
-  { name: "Notion", abbr: "No" },
-  { name: "Figma", abbr: "Fi" },
-  { name: "Slack", abbr: "Sl" },
-  { name: "HubSpot", abbr: "Hs" },
-  { name: "Intercom", abbr: "Ic" },
-  { name: "Loom", abbr: "Lm" },
-  { name: "Retool", abbr: "Re" },
-  { name: "Clay", abbr: "Cl" },
-  { name: "Apollo", abbr: "Ap" },
+  { name: "Linear", domain: "linear.app" },
+  { name: "Notion", domain: "notion.so" },
+  { name: "Figma", domain: "figma.com" },
+  { name: "Slack", domain: "slack.com" },
+  { name: "HubSpot", domain: "hubspot.com" },
+  { name: "Intercom", domain: "intercom.com" },
+  { name: "Loom", domain: "loom.com" },
+  { name: "Retool", domain: "retool.com" },
+  { name: "Clay", domain: "clay.com" },
+  { name: "Apollo", domain: "apollo.io" },
 ];
+
+function LogoItem({ name, domain }: { name: string; domain: string }) {
+  const [imgSrc, setImgSrc] = useState(`https://logo.clearbit.com/${domain}`);
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 px-6 py-5 bg-white hover:bg-[#F3F3EF] transition-colors border-r border-black/10 last:border-r-0">
+      {!failed ? (
+        <img
+          src={imgSrc}
+          alt={name}
+          className="h-7 w-7 object-contain"
+          onError={() => {
+            if (imgSrc.includes("clearbit")) {
+              setImgSrc(`https://www.google.com/s2/favicons?domain=${domain}&sz=64`);
+            } else {
+              setFailed(true);
+            }
+          }}
+        />
+      ) : (
+        <div className="h-7 w-7 border border-black/20 flex items-center justify-center font-mono text-xs font-bold text-neutral-500">
+          {name.charAt(0)}
+        </div>
+      )}
+      <span className="font-mono text-[10px] text-neutral-500 tracking-wide whitespace-nowrap">
+        {name}
+      </span>
+    </div>
+  );
+}
 
 export function MarketingLogos() {
   const ref = useRef(null);
@@ -30,18 +61,9 @@ export function MarketingLogos() {
         <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 text-center mb-6">
           Ops teams are tracking these tools — and hundreds more
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-0 border border-black/10">
-          {LOGOS.map((logo, i) => (
-            <div
-              key={logo.name}
-              className={`flex items-center justify-center px-6 py-4 bg-white hover:bg-[#F3F3EF] transition-colors ${
-                i < LOGOS.length - 1 ? "border-r border-black/10" : ""
-              }`}
-            >
-              <span className="font-mono text-xs font-semibold text-neutral-600 tracking-wider whitespace-nowrap">
-                {logo.name}
-              </span>
-            </div>
+        <div className="flex flex-wrap items-stretch justify-center border border-black/10 divide-x divide-black/10">
+          {LOGOS.map((logo) => (
+            <LogoItem key={logo.name} name={logo.name} domain={logo.domain} />
           ))}
         </div>
       </motion.div>

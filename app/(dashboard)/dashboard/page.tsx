@@ -7,6 +7,7 @@ import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
+import { ToolLogo } from "@/components/tools/tool-logo";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
@@ -105,13 +106,13 @@ export default async function DashboardPage() {
         where: and(eq(tools.workspaceId, workspaceId), isNotNull(tools.overallScore), eq(tools.status, "active")),
         orderBy: [desc(tools.overallScore)],
         limit: 3,
-        columns: { id: true, name: true, overallScore: true, category: true },
+        columns: { id: true, name: true, overallScore: true, category: true, logoUrl: true, websiteUrl: true },
     });
     const needsAttention = await db.query.tools.findMany({
         where: and(eq(tools.workspaceId, workspaceId), eq(tools.status, "active"), isNotNull(tools.overallScore)),
         orderBy: [tools.overallScore],
         limit: 3,
-        columns: { id: true, name: true, overallScore: true, category: true },
+        columns: { id: true, name: true, overallScore: true, category: true, logoUrl: true, websiteUrl: true },
     });
 
     const reportsCountData = await db
@@ -319,14 +320,15 @@ export default async function DashboardPage() {
                         </div>
                         <div className="divide-y divide-neutral-100">
                             {topPerformers.map(tool => (
-                                <Link key={tool.id} href={`/tools/${tool.id}`} className="flex items-center justify-between px-5 py-3 hover:bg-neutral-100 transition-colors group">
-                                    <div>
-                                        <div className="font-mono text-sm">{tool.name}</div>
+                                <Link key={tool.id} href={`/tools/${tool.id}`} className="flex items-center gap-3 px-5 py-3 hover:bg-neutral-100 transition-colors group">
+                                    <ToolLogo name={tool.name} logoUrl={tool.logoUrl} websiteUrl={tool.websiteUrl} size="sm" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-mono text-sm truncate">{tool.name}</div>
                                         {tool.category && tool.category.length > 0 && (
                                             <div className="font-mono text-[10px] text-neutral-400 uppercase">{tool.category[0]}</div>
                                         )}
                                     </div>
-                                    <span className="font-mono text-sm font-bold border border-black bg-black text-white px-2 py-0.5">
+                                    <span className="font-mono text-sm font-bold border border-black bg-black text-white px-2 py-0.5 flex-shrink-0">
                                         {Number(tool.overallScore).toFixed(1)}
                                     </span>
                                 </Link>
@@ -341,9 +343,10 @@ export default async function DashboardPage() {
                         </div>
                         <div className="divide-y divide-neutral-100">
                             {needsAttention.map(tool => (
-                                <div key={tool.id} className="flex items-center justify-between px-5 py-3">
-                                    <div>
-                                        <div className="font-mono text-sm">{tool.name}</div>
+                                <div key={tool.id} className="flex items-center gap-3 px-5 py-3">
+                                    <ToolLogo name={tool.name} logoUrl={tool.logoUrl} websiteUrl={tool.websiteUrl} size="sm" />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-mono text-sm truncate">{tool.name}</div>
                                         {tool.category && tool.category.length > 0 && (
                                             <div className="font-mono text-[10px] text-neutral-400 uppercase">{tool.category[0]}</div>
                                         )}
@@ -417,9 +420,7 @@ export default async function DashboardPage() {
                                 {recentTools.map(tool => (
                                     <Link key={tool.id} href={`/tools/${tool.id}`} className="flex items-center justify-between py-3 hover:bg-neutral-100 -mx-2 px-2 transition-colors">
                                         <div className="flex items-center gap-3">
-                                            <div className="h-7 w-7 border border-black flex items-center justify-center font-mono text-xs font-bold flex-shrink-0">
-                                                {tool.name.charAt(0)}
-                                            </div>
+                                            <ToolLogo name={tool.name} logoUrl={tool.logoUrl} websiteUrl={tool.websiteUrl} size="md" />
                                             <div>
                                                 <div className="font-mono text-sm font-medium">{tool.name}</div>
                                                 <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">{tool.status}</div>
