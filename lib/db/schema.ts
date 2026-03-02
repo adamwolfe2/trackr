@@ -15,6 +15,7 @@ export const workspaces = pgTable('workspaces', {
     slackBotToken: text('slack_bot_token'),     // Per-workspace OAuth bot token
     slackTeamId: text('slack_team_id'),         // Slack workspace ID
     slackTeamName: text('slack_team_name'),     // Slack workspace name for display
+    inviteCode: text('invite_code').unique(),    // Persistent public invite link token
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
     index('workspaces_slack_channel_id_idx').on(table.slackChannelId),

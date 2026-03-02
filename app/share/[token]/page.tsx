@@ -1,16 +1,24 @@
 import { db } from "@/lib/db";
-import { reports, tools } from "@/lib/db/schema";
+import { reports, tools, workspaces, painPoints } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ExternalLink, Link2, Mail } from "lucide-react";
 import { ShareActions } from "./share-actions";
 import { TrackrLogo } from "@/components/common/trackr-logo";
+import { ShareRadarChart } from "@/components/share/share-radar-chart";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
 type ScorecardEntry = { score: number; justification: string };
 type ReviewSource = { title: string; url: string; score: number };
+type RedditThread = { title: string; url: string; subreddit: string; snippet: string };
+type ScorecardConfig = {
+    systemContext?: string;
+    businessUnits?: Array<{ key: string; name: string; description: string; priorities: string }>;
+    evaluationCriteria?: string;
+    dealBreakers?: string;
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
     const { token } = await params;
@@ -59,6 +67,21 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
 
     if (!tool) return notFound();
 
+    // Fetch workspace context — custom scorecard, company profile, and pain points
+    const [workspace, workspacePainPoints] = await Promise.all([
+        db.query.workspaces.findFirst({
+            where: eq(workspaces.id, tool.workspaceId),
+            columns: { name: true, companyContext: true, scorecardConfig: true },
+        }),
+        db.query.painPoints.findMany({
+            where: eq(painPoints.workspaceId, tool.workspaceId),
+            columns: { id: true, title: true, description: true, category: true, active: true },
+        }),
+    ]);
+
+    const activePainPoints = workspacePainPoints.filter((p) => p.active);
+    const scorecardConfig = workspace?.scorecardConfig as ScorecardConfig | null;
+
     const scorecardSnapshot = report.scorecardSnapshot as Record<string, ScorecardEntry> | null;
     const pros = report.pros as string[] | null;
     const cons = report.cons as string[] | null;
@@ -71,6 +94,23 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
         redditAnswer?: string;
         competitorAnalysis?: string;
         reviewSources?: ReviewSource[];
+        trustSources?: ReviewSource[];
+        trustAnswer?: string;
+        redditThreads?: RedditThread[];
+        sentimentConsensus?: {
+            overall: "very_positive" | "positive" | "mixed" | "negative" | "very_negative";
+            confidence: number;
+            sourceAgreement: string;
+        };
+        marketIntel?: {
+            founded?: string;
+            headquarters?: string;
+            employeeCount?: string;
+            funding?: string;
+            recentNews?: string[];
+        };
+        dataSources?: number;
+        pagesScraped?: number;
     } | null;
     const competitors = (report.competitors as string[]) ?? [];
 
@@ -82,6 +122,21 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
     const avgScore = scorecardSnapshot
         ? Object.values(scorecardSnapshot).reduce((s, v) => s + v.score, 0) / Object.keys(scorecardSnapshot).length
         : 0;
+
+    const sentimentColors: Record<string, string> = {
+        very_positive: "bg-black text-white border-black",
+        positive: "border-black text-black",
+        mixed: "border-neutral-400 text-neutral-500",
+        negative: "border-red-400 text-red-600",
+        very_negative: "bg-red-600 text-white border-red-600",
+    };
+    const sentimentLabels: Record<string, string> = {
+        very_positive: "Very Positive",
+        positive: "Positive",
+        mixed: "Mixed",
+        negative: "Negative",
+        very_negative: "Very Negative",
+    };
 
     const reviewJsonLd = {
         "@context": "https://schema.org",
@@ -98,17 +153,9 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
             bestRating: "10",
             worstRating: "0",
         },
-        author: {
-            "@type": "Organization",
-            name: "Trackr",
-            url: "https://trytrackr.com",
-        },
+        author: { "@type": "Organization", name: "Trackr", url: "https://trytrackr.com" },
         reviewBody: report.summary ?? undefined,
-        publisher: {
-            "@type": "Organization",
-            name: "Trackr",
-            url: "https://trytrackr.com",
-        },
+        publisher: { "@type": "Organization", name: "Trackr", url: "https://trytrackr.com" },
     };
 
     return (
@@ -139,7 +186,7 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                             )}
                             {tool.name}
                         </h1>
-                        <div className="flex items-center gap-2 font-mono text-xs text-neutral-400">
+                        <div className="flex items-center gap-2 font-mono text-xs text-neutral-400 flex-wrap">
                             {toolHostname && (
                                 <a href={tool.websiteUrl!} target="_blank" rel="noopener noreferrer" className="hover:text-black flex items-center gap-1">
                                     {toolHostname} <ExternalLink className="h-2.5 w-2.5" />
@@ -147,7 +194,7 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                             )}
                             {tool.category?.length ? (
                                 <>
-                                    <span>·</span>
+                                    {toolHostname && <span>·</span>}
                                     {tool.category.map((c: string) => (
                                         <span key={c} className="border border-neutral-300 px-1.5 py-0.5 text-[10px]">{c}</span>
                                     ))}
@@ -161,6 +208,26 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                     </div>
                 </div>
 
+                {/* Company Context Banner */}
+                {workspace && (
+                    <div className="border border-black bg-white px-5 py-3 flex items-center gap-3">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Evaluated by</span>
+                        <span className="font-mono text-xs font-medium">{workspace.name}</span>
+                        {sentimentData?.dataSources && (
+                            <>
+                                <span className="text-neutral-300">·</span>
+                                <span className="font-mono text-[10px] text-neutral-400">{sentimentData.dataSources} sources analyzed</span>
+                            </>
+                        )}
+                        {sentimentData?.pagesScraped && (
+                            <>
+                                <span className="text-neutral-300">·</span>
+                                <span className="font-mono text-[10px] text-neutral-400">{sentimentData.pagesScraped} pages scraped</span>
+                            </>
+                        )}
+                    </div>
+                )}
+
                 {/* Executive Summary */}
                 <div className="border border-black p-5">
                     <h2 className="font-mono text-xs uppercase tracking-widest mb-3">Executive Summary</h2>
@@ -173,6 +240,9 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                 {scorecardSnapshot && Object.keys(scorecardSnapshot).length > 0 && (
                     <div className="border border-black p-5">
                         <h3 className="font-mono text-xs uppercase tracking-widest mb-4">Score Breakdown</h3>
+                        {Object.keys(scorecardSnapshot).length >= 3 && (
+                            <ShareRadarChart snapshot={scorecardSnapshot} />
+                        )}
                         <div className="space-y-4">
                             {Object.entries(scorecardSnapshot).map(([key, value]) => (
                                 <div key={key}>
@@ -216,6 +286,83 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                     </div>
                 )}
 
+                {/* Pain Points — workspace-specific */}
+                {activePainPoints.length > 0 && (
+                    <div className="border border-black p-5">
+                        <h3 className="font-mono text-xs uppercase tracking-widest mb-1">Pain Points Being Solved For</h3>
+                        <p className="font-mono text-[10px] text-neutral-400 mb-4">
+                            Active problems {workspace?.name ?? "this team"} is evaluating tools against
+                        </p>
+                        <div className="space-y-3">
+                            {activePainPoints.map((pp) => (
+                                <div key={pp.id} className="border border-neutral-200 p-3">
+                                    <div className="flex items-start gap-2">
+                                        <span className="font-mono text-xs font-medium">{pp.title}</span>
+                                        {pp.category && (
+                                            <span className="font-mono text-[10px] border border-neutral-300 px-1.5 py-0.5 text-neutral-400 flex-shrink-0">{pp.category}</span>
+                                        )}
+                                    </div>
+                                    {pp.description && (
+                                        <p className="font-mono text-[10px] text-neutral-500 mt-1 leading-relaxed">{pp.description}</p>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Custom Scorecard Criteria */}
+                {scorecardConfig && (scorecardConfig.evaluationCriteria || scorecardConfig.businessUnits?.length || scorecardConfig.dealBreakers) && (
+                    <div className="border border-black p-5 space-y-4">
+                        <div>
+                            <h3 className="font-mono text-xs uppercase tracking-widest mb-1">Evaluation Criteria</h3>
+                            <p className="font-mono text-[10px] text-neutral-400 mb-3">
+                                How {workspace?.name ?? "this team"} evaluates AI tools
+                            </p>
+                        </div>
+
+                        {scorecardConfig.systemContext && (
+                            <div>
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">Company Context</span>
+                                <p className="font-mono text-xs text-neutral-600 leading-relaxed">{scorecardConfig.systemContext}</p>
+                            </div>
+                        )}
+
+                        {scorecardConfig.businessUnits && scorecardConfig.businessUnits.length > 0 && (
+                            <div>
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-2">Business Units</span>
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                    {scorecardConfig.businessUnits.map((unit) => (
+                                        <div key={unit.key} className="border border-neutral-200 p-3">
+                                            <div className="font-mono text-xs font-medium mb-0.5">{unit.name}</div>
+                                            {unit.description && (
+                                                <p className="font-mono text-[10px] text-neutral-500">{unit.description}</p>
+                                            )}
+                                            {unit.priorities && (
+                                                <p className="font-mono text-[10px] text-neutral-400 mt-1 italic">{unit.priorities}</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {scorecardConfig.evaluationCriteria && (
+                            <div>
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">Evaluation Criteria</span>
+                                <p className="font-mono text-xs text-neutral-600 leading-relaxed whitespace-pre-line">{scorecardConfig.evaluationCriteria}</p>
+                            </div>
+                        )}
+
+                        {scorecardConfig.dealBreakers && (
+                            <div>
+                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">Deal Breakers</span>
+                                <p className="font-mono text-xs text-neutral-600 leading-relaxed whitespace-pre-line">{scorecardConfig.dealBreakers}</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* Features */}
                 {featuresList.length > 0 && (
                     <div className="border border-black p-5">
@@ -246,9 +393,78 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                 )}
 
                 {/* Sentiment */}
-                {sentimentData && (sentimentData.reviewAnswer || sentimentData.redditAnswer) && (
-                    <div className="border border-black p-5 space-y-4">
+                {sentimentData && (
+                    <div className="border border-black p-5 space-y-5">
                         <h3 className="font-mono text-xs uppercase tracking-widest">Community Sentiment</h3>
+
+                        {/* Multi-Source Consensus */}
+                        {sentimentData.sentimentConsensus && (
+                            <div className="border border-black p-4">
+                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-3">Multi-Source Consensus</h4>
+                                <div className="flex items-center gap-4 mb-3">
+                                    <span className={`font-mono text-sm font-bold uppercase px-2 py-1 border ${sentimentColors[sentimentData.sentimentConsensus.overall] ?? "border-neutral-300 text-neutral-500"}`}>
+                                        {sentimentLabels[sentimentData.sentimentConsensus.overall] ?? sentimentData.sentimentConsensus.overall}
+                                    </span>
+                                    <div className="flex-1">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Confidence</span>
+                                            <span className="font-mono text-xs font-bold">{sentimentData.sentimentConsensus.confidence}%</span>
+                                        </div>
+                                        <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
+                                            <div className="h-full bg-black" style={{ width: `${sentimentData.sentimentConsensus.confidence}%` }} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <p className="font-mono text-xs text-neutral-600 leading-relaxed">{sentimentData.sentimentConsensus.sourceAgreement}</p>
+                            </div>
+                        )}
+
+                        {/* Market Intelligence */}
+                        {sentimentData.marketIntel && (
+                            <div className="border border-black p-4">
+                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-3">Market Intelligence</h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                                    {sentimentData.marketIntel.founded && sentimentData.marketIntel.founded !== "Unknown" && (
+                                        <div>
+                                            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">Founded</span>
+                                            <span className="font-mono text-xs">{sentimentData.marketIntel.founded}</span>
+                                        </div>
+                                    )}
+                                    {sentimentData.marketIntel.headquarters && sentimentData.marketIntel.headquarters !== "Unknown" && (
+                                        <div>
+                                            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">HQ</span>
+                                            <span className="font-mono text-xs">{sentimentData.marketIntel.headquarters}</span>
+                                        </div>
+                                    )}
+                                    {sentimentData.marketIntel.employeeCount && sentimentData.marketIntel.employeeCount !== "Unknown" && (
+                                        <div>
+                                            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">Employees</span>
+                                            <span className="font-mono text-xs">{sentimentData.marketIntel.employeeCount}</span>
+                                        </div>
+                                    )}
+                                    {sentimentData.marketIntel.funding && sentimentData.marketIntel.funding !== "Unknown" && (
+                                        <div>
+                                            <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">Funding</span>
+                                            <span className="font-mono text-xs">{sentimentData.marketIntel.funding}</span>
+                                        </div>
+                                    )}
+                                </div>
+                                {sentimentData.marketIntel.recentNews && sentimentData.marketIntel.recentNews.length > 0 && (
+                                    <div>
+                                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">Recent News</span>
+                                        <ul className="space-y-1">
+                                            {sentimentData.marketIntel.recentNews.map((news, i) => (
+                                                <li key={i} className="font-mono text-xs text-neutral-600 flex gap-2">
+                                                    <span className="text-neutral-400">→</span>{news}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Review Sites */}
                         {sentimentData.reviewAnswer && (
                             <div>
                                 <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">Review Sites</h4>
@@ -268,10 +484,62 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                                 ))}
                             </div>
                         )}
+
+                        {/* Trust & Reputation */}
+                        {sentimentData.trustAnswer && (
+                            <div>
+                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">Trust & Reputation</h4>
+                                <p className="font-mono text-xs text-neutral-600 leading-relaxed">{sentimentData.trustAnswer}</p>
+                            </div>
+                        )}
+                        {sentimentData.trustSources && sentimentData.trustSources.length > 0 && (
+                            <div className="space-y-1">
+                                {sentimentData.trustSources.map((src, i) => (
+                                    <a key={i} href={src.url} target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center justify-between p-2 border border-black hover:bg-neutral-100 transition-colors">
+                                        <span className="font-mono text-xs truncate">{src.title}</span>
+                                        <span className="font-mono text-[10px] text-neutral-400 flex-shrink-0 ml-2">
+                                            {(() => { try { return new URL(src.url).hostname.replace("www.", ""); } catch { return ""; } })()}
+                                        </span>
+                                    </a>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Reddit / Community */}
                         {sentimentData.redditAnswer && (
                             <div>
                                 <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">Reddit / Community</h4>
                                 <p className="font-mono text-xs text-neutral-600 leading-relaxed">{sentimentData.redditAnswer}</p>
+                            </div>
+                        )}
+                        {sentimentData.redditThreads && sentimentData.redditThreads.length > 0 && (
+                            <div>
+                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-2">
+                                    Reddit Threads ({sentimentData.redditThreads.length})
+                                </h4>
+                                <div className="space-y-1">
+                                    {sentimentData.redditThreads.map((thread, i) => (
+                                        <a key={i} href={thread.url} target="_blank" rel="noopener noreferrer"
+                                            className="block p-2 border border-black hover:bg-neutral-100 transition-colors">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="font-mono text-xs truncate flex-1">{thread.title}</span>
+                                                <span className="font-mono text-[10px] text-neutral-400 flex-shrink-0 ml-2">r/{thread.subreddit}</span>
+                                            </div>
+                                            {thread.snippet && (
+                                                <p className="font-mono text-[10px] text-neutral-500 line-clamp-2">{thread.snippet}</p>
+                                            )}
+                                        </a>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Competitive Context */}
+                        {sentimentData.competitorAnalysis && (
+                            <div>
+                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">Competitive Context</h4>
+                                <p className="font-mono text-xs text-neutral-600 leading-relaxed whitespace-pre-line">{sentimentData.competitorAnalysis}</p>
                             </div>
                         )}
                     </div>

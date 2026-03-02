@@ -10,7 +10,7 @@ import { Shield, Building2, Lock } from "lucide-react";
 import { clerkClient } from "@clerk/nextjs/server";
 import { ApiKeySection } from "@/components/workspace/api-key-section";
 import { SlackSection } from "@/components/workspace/slack-section";
-import { InviteMemberForm, RemoveMemberButton, CancelInvitationButton, UpdateWorkspaceNameForm, UpdateCompanyContextForm } from "@/components/workspace/workspace-forms";
+import { InviteMemberForm, RemoveMemberButton, CancelInvitationButton, UpdateWorkspaceNameForm, UpdateCompanyContextForm, InviteLinkPanel } from "@/components/workspace/workspace-forms";
 import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 import Link from "next/link";
 
@@ -119,7 +119,14 @@ export default async function WorkspacePage() {
                         </span>
                     </div>
                     <div className="p-5 space-y-5">
-                        {isOwnerOrAdmin && <InviteMemberForm />}
+                        {isOwnerOrAdmin && (
+                            <div className="space-y-4">
+                                <InviteMemberForm />
+                                <div className="pt-4 border-t border-neutral-100">
+                                    <InviteLinkPanel initialCode={workspace?.inviteCode ?? null} />
+                                </div>
+                            </div>
+                        )}
 
                         <div className="divide-y divide-neutral-100">
                             {members.map((member) => {

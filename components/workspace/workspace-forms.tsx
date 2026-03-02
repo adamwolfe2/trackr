@@ -3,8 +3,8 @@
 import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext, cancelInvitation } from "@/lib/actions/workspace";
-import { Loader2, UserX, X } from "lucide-react";
+import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext, cancelInvitation, generateInviteLink, revokeInviteLink } from "@/lib/actions/workspace";
+import { Loader2, UserX, X, Copy, Check, Link2, RefreshCw, Trash2 } from "lucide-react";
 
 function SubmitButton({ children, className }: { children: React.ReactNode; className: string }) {
     const { pending } = useFormStatus();
@@ -115,6 +115,105 @@ export function UpdateWorkspaceNameForm({ defaultName, disabled }: { defaultName
                 </SubmitButton>
             )}
         </form>
+    );
+}
+
+export function InviteLinkPanel({ initialCode }: { initialCode: string | null }) {
+    const [code, setCode] = useState<string | null>(initialCode);
+    const [copied, setCopied] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const inviteUrl = code ? `https://trytrackr.com/invite/link/${code}` : null;
+
+    async function handleGenerate() {
+        setLoading(true);
+        try {
+            const newCode = await generateInviteLink();
+            setCode(newCode);
+            toast.success("Invite link generated");
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to generate link");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function handleRevoke() {
+        if (!window.confirm("Revoke this link? Anyone who tries to use it will be denied access.")) return;
+        setLoading(true);
+        try {
+            await revokeInviteLink();
+            setCode(null);
+            toast.success("Invite link revoked");
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Failed to revoke link");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function handleCopy() {
+        if (!inviteUrl) return;
+        try {
+            await navigator.clipboard.writeText(inviteUrl);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            toast.error("Failed to copy to clipboard");
+        }
+    }
+
+    return (
+        <div className="space-y-3">
+            <div className="flex items-center gap-2">
+                <Link2 className="h-3.5 w-3.5" />
+                <span className="font-mono text-xs uppercase tracking-widest">Invite Link</span>
+            </div>
+            {inviteUrl ? (
+                <div className="flex flex-col sm:flex-row gap-0">
+                    <input
+                        readOnly
+                        value={inviteUrl}
+                        className="flex-1 border border-black px-4 py-2 font-mono text-xs bg-white focus:outline-none text-neutral-600 truncate"
+                    />
+                    <button
+                        type="button"
+                        onClick={handleCopy}
+                        className="border sm:border-l-0 border-t-0 sm:border-t border-black px-4 py-2 font-mono text-xs uppercase tracking-widest bg-black text-white hover:bg-neutral-800 flex items-center gap-1.5 whitespace-nowrap"
+                    >
+                        {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                        {copied ? "Copied" : "Copy"}
+                    </button>
+                </div>
+            ) : (
+                <p className="font-mono text-xs text-neutral-400">No invite link yet. Generate one to share with your team.</p>
+            )}
+            <div className="flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={handleGenerate}
+                    disabled={loading}
+                    className="border border-black px-4 py-2 font-mono text-xs uppercase tracking-widest bg-white hover:bg-black hover:text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                >
+                    {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+                    {code ? "Regenerate" : "Generate Link"}
+                </button>
+                {code && (
+                    <button
+                        type="button"
+                        onClick={handleRevoke}
+                        disabled={loading}
+                        className="border border-red-300 text-red-500 px-4 py-2 font-mono text-xs uppercase tracking-widest hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+                    >
+                        <Trash2 className="h-3 w-3" />
+                        Revoke
+                    </button>
+                )}
+            </div>
+            <p className="font-mono text-[10px] text-neutral-400">
+                Anyone with this link can join your workspace · Subject to member limits
+            </p>
+        </div>
     );
 }
 

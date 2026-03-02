@@ -7,7 +7,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { eq, and, count, gt } from "drizzle-orm";
 import { getWorkspaceId } from "@/lib/db/queries";
 import { getPlanLimits } from "@/lib/config/subscriptions";
-import { createHash } from "crypto";
+import { createHash, randomBytes } from "crypto";
 
 function hashApiKey(key: string): string {
     return createHash("sha256").update(key).digest("hex");
@@ -311,6 +311,55 @@ export async function cancelInvitation(invitationId: string) {
     if (!invitation) throw new Error("Invitation not found");
 
     await db.delete(pendingInvitations).where(eq(pendingInvitations.id, invitationId));
+
+    revalidatePath("/workspace");
+    return { success: true };
+}
+
+export async function generateInviteLink() {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId)
+        ),
+    });
+
+    if (!member || (member.role !== "owner" && member.role !== "admin")) {
+        throw new Error("Only workspace owners or admins can manage invite links");
+    }
+
+    const code = randomBytes(16).toString("hex");
+    await db.update(workspaces).set({ inviteCode: code }).where(eq(workspaces.id, workspaceId));
+
+    revalidatePath("/workspace");
+    return code;
+}
+
+export async function revokeInviteLink() {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId)
+        ),
+    });
+
+    if (!member || (member.role !== "owner" && member.role !== "admin")) {
+        throw new Error("Only workspace owners or admins can manage invite links");
+    }
+
+    await db.update(workspaces).set({ inviteCode: null }).where(eq(workspaces.id, workspaceId));
 
     revalidatePath("/workspace");
     return { success: true };

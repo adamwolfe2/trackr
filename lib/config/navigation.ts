@@ -34,7 +34,7 @@ export const NAV_ITEMS: NavItem[] = [
     { title: "Analytics", href: "/analytics", icon: BarChart3 },
     { title: "Pain Points", href: "/pain-points", icon: AlertCircle },
     { title: "Compare", href: "/compare", icon: GitCompareArrows },
-    { title: "Scorecard", href: "/scorecard", icon: SlidersHorizontal },
+    { title: "Scorecard", href: "/settings/scorecard", icon: SlidersHorizontal },
     { title: "Advertise", href: "/advertise", icon: Sparkles },
     { title: "Referrals", href: "/referrals", icon: Gift },
 ];
