@@ -6,6 +6,7 @@ import type { InferSelectModel } from "drizzle-orm";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
+import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
@@ -193,6 +194,15 @@ export default async function DashboardPage() {
         quickActions.push({ icon: RefreshCw, label: `${staleCount} tool${staleCount > 1 ? "s" : ""} not researched in 60+ days — set a schedule`, href: "/tools", badge: "Stale" });
     }
 
+    // Onboarding checklist data
+    const hasActiveResearch = recentTools.some(t => t.status === "active");
+    const teamMembersCountData = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(workspaceMembers)
+        .where(eq(workspaceMembers.workspaceId, workspaceId));
+    const teamMembersCount = Number(teamMembersCountData[0]?.count || 1);
+    const showChecklist = toolsCount < 3 || !hasActiveResearch;
+
     const statusLabel = (status: string) => {
         const map: Record<string, string> = {
             complete: "DONE",
@@ -220,6 +230,15 @@ export default async function DashboardPage() {
                 toolsThisWeek={toolsThisWeek}
                 reportsThisWeek={reportsThisWeek}
             />
+
+            {/* Onboarding checklist — shown until workspace has 3+ tools + active research */}
+            {showChecklist && (
+                <OnboardingChecklist
+                    toolsCount={toolsCount}
+                    hasActiveResearch={hasActiveResearch}
+                    teamMembersCount={teamMembersCount}
+                />
+            )}
 
             {/* Quick Actions */}
             {quickActions.length > 0 && (

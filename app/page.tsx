@@ -9,6 +9,8 @@ import { OffsetHero } from "@/components/marketing/offset-hero";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingSocialProof } from "@/components/marketing/marketing-social-proof";
 import { MarketingIntegrations } from "@/components/marketing/marketing-integrations";
+import { MarketingLogos } from "@/components/marketing/marketing-logos";
+import { MarketingTestimonials } from "@/components/marketing/marketing-testimonials";
 
 // Below-fold: code-split to reduce initial JS bundle
 const MarketingProblem = lazy(() => import("@/components/marketing/marketing-problem").then(m => ({ default: m.MarketingProblem })));
@@ -121,6 +123,8 @@ export default async function Home() {
       <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
         <MarketingNavigation isLoggedIn={!!user} />
         <OffsetHero />
+        <MarketingLogos />
+        <MarketingTestimonials />
         <MarketingSocialProof />
         <MarketingIntegrations />
         <MarketingProblem />

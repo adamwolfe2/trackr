@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 import { createHash, timingSafeEqual } from "crypto";
 import { PLANS, getPlanLimits } from "@/lib/config/subscriptions";
 import { rateLimit } from "@/lib/middleware/rate-limit";
+import { AdminTrendChart } from "@/components/admin/admin-trend-chart";
 
 export const metadata: Metadata = {
     title: "Admin Analytics — Trackr",
@@ -161,6 +162,33 @@ async function getAnalytics(windowDays: number) {
         .orderBy(desc(count(tools.id)))
         .limit(10);
 
+    // 30-day daily signup trend
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000);
+    const dailySignups = await db
+        .select({
+            date: sql<string>`date_trunc('day', ${workspaces.createdAt})::date::text`,
+            count: count(),
+        })
+        .from(workspaces)
+        .where(gte(workspaces.createdAt, thirtyDaysAgo))
+        .groupBy(sql`date_trunc('day', ${workspaces.createdAt})`)
+        .orderBy(sql`date_trunc('day', ${workspaces.createdAt})`);
+
+    // Fill gaps with 0s to get a full 30-day series
+    const trendMap = new Map(dailySignups.map(r => [r.date, Number(r.count)]));
+    const trendData: { date: string; count: number }[] = [];
+    for (let i = 29; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000);
+        const key = d.toISOString().slice(0, 10);
+        const label = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        trendData.push({ date: label, count: trendMap.get(key) ?? 0 });
+    }
+
+    // Conversion rate: paid / total workspaces
+    const paidCount = (tierCounts.team ?? 0) + (tierCounts.startup ?? 0) + (tierCounts.enterprise ?? 0);
+    const totalForConversion = Object.values(tierCounts).reduce((a, b) => a + b, 0);
+    const conversionRate = totalForConversion > 0 ? Math.round((paidCount / totalForConversion) * 100) : 0;
+
     return {
         totalWorkspaces: Number(totalWorkspaces),
         newWorkspaces: Number(newWorkspaces),
@@ -174,6 +202,9 @@ async function getAnalytics(windowDays: number) {
         churnedSubs: Number(churnedSubs),
         recentWebhooks,
         topWorkspaces,
+        trendData,
+        conversionRate,
+        paidCount,
     };
 }
 
@@ -277,6 +308,41 @@ export default async function AdminAnalyticsPage({
                     value={fmt(data.totalMembers)}
                     sub={`+${fmt(data.newMembers)} last ${windowDays}d`}
                 />
+            </div>
+
+            {/* Conversion Rate + 30-day trend */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="border border-black">
+                    <div className="border-b border-black px-5 py-3">
+                        <h2 className="font-mono text-xs uppercase tracking-widest">Free → Paid Conversion</h2>
+                    </div>
+                    <div className="p-5">
+                        <div className="flex items-end gap-1 mb-2">
+                            <span className="font-mono text-4xl font-bold leading-none">{data.conversionRate}%</span>
+                        </div>
+                        <p className="font-mono text-xs text-neutral-500 mb-4">
+                            {data.paidCount} paid / {Object.values(data.tierCounts).reduce((a, b) => a + b, 0)} total workspaces
+                        </p>
+                        <div className="h-2 bg-neutral-100 border border-neutral-200">
+                            <div className="h-full bg-black transition-all" style={{ width: `${data.conversionRate}%` }} />
+                        </div>
+                        <div className="flex justify-between mt-1">
+                            <span className="font-mono text-[9px] text-neutral-400">0%</span>
+                            <span className="font-mono text-[9px] text-neutral-400">Target: 8%</span>
+                            <span className="font-mono text-[9px] text-neutral-400">100%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="md:col-span-2 border border-black">
+                    <div className="border-b border-black px-5 py-3 flex items-center justify-between">
+                        <h2 className="font-mono text-xs uppercase tracking-widest">30-Day Signup Trend</h2>
+                        <span className="font-mono text-[10px] text-neutral-400">New workspaces per day</span>
+                    </div>
+                    <div className="p-5">
+                        <AdminTrendChart data={data.trendData} />
+                    </div>
+                </div>
             </div>
 
             {/* Tools + Plan breakdown side by side */}
