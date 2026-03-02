@@ -1,11 +1,12 @@
 import { db } from "@/lib/db";
-import { reports, tools, workspaces, painPoints } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { reports, tools, workspaces, painPoints, notes } from "@/lib/db/schema";
+import { eq, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { ExternalLink, Link2, Mail } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { ShareActions } from "./share-actions";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { ShareRadarChart } from "@/components/share/share-radar-chart";
+import { MarkdownText, CompetitorAnalysisBlock } from "@/components/share/markdown-text";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -67,8 +68,8 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
 
     if (!tool) return notFound();
 
-    // Fetch workspace context — custom scorecard, company profile, and pain points
-    const [workspace, workspacePainPoints] = await Promise.all([
+    // Fetch workspace context — custom scorecard, company profile, pain points, and team notes
+    const [workspace, workspacePainPoints, toolNotes] = await Promise.all([
         db.query.workspaces.findFirst({
             where: eq(workspaces.id, tool.workspaceId),
             columns: { name: true, companyContext: true, scorecardConfig: true },
@@ -76,6 +77,11 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
         db.query.painPoints.findMany({
             where: eq(painPoints.workspaceId, tool.workspaceId),
             columns: { id: true, title: true, description: true, category: true, active: true },
+        }),
+        db.query.notes.findMany({
+            where: eq(notes.toolId, tool.id),
+            orderBy: [desc(notes.createdAt)],
+            columns: { id: true, content: true, noteType: true, createdAt: true },
         }),
     ]);
 
@@ -467,8 +473,8 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                         {/* Review Sites */}
                         {sentimentData.reviewAnswer && (
                             <div>
-                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">Review Sites</h4>
-                                <p className="font-mono text-xs text-neutral-600 leading-relaxed">{sentimentData.reviewAnswer}</p>
+                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-2">Review Sites</h4>
+                                <MarkdownText text={sentimentData.reviewAnswer} />
                             </div>
                         )}
                         {sentimentData.reviewSources && sentimentData.reviewSources.length > 0 && (
@@ -488,8 +494,8 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                         {/* Trust & Reputation */}
                         {sentimentData.trustAnswer && (
                             <div>
-                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">Trust & Reputation</h4>
-                                <p className="font-mono text-xs text-neutral-600 leading-relaxed">{sentimentData.trustAnswer}</p>
+                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-2">Trust & Reputation</h4>
+                                <MarkdownText text={sentimentData.trustAnswer} />
                             </div>
                         )}
                         {sentimentData.trustSources && sentimentData.trustSources.length > 0 && (
@@ -509,8 +515,8 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                         {/* Reddit / Community */}
                         {sentimentData.redditAnswer && (
                             <div>
-                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">Reddit / Community</h4>
-                                <p className="font-mono text-xs text-neutral-600 leading-relaxed">{sentimentData.redditAnswer}</p>
+                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-2">Reddit / Community</h4>
+                                <MarkdownText text={sentimentData.redditAnswer} />
                             </div>
                         )}
                         {sentimentData.redditThreads && sentimentData.redditThreads.length > 0 && (
@@ -538,8 +544,8 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                         {/* Competitive Context */}
                         {sentimentData.competitorAnalysis && (
                             <div>
-                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">Competitive Context</h4>
-                                <p className="font-mono text-xs text-neutral-600 leading-relaxed whitespace-pre-line">{sentimentData.competitorAnalysis}</p>
+                                <h4 className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-3">Competitive Context</h4>
+                                <CompetitorAnalysisBlock text={sentimentData.competitorAnalysis} />
                             </div>
                         )}
                     </div>
@@ -553,6 +559,39 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                             {competitors.map((c, i) => (
                                 <span key={i} className="font-mono text-xs border border-black px-2.5 py-1">{c}</span>
                             ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Team Notes */}
+                {toolNotes.length > 0 && (
+                    <div className="border border-black p-5">
+                        <h3 className="font-mono text-xs uppercase tracking-widest mb-1">Team Notes</h3>
+                        <p className="font-mono text-[10px] text-neutral-400 mb-4">
+                            Internal observations left by {workspace?.name ?? "the team"} during evaluation
+                        </p>
+                        <div className="space-y-3">
+                            {toolNotes.map((note) => {
+                                const noteTypeLabels: Record<string, string> = {
+                                    general: "Note",
+                                    test_result: "Test Result",
+                                    pricing_update: "Pricing",
+                                    decision: "Decision",
+                                };
+                                return (
+                                    <div key={note.id} className="border border-neutral-200 p-3">
+                                        <div className="flex items-center gap-2 mb-1.5">
+                                            <span className="font-mono text-[10px] uppercase tracking-widest border border-neutral-300 px-1.5 py-0.5 text-neutral-400">
+                                                {noteTypeLabels[note.noteType] ?? note.noteType}
+                                            </span>
+                                            <span className="font-mono text-[10px] text-neutral-400">
+                                                {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                            </span>
+                                        </div>
+                                        <p className="font-mono text-xs text-neutral-700 leading-relaxed">{note.content}</p>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
