@@ -60,6 +60,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
                 id: tool.id,
                 name: tool.name,
                 score: tool.overallScore ? Number(tool.overallScore) : null,
+                logoUrl: tool.logoUrl,
                 websiteUrl: tool.websiteUrl,
                 status: tool.status,
                 pros: report?.pros ?? [],

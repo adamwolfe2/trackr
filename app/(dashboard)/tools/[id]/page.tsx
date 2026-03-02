@@ -268,9 +268,9 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
             <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="space-y-1 min-w-0">
                     <h1 className="font-serif text-3xl font-normal flex items-center gap-3 flex-wrap">
-                        {tool.logoUrl && (
+                        {(tool.logoUrl || toolHostname) && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={tool.logoUrl} alt={tool.name} className="w-8 h-8 object-contain flex-shrink-0" />
+                            <img src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${toolHostname}&sz=64`} alt={tool.name} className="w-8 h-8 object-contain flex-shrink-0" />
                         )}
                         {tool.name}
                         <span className={`font-mono text-xs border px-2 py-0.5 uppercase tracking-widest ${statusColors[tool.status] ?? "border-neutral-300 text-neutral-500"}`}>

@@ -12,6 +12,7 @@ interface CompareTool {
     id: string;
     name: string;
     score: number | null;
+    logoUrl?: string | null;
     websiteUrl: string | null;
     status: string;
     pros: string[];
@@ -303,16 +304,25 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                                 onSelect={(id) => handleToolSelect(index, id)}
                                 label={`Tool ${index + 1}`}
                             />
-                            {tool?.websiteUrl && (
-                                <a
-                                    href={tool.websiteUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="mt-2 flex items-center gap-1 font-mono text-xs text-neutral-400 hover:text-black transition-colors"
-                                >
-                                    {(() => { try { return new URL(tool.websiteUrl).hostname; } catch { return tool.websiteUrl; } })()}
-                                    <ExternalLink className="h-3 w-3" />
-                                </a>
+                            {tool && (
+                                <div className="mt-2 flex items-center gap-2">
+                                    {(() => {
+                                        const domain = tool.websiteUrl ? (() => { try { return new URL(tool.websiteUrl).hostname; } catch { return null; } })() : null;
+                                        const src = tool.logoUrl ?? (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null);
+                                        return src ? <img src={src} alt={tool.name} className="w-5 h-5 object-contain flex-shrink-0" /> : null;
+                                    })()}
+                                    {tool.websiteUrl && (
+                                        <a
+                                            href={tool.websiteUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-1 font-mono text-xs text-neutral-400 hover:text-black transition-colors"
+                                        >
+                                            {(() => { try { return new URL(tool.websiteUrl).hostname; } catch { return tool.websiteUrl; } })()}
+                                            <ExternalLink className="h-3 w-3" />
+                                        </a>
+                                    )}
+                                </div>
                             )}
                         </div>
                     );
