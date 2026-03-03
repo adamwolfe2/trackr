@@ -14,21 +14,7 @@ import { sql, desc, eq, gte, and, gt } from "drizzle-orm";
 
 // ── Auth check ──────────────────────────────────────────────────────────────
 
-async function getAdminCookie(): Promise<string | undefined> {
-    const { cookies } = await import("next/headers");
-    const cookie = (await cookies()).get("trackr-admin");
-    return cookie?.value;
-}
-
-function isAuthenticated(cookieValue: string | undefined): boolean {
-    if (!cookieValue || !process.env.ADMIN_PASSWORD) return false;
-    const { timingSafeEqual, createHash } = require("crypto");
-    const expectedToken = createHash("sha256").update(process.env.ADMIN_PASSWORD).digest("hex");
-    const a = Buffer.from(cookieValue);
-    const b = Buffer.from(expectedToken);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-}
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 // ── Server actions ──────────────────────────────────────────────────────────
 
@@ -869,9 +855,7 @@ function AlertsConfig() {
 // ── Page ────────────────────────────────────────────────────────────────────
 
 export default async function AdminApiPage() {
-    const cookieValue = await getAdminCookie();
-
-    if (!isAuthenticated(cookieValue)) {
+    if (!(await isAdminAuthenticated())) {
         return <LoginForm />;
     }
 

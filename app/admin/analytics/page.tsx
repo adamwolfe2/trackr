@@ -10,24 +10,13 @@ import { createHash, timingSafeEqual } from "crypto";
 import { PLANS, getPlanLimits } from "@/lib/config/subscriptions";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { AdminTrendChart } from "@/components/admin/admin-trend-chart";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 export const metadata: Metadata = {
     title: "Admin Analytics — Trackr",
     description: "Business analytics dashboard.",
     robots: { index: false },
 };
-
-// ── Auth (same pattern as /admin/api) ────────────────────────────────────────
-
-async function isAuthenticated(): Promise<boolean> {
-    const cookie = (await cookies()).get("trackr-admin");
-    if (!cookie?.value || !process.env.ADMIN_PASSWORD) return false;
-    const expected = createHash("sha256").update(process.env.ADMIN_PASSWORD).digest("hex");
-    const a = Buffer.from(cookie.value);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-}
 
 async function loginAction(formData: FormData) {
     "use server";
@@ -227,7 +216,7 @@ export default async function AdminAnalyticsPage({
 }: {
     searchParams: Promise<{ window?: string }>;
 }) {
-    const authed = await isAuthenticated();
+    const authed = await isAdminAuthenticated();
 
     if (!authed) {
         return (

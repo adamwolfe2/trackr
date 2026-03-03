@@ -10,9 +10,7 @@ import {
     auditSubmissions,
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
-import { createHash, timingSafeEqual } from "crypto";
 import { ARCHITECT_ROLES } from "@/lib/config/architect-roles";
 import {
     approveApplication,
@@ -20,16 +18,7 @@ import {
     pauseArchitect,
     terminateArchitect,
 } from "@/lib/actions/architects";
-
-async function isAuthenticated(): Promise<boolean> {
-    const cookie = (await cookies()).get("trackr-admin");
-    if (!cookie?.value || !process.env.ADMIN_PASSWORD) return false;
-    const expected = createHash("sha256").update(process.env.ADMIN_PASSWORD).digest("hex");
-    const a = Buffer.from(cookie.value);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-}
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 function getRoleTitle(slug: string): string {
     return ARCHITECT_ROLES.find((r) => r.slug === slug)?.title ?? slug;
@@ -52,7 +41,7 @@ export default async function ArchitectDetailPage({
 }: {
     params: Promise<{ id: string }>;
 }) {
-    const authed = await isAuthenticated();
+    const authed = await isAdminAuthenticated();
     if (!authed) redirect("/admin/architects");
 
     const { id } = await params;

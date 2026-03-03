@@ -4,27 +4,14 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { auditSubmissions, pendingInvitations, workspaces, softwareSpend } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
-import { cookies } from "next/headers";
 import { redirect, notFound } from "next/navigation";
-import { createHash, timingSafeEqual } from "crypto";
 import type { AuditScorecard } from "@/lib/actions/audit";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 export const metadata: Metadata = {
     title: "Lead Detail — Trackr Admin",
     robots: { index: false },
 };
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
-
-async function isAuthenticated(): Promise<boolean> {
-    const cookie = (await cookies()).get("trackr-admin");
-    if (!cookie?.value || !process.env.ADMIN_PASSWORD) return false;
-    const expected = createHash("sha256").update(process.env.ADMIN_PASSWORD).digest("hex");
-    const a = Buffer.from(cookie.value);
-    const b = Buffer.from(expected);
-    if (a.length !== b.length) return false;
-    return timingSafeEqual(a, b);
-}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -74,7 +61,7 @@ export default async function LeadDetailPage({
 }: {
     params: Promise<{ id: string }>;
 }) {
-    const authed = await isAuthenticated();
+    const authed = await isAdminAuthenticated();
     if (!authed) redirect("/admin/leads");
 
     const { id } = await params;
