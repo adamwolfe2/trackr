@@ -7,10 +7,10 @@ import { ARCHITECT_ROLES } from "@/lib/config/architect-roles";
 
 export const metadata: Metadata = {
     title: "The AI Architect Program — Trackr",
-    description: "An elite designation for the top 1% of AI-native operators. Fewer than 5% of applicants are accepted. Multi-stage vetting. Enterprise clients. Recurring compensation.",
+    description: "Enterprise AI consultants who outpace traditional firms by building with the tools they recommend. We accept the top fraction of applicants. Multi-stage vetting. Enterprise engagements. Recurring compensation.",
     openGraph: {
         title: "The AI Architect Program — Trackr",
-        description: "A professional designation for proven AI operators. Rigorous vetting. Enterprise clients. 20% recurring compensation.",
+        description: "Enterprise AI consultants who run circles around traditional firms. Rigorous vetting. Enterprise engagements. 20% recurring compensation.",
         url: "https://trytrackr.com/apply",
         images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr AI Architect Program" }],
     },
@@ -21,7 +21,7 @@ const BENEFITS = [
     {
         icon: Shield,
         title: "The Vetting Is the Credential",
-        description: "Our multi-stage review evaluates your portfolio, domain expertise, and track record with AI deployments. Fewer than 5% of applicants are accepted. The designation itself signals caliber.",
+        description: "Our multi-stage review evaluates your portfolio, domain expertise, and deployment track record. We accept a fraction of applicants. The designation itself signals caliber to enterprise buyers.",
     },
     {
         icon: Users,
@@ -36,7 +36,7 @@ const BENEFITS = [
     {
         icon: TrendingUp,
         title: "Recurring Compensation",
-        description: "20% recurring on every client engagement, paid for the lifetime of the relationship. This is compensation that reflects the value of your expertise — not an affiliate payout.",
+        description: "20% recurring on every client engagement, paid for the lifetime of the relationship. Compensation that reflects the value of your hands-on expertise and the outcomes you drive.",
     },
 ];
 
@@ -49,18 +49,18 @@ export default function ApplyPage() {
                 {/* Hero */}
                 <section className="pt-16 pb-12 border-b border-black">
                     <div className="max-w-3xl">
-                        <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-6">Application — Fewer than 5% accepted</p>
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-6">Application — We accept the top 0.01%</p>
                         <h1 className="font-serif text-5xl sm:text-6xl font-normal leading-tight mb-6">
                             The AI Architect Program.
                         </h1>
                         <p className="font-mono text-sm text-neutral-600 leading-relaxed max-w-2xl mb-4">
-                            A professional designation for the top 1% of AI-native operators. Not an affiliate program.
-                            Not a referral network. A vetted role for practitioners who have deployed AI at scale
-                            and can advise at the enterprise level.
+                            Enterprise AI consultants who run circles around McKinsey by being grassroots — building with the tools
+                            they recommend, every single day. This is the convergence of enterprise sales, consulting,
+                            and hands-on AI implementation. We are looking for overachievers who live inside these tools.
                         </p>
                         <p className="font-mono text-[11px] text-neutral-400 leading-relaxed max-w-2xl">
                             Our architects have led AI implementations across Fortune 500 companies, Series A-D startups,
-                            and category-defining platforms. We are looking for the same.
+                            and category-defining platforms. They don't just advise — they build. That's the difference.
                         </p>
                     </div>
                 </section>
