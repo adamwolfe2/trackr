@@ -11,6 +11,7 @@ const BYPASS_PREFIXES = [
     "/api/extension/",       // API key auth (extension-auth.ts)
     "/api/cron/",            // CRON_SECRET verification
     "/api/audit/",           // Public — no auth required
+    "/api/admin/",           // ADMIN_PASSWORD bearer auth
 ];
 
 /** Exact-matched: only these specific paths bypass Clerk */
