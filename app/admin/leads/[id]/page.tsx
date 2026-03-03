@@ -6,6 +6,7 @@ import { auditSubmissions, pendingInvitations, workspaces, softwareSpend } from 
 import { eq, count } from "drizzle-orm";
 import { redirect, notFound } from "next/navigation";
 import type { AuditScorecard } from "@/lib/actions/audit";
+import { processAuditSubmission } from "@/lib/actions/audit";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 export const metadata: Metadata = {
@@ -139,6 +140,16 @@ export default async function LeadDetailPage({
         redirect(`/admin/leads/${id}?called=1`);
     }
 
+    async function retryScorecard() {
+        "use server";
+        await db.update(auditSubmissions)
+            .set({ status: "processing", errorMessage: null })
+            .where(eq(auditSubmissions.id, id));
+        const { after } = await import("next/server");
+        after(async () => { await processAuditSubmission(id); });
+        redirect(`/admin/leads/${id}?retrying=1`);
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
 
     return (
@@ -192,6 +203,13 @@ export default async function LeadDetailPage({
                         }`}>
                             {submission.status}
                         </span>
+                        {submission.status === "failed" && (
+                            <form action={retryScorecard}>
+                                <button type="submit" className="font-mono text-[10px] uppercase tracking-widest border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors">
+                                    Retry Scorecard
+                                </button>
+                            </form>
+                        )}
                         <span className="font-mono text-xs text-neutral-400">
                             {new Date(submission.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                         </span>
