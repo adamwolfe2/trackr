@@ -20,7 +20,7 @@ type Step2Data = {
     dailyAdoptionPct: string;
     hasAIManager: string;
     monthlySpend: string;
-    biggestBottleneck: string;
+    biggestBottleneck: string[];
     teamsNeedingAI: string[];
     failedAI: string;
     successDefinition: string;
@@ -151,6 +151,12 @@ function Step2({ data, onChange }: { data: Step2Data; onChange: (d: Partial<Step
             teamsNeedingAI: current.includes(team) ? current.filter((t) => t !== team) : [...current, team],
         });
     };
+    const toggleBottleneck = (b: string) => {
+        const current = data.biggestBottleneck;
+        onChange({
+            biggestBottleneck: current.includes(b) ? current.filter((x) => x !== b) : [...current, b],
+        });
+    };
 
     return (
         <div className="space-y-7">
@@ -191,10 +197,18 @@ function Step2({ data, onChange }: { data: Step2Data; onChange: (d: Partial<Step
             </div>
 
             <div>
-                <label className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 block mb-2">What&apos;s your biggest operational bottleneck right now?</label>
+                <label className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 block mb-2">What&apos;s your biggest operational bottleneck right now? (Select all that apply)</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {BOTTLENECKS.map((b) => (
-                        <OptionButton key={b} selected={data.biggestBottleneck === b} onClick={() => onChange({ biggestBottleneck: b })}>{b}</OptionButton>
+                        <button
+                            key={b}
+                            type="button"
+                            onClick={() => toggleBottleneck(b)}
+                            className={`text-left px-3 py-2.5 border font-mono text-xs uppercase tracking-wide transition-all flex items-center gap-2 ${data.biggestBottleneck.includes(b) ? "bg-black text-white border-black" : "bg-white text-neutral-700 border-neutral-300 hover:border-black"}`}
+                        >
+                            {data.biggestBottleneck.includes(b) && <Check className="w-3 h-3 flex-shrink-0" />}
+                            {b}
+                        </button>
                     ))}
                 </div>
             </div>
@@ -483,7 +497,7 @@ function Step4({ step1, step2 }: { step1: Step1Data; step2: Step2Data }) {
                         { label: "Size", value: step1.companySize || "—" },
                         { label: "AI Tools Today", value: step2.aiToolCount || "—" },
                         { label: "Monthly Spend", value: step2.monthlySpend || "—" },
-                        { label: "Key Bottleneck", value: step2.biggestBottleneck || "—" },
+                        { label: "Key Bottleneck", value: step2.biggestBottleneck.length > 0 ? step2.biggestBottleneck.join(", ") : "—" },
                     ].map((item) => (
                         <div key={item.label}>
                             <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-0.5">{item.label}</div>
@@ -537,7 +551,7 @@ export function AuditWizard({ callOwnerEmail, arcCode }: { callOwnerEmail?: stri
     });
     const [step2, setStep2] = useState<Step2Data>({
         aiToolCount: "", dailyAdoptionPct: "", hasAIManager: "", monthlySpend: "",
-        biggestBottleneck: "", teamsNeedingAI: [], failedAI: "", successDefinition: "",
+        biggestBottleneck: [], teamsNeedingAI: [], failedAI: "", successDefinition: "",
     });
     const [step3, setStep3] = useState<Step3Data>({
         currentTools: [], toolFrustrations: "", manualProcesses: "",
@@ -571,7 +585,7 @@ export function AuditWizard({ callOwnerEmail, arcCode }: { callOwnerEmail?: stri
                         dailyAdoptionPct: step2.dailyAdoptionPct || undefined,
                         hasAIManager: step2.hasAIManager || undefined,
                         monthlySpend: step2.monthlySpend || undefined,
-                        biggestBottleneck: step2.biggestBottleneck || undefined,
+                        biggestBottleneck: step2.biggestBottleneck.length > 0 ? step2.biggestBottleneck.join(", ") : undefined,
                         teamsNeedingAI: step2.teamsNeedingAI.length > 0 ? step2.teamsNeedingAI : undefined,
                         failedAI: step2.failedAI || undefined,
                         successDefinition: step2.successDefinition || undefined,
