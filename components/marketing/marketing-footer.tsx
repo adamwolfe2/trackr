@@ -3,94 +3,113 @@
 import Link from "next/link";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 
+const PRODUCT_LINKS = [
+    { label: "How It Works", href: "/#how-it-works" },
+    { label: "Features", href: "/#features" },
+    { label: "Pricing", href: "/pricing" },
+    { label: "Our Process", href: "/process" },
+    { label: "AI Tool Library", href: "/research" },
+    { label: "AI Audit", href: "/audit" },
+    { label: "Changelog", href: "/changelog" },
+];
+
+const SOLUTIONS_LINKS = [
+    { label: "Ops Teams", href: "/for/ops-teams" },
+    { label: "RevOps", href: "/for/revops" },
+    { label: "Founders", href: "/for/founders" },
+    { label: "Engineering", href: "/for/engineering" },
+    { label: "Product Managers", href: "/for/product-managers" },
+    { label: "Chiefs of Staff", href: "/for/chiefs-of-staff" },
+    { label: "All teams \u2192", href: "/for" },
+];
+
+const COMPANY_LINKS = [
+    { label: "About", href: "/about" },
+    { label: "Blog", href: "/blog" },
+    { label: "Contact", href: "/contact" },
+    { label: "Integrations", href: "/partners" },
+    { label: "AI Architects", href: "/apply" },
+    { label: "Chrome Extension", href: "/chrome" },
+    { label: "Slack Integration", href: "/slack" },
+];
+
+const COMPARE_LINKS = [
+    { label: "Trackr vs G2", href: "/vs/g2" },
+    { label: "Trackr vs ChatGPT", href: "/vs/chatgpt" },
+    { label: "Trackr vs Capterra", href: "/vs/capterra" },
+    { label: "Trackr vs Gartner", href: "/vs/gartner" },
+    { label: "Trackr vs Vendr", href: "/vs/vendr" },
+    { label: "Trackr vs Spreadsheets", href: "/vs/spreadsheets" },
+    { label: "All comparisons \u2192", href: "/vs" },
+];
+
+const LINK_STYLE = "text-neutral-600 hover:text-black hover:underline";
+
 export function MarketingFooter() {
     return (
-        <footer className="w-full py-12 border-t border-black">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-                {/* Brand */}
-                <div className="md:col-span-1">
-                    <h3 className="text-2xl font-serif font-medium mb-4 flex items-center gap-2">
-                        <TrackrLogo size={24} />
-                        Trackr
-                    </h3>
-                    <p className="font-mono text-sm text-neutral-500 leading-relaxed">
-                        Research smarter. Evaluate consistently. Stay ahead.
-                    </p>
+        <footer className="w-full border-t border-black">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-8 md:gap-6 mb-16">
+                    {/* Brand */}
+                    <div className="col-span-2">
+                        <h3 className="text-2xl font-serif font-medium mb-3 flex items-center gap-2">
+                            <TrackrLogo size={24} />
+                            Trackr
+                        </h3>
+                        <p className="font-mono text-sm text-neutral-500 leading-relaxed mb-6">
+                            Research smarter. Evaluate consistently. Stay ahead.
+                        </p>
+                        <div className="flex gap-4 font-mono text-xs">
+                            <Link
+                                href="/sign-up"
+                                className="border border-black bg-black text-white px-4 py-2 uppercase tracking-widest hover:bg-neutral-800 transition-colors"
+                            >
+                                Get Started
+                            </Link>
+                            <Link
+                                href="/sign-in"
+                                className="border border-black px-4 py-2 uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
+                            >
+                                Sign In
+                            </Link>
+                        </div>
+                    </div>
+
+                    {/* Product */}
+                    <FooterColumn title="Product" links={PRODUCT_LINKS} />
+
+                    {/* Solutions */}
+                    <FooterColumn title="Solutions" links={SOLUTIONS_LINKS} />
+
+                    {/* Company */}
+                    <FooterColumn title="Company" links={COMPANY_LINKS} />
+
+                    {/* Compare */}
+                    <FooterColumn title="Compare" links={COMPARE_LINKS} />
                 </div>
 
-                {/* Links */}
-                <div className="md:col-span-3 grid grid-cols-2 md:grid-cols-4 gap-8 font-mono text-sm">
-
-                    <div className="flex flex-col gap-4">
-                        <span className="font-bold text-black uppercase tracking-wider">Product</span>
-                        <Link href="/#how-it-works" className="text-neutral-600 hover:text-black hover:underline">How It Works</Link>
-                        <Link href="/#features" className="text-neutral-600 hover:text-black hover:underline">Features</Link>
-                        <Link href="/pricing" className="text-neutral-600 hover:text-black hover:underline">Pricing</Link>
-                        <Link href="/process" className="text-neutral-600 hover:text-black hover:underline">Our Process</Link>
-                        <Link href="/research" className="text-neutral-600 hover:text-black hover:underline">AI Tool Library</Link>
-                        <Link href="/changelog" className="text-neutral-600 hover:text-black hover:underline">Changelog</Link>
-                        <Link href="/audit" className="text-neutral-600 hover:text-black hover:underline">AI Audit</Link>
-                        <Link href="/chrome" className="text-neutral-600 hover:text-black hover:underline">Chrome Extension</Link>
-                        <Link href="/slack" className="text-neutral-600 hover:text-black hover:underline">Slack Integration</Link>
+                <div className="pt-8 border-t border-black/10 flex flex-col md:flex-row justify-between items-center gap-4 font-mono text-xs text-neutral-500 uppercase tracking-wide">
+                    <span>&copy; 2026 Trackr. All rights reserved.</span>
+                    <div className="flex gap-8">
+                        <Link href="/privacy" className="hover:text-black hover:underline">Privacy Policy</Link>
+                        <Link href="/terms" className="hover:text-black hover:underline">Terms of Service</Link>
+                        <Link href="/security" className="hover:text-black hover:underline">Security</Link>
                     </div>
-
-                    <div className="flex flex-col gap-4">
-                        <span className="font-bold text-black uppercase tracking-wider">For Teams</span>
-                        <Link href="/for/ops-teams" className="text-neutral-600 hover:text-black hover:underline">Ops Teams</Link>
-                        <Link href="/for/revops" className="text-neutral-600 hover:text-black hover:underline">RevOps</Link>
-                        <Link href="/for/founders" className="text-neutral-600 hover:text-black hover:underline">Founders</Link>
-                        <Link href="/for/engineering" className="text-neutral-600 hover:text-black hover:underline">Engineering</Link>
-                        <Link href="/for/chiefs-of-staff" className="text-neutral-600 hover:text-black hover:underline">Chiefs of Staff</Link>
-                        <Link href="/for/marketing-teams" className="text-neutral-600 hover:text-black hover:underline">Marketing</Link>
-                        <Link href="/for/finance-teams" className="text-neutral-600 hover:text-black hover:underline">Finance</Link>
-                        <Link href="/for/it-leaders" className="text-neutral-600 hover:text-black hover:underline">IT Leaders</Link>
-                        <Link href="/for/product-managers" className="text-neutral-600 hover:text-black hover:underline">Product Managers</Link>
-                        <Link href="/for/sales-leaders" className="text-neutral-600 hover:text-black hover:underline">Sales Leaders</Link>
-                        <Link href="/for/customer-success" className="text-neutral-600 hover:text-black hover:underline">Customer Success</Link>
-                        <Link href="/for/hr-leaders" className="text-neutral-600 hover:text-black hover:underline">HR Leaders</Link>
-                        <Link href="/for/legal-teams" className="text-neutral-600 hover:text-black hover:underline">Legal Teams</Link>
-                        <Link href="/for/procurement" className="text-neutral-600 hover:text-black hover:underline">Procurement</Link>
-                        <Link href="/for/security-leaders" className="text-neutral-600 hover:text-black hover:underline">Security Leaders</Link>
-                        <Link href="/for/vp-strategy" className="text-neutral-600 hover:text-black hover:underline">VP Strategy</Link>
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                        <span className="font-bold text-black uppercase tracking-wider">Company</span>
-                        <Link href="/about" className="text-neutral-600 hover:text-black hover:underline">About</Link>
-                        <Link href="/blog" className="text-neutral-600 hover:text-black hover:underline">Blog</Link>
-                        <Link href="/contact" className="text-neutral-600 hover:text-black hover:underline">Contact</Link>
-                        <Link href="/partners" className="text-neutral-600 hover:text-black hover:underline">Integrations</Link>
-                        <Link href="/apply" className="text-neutral-600 hover:text-black hover:underline">AI Architects</Link>
-                        <span className="font-bold text-black uppercase tracking-wider mt-4">Get Started</span>
-                        <Link href="/sign-up" className="text-neutral-600 hover:text-black hover:underline">Create Account</Link>
-                        <Link href="/sign-in" className="text-neutral-600 hover:text-black hover:underline">Sign In</Link>
-                        <Link href="/security" className="text-neutral-600 hover:text-black hover:underline">Security</Link>
-                    </div>
-
-                    <div className="flex flex-col gap-4">
-                        <span className="font-bold text-black uppercase tracking-wider">Compare</span>
-                        <Link href="/vs/g2" className="text-neutral-600 hover:text-black hover:underline">Trackr vs G2</Link>
-                        <Link href="/vs/capterra" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Capterra</Link>
-                        <Link href="/vs/chatgpt" className="text-neutral-600 hover:text-black hover:underline">Trackr vs ChatGPT</Link>
-                        <Link href="/vs/vendr" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Vendr</Link>
-                        <Link href="/vs/spreadsheets" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Spreadsheets</Link>
-                        <Link href="/vs/notion" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Notion</Link>
-                        <Link href="/vs/gartner" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Gartner</Link>
-                        <Link href="/vs/microsoft-copilot" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Copilot</Link>
-                        <Link href="/vs/ramp" className="text-neutral-600 hover:text-black hover:underline">Trackr vs Ramp</Link>
-                        <Link href="/vs" className="text-neutral-600 hover:text-black hover:underline font-medium">All comparisons →</Link>
-                    </div>
-
-                </div>
-            </div>
-
-            <div className="pt-8 border-t border-black/10 flex flex-col md:flex-row justify-between items-center gap-4 font-mono text-xs text-neutral-500 uppercase tracking-wide">
-                <span>© 2026 Trackr. All rights reserved.</span>
-                <div className="flex gap-8">
-                    <Link href="/privacy" className="hover:text-black hover:underline">Privacy Policy</Link>
-                    <Link href="/terms" className="hover:text-black hover:underline">Terms of Service</Link>
                 </div>
             </div>
         </footer>
+    );
+}
+
+function FooterColumn({ title, links }: { title: string; links: { label: string; href: string }[] }) {
+    return (
+        <div className="flex flex-col gap-3 font-mono text-sm">
+            <span className="font-bold text-black text-xs uppercase tracking-wider">{title}</span>
+            {links.map((link) => (
+                <Link key={link.href} href={link.href} className={LINK_STYLE}>
+                    {link.label}
+                </Link>
+            ))}
+        </div>
     );
 }
