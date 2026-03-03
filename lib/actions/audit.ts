@@ -21,14 +21,14 @@ import { z } from "zod";
 
 const AuditScorecardSchema = z.object({
     companyName: z.string(),
-    companyWebsite: z.string().optional(),
-    contactName: z.string().optional(),
-    industry: z.string().optional(),
-    companySize: z.string().optional(),
+    companyWebsite: z.string().nullable(),
+    contactName: z.string().nullable(),
+    industry: z.string().nullable(),
+    companySize: z.string().nullable(),
     branding: z.object({
-        logoUrl: z.string().optional(),
-        primaryColor: z.string().optional(),
-        backgroundColor: z.string().optional(),
+        logoUrl: z.string().nullable(),
+        primaryColor: z.string().nullable(),
+        backgroundColor: z.string().nullable(),
     }),
     aiNativeScore: z.object({
         score: z.number().int().min(0).max(100),
