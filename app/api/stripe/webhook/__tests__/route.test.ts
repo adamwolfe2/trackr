@@ -224,7 +224,7 @@ describe("POST /api/stripe/webhook", () => {
         expect(db.update).toHaveBeenCalled();
     });
 
-    it("handles invoice.payment_succeeded → restores active if was past_due", async () => {
+    it("handles invoice.paid → restores active if was past_due", async () => {
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
             id: "dbsub_3",
             stripeSubscriptionId: "sub_ps",
@@ -232,7 +232,7 @@ describe("POST /api/stripe/webhook", () => {
             status: "past_due",
         });
 
-        mockStripeEvent("invoice.payment_succeeded", {
+        mockStripeEvent("invoice.paid", {
             parent: { subscription_details: { subscription: "sub_ps" } },
         });
 
@@ -241,7 +241,7 @@ describe("POST /api/stripe/webhook", () => {
         expect(db.update).toHaveBeenCalled();
     });
 
-    it("handles invoice.payment_succeeded → restores active if was incomplete", async () => {
+    it("handles invoice.paid → restores active if was incomplete", async () => {
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
             id: "dbsub_inc",
             stripeSubscriptionId: "sub_inc",
@@ -249,7 +249,7 @@ describe("POST /api/stripe/webhook", () => {
             status: "incomplete",
         });
 
-        mockStripeEvent("invoice.payment_succeeded", {
+        mockStripeEvent("invoice.paid", {
             parent: { subscription_details: { subscription: "sub_inc" } },
         });
 
