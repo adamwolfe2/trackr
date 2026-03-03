@@ -28,36 +28,44 @@ export async function GET() {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
 
-    let accountId = architect.stripeConnectAccountId;
+    try {
+        let accountId = architect.stripeConnectAccountId;
 
-    // Create Stripe Connect Express account if not yet created
-    if (!accountId) {
-        const account = await stripe.accounts.create({
-            type: "express",
-            email: architect.email,
-            metadata: {
-                architectId: architect.id,
-                arcCode: architect.arcCode,
-            },
-            capabilities: {
-                transfers: { requested: true },
-            },
+        // Create Stripe Connect Express account if not yet created
+        if (!accountId) {
+            const account = await stripe.accounts.create({
+                type: "express",
+                email: architect.email,
+                metadata: {
+                    architectId: architect.id,
+                    arcCode: architect.arcCode,
+                },
+                capabilities: {
+                    transfers: { requested: true },
+                },
+            });
+            accountId = account.id;
+
+            await db
+                .update(architects)
+                .set({ stripeConnectAccountId: accountId })
+                .where(eq(architects.id, architect.id));
+        }
+
+        // Generate onboarding link
+        const accountLink = await stripe.accountLinks.create({
+            account: accountId,
+            refresh_url: `${appUrl}/api/architect/stripe-connect`,
+            return_url: `${appUrl}/api/architect/stripe-connect/callback`,
+            type: "account_onboarding",
         });
-        accountId = account.id;
 
-        await db
-            .update(architects)
-            .set({ stripeConnectAccountId: accountId })
-            .where(eq(architects.id, architect.id));
+        return NextResponse.redirect(accountLink.url);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : "Stripe error";
+        console.error("[stripe-connect]", message);
+        const errUrl = new URL("/architect/settings", appUrl);
+        errUrl.searchParams.set("stripe_error", message);
+        return NextResponse.redirect(errUrl);
     }
-
-    // Generate onboarding link
-    const accountLink = await stripe.accountLinks.create({
-        account: accountId,
-        refresh_url: `${appUrl}/api/architect/stripe-connect`,
-        return_url: `${appUrl}/api/architect/stripe-connect/callback`,
-        type: "account_onboarding",
-    });
-
-    return NextResponse.redirect(accountLink.url);
 }

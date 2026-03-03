@@ -9,13 +9,16 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { ARCHITECT_ROLES } from "@/lib/config/architect-roles";
 import { CopyLinkButton } from "@/components/referrals/copy-link-button";
-import { CalendarUrlForm } from "@/components/architect/calendar-url-form";
 
 function getRoleTitle(slug: string): string {
     return ARCHITECT_ROLES.find((r) => r.slug === slug)?.title ?? slug;
 }
 
-export default async function ArchitectSettingsPage() {
+export default async function ArchitectSettingsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ stripe_error?: string }>;
+}) {
     const user = await currentUser();
     if (!user) redirect("/sign-in");
 
@@ -24,6 +27,7 @@ export default async function ArchitectSettingsPage() {
     });
     if (!architect) redirect("/apply");
 
+    const { stripe_error } = await searchParams;
     const referralUrl = `https://trytrackr.com/audit?arc=${architect.arcCode}`;
 
     return (
@@ -62,12 +66,6 @@ export default async function ArchitectSettingsPage() {
                 </div>
             </div>
 
-            {/* Calendar Link */}
-            <div className="border border-black p-5">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-3">Calendar Link</p>
-                <CalendarUrlForm architectId={architect.id} initialUrl={architect.calendarUrl} />
-            </div>
-
             {/* Referral Code */}
             <div className="border border-black p-5">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-3">Referral Code</p>
@@ -82,6 +80,9 @@ export default async function ArchitectSettingsPage() {
             {/* Stripe Connect */}
             <div className="border border-black p-5">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-3">Stripe Connect</p>
+                {stripe_error && (
+                    <p className="font-mono text-xs text-red-700 border border-red-200 px-3 py-2 mb-3 break-all">{stripe_error}</p>
+                )}
                 {architect.stripeOnboardingComplete ? (
                     <div>
                         <p className="font-mono text-sm text-green-700 mb-3">Connected and active</p>

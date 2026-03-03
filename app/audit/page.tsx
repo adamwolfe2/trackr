@@ -5,8 +5,6 @@ import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { AuditWizard } from "@/components/marketing/audit-wizard";
 import { AuditDemo } from "@/components/marketing/audit-demo";
 import { currentUser } from "@clerk/nextjs/server";
-import { cookies } from "next/headers";
-// Note: arc cookie is SET in middleware (proxy.ts) — Server Components cannot write cookies.
 
 export const metadata: Metadata = {
     title: "AI Readiness Audit — Trackr",
@@ -55,12 +53,7 @@ export default async function AuditPage({
     searchParams: Promise<{ arc?: string }>;
 }) {
     const user = await currentUser();
-    const { arc: arcParam } = await searchParams;
-
-    // Arc cookie is WRITTEN by middleware (proxy.ts) when ?arc= is present.
-    // Server Components cannot write cookies — just read here for attribution.
-    const cookieStore = await cookies();
-    const arcCode = arcParam ?? cookieStore.get("trackr_arc")?.value;
+    const { arc: arcCode } = await searchParams;
 
     return (
         <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
