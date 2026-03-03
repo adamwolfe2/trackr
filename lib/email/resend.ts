@@ -731,12 +731,12 @@ export async function sendArchitectApproved(to: string, firstName: string, arcCo
                     <ol style="font-size: 13px; color: #333; line-height: 1.9; padding-left: 18px; margin: 0;">
                         <li>Sign in to your architect dashboard</li>
                         <li>Complete Stripe Connect setup (to receive payouts)</li>
-                        <li>Share your client intake link: trytrackr.com/audit?arc=${escapeHtml(arcCode)}</li>
-                        <li>Earn 20% recurring on every client payment</li>
+                        <li>Share your referral link: <a href="https://trytrackr.com/audit?arc=${escapeHtml(arcCode)}" style="color:#000;">trytrackr.com/audit?arc=${escapeHtml(arcCode)}</a></li>
+                        <li>When someone you refer becomes a client, earn 20% recurring — forever</li>
                     </ol>
                 </div>
                 <p style="font-size: 12px; color: #555; line-height: 1.6; margin: 0 0 20px;">
-                    Set up your calendar link in Settings so clients can book directly.
+                    Your referral link sends prospects directly to our AI Readiness Audit. Our team handles all calls and onboarding — you earn commission when they close.
                 </p>
                 ${emailButton(onboardingUrl, "Open Your Dashboard")}
                 <p style="font-size: 13px; color: #777; margin: 20px 0 0; line-height: 1.5;">

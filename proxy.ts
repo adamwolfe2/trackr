@@ -129,6 +129,25 @@ export default function middleware(req: NextRequest) {
         return NextResponse.next();
     }
 
+    // Set architect referral cookie when ?arc= is present on the audit page.
+    // We do this in middleware because Server Components cannot write cookies.
+    // /audit is a public route — Clerk just passes it through, so we can
+    // return NextResponse.next() here without breaking auth state.
+    if (path === "/audit") {
+        const arcCode = req.nextUrl.searchParams.get("arc");
+        if (arcCode && /^[A-Z0-9]{6,12}$/i.test(arcCode)) {
+            const response = NextResponse.next();
+            response.cookies.set("trackr_arc", arcCode.toUpperCase(), {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                maxAge: 60 * 60 * 24 * 90,
+                path: "/",
+            });
+            return response;
+        }
+    }
+
     // If Clerk is not configured and we're not in a build, block the request
     if (!clerk && !isBuilding) {
         return NextResponse.json({ error: "Authentication unavailable" }, { status: 503 });

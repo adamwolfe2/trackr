@@ -6,6 +6,7 @@ import { AuditWizard } from "@/components/marketing/audit-wizard";
 import { AuditDemo } from "@/components/marketing/audit-demo";
 import { currentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
+// Note: arc cookie is SET in middleware (proxy.ts) — Server Components cannot write cookies.
 
 export const metadata: Metadata = {
     title: "AI Readiness Audit — Trackr",
@@ -56,18 +57,9 @@ export default async function AuditPage({
     const user = await currentUser();
     const { arc: arcParam } = await searchParams;
 
-    // Persist arc code in cookie (90-day attribution window per architect terms)
+    // Arc cookie is WRITTEN by middleware (proxy.ts) when ?arc= is present.
+    // Server Components cannot write cookies — just read here for attribution.
     const cookieStore = await cookies();
-    if (arcParam) {
-        cookieStore.set("trackr_arc", arcParam, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            maxAge: 60 * 60 * 24 * 90, // 90 days
-            path: "/",
-        });
-    }
-    // Read from cookie if not in URL (user returned without param)
     const arcCode = arcParam ?? cookieStore.get("trackr_arc")?.value;
 
     return (

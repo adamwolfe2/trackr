@@ -2,7 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { architects } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNull, and } from "drizzle-orm";
 import Link from "next/link";
 import { LayoutDashboard, Users, DollarSign, Settings } from "lucide-react";
 import type { Metadata } from "next";
@@ -34,9 +34,26 @@ export default async function ArchitectLayout({
         redirect("/sign-in");
     }
 
-    const architect = await db.query.architects.findFirst({
+    let architect = await db.query.architects.findFirst({
         where: eq(architects.userId, user.id),
     });
+
+    // First sign-in after approval: userId is null, link by email
+    if (!architect) {
+        const email = user.emailAddresses[0]?.emailAddress?.toLowerCase();
+        if (email) {
+            const unlinked = await db.query.architects.findFirst({
+                where: and(eq(architects.email, email), isNull(architects.userId)),
+            });
+            if (unlinked) {
+                await db
+                    .update(architects)
+                    .set({ userId: user.id })
+                    .where(eq(architects.id, unlinked.id));
+                architect = { ...unlinked, userId: user.id };
+            }
+        }
+    }
 
     if (!architect) {
         redirect("/apply?message=no-architect-record");
