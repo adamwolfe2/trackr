@@ -18,6 +18,10 @@ vi.mock("drizzle-orm", async (importOriginal) => {
     return { ...actual, eq: vi.fn((...args) => args) };
 });
 
+vi.mock("next/server", () => ({
+    after: vi.fn((fn: () => void) => fn()),
+}));
+
 const { mockCheckoutCreate, mockPortalCreate } = vi.hoisted(() => ({
     mockCheckoutCreate: vi.fn(),
     mockPortalCreate: vi.fn(),

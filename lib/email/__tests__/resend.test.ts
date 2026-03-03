@@ -103,7 +103,7 @@ describe("sendWelcomeEmail", () => {
         const call = mockEmailsSend.mock.calls[0][0];
         expect(call.to).toBe("user@example.com");
         expect(call.subject).toBe("Welcome to Trackr");
-        expect(call.from).toContain("noreply@trytrackr.com");
+        expect(call.from).toContain("noreply@send.trytrackr.com");
     });
 
     it("includes the user's first name in the HTML body", async () => {

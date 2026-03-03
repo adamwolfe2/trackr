@@ -48,6 +48,10 @@ vi.mock("@/lib/actions/referrals", () => ({
     trackReferralSignup: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock("next/server", () => ({
+    after: vi.fn((fn: () => void) => fn()),
+}));
+
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { ensureWorkspace } from "@/lib/db/ensure-workspace";

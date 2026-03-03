@@ -20,6 +20,7 @@ vi.mock("@/lib/db", () => ({
             pendingInvitations: { findFirst: vi.fn() },
             workspaceMembers: { findMany: vi.fn() },
             subscriptions: { findFirst: vi.fn() },
+            architects: { findFirst: vi.fn() },
         },
         insert: vi.fn().mockReturnValue({
             values: vi.fn().mockReturnValue({
@@ -94,6 +95,7 @@ describe("POST /api/webhooks/clerk", () => {
         (db.query.pendingInvitations.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.architects.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
         (headers as ReturnType<typeof vi.fn>).mockResolvedValue(makeSvixHeaders());
 
