@@ -73,6 +73,10 @@ export async function POST(req: NextRequest) {
                 await handleTrialWillEnd(event.data.object as Stripe.Subscription);
                 break;
             }
+            case "account.updated": {
+                await handleAccountUpdated(event.data.object as Stripe.Account);
+                break;
+            }
             default: {
                 // Unhandled event type — return 200 to acknowledge receipt
             }
@@ -314,15 +318,33 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
             .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));
     }
 
-    // Architect commission: check if this workspace has an active architect referral
+    // Architect commission: check if this workspace has an architect referral
     if (existing) {
         try {
-            const referral = await db.query.architectReferrals.findFirst({
+            // First check for active referrals; if none, promote a "lead" to "active"
+            // (a "lead" becomes "active" on first successful payment — this is the conversion event)
+            let referral = await db.query.architectReferrals.findFirst({
                 where: and(
                     eq(architectReferrals.workspaceId, existing.workspaceId),
                     eq(architectReferrals.status, "active"),
                 ),
             });
+
+            if (!referral) {
+                // Promote lead → active on first payment
+                const leadReferral = await db.query.architectReferrals.findFirst({
+                    where: and(
+                        eq(architectReferrals.workspaceId, existing.workspaceId),
+                        eq(architectReferrals.status, "lead"),
+                    ),
+                });
+                if (leadReferral) {
+                    await db.update(architectReferrals)
+                        .set({ status: "active" })
+                        .where(eq(architectReferrals.id, leadReferral.id));
+                    referral = { ...leadReferral, status: "active" };
+                }
+            }
 
             if (referral) {
                 const architect = await db.query.architects.findFirst({
@@ -436,6 +458,21 @@ async function handleTrialWillEnd(sub: Stripe.Subscription) {
         }
     } catch {
         // Non-critical — don't fail webhook if email errors
+    }
+}
+
+async function handleAccountUpdated(account: Stripe.Account) {
+    // Stripe Connect: update architect onboarding status when charges become enabled
+    if (!account.charges_enabled) return;
+
+    const architect = await db.query.architects.findFirst({
+        where: eq(architects.stripeConnectAccountId, account.id),
+    });
+
+    if (architect && !architect.stripeOnboardingComplete) {
+        await db.update(architects)
+            .set({ stripeOnboardingComplete: true })
+            .where(eq(architects.id, architect.id));
     }
 }
 

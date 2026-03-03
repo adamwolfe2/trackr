@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, DollarSign, BarChart3, Briefcase } from "lucide-react";
+import { ArrowRight, Shield, Users, FlaskConical, TrendingUp } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { ARCHITECT_ROLES } from "@/lib/config/architect-roles";
 
 export const metadata: Metadata = {
-    title: "Become a Trackr AI Architect",
-    description: "Join the Trackr AI Architect program. Earn 20% recurring commissions by referring companies to Trackr's AI tool intelligence platform.",
+    title: "The AI Architect Program — Trackr",
+    description: "An elite designation for the top 1% of AI-native operators. Fewer than 5% of applicants are accepted. Multi-stage vetting. Enterprise clients. Recurring compensation.",
     openGraph: {
-        title: "Become a Trackr AI Architect",
-        description: "Earn 20% recurring commissions by helping companies adopt AI tools with Trackr.",
+        title: "The AI Architect Program — Trackr",
+        description: "A professional designation for proven AI operators. Rigorous vetting. Enterprise clients. 20% recurring compensation.",
         url: "https://trytrackr.com/apply",
         images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr AI Architect Program" }],
     },
@@ -19,19 +19,24 @@ export const metadata: Metadata = {
 
 const BENEFITS = [
     {
-        icon: DollarSign,
-        title: "20% Recurring Commissions",
-        description: "Earn on every payment your referred clients make, for as long as they stay subscribed.",
+        icon: Shield,
+        title: "The Vetting Is the Credential",
+        description: "Our multi-stage review evaluates your portfolio, domain expertise, and track record with AI deployments. Fewer than 5% of applicants are accepted. The designation itself signals caliber.",
     },
     {
-        icon: BarChart3,
-        title: "Dedicated Portal",
-        description: "Track your referrals, clients, commissions, and payouts from your own architect dashboard.",
+        icon: Users,
+        title: "Enterprise Client Access",
+        description: "Architects are matched with organizations actively evaluating AI tooling — from Fortune 500 procurement teams to high-growth startups scaling their stack. We bring the pipeline to you.",
     },
     {
-        icon: Briefcase,
-        title: "Trackr Research Tools",
-        description: "Access the full Trackr platform to research AI tools and build recommendations for your clients.",
+        icon: FlaskConical,
+        title: "Proprietary Research Platform",
+        description: "Full access to Trackr's AI intelligence layer — real-time tool benchmarks, spend analytics, and implementation data that doesn't exist anywhere else. Build recommendations backed by evidence.",
+    },
+    {
+        icon: TrendingUp,
+        title: "Recurring Compensation",
+        description: "20% recurring on every client engagement, paid for the lifetime of the relationship. This is compensation that reflects the value of your expertise — not an affiliate payout.",
     },
 ];
 
@@ -44,21 +49,27 @@ export default function ApplyPage() {
                 {/* Hero */}
                 <section className="pt-16 pb-12 border-b border-black">
                     <div className="max-w-3xl">
-                        <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-6">AI Architect Program</p>
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-6">Application — Fewer than 5% accepted</p>
                         <h1 className="font-serif text-5xl sm:text-6xl font-normal leading-tight mb-6">
-                            Become a Trackr AI Architect.
+                            The AI Architect Program.
                         </h1>
-                        <p className="font-mono text-sm text-neutral-600 leading-relaxed max-w-2xl">
-                            Help companies adopt the right AI tools. Earn 20% recurring commissions on every client you refer.
-                            Get your own dashboard, referral code, and direct payouts via Stripe.
+                        <p className="font-mono text-sm text-neutral-600 leading-relaxed max-w-2xl mb-4">
+                            A professional designation for the top 1% of AI-native operators. Not an affiliate program.
+                            Not a referral network. A vetted role for practitioners who have deployed AI at scale
+                            and can advise at the enterprise level.
+                        </p>
+                        <p className="font-mono text-[11px] text-neutral-400 leading-relaxed max-w-2xl">
+                            Our architects have led AI implementations across Fortune 500 companies, Series A-D startups,
+                            and category-defining platforms. We are looking for the same.
                         </p>
                     </div>
                 </section>
 
                 {/* Benefits */}
                 <section className="py-16 border-b border-black">
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-8">Why join</p>
-                    <div className="grid sm:grid-cols-3 gap-px border border-black bg-black">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-4">What you gain</p>
+                    <h2 className="font-serif text-3xl font-normal mb-8">Built for operators, not affiliates.</h2>
+                    <div className="grid sm:grid-cols-2 gap-px border border-black bg-black">
                         {BENEFITS.map((benefit) => {
                             const Icon = benefit.icon;
                             return (
@@ -74,10 +85,28 @@ export default function ApplyPage() {
                     </div>
                 </section>
 
+                {/* Requirements */}
+                <section className="py-16 border-b border-black">
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-4">Requirements</p>
+                    <h2 className="font-serif text-3xl font-normal mb-8">What we look for.</h2>
+                    <div className="grid sm:grid-cols-3 gap-px border border-black bg-black">
+                        {[
+                            { title: "Proven AI Portfolio", description: "Documented history of AI tool evaluations, deployments, or transformations. We review real work, not resumes." },
+                            { title: "Tool Fluency", description: "Deep working knowledge across the AI landscape — LLMs, automation platforms, vertical SaaS, infrastructure. Generalists need not apply." },
+                            { title: "Domain Authority", description: "Recognized expertise in a specific vertical or function. Your clients trust your judgment because you've done the work." },
+                        ].map((item) => (
+                            <div key={item.title} className="bg-[#F3F3EF] p-6">
+                                <h3 className="font-serif text-lg font-normal mb-2">{item.title}</h3>
+                                <p className="font-mono text-[11px] text-neutral-600 leading-relaxed">{item.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
                 {/* Role selection */}
                 <section className="py-16 border-b border-black">
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-4">Select your role</p>
-                    <h2 className="font-serif text-3xl font-normal mb-8">How do you work with clients?</h2>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-4">Select your track</p>
+                    <h2 className="font-serif text-3xl font-normal mb-8">Choose the role that fits your practice.</h2>
                     <div className="space-y-px border border-black bg-black">
                         {ARCHITECT_ROLES.map((role) => (
                             <Link
@@ -97,13 +126,14 @@ export default function ApplyPage() {
 
                 {/* How it works */}
                 <section className="py-16">
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-4">How it works</p>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-4">Process</p>
+                    <h2 className="font-serif text-3xl font-normal mb-8">A rigorous, multi-stage review.</h2>
                     <div className="grid sm:grid-cols-4 gap-px border border-black bg-black">
                         {[
-                            { step: "01", title: "Apply", description: "Select your role and tell us about your experience." },
-                            { step: "02", title: "Get approved", description: "We review applications within 48 hours." },
-                            { step: "03", title: "Refer clients", description: "Share your unique referral link with prospects." },
-                            { step: "04", title: "Earn commissions", description: "20% recurring on every client payment." },
+                            { step: "01", title: "Apply", description: "Select your track and submit your portfolio, specialization, and deployment history." },
+                            { step: "02", title: "Review", description: "Our team evaluates every application against expertise benchmarks. Most are declined within 72 hours." },
+                            { step: "03", title: "Onboard", description: "Accepted architects receive platform access, client matching, and proprietary research tools." },
+                            { step: "04", title: "Engage", description: "Advise enterprise clients on AI tooling. Earn 20% recurring compensation on every engagement." },
                         ].map((item) => (
                             <div key={item.step} className="bg-[#F3F3EF] p-6">
                                 <p className="font-mono text-[10px] text-neutral-400 mb-2">{item.step}</p>

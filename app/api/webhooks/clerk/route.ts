@@ -4,7 +4,7 @@ import { WebhookEvent } from '@clerk/nextjs/server'
 import { ensureWorkspace } from '@/lib/db/ensure-workspace'
 import { sendWelcomeEmail, scheduleDripSequence } from '@/lib/email/resend'
 import { db } from '@/lib/db'
-import { pendingInvitations, workspaceMembers, workspaces, subscriptions, webhookEvents } from '@/lib/db/schema'
+import { pendingInvitations, workspaceMembers, workspaces, subscriptions, webhookEvents, architects } from '@/lib/db/schema'
 import { and, eq, gt } from 'drizzle-orm'
 
 
@@ -88,6 +88,18 @@ async function handleUserCreated(evt: WebhookEvent) {
     const primaryEmail = email_addresses[0]?.email_address;
     const displayName = username || primaryEmail?.split('@')[0] || "User";
     const firstName = first_name || displayName;
+
+    // Link architect record if this email matches an approved architect
+    if (primaryEmail) {
+        const architect = await db.query.architects.findFirst({
+            where: and(eq(architects.email, primaryEmail), eq(architects.status, 'active')),
+        });
+        if (architect && !architect.userId) {
+            await db.update(architects)
+                .set({ userId: id })
+                .where(eq(architects.id, architect.id));
+        }
+    }
 
     // Check for a pending workspace invitation for this email.
     if (primaryEmail) {

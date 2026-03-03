@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { tools, reports, researchJobs, notes, workspaceMembers, subscriptions } from "@/lib/db/schema";
+import { tools, reports, researchJobs, notes, workspaceMembers, subscriptions, workspaces } from "@/lib/db/schema";
 import { eq, desc, inArray, and } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
 import { ExternalLink, ChevronLeft, GitCompare, RefreshCw, Share2, ArrowRight, AlertTriangle, Info } from "lucide-react";
@@ -11,6 +11,8 @@ import { ExportButton } from "@/components/common/export-button";
 import { ShareReportButton } from "@/components/tools/share-report-button";
 import { PublishButton } from "@/components/tools/publish-button";
 import { ToolDetailTabs } from "@/components/tools/tool-detail-tabs";
+import { ScorecardFitPanel } from "@/components/tools/scorecard-fit-panel";
+import type { WorkspaceFitData } from "@/components/tools/scorecard-fit-panel";
 import { ResearchSchedulePicker } from "@/components/tools/research-schedule-picker";
 import { clerkClient } from "@clerk/nextjs/server";
 import { currentUser } from "@clerk/nextjs/server";
@@ -62,6 +64,14 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
     const plan = getPlanLimits(subscription);
     const canExport = hasFeature(plan, "reportExport");
     const canSchedule = hasFeature(plan, "scheduledResearch");
+    const canSeeFit = hasFeature(plan, "scorecardRecipe");
+
+    // Fetch workspace for recipe check
+    const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.id, tool.workspaceId),
+        columns: { scorecardConfig: true },
+    });
+    const hasRecipe = !!(workspace?.scorecardConfig as Record<string, unknown> | null)?.systemContext;
 
     const workspaceTools = await db.query.tools.findMany({
         where: eq(tools.workspaceId, tool.workspaceId),
@@ -224,6 +234,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
             dataSources?: number;
             pagesScraped?: number;
         } | null,
+        workspaceFitData: report.workspaceFitData as WorkspaceFitData | null,
     } : null;
 
     const serializedNotes = toolNotes.map(n => ({
@@ -323,16 +334,26 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                         hasReport={!!report}
                         isFailed={tool.status === "failed"}
                     />
-                    <div className="text-right">
-                        <div className="font-mono text-3xl font-bold">
-                            {Number(tool.overallScore || 0).toFixed(1)}
-                        </div>
-                        <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Score</div>
-                        {scoreTrend && scoreTrend.direction !== "flat" && (
-                            <div className={`font-mono text-[10px] mt-0.5 ${scoreTrend.direction === "up" ? "text-black" : "text-neutral-500"}`}>
-                                {scoreTrend.direction === "up" ? "↑" : "↓"} {scoreTrend.delta} vs last
+                    <div className="flex items-end gap-4">
+                        {canSeeFit && serializedReport?.workspaceFitData && (
+                            <div className="text-right">
+                                <div className="font-mono text-3xl font-bold">
+                                    {serializedReport.workspaceFitData.fitScore.toFixed(1)}
+                                </div>
+                                <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Fit</div>
                             </div>
                         )}
+                        <div className="text-right">
+                            <div className="font-mono text-3xl font-bold">
+                                {Number(tool.overallScore || 0).toFixed(1)}
+                            </div>
+                            <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Score</div>
+                            {scoreTrend && scoreTrend.direction !== "flat" && (
+                                <div className={`font-mono text-[10px] mt-0.5 ${scoreTrend.direction === "up" ? "text-black" : "text-neutral-500"}`}>
+                                    {scoreTrend.direction === "up" ? "↑" : "↓"} {scoreTrend.delta} vs last
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -397,6 +418,15 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                             </div>
                         )}
                     </div>
+
+                    {/* Scorecard Fit Panel */}
+                    {canSeeFit && (
+                        <ScorecardFitPanel
+                            fitData={serializedReport?.workspaceFitData ?? null}
+                            hasRecipe={hasRecipe}
+                            hasReport={!!report}
+                        />
+                    )}
 
                     {/* Tabs */}
                     <ToolDetailTabs

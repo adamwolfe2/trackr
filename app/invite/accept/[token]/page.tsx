@@ -86,8 +86,34 @@ export default async function InviteAcceptPage({
     const user = await currentUser();
 
     if (!user) {
-        // Redirect to sign-in; after auth Clerk will send them back here
-        redirect(`/sign-in?redirect_url=${encodeURIComponent(`/invite/accept/${token}`)}`);
+        const wsName = invitation.workspace?.name ?? "a workspace";
+        return (
+            <InvitePage>
+                <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-2">
+                    You've been invited
+                </p>
+                <h1 className="font-serif text-2xl font-normal mb-2">
+                    Join {wsName}
+                </h1>
+                <p className="font-mono text-sm text-neutral-600 mb-6">
+                    Sign in or create an account to accept this invitation.
+                </p>
+                <div className="space-y-3">
+                    <a
+                        href={`/sign-in?redirect_url=${encodeURIComponent(`/invite/accept/${token}`)}`}
+                        className="block w-full text-center font-mono text-xs uppercase tracking-widest border-2 border-black bg-black text-white px-4 py-3 hover:bg-neutral-800 transition-colors"
+                    >
+                        Sign In
+                    </a>
+                    <a
+                        href={`/sign-up?redirect_url=${encodeURIComponent(`/invite/accept/${token}`)}`}
+                        className="block w-full text-center font-mono text-xs uppercase tracking-widest border-2 border-black px-4 py-3 hover:bg-black hover:text-white transition-colors"
+                    >
+                        Create Account
+                    </a>
+                </div>
+            </InvitePage>
+        );
     }
 
     // Check if already a member

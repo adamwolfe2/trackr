@@ -5,8 +5,9 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { architects, architectReferrals, architectCommissions } from "@/lib/db/schema";
 import { eq, desc, sum, count, and } from "drizzle-orm";
-import { Copy, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
+import { CopyLinkButton } from "@/components/referrals/copy-link-button";
 
 export default async function ArchitectDashboardPage() {
     const user = await currentUser();
@@ -87,18 +88,7 @@ export default async function ArchitectDashboardPage() {
             {/* Referral link */}
             <div className="border border-black p-5">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-2">Your Referral Link</p>
-                <div className="flex items-center gap-3">
-                    <code className="flex-1 font-mono text-xs bg-[#F3F3EF] border border-neutral-200 px-3 py-2 truncate">
-                        {referralUrl}
-                    </code>
-                    <button
-                        className="flex items-center gap-1.5 border border-black px-3 py-2 font-mono text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
-                        title="Copy link"
-                    >
-                        <Copy className="w-3 h-3" />
-                        Copy
-                    </button>
-                </div>
+                <CopyLinkButton referralUrl={referralUrl} />
                 <p className="font-mono text-[10px] text-neutral-400 mt-2">Arc Code: {architect.arcCode}</p>
             </div>
 

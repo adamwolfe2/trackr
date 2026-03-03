@@ -6,8 +6,9 @@ import { db } from "@/lib/db";
 import { architects } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import Link from "next/link";
-import { ExternalLink, Copy } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { ARCHITECT_ROLES } from "@/lib/config/architect-roles";
+import { CopyLinkButton } from "@/components/referrals/copy-link-button";
 
 function getRoleTitle(slug: string): string {
     return ARCHITECT_ROLES.find((r) => r.slug === slug)?.title ?? slug;
@@ -68,18 +69,7 @@ export default async function ArchitectSettingsPage() {
                         {architect.arcCode}
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
-                    <code className="flex-1 font-mono text-xs bg-[#F3F3EF] border border-neutral-200 px-3 py-2 truncate">
-                        {referralUrl}
-                    </code>
-                    <button
-                        className="flex items-center gap-1.5 border border-black px-3 py-2 font-mono text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
-                        title="Copy link"
-                    >
-                        <Copy className="w-3 h-3" />
-                        Copy
-                    </button>
-                </div>
+                <CopyLinkButton referralUrl={referralUrl} />
             </div>
 
             {/* Stripe Connect */}

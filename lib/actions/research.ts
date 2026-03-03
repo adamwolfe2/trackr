@@ -3,7 +3,7 @@
 // as a server action would let anyone trigger expensive API calls without auth.
 
 import { db } from "@/lib/db";
-import { tools, reports, workspaces, researchJobs, subscriptions } from "@/lib/db/schema";
+import { tools, reports, workspaces, researchJobs, subscriptions, painPoints } from "@/lib/db/schema";
 import { eq, sql, and, gte, ne, inArray, count, gt } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
 import { tavily } from "@/lib/services/tavily";
@@ -60,6 +60,30 @@ const ReportSchema = z.object({
         funding: z.string().describe("Total funding raised, 'Bootstrapped', 'Public', or 'Unknown'"),
         recentNews: z.array(z.string()).describe("2-3 recent notable developments, launches, or news items from the past year"),
     }).describe("Market intelligence about the company behind the tool"),
+});
+
+const WorkspaceFitSchema = z.object({
+    fitScore: z.number().min(0).max(10).describe("Overall workspace fit score (0-10) based on the company's scorecard recipe, pain points, and business units."),
+    fitJustification: z.string().describe("2-3 sentence justification for the fit score."),
+    dealBreakerFlags: z.array(z.object({
+        trigger: z.string().describe("The deal breaker criterion that was triggered"),
+        severity: z.enum(["hard", "soft"]).describe("hard = absolute blocker, soft = significant concern"),
+        explanation: z.string().describe("Why this is a deal breaker for this specific company"),
+    })).describe("Deal breakers from the company's recipe that this tool triggers. Empty array if none."),
+    painPointMapping: z.array(z.object({
+        painPointTitle: z.string().describe("Title of the company's pain point"),
+        addressesIt: z.enum(["fully", "partially", "tangentially"]).describe("How well this tool addresses the pain point"),
+        explanation: z.string().describe("How the tool addresses (or fails to address) this pain point"),
+    })).describe("How this tool maps to the company's defined pain points."),
+    businessUnitRelevance: z.array(z.object({
+        unitName: z.string().describe("Name of the business unit"),
+        relevanceScore: z.number().min(0).max(10).describe("Relevance score 0-10 for this unit"),
+        reason: z.string().describe("Why this tool is relevant (or not) for this business unit"),
+    })).describe("Relevance scores per business unit from the company's recipe."),
+});
+
+const ReportSchemaWithFit = ReportSchema.extend({
+    workspaceFit: WorkspaceFitSchema,
 });
 
 // Minimal report used when AI synthesis fails entirely — ensures tool always reaches active status
@@ -562,6 +586,20 @@ export async function performDeepResearch(toolId: string) {
             dealBreakers?: string;
         } | null;
 
+        // Fetch active pain points if recipe exists (for workspace fit scoring)
+        const hasRecipe = !!fullRecipe?.systemContext;
+        let painPointsList: Array<{ title: string; description: string | null }> = [];
+        if (hasRecipe) {
+            painPointsList = await db.query.painPoints.findMany({
+                where: and(
+                    eq(painPoints.workspaceId, tool.workspaceId),
+                    eq(painPoints.active, true),
+                ),
+                columns: { title: true, description: true },
+                limit: 10,
+            });
+        }
+
         // Build a rich recipe-based prompt if a recipe exists, otherwise fall back to context only
         const recipeSection = fullRecipe?.systemContext ? `
 === COMPANY SCORECARD RECIPE ===
@@ -574,6 +612,10 @@ ${fullRecipe.businessUnits?.length ? `BUSINESS UNITS:\n${fullRecipe.businessUnit
 ${fullRecipe.evaluationCriteria ? `EVALUATION CRITERIA:\n${fullRecipe.evaluationCriteria}` : ""}
 
 ${fullRecipe.dealBreakers ? `DEAL BREAKERS (flag these prominently in cons):\n${fullRecipe.dealBreakers}` : ""}
+
+${painPointsList.length > 0 ? `COMPANY PAIN POINTS:\n${painPointsList.map(pp =>
+    `- ${pp.title}${pp.description ? `: ${pp.description}` : ""}`
+).join("\n")}` : ""}
 ` : `COMPANY CONTEXT: ${companyContext}`;
 
         const synthesisPrompt = `
@@ -632,29 +674,56 @@ INSTRUCTIONS:
 - Evaluate through the lens of the company's recipe above: what works for their specific business units, and flag any deal breakers prominently.
 - For sentimentConsensus: cross-reference ALL sources (reviews, trust sites, Reddit, competitor analyses). Do sources agree? What's the confidence based on volume of data?
 - For marketIntel: extract company details from the about page, market research, and any other available sources. Use "Unknown" for any field you cannot determine.
+${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's specific needs based on the scorecard recipe above.
+  - fitScore: Overall workspace fit (0-10). Consider recipe criteria, pain points, business units, and deal breakers.
+  - dealBreakerFlags: Check each deal breaker in the recipe. Only flag ones that actually apply to this tool. Use "hard" for absolute blockers and "soft" for significant concerns.
+  - painPointMapping: Map each company pain point to how well this tool addresses it ("fully", "partially", "tangentially"). Only include pain points listed above.
+  - businessUnitRelevance: Score relevance (0-10) for each business unit listed in the recipe. Skip if no business units are defined.` : ""}
         `.trim();
 
         // Attempt synthesis — primary model, then fallback to gpt-4o with json mode,
         // then a minimal data-only report so research never ends in a failed state.
+        type FitData = z.infer<typeof WorkspaceFitSchema>;
         let reportData: z.infer<typeof ReportSchema>;
+        let fitData: FitData | null = null;
         const openaiStart = Date.now();
         try {
-            const { object, usage } = await generateObject({
-                model: openai("gpt-4o-mini"),
-                schema: ReportSchema,
-                prompt: synthesisPrompt,
-            });
-            reportData = object;
-            logApiCall({
-                service: "openai",
-                endpoint: "gpt-4o-mini",
-                durationMs: Date.now() - openaiStart,
-                tokensIn: usage?.inputTokens,
-                tokensOut: usage?.outputTokens,
-                estimatedCost: estimateOpenAICost(usage?.inputTokens ?? 0, usage?.outputTokens ?? 0, "gpt-4o-mini"),
-                workspaceId: tool.workspaceId,
-                toolId,
-            });
+            if (hasRecipe) {
+                const { object, usage: u } = await generateObject({
+                    model: openai("gpt-4o-mini"),
+                    schema: ReportSchemaWithFit,
+                    prompt: synthesisPrompt,
+                });
+                fitData = object.workspaceFit;
+                reportData = object;
+                logApiCall({
+                    service: "openai",
+                    endpoint: "gpt-4o-mini",
+                    durationMs: Date.now() - openaiStart,
+                    tokensIn: u?.inputTokens,
+                    tokensOut: u?.outputTokens,
+                    estimatedCost: estimateOpenAICost(u?.inputTokens ?? 0, u?.outputTokens ?? 0, "gpt-4o-mini"),
+                    workspaceId: tool.workspaceId,
+                    toolId,
+                });
+            } else {
+                const { object, usage: u } = await generateObject({
+                    model: openai("gpt-4o-mini"),
+                    schema: ReportSchema,
+                    prompt: synthesisPrompt,
+                });
+                reportData = object;
+                logApiCall({
+                    service: "openai",
+                    endpoint: "gpt-4o-mini",
+                    durationMs: Date.now() - openaiStart,
+                    tokensIn: u?.inputTokens,
+                    tokensOut: u?.outputTokens,
+                    estimatedCost: estimateOpenAICost(u?.inputTokens ?? 0, u?.outputTokens ?? 0, "gpt-4o-mini"),
+                    workspaceId: tool.workspaceId,
+                    toolId,
+                });
+            }
         } catch (primaryErr) {
             const primaryMsg = primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
             await logProgress(toolId, `Synthesis attempt 1 failed: ${primaryMsg.slice(0, 120)} — retrying with fallback model...`);
@@ -663,22 +732,42 @@ INSTRUCTIONS:
             try {
                 const fallbackStart = Date.now();
                 // gpt-4o is more capable at complex schema compliance than gpt-4o-mini
-                const { object, usage } = await generateObject({
-                    model: openai("gpt-4o"),
-                    schema: ReportSchema,
-                    prompt: synthesisPrompt,
-                });
-                reportData = object;
-                logApiCall({
-                    service: "openai",
-                    endpoint: "gpt-4o",
-                    durationMs: Date.now() - fallbackStart,
-                    tokensIn: usage?.inputTokens,
-                    tokensOut: usage?.outputTokens,
-                    estimatedCost: estimateOpenAICost(usage?.inputTokens ?? 0, usage?.outputTokens ?? 0, "gpt-4o"),
-                    workspaceId: tool.workspaceId,
-                    toolId,
-                });
+                if (hasRecipe) {
+                    const { object, usage: u } = await generateObject({
+                        model: openai("gpt-4o"),
+                        schema: ReportSchemaWithFit,
+                        prompt: synthesisPrompt,
+                    });
+                    fitData = object.workspaceFit;
+                    reportData = object;
+                    logApiCall({
+                        service: "openai",
+                        endpoint: "gpt-4o",
+                        durationMs: Date.now() - fallbackStart,
+                        tokensIn: u?.inputTokens,
+                        tokensOut: u?.outputTokens,
+                        estimatedCost: estimateOpenAICost(u?.inputTokens ?? 0, u?.outputTokens ?? 0, "gpt-4o"),
+                        workspaceId: tool.workspaceId,
+                        toolId,
+                    });
+                } else {
+                    const { object, usage: u } = await generateObject({
+                        model: openai("gpt-4o"),
+                        schema: ReportSchema,
+                        prompt: synthesisPrompt,
+                    });
+                    reportData = object;
+                    logApiCall({
+                        service: "openai",
+                        endpoint: "gpt-4o",
+                        durationMs: Date.now() - fallbackStart,
+                        tokensIn: u?.inputTokens,
+                        tokensOut: u?.outputTokens,
+                        estimatedCost: estimateOpenAICost(u?.inputTokens ?? 0, u?.outputTokens ?? 0, "gpt-4o"),
+                        workspaceId: tool.workspaceId,
+                        toolId,
+                    });
+                }
                 await logProgress(toolId, `Synthesis: Fallback (gpt-4o) succeeded.`);
             } catch (fallbackErr) {
                 const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
@@ -737,6 +826,7 @@ INSTRUCTIONS:
                 integrations: reportData.integrations ?? [],
                 rawScrapedData: rawData,
                 sentimentData: sentimentData,
+                workspaceFitData: fitData,
             });
         } catch (insertErr) {
             // Report insert failed — log and attempt a minimal save so the tool
@@ -758,6 +848,7 @@ INSTRUCTIONS:
                 integrations: [],
                 rawScrapedData: rawData,
                 sentimentData: null,
+                workspaceFitData: null,
             });
         }
 
@@ -846,6 +937,7 @@ INSTRUCTIONS:
                 integrations: [],
                 rawScrapedData: {},
                 sentimentData: null,
+                workspaceFitData: null,
             });
             await db.update(tools).set({
                 status: "active",

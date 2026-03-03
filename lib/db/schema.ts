@@ -78,6 +78,7 @@ export const reports = pgTable('reports', {
     competitors: text('competitors').array(),
     rawScrapedData: jsonb('raw_scraped_data'),
     sentimentData: jsonb('sentiment_data'),
+    workspaceFitData: jsonb('workspace_fit_data'), // Workspace-specific fit scoring (recipe-dependent)
     shareToken: text('share_token').unique(), // Public sharing URL token
     isPublic: boolean('is_public').default(false).notNull(), // Published to /research/[slug] library
     createdAt: timestamp('created_at').defaultNow().notNull(),

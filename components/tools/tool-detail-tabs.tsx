@@ -51,6 +51,13 @@ type SerializedReport = {
     featuresList: string[];
     pricingTiers: Array<{ tier: string; price: string }>;
     sentimentData: SentimentData | null;
+    workspaceFitData?: {
+        fitScore: number;
+        fitJustification: string;
+        dealBreakerFlags: Array<{ trigger: string; severity: "hard" | "soft"; explanation: string }>;
+        painPointMapping: Array<{ painPointTitle: string; addressesIt: "fully" | "partially" | "tangentially"; explanation: string }>;
+        businessUnitRelevance: Array<{ unitName: string; relevanceScore: number; reason: string }>;
+    } | null;
 };
 
 type SerializedJob = {
