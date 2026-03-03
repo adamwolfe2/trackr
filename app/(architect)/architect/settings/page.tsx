@@ -9,6 +9,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { ARCHITECT_ROLES } from "@/lib/config/architect-roles";
 import { CopyLinkButton } from "@/components/referrals/copy-link-button";
+import { CalendarUrlForm } from "@/components/architect/calendar-url-form";
 
 function getRoleTitle(slug: string): string {
     return ARCHITECT_ROLES.find((r) => r.slug === slug)?.title ?? slug;
@@ -59,6 +60,12 @@ export default async function ArchitectSettingsPage() {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            {/* Calendar Link */}
+            <div className="border border-black p-5">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-3">Calendar Link</p>
+                <CalendarUrlForm architectId={architect.id} initialUrl={architect.calendarUrl} />
             </div>
 
             {/* Referral Code */}

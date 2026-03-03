@@ -3,8 +3,8 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { architectApplications, architects } from "@/lib/db/schema";
-import { desc, eq, count } from "drizzle-orm";
+import { architectApplications, architects, architectReferrals } from "@/lib/db/schema";
+import { desc, eq, count, and } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHash, timingSafeEqual } from "crypto";
@@ -110,6 +110,41 @@ export default async function AdminArchitectsPage({
     const [approvedApps] = await db.select({ count: count() }).from(architectApplications).where(eq(architectApplications.status, "approved"));
     const [activeArchitects] = await db.select({ count: count() }).from(architects).where(eq(architects.status, "active"));
 
+    // Fetch top architects for leaderboard
+    const topArchitects = activeArchitects.count > 0
+        ? await db
+            .select()
+            .from(architects)
+            .where(eq(architects.status, "active"))
+            .orderBy(desc(architects.totalEarnings))
+            .limit(10)
+        : [];
+
+    // For each top architect, get referral counts
+    const leaderboard = await Promise.all(
+        topArchitects.map(async (arch) => {
+            const [totalRef] = await db
+                .select({ count: count() })
+                .from(architectReferrals)
+                .where(eq(architectReferrals.architectId, arch.id));
+            const [activeRef] = await db
+                .select({ count: count() })
+                .from(architectReferrals)
+                .where(and(
+                    eq(architectReferrals.architectId, arch.id),
+                    eq(architectReferrals.status, "active"),
+                ));
+            const total = totalRef?.count ?? 0;
+            const active = activeRef?.count ?? 0;
+            return {
+                ...arch,
+                referralCount: total,
+                activeCount: active,
+                conversionRate: total > 0 ? ((active / total) * 100).toFixed(0) : "N/A",
+            };
+        })
+    );
+
     // Fetch applications with optional filter
     const whereClause = filter && ["pending", "approved", "rejected"].includes(filter)
         ? eq(architectApplications.status, filter)
@@ -144,6 +179,43 @@ export default async function AdminArchitectsPage({
                     </div>
                 ))}
             </div>
+
+            {/* Leaderboard */}
+            {leaderboard.length > 0 && (
+                <div className="border border-black">
+                    <div className="border-b border-black p-5">
+                        <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">Top Architects</p>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-black">
+                                    <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Rank</th>
+                                    <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Name</th>
+                                    <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Role</th>
+                                    <th className="text-right font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Referrals</th>
+                                    <th className="text-right font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Active</th>
+                                    <th className="text-right font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Conv. Rate</th>
+                                    <th className="text-right font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Earnings</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {leaderboard.map((arch, i) => (
+                                    <tr key={arch.id} className="border-b border-neutral-200 last:border-0 hover:bg-white transition-colors">
+                                        <td className="p-3 font-mono text-xs text-neutral-400">{i + 1}</td>
+                                        <td className="p-3 font-mono text-sm">{arch.firstName} {arch.lastName}</td>
+                                        <td className="p-3 font-mono text-xs text-neutral-600">{getRoleTitle(arch.role)}</td>
+                                        <td className="p-3 font-mono text-xs text-right">{arch.referralCount}</td>
+                                        <td className="p-3 font-mono text-xs text-right">{arch.activeCount}</td>
+                                        <td className="p-3 font-mono text-xs text-right">{arch.conversionRate === "N/A" ? "N/A" : `${arch.conversionRate}%`}</td>
+                                        <td className="p-3 font-mono text-xs text-right">${(arch.totalEarnings / 100).toFixed(2)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             {/* Filter tabs */}
             <div className="flex gap-1">

@@ -170,7 +170,7 @@ export default function ApplyRolePage() {
                             name="experience"
                             required
                             rows={4}
-                            placeholder="Tell us about your experience helping companies adopt AI tools..."
+                            placeholder="Describe a specific engagement where you drove measurable outcomes through AI tooling — revenue generated, costs reduced, or operational improvements delivered. Include your role, the client context, and the result."
                             className="w-full border border-black px-3 py-2 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black resize-none"
                         />
                     </div>

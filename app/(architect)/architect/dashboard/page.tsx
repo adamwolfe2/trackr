@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { architects, architectReferrals, architectCommissions } from "@/lib/db/schema";
+import { architects, architectReferrals, architectCommissions, workspaces } from "@/lib/db/schema";
 import { eq, desc, sum, count, and } from "drizzle-orm";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
@@ -48,8 +48,15 @@ export default async function ArchitectDashboardPage() {
 
     // Recent activity
     const recentReferrals = await db
-        .select()
+        .select({
+            id: architectReferrals.id,
+            workspaceId: architectReferrals.workspaceId,
+            status: architectReferrals.status,
+            attributedAt: architectReferrals.attributedAt,
+            workspaceName: workspaces.name,
+        })
         .from(architectReferrals)
+        .leftJoin(workspaces, eq(architectReferrals.workspaceId, workspaces.id))
         .where(eq(architectReferrals.architectId, architect.id))
         .orderBy(desc(architectReferrals.attributedAt))
         .limit(5);
@@ -71,10 +78,11 @@ export default async function ArchitectDashboardPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px border border-black bg-black">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-px border border-black bg-black">
                 {[
                     { label: "Total Referrals", value: totalClients },
                     { label: "Active Clients", value: activeClients },
+                    { label: "Conversion Rate", value: totalClients > 0 ? `${((activeClients / totalClients) * 100).toFixed(0)}%` : "N/A" },
                     { label: "Lifetime Earnings", value: `$${(lifetimeEarnings / 100).toFixed(2)}` },
                     { label: "Pending Commissions", value: `$${(pendingCommissions / 100).toFixed(2)}` },
                 ].map((stat) => (
@@ -123,7 +131,7 @@ export default async function ArchitectDashboardPage() {
                         {recentReferrals.map((ref) => (
                             <div key={ref.id} className="flex items-center justify-between p-4">
                                 <div>
-                                    <p className="font-mono text-xs">{ref.workspaceId || "Pending workspace"}</p>
+                                    <p className="font-mono text-xs">{ref.workspaceName || "Pending"}</p>
                                     <p className="font-mono text-[10px] text-neutral-400">
                                         {new Date(ref.attributedAt).toLocaleDateString()}
                                     </p>

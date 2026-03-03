@@ -55,8 +55,8 @@ export default function ApplyPage() {
                         </h1>
                         <p className="font-mono text-sm text-neutral-600 leading-relaxed max-w-2xl mb-4">
                             Enterprise AI consultants who run circles around McKinsey by being grassroots — building with the tools
-                            they recommend, every single day. This is the convergence of enterprise sales, consulting,
-                            and hands-on AI implementation. We are looking for overachievers who live inside these tools.
+                            they recommend, every single day. This is the convergence of enterprise sales, strategic consulting,
+                            and hands-on AI deployment. We are looking for operators who drive revenue, not decks.
                         </p>
                         <p className="font-mono text-[11px] text-neutral-400 leading-relaxed max-w-2xl">
                             Our architects have led AI implementations across Fortune 500 companies, Series A-D startups,
@@ -91,9 +91,9 @@ export default function ApplyPage() {
                     <h2 className="font-serif text-3xl font-normal mb-8">What we look for.</h2>
                     <div className="grid sm:grid-cols-3 gap-px border border-black bg-black">
                         {[
-                            { title: "Proven AI Portfolio", description: "Documented history of AI tool evaluations, deployments, or transformations. We review real work, not resumes." },
-                            { title: "Tool Fluency", description: "Deep working knowledge across the AI landscape — LLMs, automation platforms, vertical SaaS, infrastructure. Generalists need not apply." },
-                            { title: "Domain Authority", description: "Recognized expertise in a specific vertical or function. Your clients trust your judgment because you've done the work." },
+                            { title: "Enterprise AI Portfolio", description: "Documented history of AI-driven revenue generation, cost reduction, or operational transformation. We review outcomes, not resumes." },
+                            { title: "Technical + Commercial Fluency", description: "You can architect the solution and close the deal. Deep working knowledge across LLMs, automation platforms, vertical SaaS, and enterprise infrastructure." },
+                            { title: "Domain Authority", description: "Recognized expertise in a specific vertical or function. Your clients trust your judgment because you've driven measurable results in their industry." },
                         ].map((item) => (
                             <div key={item.title} className="bg-[#F3F3EF] p-6">
                                 <h3 className="font-serif text-lg font-normal mb-2">{item.title}</h3>

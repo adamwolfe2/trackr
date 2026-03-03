@@ -6,6 +6,8 @@ import {
     architects,
     architectReferrals,
     architectCommissions,
+    workspaces,
+    auditSubmissions,
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { cookies } from "next/headers";
@@ -66,15 +68,32 @@ export default async function ArchitectDetailPage({
     });
 
     // If architect exists, get referrals and commissions
-    type ReferralRow = typeof architectReferrals.$inferSelect;
     type CommissionRow = typeof architectCommissions.$inferSelect;
-    let referrals: ReferralRow[] = [];
+    let referrals: {
+        id: string;
+        workspaceId: string | null;
+        status: string;
+        attributedAt: Date;
+        workspaceName: string | null;
+        companyName: string | null;
+        contactEmail: string | null;
+    }[] = [];
     let commissions: CommissionRow[] = [];
 
     if (architect) {
         referrals = await db
-            .select()
+            .select({
+                id: architectReferrals.id,
+                workspaceId: architectReferrals.workspaceId,
+                status: architectReferrals.status,
+                attributedAt: architectReferrals.attributedAt,
+                workspaceName: workspaces.name,
+                companyName: auditSubmissions.companyName,
+                contactEmail: auditSubmissions.contactEmail,
+            })
             .from(architectReferrals)
+            .leftJoin(workspaces, eq(architectReferrals.workspaceId, workspaces.id))
+            .leftJoin(auditSubmissions, eq(architectReferrals.auditSubmissionId, auditSubmissions.id))
             .where(eq(architectReferrals.architectId, architect.id));
 
         commissions = await db
@@ -258,7 +277,12 @@ export default async function ArchitectDetailPage({
                             <div className="space-y-2">
                                 {referrals.map((ref) => (
                                     <div key={ref.id} className="flex justify-between items-center border border-neutral-200 p-3">
-                                        <p className="font-mono text-xs">{ref.workspaceId || "Pending workspace"}</p>
+                                        <div>
+                                            <p className="font-mono text-xs">{ref.workspaceName || ref.companyName || "Pending workspace"}</p>
+                                            {ref.contactEmail && (
+                                                <p className="font-mono text-[10px] text-neutral-400">{ref.contactEmail}</p>
+                                            )}
+                                        </div>
                                         <span className={`font-mono text-[10px] uppercase tracking-widest border px-1.5 py-0.5 ${statusColor(ref.status)}`}>
                                             {ref.status}
                                         </span>

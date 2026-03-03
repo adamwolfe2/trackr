@@ -12,6 +12,7 @@ import { db } from "@/lib/db";
 import { architectApplications } from "@/lib/db/schema";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { sendArchitectApplicationReceived, sendArchitectApplicationNotification } from "@/lib/email/resend";
+import { ARCHITECT_ROLES } from "@/lib/config/architect-roles";
 import { z } from "zod";
 
 const ArchitectApplySchema = z.object({
@@ -85,10 +86,11 @@ export async function POST(req: NextRequest) {
     });
 
     after(async () => {
+        const roleTitle = ARCHITECT_ROLES.find(r => r.slug === data.roleSlug)?.title ?? data.roleSlug;
         await sendArchitectApplicationNotification(
             application.id,
             `${data.firstName} ${data.lastName}`,
-            data.roleSlug
+            roleTitle
         );
     });
 

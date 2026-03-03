@@ -35,6 +35,7 @@ export const architects = pgTable('architects', {
     arcCode: text('arc_code').unique().notNull(), // 8-char uppercase referral code
     stripeConnectAccountId: text('stripe_connect_account_id'),
     stripeOnboardingComplete: boolean('stripe_onboarding_complete').default(false).notNull(),
+    calendarUrl: text('calendar_url'),
     status: text('status').default('active').notNull(), // active | paused | terminated
     totalEarnings: integer('total_earnings').default(0).notNull(), // cents
     totalClients: integer('total_clients').default(0).notNull(),

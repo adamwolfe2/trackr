@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { architects, architectReferrals, architectCommissions } from "@/lib/db/schema";
+import { architects, architectReferrals, architectCommissions, workspaces, auditSubmissions } from "@/lib/db/schema";
 import { eq, sum, and } from "drizzle-orm";
 
 export default async function ArchitectClientsPage() {
@@ -16,8 +16,18 @@ export default async function ArchitectClientsPage() {
     if (!architect) redirect("/apply");
 
     const referrals = await db
-        .select()
+        .select({
+            id: architectReferrals.id,
+            workspaceId: architectReferrals.workspaceId,
+            status: architectReferrals.status,
+            attributedAt: architectReferrals.attributedAt,
+            workspaceName: workspaces.name,
+            companyName: auditSubmissions.companyName,
+            contactEmail: auditSubmissions.contactEmail,
+        })
         .from(architectReferrals)
+        .leftJoin(workspaces, eq(architectReferrals.workspaceId, workspaces.id))
+        .leftJoin(auditSubmissions, eq(architectReferrals.auditSubmissionId, auditSubmissions.id))
         .where(eq(architectReferrals.architectId, architect.id));
 
     // Get commission totals per referral
@@ -44,7 +54,8 @@ export default async function ArchitectClientsPage() {
                 <table className="w-full">
                     <thead>
                         <tr className="border-b border-black">
-                            <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Workspace</th>
+                            <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Client</th>
+                            <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Contact</th>
                             <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Status</th>
                             <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Referred</th>
                             <th className="text-right font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Commission Earned</th>
@@ -53,7 +64,7 @@ export default async function ArchitectClientsPage() {
                     <tbody>
                         {referrals.length === 0 && (
                             <tr>
-                                <td colSpan={4} className="p-8 text-center font-mono text-sm text-neutral-400">
+                                <td colSpan={5} className="p-8 text-center font-mono text-sm text-neutral-400">
                                     No referrals yet. Share your referral link to start earning commissions.
                                 </td>
                             </tr>
@@ -61,7 +72,10 @@ export default async function ArchitectClientsPage() {
                         {referrals.map((ref) => (
                             <tr key={ref.id} className="border-b border-neutral-200 last:border-0 hover:bg-white transition-colors">
                                 <td className="p-3 font-mono text-sm">
-                                    {ref.workspaceId || "Pending"}
+                                    {ref.workspaceName || ref.companyName || "Pending"}
+                                </td>
+                                <td className="p-3 font-mono text-xs text-neutral-500">
+                                    {ref.contactEmail || "—"}
                                 </td>
                                 <td className="p-3">
                                     <span className={`font-mono text-[10px] uppercase tracking-widest border px-1.5 py-0.5 ${
