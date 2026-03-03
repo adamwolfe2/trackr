@@ -20,6 +20,7 @@ type Step2Data = {
     dailyAdoptionPct: string;
     hasAIManager: string;
     monthlySpend: string;
+    employeeCount: string;
     biggestBottleneck: string[];
     teamsNeedingAI: string[];
     failedAI: string;
@@ -41,6 +42,7 @@ const AI_TOOL_COUNTS = ["0–2 tools", "3–10 tools", "11–25 tools", "25+ too
 const ADOPTION_PCTS = ["Less than 10%", "10–30%", "30–60%", "60%+"];
 const AI_MANAGERS = ["Yes, we have someone dedicated", "No — it's scattered across teams", "Planning to hire soon"];
 const MONTHLY_SPENDS = ["Under $1K/mo", "$1K – $5K/mo", "$5K – $15K/mo", "$15K – $50K/mo", "$50K+/mo"];
+const EMPLOYEE_COUNTS = ["1–10", "11–50", "51–200", "201–500", "500–1,000", "1,000+"];
 const BOTTLENECKS = ["Lead Generation & Prospecting", "Sales Process & Conversion", "Content Creation & Marketing", "Customer Support & Success", "Data Analysis & Reporting", "Internal Operations & Workflows", "Product Development", "Hiring & People Ops"];
 const TEAMS = ["Sales", "Marketing", "Operations", "Engineering", "Customer Success", "Finance", "HR / People", "Executive / Strategy"];
 const FAILED_AI = ["No — haven't tried much yet", "Yes — minor impact, moved on", "Yes — cost us time and money significantly"];
@@ -192,6 +194,15 @@ function Step2({ data, onChange }: { data: Step2Data; onChange: (d: Partial<Step
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {MONTHLY_SPENDS.map((s) => (
                         <OptionButton key={s} selected={data.monthlySpend === s} onClick={() => onChange({ monthlySpend: s })}>{s}</OptionButton>
+                    ))}
+                </div>
+            </div>
+
+            <div>
+                <label className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 block mb-2">How many total employees in your organization? <span className="text-neutral-400">(used for cost projections)</span></label>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    {EMPLOYEE_COUNTS.map((c) => (
+                        <OptionButton key={c} selected={data.employeeCount === c} onClick={() => onChange({ employeeCount: c })}>{c}</OptionButton>
                     ))}
                 </div>
             </div>
@@ -551,7 +562,7 @@ export function AuditWizard({ callOwnerEmail, arcCode }: { callOwnerEmail?: stri
     });
     const [step2, setStep2] = useState<Step2Data>({
         aiToolCount: "", dailyAdoptionPct: "", hasAIManager: "", monthlySpend: "",
-        biggestBottleneck: [], teamsNeedingAI: [], failedAI: "", successDefinition: "",
+        employeeCount: "", biggestBottleneck: [], teamsNeedingAI: [], failedAI: "", successDefinition: "",
     });
     const [step3, setStep3] = useState<Step3Data>({
         currentTools: [], toolFrustrations: "", manualProcesses: "",
@@ -585,6 +596,7 @@ export function AuditWizard({ callOwnerEmail, arcCode }: { callOwnerEmail?: stri
                         dailyAdoptionPct: step2.dailyAdoptionPct || undefined,
                         hasAIManager: step2.hasAIManager || undefined,
                         monthlySpend: step2.monthlySpend || undefined,
+                        employeeCount: step2.employeeCount || undefined,
                         biggestBottleneck: step2.biggestBottleneck.length > 0 ? step2.biggestBottleneck.join(", ") : undefined,
                         teamsNeedingAI: step2.teamsNeedingAI.length > 0 ? step2.teamsNeedingAI : undefined,
                         failedAI: step2.failedAI || undefined,

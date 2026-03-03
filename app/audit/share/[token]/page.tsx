@@ -2,12 +2,46 @@ import { db } from "@/lib/db";
 import { auditSubmissions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { ExternalLink, ArrowRight } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import type { Metadata } from "next";
 import type { AuditScorecard } from "@/lib/actions/audit";
 
 export const dynamic = "force-dynamic";
+
+type RecommendedTool = {
+    name: string;
+    websiteDomain: string | null;
+    category: string;
+    reason: string;
+    estimatedCostPerUser: string | null;
+    impact: "High" | "Medium" | "Low";
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function toolLogoUrl(name: string, domain?: string | null): string {
+    if (domain) return `https://www.google.com/s2/favicons?sz=64&domain=${domain}`;
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+    return `https://www.google.com/s2/favicons?sz=64&domain=${slug}.com`;
+}
+
+function impactBadge(level: string) {
+    const colors: Record<string, string> = {
+        High: "text-red-700 border-red-200",
+        Medium: "text-yellow-700 border-yellow-200",
+        Low: "text-neutral-500 border-neutral-200",
+    };
+    return colors[level] ?? colors.Low;
+}
+
+function aiRoleStyle(role: string) {
+    if (role === "AI-native") return "border-black text-black";
+    if (role === "AI-assisted") return "border-neutral-400 text-neutral-500";
+    return "border-neutral-200 text-neutral-400";
+}
+
+// ── Metadata ──────────────────────────────────────────────────────────────────
 
 export async function generateMetadata({
     params,
@@ -39,9 +73,11 @@ export async function generateMetadata({
             description: desc,
             images: ["/og.png"],
         },
-        robots: { index: false }, // Don't index individual scorecards
+        robots: { index: false },
     };
 }
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function AuditSharePage({
     params,
@@ -57,10 +93,15 @@ export default async function AuditSharePage({
     if (!submission || !submission.scorecard) return notFound();
 
     const scorecard = submission.scorecard as AuditScorecard;
+    const recommendedTools = (scorecard as AuditScorecard & { recommendedTools?: RecommendedTool[] }).recommendedTools ?? [];
     const score = scorecard.aiNativeScore.score;
 
-    const scoreColor =
+    const scoreBarColor =
+        score >= 61 ? "bg-green-600" : score >= 41 ? "bg-yellow-500" : "bg-red-500";
+    const scoreTextColor =
         score >= 61 ? "#16a34a" : score >= 41 ? "#d97706" : "#dc2626";
+    const scoreLabel =
+        score < 21 ? "Not using AI" : score < 41 ? "Ad-hoc" : score < 61 ? "Moderate" : score < 81 ? "Structured" : "AI-native";
 
     const websiteHostname = (() => {
         if (!submission.companyWebsite) return null;
@@ -73,6 +114,10 @@ export default async function AuditSharePage({
             return submission.companyWebsite;
         }
     })();
+
+    const companyLogoUrl = websiteHostname
+        ? `https://www.google.com/s2/favicons?sz=128&domain=${websiteHostname}`
+        : null;
 
     return (
         <div className="min-h-screen bg-[#F3F3EF]">
@@ -92,59 +137,157 @@ export default async function AuditSharePage({
 
             <div className="max-w-3xl mx-auto px-6 py-10 space-y-6">
 
-                {/* Company Header */}
-                <div className="flex items-start justify-between gap-4 flex-wrap">
-                    <div className="space-y-1 min-w-0">
-                        <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">
-                            AI Readiness Report
-                        </p>
-                        <h1 className="font-serif text-3xl font-normal">{scorecard.companyName}</h1>
-                        <div className="flex items-center gap-3 flex-wrap font-mono text-xs text-neutral-400 mt-1">
-                            {submission.contactName && <span>{submission.contactName}</span>}
-                            {submission.role && <><span>·</span><span>{submission.role}</span></>}
-                            {websiteHostname && (
-                                <>
-                                    <span>·</span>
-                                    <a
-                                        href={submission.companyWebsite!.startsWith("http") ? submission.companyWebsite! : `https://${submission.companyWebsite}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="hover:text-black flex items-center gap-1"
-                                    >
-                                        {websiteHostname} <ExternalLink className="w-2.5 h-2.5" />
-                                    </a>
-                                </>
-                            )}
+                {/* ── Company Header + Score ──────────────────────────────── */}
+                <div className="border-2 border-black bg-white p-6">
+                    <div className="flex items-start gap-4 mb-5">
+                        {companyLogoUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                                src={companyLogoUrl}
+                                alt={scorecard.companyName}
+                                width={64}
+                                height={64}
+                                className="w-14 h-14 border border-neutral-200 bg-white p-1.5 flex-shrink-0 object-contain"
+                            />
+                        )}
+                        <div className="flex-1 min-w-0">
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">
+                                AI Readiness Report
+                            </p>
+                            <h1 className="font-serif text-3xl font-normal">{scorecard.companyName}</h1>
+                            <div className="flex items-center gap-3 flex-wrap font-mono text-xs text-neutral-400 mt-1.5">
+                                {scorecard.industry && <span>{scorecard.industry}</span>}
+                                {scorecard.companySize && <><span>·</span><span>{scorecard.companySize}</span></>}
+                                {submission.contactName && <><span>·</span><span>{submission.contactName}</span></>}
+                                {submission.role && <><span>·</span><span>{submission.role}</span></>}
+                                {websiteHostname && (
+                                    <>
+                                        <span>·</span>
+                                        <a
+                                            href={submission.companyWebsite!.startsWith("http") ? submission.companyWebsite! : `https://${submission.companyWebsite}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:text-black flex items-center gap-1"
+                                        >
+                                            {websiteHostname} <ExternalLink className="w-2.5 h-2.5" />
+                                        </a>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Score bar */}
+                    <div className="border-t border-neutral-200 pt-5">
+                        <div className="flex items-center gap-5">
+                            <div className="flex-shrink-0">
+                                <span
+                                    className="font-mono font-black leading-none"
+                                    style={{ fontSize: "3.5rem", color: scoreTextColor }}
+                                >
+                                    {score}
+                                </span>
+                                <span className="font-mono text-xl text-neutral-300">/100</span>
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">AI-Native Score</span>
+                                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 border border-neutral-300 px-1.5 py-0.5">
+                                        {scoreLabel}
+                                    </span>
+                                </div>
+                                <div className="h-2.5 w-full bg-neutral-100 border border-neutral-200">
+                                    <div className={`h-full ${scoreBarColor}`} style={{ width: `${score}%` }} />
+                                </div>
+                                <p className="font-mono text-xs text-neutral-500 mt-2.5 leading-relaxed">
+                                    {scorecard.aiNativeScore.summary}
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {/* AI-Native Score */}
-                <div className="border-2 border-black p-6 flex items-center gap-6">
-                    <div
-                        className="font-serif font-black leading-none flex-shrink-0"
-                        style={{ fontSize: "4rem", color: scoreColor }}
-                    >
-                        {score}
-                        <span className="text-2xl text-neutral-300">/100</span>
-                    </div>
-                    <div>
-                        <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1.5">
-                            AI-Native Score
-                        </div>
-                        <p className="font-mono text-sm text-neutral-600 leading-relaxed">
-                            {scorecard.aiNativeScore.summary}
-                        </p>
-                    </div>
-                </div>
+                {/* ── Current Stack + Recommended Tools ──────────────────── */}
+                {(scorecard.currentStack.length > 0 || recommendedTools.length > 0) && (
+                    <div className="grid sm:grid-cols-2 gap-5">
+                        {/* Current Stack */}
+                        {scorecard.currentStack.length > 0 && (
+                            <div className="border border-black bg-white">
+                                <div className="border-b border-black px-5 py-3">
+                                    <h2 className="font-mono text-xs uppercase tracking-widest">Current Stack</h2>
+                                </div>
+                                <div className="divide-y divide-black/5">
+                                    {scorecard.currentStack.map((t, i) => (
+                                        <div key={i} className="px-4 py-3 flex items-center gap-3">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={toolLogoUrl(t.name)}
+                                                alt={t.name}
+                                                width={28}
+                                                height={28}
+                                                className="w-6 h-6 border border-neutral-200 bg-white p-0.5 flex-shrink-0 object-contain"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-mono text-xs font-bold truncate">{t.name}</span>
+                                                    <span className={`font-mono text-[9px] uppercase tracking-widest border px-1 py-0.5 flex-shrink-0 ${aiRoleStyle(t.aiRole)}`}>
+                                                        {t.aiRole === "AI-native" ? "AI" : t.aiRole === "AI-assisted" ? "Assisted" : "Core"}
+                                                    </span>
+                                                </div>
+                                                <p className="font-mono text-[9px] text-neutral-400 truncate">{t.category}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
-                {/* Pain Points */}
+                        {/* Recommended Tools */}
+                        {recommendedTools.length > 0 && (
+                            <div className="border border-black bg-white">
+                                <div className="border-b border-black px-5 py-3 flex items-center justify-between">
+                                    <h2 className="font-mono text-xs uppercase tracking-widest">Recommended</h2>
+                                    <span className="font-mono text-[9px] text-neutral-400">For your stack</span>
+                                </div>
+                                <div className="divide-y divide-black/5">
+                                    {recommendedTools.map((t, i) => (
+                                        <div key={i} className="px-4 py-3 flex items-start gap-3">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img
+                                                src={toolLogoUrl(t.name, t.websiteDomain)}
+                                                alt={t.name}
+                                                width={28}
+                                                height={28}
+                                                className="w-6 h-6 border border-neutral-200 bg-white p-0.5 flex-shrink-0 object-contain mt-0.5"
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-0.5">
+                                                    <span className="font-mono text-xs font-bold truncate">{t.name}</span>
+                                                    <span className={`font-mono text-[9px] border px-1 py-0.5 flex-shrink-0 ${impactBadge(t.impact)}`}>
+                                                        {t.impact}
+                                                    </span>
+                                                </div>
+                                                <p className="font-mono text-[9px] text-neutral-400 mb-1">{t.category}</p>
+                                                <p className="font-mono text-[10px] text-neutral-600 leading-relaxed">{t.reason}</p>
+                                                {t.estimatedCostPerUser && (
+                                                    <p className="font-mono text-[9px] text-neutral-400 mt-1">{t.estimatedCostPerUser}</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ── Pain Points ─────────────────────────────────────────── */}
                 {scorecard.painPoints.length > 0 && (
-                    <div className="border border-black">
+                    <div className="border border-black bg-white">
                         <div className="border-b border-black px-5 py-3">
                             <h2 className="font-mono text-xs uppercase tracking-widest">Pain Points Identified</h2>
                         </div>
-                        <div className="divide-y divide-black/10">
+                        <div className="divide-y divide-black/5">
                             {scorecard.painPoints.map((p, i) => (
                                 <div key={i} className="px-5 py-4 flex gap-4">
                                     <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mt-0.5 w-20 flex-shrink-0 pt-0.5">
@@ -157,48 +300,13 @@ export default async function AuditSharePage({
                     </div>
                 )}
 
-                {/* Current Stack */}
-                {scorecard.currentStack.length > 0 && (
-                    <div className="border border-black">
-                        <div className="border-b border-black px-5 py-3">
-                            <h2 className="font-mono text-xs uppercase tracking-widest">Current Tool Stack</h2>
-                        </div>
-                        <div className="divide-y divide-black/10">
-                            {scorecard.currentStack.map((t, i) => (
-                                <div key={i} className="px-5 py-3 flex items-start gap-4">
-                                    <div className="w-36 flex-shrink-0">
-                                        <div className="font-mono text-xs font-bold">{t.name}</div>
-                                        <div className="font-mono text-[10px] text-neutral-400 mt-0.5">
-                                            {t.category}
-                                        </div>
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <span className={`font-mono text-[10px] uppercase tracking-widest px-1.5 py-0.5 border ${
-                                            t.aiRole === "AI-native"
-                                                ? "border-black text-black"
-                                                : t.aiRole === "AI-assisted"
-                                                ? "border-neutral-400 text-neutral-500"
-                                                : "border-neutral-200 text-neutral-400"
-                                        }`}>
-                                            {t.aiRole}
-                                        </span>
-                                        <p className="font-mono text-xs text-neutral-500 mt-1.5 leading-relaxed">
-                                            {t.usageNotes}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Recommendations */}
+                {/* ── Recommendations ─────────────────────────────────────── */}
                 {scorecard.recommendations.length > 0 && (
-                    <div className="border border-black">
+                    <div className="border border-black bg-white">
                         <div className="border-b border-black px-5 py-3">
                             <h2 className="font-mono text-xs uppercase tracking-widest">Recommendations</h2>
                         </div>
-                        <div className="divide-y divide-black/10">
+                        <div className="divide-y divide-black/5">
                             {scorecard.recommendations.map((r, i) => (
                                 <div key={i} className="px-5 py-4">
                                     <div className="flex items-start justify-between gap-3 mb-2">
@@ -225,9 +333,9 @@ export default async function AuditSharePage({
                     </div>
                 )}
 
-                {/* Future Target */}
+                {/* ── Future Target ────────────────────────────────────────── */}
                 <div className="border-2 border-black bg-black text-white p-6 flex items-center gap-6">
-                    <div className="font-serif font-black leading-none flex-shrink-0 text-white" style={{ fontSize: "3rem" }}>
+                    <div className="font-mono font-black leading-none flex-shrink-0 text-white" style={{ fontSize: "3rem" }}>
                         {scorecard.futureAINativeTarget.targetScore}
                         <span className="text-xl text-white/30">/100</span>
                     </div>
@@ -241,8 +349,8 @@ export default async function AuditSharePage({
                     </div>
                 </div>
 
-                {/* Soft CTA */}
-                <div className="border border-black p-8 space-y-5">
+                {/* ── CTA ─────────────────────────────────────────────────── */}
+                <div className="border border-black p-8 space-y-5 bg-white">
                     <div>
                         <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-2">
                             Powered by Trackr

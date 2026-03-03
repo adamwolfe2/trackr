@@ -60,6 +60,14 @@ const AuditScorecardSchema = z.object({
         question: z.string(),
         opportunity: z.string(),
     })).min(3).max(5),
+    recommendedTools: z.array(z.object({
+        name: z.string(),
+        websiteDomain: z.string().nullable(),
+        category: z.string(),
+        reason: z.string(),
+        estimatedCostPerUser: z.string().nullable(),
+        impact: z.enum(["High", "Medium", "Low"]),
+    })).min(2).max(5),
 });
 
 export type AuditScorecard = z.infer<typeof AuditScorecardSchema>;
@@ -90,6 +98,14 @@ BRANDING: Extract logoUrl and primaryColor from website metadata if available in
 
 TALKING POINTS: Generate 3–5 call preparation talking points. Each must have: topic (short label), observation (what the data shows about their current situation), question (an opener to ask the prospect on the call), opportunity (what we can specifically help with).
 
+RECOMMENDED TOOLS: 2–5 specific tools we should propose to this company. Prioritize tools that directly address their stated pain points or fill clear gaps in their current stack. Each must include:
+- name: exact tool name as commonly known
+- websiteDomain: just the root domain (e.g. "clay.com", "notion.so") — no https, no paths — for logo display; set null if unsure
+- category: short type label (e.g. "Sales Intelligence", "AI Writing", "CRM", "Workflow Automation")
+- reason: 1–2 sentences specifically tied to their situation, bottlenecks, and current stack
+- estimatedCostPerUser: typical monthly per-seat price range (e.g. "$15–30/user/month") or null if free or highly variable
+- impact: High/Medium/Low based on their stated pain points and maturity level
+
 STYLE: Be factual and conservative. Do not fabricate revenue numbers. If website data is sparse, focus on form responses. Keep all text concise — executives should absorb this in under 2 minutes.`;
 
 // ── Build prompt from submission data ────────────────────────────────────────
@@ -107,6 +123,7 @@ FORM SUBMISSION DATA:
 - Website: ${sub.companyWebsite || "Not provided"}
 - Industry: ${sub.industry || "Not specified"}
 - Size: ${sub.companySize || "Not specified"}
+- Employee count (for seat-based cost projections): ${sub.employeeCount || "Not specified"}
 - Contact role: ${sub.role || "Not specified"}
 - Revenue: ${sub.revenue || "Not specified"}
 

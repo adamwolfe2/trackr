@@ -37,6 +37,7 @@ const AuditSubmitSchema = z.object({
     toolFrustrations: z.string().optional(),
     manualProcesses: z.string().optional(),
     arcCode: z.string().optional(),
+    employeeCount: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -91,6 +92,7 @@ export async function POST(req: NextRequest) {
             toolFrustrations: data.toolFrustrations ?? null,
             manualProcesses: data.manualProcesses ?? null,
             arcCode: data.arcCode ?? null,
+            employeeCount: data.employeeCount ?? null,
             status: "pending",
         })
         .returning();

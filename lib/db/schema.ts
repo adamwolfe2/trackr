@@ -465,6 +465,7 @@ export const auditSubmissions = pgTable('audit_submissions', {
     preBuiltWorkspaceId: uuid('pre_built_workspace_id').references(() => workspaces.id),
     inviteToken: text('invite_token').unique(), // used to track invite state
     arcCode: text('arc_code'), // architect attribution code
+    employeeCount: text('employee_count'), // Used for per-seat cost projections
     createdAt: timestamp('created_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
 }, (table) => [
