@@ -11,6 +11,7 @@ import { z } from "zod";
 
 const StartResearchSchema = z.object({
     toolId: z.string().uuid("toolId must be a valid UUID"),
+    depth: z.enum(["quick", "full"]).optional(),
 });
 
 export const maxDuration = 300; // research pipeline takes 2-5 min; after() needs this headroom
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
         );
     }
 
-    const { toolId } = parsed.data;
+    const { toolId, depth } = parsed.data;
 
     // Verify tool exists and belongs to this workspace
     const tool = await db.query.tools.findFirst({
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
     // Kick off research in the background — returns immediately
     after(async () => {
         try {
-            await performDeepResearch(toolId);
+            await performDeepResearch(toolId, depth ? { depth } : undefined);
         } catch (err) {
             console.error("[api/research/start] background research failed:", err);
         }

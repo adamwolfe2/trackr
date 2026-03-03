@@ -6,19 +6,20 @@ import { db } from "@/lib/db";
 import { tools, reports, workspaces, researchJobs, subscriptions, painPoints } from "@/lib/db/schema";
 import { eq, sql, and, gte, ne, inArray, count, gt } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
-import { tavily } from "@/lib/services/tavily";
+import { tavily, type TavilyResult } from "@/lib/services/tavily";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import type { InferSelectModel } from "drizzle-orm";
-import { getPlanLimits } from "@/lib/config/subscriptions";
+import { getPlanLimits, type ResearchDepth } from "@/lib/config/subscriptions";
 import { isPrivateUrl } from "@/lib/utils/url-validation";
 import { sendResearchCompleteEmail, sendResearchFailedEmail } from "@/lib/email/resend";
 import { clerkClient } from "@clerk/nextjs/server";
 import { postMessage, researchCompleteBlocks, researchFailedBlocks } from "@/lib/services/slack";
 import { logApiCall, COST_MAP, estimateOpenAICost } from "@/lib/services/api-logger";
 import { perplexity } from "@/lib/services/perplexity";
+import { checkCostCap } from "@/lib/services/cost-cap";
 
 type ToolWithWorkspace = InferSelectModel<typeof tools> & {
     workspace: InferSelectModel<typeof workspaces>;
@@ -159,7 +160,11 @@ function getDomain(url: string): string {
     try { return new URL(url).hostname.replace("www.", ""); } catch { return url; }
 }
 
-export async function performDeepResearch(toolId: string) {
+export interface ResearchOptions {
+    depth?: ResearchDepth;
+}
+
+export async function performDeepResearch(toolId: string, options?: ResearchOptions) {
     const tool = await db.query.tools.findFirst({
         where: eq(tools.id, toolId),
         with: { workspace: true },
@@ -168,6 +173,9 @@ export async function performDeepResearch(toolId: string) {
     if (!tool || !tool.websiteUrl) {
         return { success: false, error: "Tool not found or missing URL" };
     }
+
+    // Narrow to non-undefined for use in closures (TypeScript doesn't carry narrowing into function closures)
+    const verifiedTool = tool;
 
     // SSRF protection: block internal/private addresses before passing to Firecrawl
     if (isPrivateUrl(tool.websiteUrl)) {
@@ -244,6 +252,19 @@ export async function performDeepResearch(toolId: string) {
         }
     }
 
+    // ── Cost cap check ─────────────────────────────────────────────────
+    const costCap = await checkCostCap(tool.workspaceId, limits.slug);
+    if (!costCap.allowed) {
+        await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+        return {
+            success: false,
+            error: `Monthly API cost cap reached ($${costCap.usage.toFixed(2)} / $${costCap.budget.toFixed(2)} on ${limits.name} plan). Contact support or upgrade to increase your budget.`,
+        };
+    }
+    if (costCap.warned) {
+        console.warn(`[research] Workspace ${tool.workspaceId} at ${costCap.pctUsed.toFixed(0)}% of monthly API budget ($${costCap.usage.toFixed(2)} / $${costCap.budget.toFixed(2)})`);
+    }
+
     // Insert a researchJob row so /queue shows live status
     const [researchJob] = await db.insert(researchJobs).values({
         toolId,
@@ -267,8 +288,16 @@ export async function performDeepResearch(toolId: string) {
         const rawData: Record<string, string> = {};
         const domain = getDomain(tool.websiteUrl);
 
+        // Resolve research depth: explicit option > plan default
+        const depth: ResearchDepth = options?.depth ?? limits.defaultResearchDepth;
+        const isQuick = depth === "quick";
+
+        if (isQuick) {
+            await logProgress(toolId, `Quick research mode — 1 scrape + 2 Tavily + synthesis`);
+        }
+
         // ── Step 1: Map site ──────────────────────────────────────────────
-        await logProgress(toolId, `Step 1/7: Mapping site structure for ${domain}...`);
+        await logProgress(toolId, `Step 1/${isQuick ? 4 : 6}: Mapping site structure for ${domain}...`);
         const mapStart = Date.now();
         const mapResult = await withTimeout(
             firecrawl.mapSite(tool.websiteUrl),
@@ -301,16 +330,18 @@ export async function performDeepResearch(toolId: string) {
         const recipeText = [recipe?.systemContext, recipe?.dealBreakers, recipe?.evaluationCriteria].filter(Boolean).join(" ").toLowerCase();
         const needsDeepScrape = recipeText.includes("security") || recipeText.includes("compliance") || recipeText.includes("enterprise") || recipeText.includes("soc") || recipeText.includes("hipaa");
 
-        // ── Step 2: Scrape pages (2-5 depending on context) ─────────────
-        const pagesToScrape = [
-            { key: "main", url: tool.websiteUrl, label: "homepage" },
-            ...(pricingUrl !== tool.websiteUrl ? [{ key: "pricing", url: pricingUrl, label: "pricing" }] : []),
-            ...(featuresUrl ? [{ key: "features", url: featuresUrl, label: "features" }] : []),
-            ...(needsDeepScrape && aboutUrl ? [{ key: "about", url: aboutUrl, label: "about" }] : []),
-            ...(needsDeepScrape && securityUrl ? [{ key: "security", url: securityUrl, label: "security" }] : []),
-        ];
+        // ── Step 2: Scrape pages (quick=1, full=2-5 depending on context)
+        const pagesToScrape = isQuick
+            ? [{ key: "main", url: tool.websiteUrl, label: "homepage" }]
+            : [
+                { key: "main", url: tool.websiteUrl, label: "homepage" },
+                ...(pricingUrl !== tool.websiteUrl ? [{ key: "pricing", url: pricingUrl, label: "pricing" }] : []),
+                ...(featuresUrl ? [{ key: "features", url: featuresUrl, label: "features" }] : []),
+                ...(needsDeepScrape && aboutUrl ? [{ key: "about", url: aboutUrl, label: "about" }] : []),
+                ...(needsDeepScrape && securityUrl ? [{ key: "security", url: securityUrl, label: "security" }] : []),
+            ];
         const pageLabels = pagesToScrape.map(p => p.label).join(", ");
-        await logProgress(toolId, `Step 2/7: Crawling ${pagesToScrape.length} pages (${pageLabels})...`);
+        await logProgress(toolId, `Step 2/${isQuick ? 4 : 6}: Crawling ${pagesToScrape.length} pages (${pageLabels})...`);
 
         const scrapeFallback = { success: false, data: { markdown: "", metadata: {} } };
         const scrapeStart = Date.now();
@@ -345,237 +376,182 @@ export async function performDeepResearch(toolId: string) {
             await db.update(tools).set({ logoUrl }).where(eq(tools.id, toolId));
         }
 
-        // ── Step 3: Tavily — review sites ─────────────────────────────────
-        await logProgress(toolId, `Step 3/7: Searching reviews (G2, Capterra, TrustRadius, ProductHunt)...`);
         const tavilyFallback = { results: [], answer: "" };
-        const reviewStart = Date.now();
-        const reviewSearch = await withTimeout(
-            tavily.search(
-                `${tool.name} software reviews user feedback pros cons`,
-                {
-                    includeDomains: ["g2.com", "capterra.com", "trustradius.com", "getapp.com", "producthunt.com"],
-                    maxResults: 8,
-                    includeAnswer: true,
-                }
-            ),
-            30000,
-            tavilyFallback
-        );
-        logApiCall({
-            service: "tavily",
-            endpoint: "search-reviews",
-            durationMs: Date.now() - reviewStart,
-            estimatedCost: COST_MAP.tavily.search,
-            workspaceId: tool.workspaceId,
-            toolId,
-        });
+        const REVIEW_DOMAINS = ["g2.com", "capterra.com", "trustradius.com", "getapp.com", "producthunt.com"];
+        const TRUST_DOMAINS = ["trustpilot.com", "bbb.org", "glassdoor.com", "sitejabber.com"];
 
-        if (reviewSearch.results.length > 0) {
-            const sourceNames = [...new Set(
-                reviewSearch.results.map((r) => {
-                    try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; }
-                })
-            )];
-            await logProgress(toolId, `Found ${reviewSearch.results.length} review sources: ${sourceNames.join(", ")}`);
-        }
-
-        rawData.reviews = reviewSearch.results
-            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`)
-            .join("\n\n");
-
-        // ── Step 4: Tavily — trust & reputation sites ───────────────────
-        await logProgress(toolId, `Step 4/7: Checking Trustpilot, BBB, Glassdoor...`);
-        const trustStart = Date.now();
-        const trustSearch = await withTimeout(
-            tavily.search(
-                `"${tool.name}" reviews rating`,
-                {
-                    includeDomains: ["trustpilot.com", "bbb.org", "glassdoor.com", "sitejabber.com"],
-                    maxResults: 6,
-                    includeAnswer: true,
-                }
-            ),
-            30000,
-            tavilyFallback
-        );
-        logApiCall({
-            service: "tavily",
-            endpoint: "search-trust",
-            durationMs: Date.now() - trustStart,
-            estimatedCost: COST_MAP.tavily.search,
-            workspaceId: tool.workspaceId,
-            toolId,
-        });
-
-        if (trustSearch.results.length > 0) {
-            const trustSourceNames = [...new Set(
-                trustSearch.results.map((r) => {
-                    try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; }
-                })
-            )];
-            await logProgress(toolId, `Found ${trustSearch.results.length} trust sources: ${trustSourceNames.join(", ")}`);
-        }
-
-        rawData.trust = trustSearch.results
-            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`)
-            .join("\n\n");
-
-        // ── Step 5: Deep Reddit — 3 targeted queries ────────────────────
-        await logProgress(toolId, `Step 5/7: Deep scanning Reddit (3 targeted searches)...`);
-        const redditStart = Date.now();
-        const [redditReviews, redditComparisons, redditComplaints] = await Promise.all([
-            withTimeout(
-                tavily.search(
-                    `"${tool.name}" review experience worth it site:reddit.com`,
-                    { includeDomains: ["reddit.com"], maxResults: 5, includeAnswer: true }
-                ),
-                30000, tavilyFallback
-            ),
-            withTimeout(
-                tavily.search(
-                    `"${tool.name}" vs alternative comparison site:reddit.com`,
-                    { includeDomains: ["reddit.com"], maxResults: 5, includeAnswer: true }
-                ),
-                30000, tavilyFallback
-            ),
-            withTimeout(
-                tavily.search(
-                    `"${tool.name}" problems issues complaints frustrating site:reddit.com`,
-                    { includeDomains: ["reddit.com"], maxResults: 5, includeAnswer: true }
-                ),
-                30000, tavilyFallback
-            ),
-        ]);
-        const redditDuration = Date.now() - redditStart;
-        // Log all 3 Reddit searches
-        for (const label of ["reddit-reviews", "reddit-comparisons", "reddit-complaints"]) {
-            logApiCall({
-                service: "tavily",
-                endpoint: `search-${label}`,
-                durationMs: redditDuration,
-                estimatedCost: COST_MAP.tavily.search,
-                workspaceId: tool.workspaceId,
-                toolId,
-            });
-        }
-
-        // Deduplicate Reddit results by URL
-        const allRedditResults = [...redditReviews.results, ...redditComparisons.results, ...redditComplaints.results];
-        const seenUrls = new Set<string>();
-        const uniqueRedditResults = allRedditResults.filter(r => {
-            if (seenUrls.has(r.url)) return false;
-            seenUrls.add(r.url);
-            return true;
-        });
-
-        await logProgress(toolId, `Found ${uniqueRedditResults.length} unique Reddit threads`);
-
-        // Combine Reddit answers for synthesis
-        const redditAnswers = [redditReviews.answer, redditComparisons.answer, redditComplaints.answer]
-            .filter(Boolean).join("\n\n");
-
-        rawData.reddit = uniqueRedditResults
-            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`)
-            .join("\n\n");
-        rawData.redditAnswers = redditAnswers;
-
-        // ── Step 6: Tavily — competitors + market intelligence ────────────
-        await logProgress(toolId, `Step 6/7: Analyzing competitive landscape + market intel...`);
-        const competitorStart = Date.now();
-        const [competitorSearch, marketSearch] = await Promise.all([
-            withTimeout(
-                tavily.search(
-                    `${tool.name} competitors alternatives comparison vs`,
-                    { maxResults: 6, includeAnswer: true }
-                ),
-                30000, tavilyFallback
-            ),
-            withTimeout(
-                tavily.search(
-                    `"${tool.name}" company funding employees headquarters founded`,
-                    { maxResults: 4, includeAnswer: true }
-                ),
-                30000, tavilyFallback
-            ),
-        ]);
-        const competitorDuration = Date.now() - competitorStart;
-        logApiCall({
-            service: "tavily",
-            endpoint: "search-competitors",
-            durationMs: competitorDuration,
-            estimatedCost: COST_MAP.tavily.search,
-            workspaceId: tool.workspaceId,
-            toolId,
-        });
-        logApiCall({
-            service: "tavily",
-            endpoint: "search-market-intel",
-            durationMs: competitorDuration,
-            estimatedCost: COST_MAP.tavily.search,
-            workspaceId: tool.workspaceId,
-            toolId,
-        });
-
-        // Combine competitor + market intel into one block for synthesis
-        const competitorContent = competitorSearch.results
-            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 400)}`)
-            .join("\n\n");
-        const marketContent = marketSearch.results
-            .map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 400)}`)
-            .join("\n\n");
-        rawData.competitors = [
-            competitorSearch.answer && `COMPETITOR ANALYSIS:\n${competitorSearch.answer}`,
-            competitorContent && `COMPETITOR SOURCES:\n${competitorContent}`,
-            marketSearch.answer && `MARKET INTEL:\n${marketSearch.answer}`,
-            marketContent && `MARKET SOURCES:\n${marketContent}`,
-        ].filter(Boolean).join("\n\n");
-
-        // ── Step 6.5: Perplexity deep analysis (conditional) ────────────────
+        // Variables shared between quick/full paths
+        let reviewResults: TavilyResult[] = [];
+        let trustResults: TavilyResult[] = [];
+        let uniqueRedditResults: TavilyResult[] = [];
+        let reviewTrustAnswer = "";
         let perplexityAnalysis = "";
-        if (!process.env.PERPLEXITY_API_KEY) {
-            console.warn("[research] PERPLEXITY_API_KEY not set — competitive analysis step skipped. Set this env var for deeper intelligence.");
-            await logProgress(toolId, `Perplexity: Skipped (PERPLEXITY_API_KEY not set — add this env var for competitive analysis)`);
-        } else {
-            await logProgress(toolId, `Perplexity: Running deep competitive analysis...`);
-            const perplexityStart = Date.now();
-            try {
-                perplexityAnalysis = await withTimeout(
-                    perplexity.search(
-                        `Comprehensive analysis of ${tool.name} (${tool.websiteUrl}): market position, strengths vs competitors, recent developments, user satisfaction trends, and any concerns. Focus on facts and real user experiences.`
+
+        if (isQuick) {
+            // ── Quick mode: 2 Tavily searches (reviews + competitors) ────
+            await logProgress(toolId, `Step 3/4: Searching reviews & competitors...`);
+
+            const [reviewTrustSearch, competitorSearch] = await Promise.all([
+                withTimeout(
+                    tavily.search(
+                        `${tool.name} software reviews user feedback rating pros cons`,
+                        {
+                            includeDomains: [...REVIEW_DOMAINS, ...TRUST_DOMAINS],
+                            maxResults: 8,
+                            includeAnswer: true,
+                        }
                     ),
-                    60000,
-                    ""
-                );
-                logApiCall({
-                    service: "perplexity",
-                    endpoint: "sonar-reasoning-pro",
-                    durationMs: Date.now() - perplexityStart,
-                    estimatedCost: COST_MAP.perplexity["sonar-reasoning-pro"],
-                    workspaceId: tool.workspaceId,
-                    toolId,
-                });
-                if (perplexityAnalysis) {
-                    await logProgress(toolId, `Perplexity: Analysis complete (${perplexityAnalysis.length} chars)`);
+                    30000, tavilyFallback
+                ),
+                withTimeout(
+                    tavily.search(
+                        `${tool.name} competitors alternatives comparison pricing`,
+                        { maxResults: 6, includeAnswer: true }
+                    ),
+                    30000, tavilyFallback
+                ),
+            ]);
+
+            logApiCall({ service: "tavily", endpoint: "quick-reviews", durationMs: 0, estimatedCost: COST_MAP.tavily.search, workspaceId: tool.workspaceId, toolId });
+            logApiCall({ service: "tavily", endpoint: "quick-competitors", durationMs: 0, estimatedCost: COST_MAP.tavily.search, workspaceId: tool.workspaceId, toolId });
+
+            reviewResults = reviewTrustSearch.results.filter(r => {
+                try { return REVIEW_DOMAINS.some(d => new URL(r.url).hostname.includes(d)); } catch { return false; }
+            });
+            trustResults = reviewTrustSearch.results.filter(r => {
+                try { return TRUST_DOMAINS.some(d => new URL(r.url).hostname.includes(d)); } catch { return false; }
+            });
+            reviewTrustAnswer = reviewTrustSearch.answer;
+
+            rawData.reviews = reviewResults.map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`).join("\n\n");
+            rawData.trust = trustResults.map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`).join("\n\n");
+            rawData.reddit = "";
+            rawData.redditAnswers = "";
+
+            const competitorContent = competitorSearch.results.map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 400)}`).join("\n\n");
+            rawData.competitors = [
+                competitorSearch.answer && `COMPETITOR & MARKET ANALYSIS:\n${competitorSearch.answer}`,
+                competitorContent && `SOURCES:\n${competitorContent}`,
+            ].filter(Boolean).join("\n\n");
+
+        } else {
+            // ── Full mode: 3 Tavily + Perplexity ─────────────────────────
+
+            // Step 3: Reviews + trust
+            await logProgress(toolId, `Step 3/6: Searching reviews & trust sites...`);
+            const reviewTrustStart = Date.now();
+            const reviewTrustSearch = await withTimeout(
+                tavily.search(
+                    `${tool.name} software reviews user feedback rating pros cons`,
+                    { includeDomains: [...REVIEW_DOMAINS, ...TRUST_DOMAINS], maxResults: 12, includeAnswer: true }
+                ),
+                30000, tavilyFallback
+            );
+            logApiCall({ service: "tavily", endpoint: "search-reviews-trust", durationMs: Date.now() - reviewTrustStart, estimatedCost: COST_MAP.tavily.search, workspaceId: tool.workspaceId, toolId });
+
+            reviewResults = reviewTrustSearch.results.filter(r => {
+                try { return REVIEW_DOMAINS.some(d => new URL(r.url).hostname.includes(d)); } catch { return false; }
+            });
+            trustResults = reviewTrustSearch.results.filter(r => {
+                try { return TRUST_DOMAINS.some(d => new URL(r.url).hostname.includes(d)); } catch { return false; }
+            });
+            reviewTrustAnswer = reviewTrustSearch.answer;
+
+            if (reviewTrustSearch.results.length > 0) {
+                const sourceNames = [...new Set(
+                    reviewTrustSearch.results.map((r) => { try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; } })
+                )];
+                await logProgress(toolId, `Found ${reviewTrustSearch.results.length} review/trust sources: ${sourceNames.join(", ")}`);
+            }
+
+            rawData.reviews = reviewResults.map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`).join("\n\n");
+            rawData.trust = trustResults.map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`).join("\n\n");
+
+            // Step 4: Reddit
+            await logProgress(toolId, `Step 4/6: Scanning Reddit discussions...`);
+            const redditStart = Date.now();
+            const redditSearch = await withTimeout(
+                tavily.search(
+                    `"${tool.name}" review experience worth it vs alternative comparison problems issues site:reddit.com`,
+                    { includeDomains: ["reddit.com"], maxResults: 10, includeAnswer: true }
+                ),
+                30000, tavilyFallback
+            );
+            logApiCall({ service: "tavily", endpoint: "search-reddit", durationMs: Date.now() - redditStart, estimatedCost: COST_MAP.tavily.search, workspaceId: tool.workspaceId, toolId });
+
+            uniqueRedditResults = redditSearch.results;
+            await logProgress(toolId, `Found ${uniqueRedditResults.length} Reddit threads`);
+
+            rawData.reddit = uniqueRedditResults.map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`).join("\n\n");
+            rawData.redditAnswers = redditSearch.answer || "";
+
+            // Step 5: Competitors + market intel
+            await logProgress(toolId, `Step 5/6: Analyzing competitive landscape + market intel...`);
+            const competitorStart = Date.now();
+            const competitorMarketSearch = await withTimeout(
+                tavily.search(
+                    `${tool.name} competitors alternatives comparison vs company funding employees headquarters founded`,
+                    { maxResults: 8, includeAnswer: true }
+                ),
+                30000, tavilyFallback
+            );
+            logApiCall({ service: "tavily", endpoint: "search-competitors-market", durationMs: Date.now() - competitorStart, estimatedCost: COST_MAP.tavily.search, workspaceId: tool.workspaceId, toolId });
+
+            const competitorContent = competitorMarketSearch.results.map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 400)}`).join("\n\n");
+            rawData.competitors = [
+                competitorMarketSearch.answer && `COMPETITOR & MARKET ANALYSIS:\n${competitorMarketSearch.answer}`,
+                competitorContent && `SOURCES:\n${competitorContent}`,
+            ].filter(Boolean).join("\n\n");
+
+            // Step 5.5: Perplexity deep analysis (full mode only)
+            // Use sonar-reasoning-pro for enterprise/startup, sonar for others
+            const perplexityModel = (limits.slug === "enterprise" || limits.slug === "startup")
+                ? "sonar-reasoning-pro" : "sonar";
+            const perplexityCost = perplexityModel === "sonar-reasoning-pro"
+                ? COST_MAP.perplexity["sonar-reasoning-pro"]
+                : COST_MAP.perplexity["sonar"];
+
+            if (!process.env.PERPLEXITY_API_KEY) {
+                console.warn("[research] PERPLEXITY_API_KEY not set — competitive analysis step skipped.");
+                await logProgress(toolId, `Perplexity: Skipped (PERPLEXITY_API_KEY not set)`);
+            } else {
+                await logProgress(toolId, `Perplexity: Running analysis (${perplexityModel})...`);
+                const perplexityStart = Date.now();
+                try {
+                    perplexityAnalysis = await withTimeout(
+                        perplexity.search(
+                            `Comprehensive analysis of ${tool.name} (${tool.websiteUrl}): market position, strengths vs competitors, recent developments, user satisfaction trends, and any concerns. Focus on facts and real user experiences.`,
+                            perplexityModel
+                        ),
+                        60000, ""
+                    );
+                    logApiCall({
+                        service: "perplexity", endpoint: perplexityModel,
+                        durationMs: Date.now() - perplexityStart,
+                        estimatedCost: perplexityCost,
+                        workspaceId: tool.workspaceId, toolId,
+                    });
+                    if (perplexityAnalysis) {
+                        await logProgress(toolId, `Perplexity: Analysis complete (${perplexityAnalysis.length} chars)`);
+                    }
+                } catch (err) {
+                    const detail = err instanceof Error ? err.message : String(err);
+                    await logProgress(toolId, `Perplexity: Analysis failed (non-critical, continuing) — ${detail}`);
                 }
-            } catch (err) {
-                const detail = err instanceof Error ? err.message : String(err);
-                await logProgress(toolId, `Perplexity: Analysis failed (non-critical, continuing) — ${detail}`);
             }
         }
 
-        // ── Step 7: GPT-4o-mini synthesis ───────────────────────────────────
-        // Count total unique data sources used
+        // ── Synthesis step (shared between quick and full) ──────────────
+        const allSearchResults = [...reviewResults, ...trustResults, ...uniqueRedditResults];
         const totalDataSources = [
             ...new Set([
-                ...reviewSearch.results.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
-                ...trustSearch.results.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
+                ...allSearchResults.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
                 ...uniqueRedditResults.map(() => "reddit.com"),
-                ...competitorSearch.results.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
-                ...marketSearch.results.map(r => { try { return new URL(r.url).hostname; } catch { return r.url; } }),
-                domain, // official site
+                domain,
             ])
         ];
-        await logProgress(toolId, `Step 7/7: Synthesizing from ${totalDataSources.length} sources...`);
+        const synthesisStep = isQuick ? "4/4" : "6/6";
+        await logProgress(toolId, `Step ${synthesisStep}: Synthesizing from ${totalDataSources.length} sources...`);
 
         const companyContext = tool.workspace.companyContext ?? "A technology company evaluating software tools.";
         // recipe was already loaded above for conditional scraping — cast to full type for prompt building
@@ -686,7 +662,28 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
         type FitData = z.infer<typeof WorkspaceFitSchema>;
         let reportData: z.infer<typeof ReportSchema>;
         let fitData: FitData | null = null;
+        const promptCharLength = synthesisPrompt.length;
         const openaiStart = Date.now();
+
+        function logOpenAISynthesis(model: string, u: { inputTokens?: number; outputTokens?: number } | undefined, startMs: number) {
+            const tokensIn = u?.inputTokens ?? 0;
+            const tokensOut = u?.outputTokens ?? 0;
+            if (tokensIn > 30_000) {
+                console.warn(`[research] HIGH TOKEN COUNT: ${tokensIn} input tokens for tool ${toolId} (model: ${model}, promptChars: ${promptCharLength}, pages: ${pagesToScrape.length})`);
+            }
+            logApiCall({
+                service: "openai",
+                endpoint: model,
+                durationMs: Date.now() - startMs,
+                tokensIn,
+                tokensOut,
+                estimatedCost: estimateOpenAICost(tokensIn, tokensOut, model),
+                workspaceId: verifiedTool.workspaceId,
+                toolId,
+                metadata: { promptCharLength, pagesScraped: pagesToScrape.length },
+            });
+        }
+
         try {
             if (hasRecipe) {
                 const { object, usage: u } = await generateObject({
@@ -696,16 +693,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                 });
                 fitData = object.workspaceFit;
                 reportData = object;
-                logApiCall({
-                    service: "openai",
-                    endpoint: "gpt-4o-mini",
-                    durationMs: Date.now() - openaiStart,
-                    tokensIn: u?.inputTokens,
-                    tokensOut: u?.outputTokens,
-                    estimatedCost: estimateOpenAICost(u?.inputTokens ?? 0, u?.outputTokens ?? 0, "gpt-4o-mini"),
-                    workspaceId: tool.workspaceId,
-                    toolId,
-                });
+                logOpenAISynthesis("gpt-4o-mini", u, openaiStart);
             } else {
                 const { object, usage: u } = await generateObject({
                     model: openai("gpt-4o-mini"),
@@ -713,16 +701,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                     prompt: synthesisPrompt,
                 });
                 reportData = object;
-                logApiCall({
-                    service: "openai",
-                    endpoint: "gpt-4o-mini",
-                    durationMs: Date.now() - openaiStart,
-                    tokensIn: u?.inputTokens,
-                    tokensOut: u?.outputTokens,
-                    estimatedCost: estimateOpenAICost(u?.inputTokens ?? 0, u?.outputTokens ?? 0, "gpt-4o-mini"),
-                    workspaceId: tool.workspaceId,
-                    toolId,
-                });
+                logOpenAISynthesis("gpt-4o-mini", u, openaiStart);
             }
         } catch (primaryErr) {
             const primaryMsg = primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
@@ -740,16 +719,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                     });
                     fitData = object.workspaceFit;
                     reportData = object;
-                    logApiCall({
-                        service: "openai",
-                        endpoint: "gpt-4o",
-                        durationMs: Date.now() - fallbackStart,
-                        tokensIn: u?.inputTokens,
-                        tokensOut: u?.outputTokens,
-                        estimatedCost: estimateOpenAICost(u?.inputTokens ?? 0, u?.outputTokens ?? 0, "gpt-4o"),
-                        workspaceId: tool.workspaceId,
-                        toolId,
-                    });
+                    logOpenAISynthesis("gpt-4o", u, fallbackStart);
                 } else {
                     const { object, usage: u } = await generateObject({
                         model: openai("gpt-4o"),
@@ -757,16 +727,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                         prompt: synthesisPrompt,
                     });
                     reportData = object;
-                    logApiCall({
-                        service: "openai",
-                        endpoint: "gpt-4o",
-                        durationMs: Date.now() - fallbackStart,
-                        tokensIn: u?.inputTokens,
-                        tokensOut: u?.outputTokens,
-                        estimatedCost: estimateOpenAICost(u?.inputTokens ?? 0, u?.outputTokens ?? 0, "gpt-4o"),
-                        workspaceId: tool.workspaceId,
-                        toolId,
-                    });
+                    logOpenAISynthesis("gpt-4o", u, fallbackStart);
                 }
                 await logProgress(toolId, `Synthesis: Fallback (gpt-4o) succeeded.`);
             } catch (fallbackErr) {
@@ -778,25 +739,25 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
 
         // ── Step 8: Store report ──────────────────────────────────────────
         const sentimentData = {
-            reviewSources: reviewSearch.results.map((r) => ({
+            reviewSources: reviewResults.map((r) => ({
                 title: r.title,
                 url: r.url,
                 score: r.score,
             })),
-            trustSources: trustSearch.results.map((r) => ({
+            trustSources: trustResults.map((r) => ({
                 title: r.title,
                 url: r.url,
                 score: r.score,
             })),
-            reviewAnswer: reviewSearch.answer,
-            trustAnswer: trustSearch.answer,
+            reviewAnswer: reviewTrustAnswer,
+            trustAnswer: reviewTrustAnswer,
             redditThreads: uniqueRedditResults.map((r) => ({
                 title: r.title,
                 url: r.url,
                 subreddit: (() => { try { return new URL(r.url).pathname.split("/")[2] || "reddit"; } catch { return "reddit"; } })(),
                 snippet: r.content.slice(0, 200),
             })),
-            redditAnswer: redditAnswers,
+            redditAnswer: rawData.redditAnswers,
             competitorAnalysis: rawData.competitors,
             sentimentConsensus: reportData.sentimentConsensus,
             marketIntel: reportData.marketIntel,

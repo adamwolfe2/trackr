@@ -21,6 +21,8 @@ vi.mock("@/lib/db/schema", () => ({
     workspaces: {},
     researchJobs: {},
     subscriptions: {},
+    painPoints: {},
+    apiLogs: { estimatedCost: "estimated_cost", workspaceId: "workspace_id", createdAt: "created_at" },
 }));
 
 vi.mock("drizzle-orm", async (importOriginal) => {
@@ -71,8 +73,20 @@ vi.mock("next/cache", () => ({
 vi.mock("@/lib/config/subscriptions", () => ({
     getPlanLimits: vi.fn().mockReturnValue({
         name: "Free",
+        slug: "free",
+        defaultResearchDepth: "quick",
         limits: { research: Infinity },
     }),
+}));
+
+vi.mock("@/lib/services/cost-cap", () => ({
+    checkCostCap: vi.fn(async () => ({
+        allowed: true,
+        warned: false,
+        usage: 0,
+        budget: 1,
+        pctUsed: 0,
+    })),
 }));
 
 vi.mock("@/lib/email/resend", () => ({
@@ -381,11 +395,12 @@ describe("performDeepResearch", () => {
         expect(firecrawl.mapSite).toHaveBeenCalledWith("https://linear.app");
     });
 
-    it("calls tavily.search multiple times (reviews, trust, Reddit, competitors)", async () => {
+    it("calls tavily.search multiple times (reviews+competitors in quick, or more in full)", async () => {
         await performDeepResearch("tool_1");
-        // research.ts calls tavily for: reviews, trust, 3x reddit, competitors, market = 7 calls
+        // Quick mode (free tier default): 2 calls (reviews+trust, competitors)
+        // Full mode: 3 calls (reviews+trust, reddit, competitors+market)
         const callCount = (tavily.search as ReturnType<typeof vi.fn>).mock.calls.length;
-        expect(callCount).toBeGreaterThanOrEqual(4);
+        expect(callCount).toBeGreaterThanOrEqual(2);
     });
 
     // ── Error handling ─────────────────────────────────────────────────────────

@@ -38,7 +38,7 @@ export function logApiCall(entry: LogEntry) {
 export const COST_MAP = {
     firecrawl: { map: 0.01, scrape: 0.015 },
     tavily: { search: 0.01 },
-    perplexity: { "sonar-reasoning-pro": 0.05 }, // rough estimate per call
+    perplexity: { "sonar-reasoning-pro": 0.05, "sonar": 0.01 }, // rough estimate per call
     openai: {
         "gpt-4o-input": 2.50 / 1_000_000,         // $2.50/1M input tokens
         "gpt-4o-output": 10.00 / 1_000_000,        // $10/1M output tokens

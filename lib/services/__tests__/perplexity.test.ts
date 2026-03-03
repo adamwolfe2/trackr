@@ -14,6 +14,12 @@ vi.mock("openai", () => ({
     },
 }));
 
+// Mock research-cache — cachedFetch always calls the fetcher (no caching in tests)
+vi.mock("@/lib/services/research-cache", () => ({
+    cachedFetch: vi.fn(async (_key: string, _ttl: number, fetcher: () => Promise<unknown>) => fetcher()),
+    buildCacheKey: vi.fn((...parts: string[]) => parts.join(":")),
+}));
+
 import { PerplexityService } from "../perplexity";
 
 const MOCK_RESPONSE = "This is a Perplexity research result about the topic.";
@@ -36,7 +42,6 @@ describe("PerplexityService", () => {
         vi.clearAllMocks();
         process.env.PERPLEXITY_API_KEY = "test_key_123";
         service = new PerplexityService();
-        service._clearCache();
     });
 
     afterEach(() => {
@@ -59,14 +64,6 @@ describe("PerplexityService", () => {
             expect(mockCreate).toHaveBeenCalledTimes(1);
         });
 
-        it("caches results and avoids duplicate API calls", async () => {
-            mockSuccess();
-            const result1 = await service.search("What is Notion?");
-            const result2 = await service.search("What is Notion?"); // same query
-            expect(result1).toBe(result2);
-            expect(mockCreate).toHaveBeenCalledTimes(1); // only one API call
-        });
-
         it("makes separate API calls for different queries", async () => {
             mockSuccess("Result A");
             const result1 = await service.search("Query A");
@@ -86,6 +83,14 @@ describe("PerplexityService", () => {
             const result = await promise;
             vi.useRealTimers();
             expect(result).toBe("");
+        });
+
+        it("defaults to sonar model", async () => {
+            mockSuccess();
+            await service.search("query");
+            expect(mockCreate).toHaveBeenCalledWith(
+                expect.objectContaining({ model: "sonar" })
+            );
         });
 
         it("passes the provided model to the API", async () => {
@@ -113,13 +118,6 @@ describe("PerplexityService", () => {
             expect(parsed.sentiment).toBe("neutral");
             expect(Array.isArray(parsed.quotes)).toBe(true);
             expect(mockCreate).not.toHaveBeenCalled();
-        });
-
-        it("caches sentiment results", async () => {
-            mockSuccess('{"sentiment":"positive","quotes":[]}');
-            await service.analyzeSentiment("Notion");
-            await service.analyzeSentiment("Notion");
-            expect(mockCreate).toHaveBeenCalledTimes(1);
         });
     });
 
@@ -150,18 +148,6 @@ describe("PerplexityService", () => {
             vi.useRealTimers();
             const parsed = JSON.parse(result);
             expect(Array.isArray(parsed)).toBe(true);
-        });
-    });
-
-    describe("_clearCache()", () => {
-        it("forces re-fetch after cache is cleared", async () => {
-            mockSuccess("First result");
-            await service.search("cached query");
-            service._clearCache();
-            mockSuccess("Second result");
-            const result = await service.search("cached query");
-            expect(result).toBe("Second result");
-            expect(mockCreate).toHaveBeenCalledTimes(2);
         });
     });
 });

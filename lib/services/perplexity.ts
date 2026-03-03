@@ -1,22 +1,7 @@
 import { OpenAI } from "openai";
+import { cachedFetch, buildCacheKey } from "@/lib/services/research-cache";
 
-// In-memory response cache: query → { result, expiresAt }
-const responseCache = new Map<string, { result: string; expiresAt: number }>();
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
-
-function getCached(key: string): string | null {
-    const entry = responseCache.get(key);
-    if (!entry) return null;
-    if (Date.now() > entry.expiresAt) {
-        responseCache.delete(key);
-        return null;
-    }
-    return entry.result;
-}
-
-function setCache(key: string, result: string) {
-    responseCache.set(key, { result, expiresAt: Date.now() + CACHE_TTL_MS });
-}
+const CACHE_TTL_SEC = 60 * 60; // 1 hour
 
 async function sleep(ms: number) {
     return new Promise((r) => setTimeout(r, ms));
@@ -57,33 +42,30 @@ export class PerplexityService {
         }
     }
 
-    async search(query: string, model = "sonar-reasoning-pro"): Promise<string> {
+    async search(query: string, model = "sonar"): Promise<string> {
         if (!this.client) {
             return "";
         }
 
-        const cacheKey = `${model}:${query}`;
-        const cached = getCached(cacheKey);
-        if (cached !== null) return cached;
+        const cacheKey = buildCacheKey("perplexity", model, query);
 
-        try {
-            const result = await withRetry(async () => {
-                const response = await this.client!.chat.completions.create({
-                    model,
-                    messages: [
-                        { role: "system", content: "You are a helpful research assistant. Find facts, reviews, and sentiment." },
-                        { role: "user", content: query },
-                    ],
+        return cachedFetch(cacheKey, CACHE_TTL_SEC, async () => {
+            try {
+                return await withRetry(async () => {
+                    const response = await this.client!.chat.completions.create({
+                        model,
+                        messages: [
+                            { role: "system", content: "You are a helpful research assistant. Find facts, reviews, and sentiment." },
+                            { role: "user", content: query },
+                        ],
+                    });
+                    return response.choices[0].message.content || "";
                 });
-                return response.choices[0].message.content || "";
-            });
-
-            setCache(cacheKey, result);
-            return result;
-        } catch (error) {
-            console.error("Perplexity search failed after retries:", error);
-            return "";
-        }
+            } catch (error) {
+                console.error("Perplexity search failed after retries:", error);
+                return "";
+            }
+        });
     }
 
     async deepResearch(query: string): Promise<string> {
@@ -98,37 +80,34 @@ export class PerplexityService {
             });
         }
 
-        const cacheKey = `sentiment:${entity}`;
-        const cached = getCached(cacheKey);
-        if (cached !== null) return cached;
+        const cacheKey = buildCacheKey("perplexity", "sentiment", entity);
 
-        try {
-            const result = await withRetry(async () => {
-                const response = await this.client!.chat.completions.create({
-                    model: "sonar-reasoning-pro",
-                    messages: [
-                        {
-                            role: "system",
-                            content: `You are an expert sentiment analyst. Your goal is to find authentic user reviews and extracting specific, direct quotes.
+        return cachedFetch(cacheKey, CACHE_TTL_SEC, async () => {
+            try {
+                return await withRetry(async () => {
+                    const response = await this.client!.chat.completions.create({
+                        model: "sonar-reasoning-pro",
+                        messages: [
+                            {
+                                role: "system",
+                                content: `You are an expert sentiment analyst. Your goal is to find authentic user reviews and extracting specific, direct quotes.
 
                         Output a JSON object with:
                         - "summary": A brief summary of user sentiment.
                         - "sentiment": "positive", "neutral", or "negative".
                         - "quotes": An array of objects { "text": "...", "source": "..." } containing real user quotes.
                         `,
-                        },
-                        { role: "user", content: `Analyze the sentiment for "${entity}". Find 3-5 specific, direct quotes from users on Reddit, G2, or Capterra.` },
-                    ],
+                            },
+                            { role: "user", content: `Analyze the sentiment for "${entity}". Find 3-5 specific, direct quotes from users on Reddit, G2, or Capterra.` },
+                        ],
+                    });
+                    return response.choices[0].message.content || "";
                 });
-                return response.choices[0].message.content || "";
-            });
-
-            setCache(cacheKey, result);
-            return result;
-        } catch (error) {
-            console.error("Perplexity sentiment analysis failed:", error);
-            return "";
-        }
+            } catch (error) {
+                console.error("Perplexity sentiment analysis failed:", error);
+                return "";
+            }
+        });
     }
 
     async discoverTools(painPoint: string): Promise<string> {
@@ -136,33 +115,25 @@ export class PerplexityService {
             return this.getMockSuggestions(painPoint);
         }
 
-        const cacheKey = `discover:${painPoint}`;
-        const cached = getCached(cacheKey);
-        if (cached !== null) return cached;
+        const cacheKey = buildCacheKey("perplexity", "discover", painPoint);
 
-        try {
-            const result = await withRetry(async () => {
-                const response = await this.client!.chat.completions.create({
-                    model: "sonar-reasoning-pro",
-                    messages: [
-                        { role: "system", content: "You are an expert software procurement assistant. specialized in finding the best B2B SaaS tools." },
-                        { role: "user", content: `Find 3-5 software tools that solve this pain point: "${painPoint}". Return a JSON list with name, url, and short description.` },
-                    ],
+        return cachedFetch(cacheKey, CACHE_TTL_SEC, async () => {
+            try {
+                return await withRetry(async () => {
+                    const response = await this.client!.chat.completions.create({
+                        model: "sonar-reasoning-pro",
+                        messages: [
+                            { role: "system", content: "You are an expert software procurement assistant. specialized in finding the best B2B SaaS tools." },
+                            { role: "user", content: `Find 3-5 software tools that solve this pain point: "${painPoint}". Return a JSON list with name, url, and short description.` },
+                        ],
+                    });
+                    return response.choices[0].message.content || "";
                 });
-                return response.choices[0].message.content || "";
-            });
-
-            setCache(cacheKey, result);
-            return result;
-        } catch (error) {
-            console.error("Perplexity discovery failed:", error);
-            return this.getMockSuggestions(painPoint);
-        }
-    }
-
-    /** Exported for testing — allows cache inspection/clearing */
-    _clearCache() {
-        responseCache.clear();
+            } catch (error) {
+                console.error("Perplexity discovery failed:", error);
+                return this.getMockSuggestions(painPoint);
+            }
+        });
     }
 
     private getMockSuggestions(painPoint: string): string {

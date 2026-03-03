@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     description: "Monitor API usage and costs.",
     robots: { index: false },
 };
-import { sql, desc, eq, gte } from "drizzle-orm";
+import { sql, desc, eq, gte, and, gt } from "drizzle-orm";
 
 // ── Auth check ──────────────────────────────────────────────────────────────
 
@@ -151,6 +151,13 @@ interface RecentCall {
     workspaceName: string | null;
 }
 
+interface TokenStats {
+    avgInputTokens: string;
+    maxInputTokens: string;
+    p95InputTokens: string;
+    totalCalls: string;
+}
+
 // ── Data fetching ───────────────────────────────────────────────────────────
 
 async function fetchDashboardData() {
@@ -275,7 +282,29 @@ async function fetchDashboardData() {
         .orderBy(desc(apiLogs.createdAt))
         .limit(50);
 
-    return { totalStats, serviceBreakdown, dailyTrend, workspaceBreakdown, recentCalls };
+    // F) OpenAI token usage stats (last 30 days, only OpenAI calls with token data)
+    const tokenStatsResult = await db
+        .select({
+            avgInputTokens: sql<string>`coalesce(avg(${apiLogs.tokensIn}), 0)`,
+            maxInputTokens: sql<string>`coalesce(max(${apiLogs.tokensIn}), 0)`,
+            p95InputTokens: sql<string>`coalesce(percentile_cont(0.95) within group (order by ${apiLogs.tokensIn}), 0)`,
+            totalCalls: sql<string>`count(*)`,
+        })
+        .from(apiLogs)
+        .where(and(
+            gte(apiLogs.createdAt, thirtyDaysAgo),
+            eq(apiLogs.service, "openai"),
+            gt(apiLogs.tokensIn, 0),
+        ));
+
+    const tokenStats: TokenStats = {
+        avgInputTokens: tokenStatsResult[0]?.avgInputTokens ?? "0",
+        maxInputTokens: tokenStatsResult[0]?.maxInputTokens ?? "0",
+        p95InputTokens: tokenStatsResult[0]?.p95InputTokens ?? "0",
+        totalCalls: tokenStatsResult[0]?.totalCalls ?? "0",
+    };
+
+    return { totalStats, serviceBreakdown, dailyTrend, workspaceBreakdown, recentCalls, tokenStats };
 }
 
 // ── Login form component ────────────────────────────────────────────────────
@@ -317,7 +346,7 @@ function LoginForm() {
 // ── Dashboard component ─────────────────────────────────────────────────────
 
 async function Dashboard() {
-    const { totalStats, serviceBreakdown, dailyTrend, workspaceBreakdown, recentCalls } =
+    const { totalStats, serviceBreakdown, dailyTrend, workspaceBreakdown, recentCalls, tokenStats } =
         await fetchDashboardData();
 
     const hasData = Number(totalStats.totalCalls) > 0;
@@ -405,6 +434,29 @@ async function Dashboard() {
                     </table>
                 </div>
             </section>
+
+            {/* ── OpenAI Token Usage ────────────────────────── */}
+            {Number(tokenStats.totalCalls) > 0 && (
+                <section className="mb-8">
+                    <h2 className="font-mono text-xs uppercase tracking-widest mb-4">
+                        OpenAI Token Usage (30 days)
+                    </h2>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-0">
+                        <StatCard label="Avg Input" value={formatNumber(Math.round(Number(tokenStats.avgInputTokens)))} />
+                        <StatCard
+                            label="P95 Input"
+                            value={formatNumber(Math.round(Number(tokenStats.p95InputTokens)))}
+                            highlight={Number(tokenStats.p95InputTokens) > 30000}
+                        />
+                        <StatCard
+                            label="Max Input"
+                            value={formatNumber(Math.round(Number(tokenStats.maxInputTokens)))}
+                            highlight={Number(tokenStats.maxInputTokens) > 30000}
+                        />
+                        <StatCard label="Calls w/ Tokens" value={formatNumber(tokenStats.totalCalls)} />
+                    </div>
+                </section>
+            )}
 
             {/* ── Daily Trend ────────────────────────────────── */}
             <section className="mb-8">

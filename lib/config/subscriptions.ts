@@ -1,5 +1,7 @@
 export type PlanSlug = "free" | "team" | "startup" | "enterprise";
 
+export type ResearchDepth = "quick" | "full";
+
 export type PlanFeatures = {
     askAI: boolean;
     analytics: boolean;
@@ -26,6 +28,7 @@ export type Plan = {
     };
     extraCreditPrice: number | null; // price per additional credit, null = can't buy
     features: PlanFeatures;
+    defaultResearchDepth: ResearchDepth;
 };
 
 export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
@@ -40,6 +43,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             members: 1,
         },
         extraCreditPrice: null,
+        defaultResearchDepth: "quick",
         features: {
             askAI: false,
             analytics: false,
@@ -65,6 +69,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             members: 5,
         },
         extraCreditPrice: 1.50,
+        defaultResearchDepth: "full",
         features: {
             askAI: false,
             analytics: false,
@@ -90,6 +95,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             members: 15,
         },
         extraCreditPrice: 1.00,
+        defaultResearchDepth: "full",
         features: {
             askAI: true,
             analytics: true,
@@ -115,6 +121,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             members: Infinity,
         },
         extraCreditPrice: 0.75,
+        defaultResearchDepth: "full",
         features: {
             askAI: true,
             analytics: true,

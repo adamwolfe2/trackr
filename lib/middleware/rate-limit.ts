@@ -7,23 +7,8 @@
  * Falls back to in-memory when running locally without credentials.
  */
 
-import { Redis } from "@upstash/redis";
 import { Ratelimit } from "@upstash/ratelimit";
-
-// ── Upstash setup ─────────────────────────────────────────────────────────────
-
-let _redis: Redis | null = null;
-
-function getRedis(): Redis | null {
-    if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) return null;
-    if (!_redis) {
-        _redis = new Redis({
-            url: process.env.KV_REST_API_URL,
-            token: process.env.KV_REST_API_TOKEN,
-        });
-    }
-    return _redis;
-}
+import { getRedis } from "@/lib/services/redis";
 
 // Cache Ratelimit instances by "limit:windowSeconds" so we don't create
 // a new one on every request (each instance holds sliding-window state).
