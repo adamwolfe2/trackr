@@ -9,6 +9,7 @@ import type { AuditScorecard } from "@/lib/actions/audit";
 import { processAuditSubmission } from "@/lib/actions/audit";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { ExternalLink } from "lucide-react";
+import { LogoImage } from "@/components/common/logo-image";
 
 export const metadata: Metadata = {
     title: "Lead Detail — Trackr Admin",
@@ -66,16 +67,15 @@ function aiRoleBadge(role: string) {
 }
 
 function toolLogoUrl(name: string, domain?: string | null): string {
-    if (domain) return `https://www.google.com/s2/favicons?sz=64&domain=${domain}`;
-    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-    return `https://www.google.com/s2/favicons?sz=64&domain=${slug}.com`;
+    const d = domain ?? `${name.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+    return `https://www.google.com/s2/favicons?sz=64&domain=${d}`;
 }
 
 function companyLogoUrl(website: string): string {
     try {
         const url = website.startsWith("http") ? website : `https://${website}`;
         const domain = new URL(url).hostname.replace("www.", "");
-        return `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
+        return `https://logo.clearbit.com/${domain}`;
     } catch {
         return "";
     }
@@ -207,14 +207,15 @@ export default async function LeadDetailPage({
                 <div className="flex items-start gap-5">
                     {/* Company logo */}
                     {companyLogo && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                            src={companyLogo}
-                            alt={submission.companyName}
-                            width={64}
-                            height={64}
-                            className="w-14 h-14 border border-neutral-200 bg-white p-1.5 flex-shrink-0 object-contain"
-                        />
+                        <div className="w-14 h-14 border border-neutral-200 bg-white p-1.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                            <LogoImage
+                                src={companyLogo}
+                                alt={submission.companyName}
+                                fallbackChar={submission.companyName}
+                                className="w-full h-full"
+                                fallbackClassName="w-14 h-14 text-base"
+                            />
+                        </div>
                     )}
                     <div className="flex-1 min-w-0">
                         <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">
@@ -308,14 +309,9 @@ export default async function LeadDetailPage({
                             <div className="divide-y divide-neutral-100">
                                 {scorecard.currentStack.map((t, i) => (
                                     <div key={i} className="px-4 py-3 flex items-start gap-3">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                            src={toolLogoUrl(t.name)}
-                                            alt={t.name}
-                                            width={32}
-                                            height={32}
-                                            className="w-7 h-7 border border-neutral-200 bg-white p-0.5 flex-shrink-0 object-contain"
-                                        />
+                                        <div className="w-7 h-7 border border-neutral-200 bg-white p-0.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                            <LogoImage src={toolLogoUrl(t.name)} alt={t.name} fallbackChar={t.name} className="w-5 h-5" fallbackClassName="w-7 h-7 text-[9px]" />
+                                        </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap mb-0.5">
                                                 <span className="font-mono text-xs font-bold">{t.name}</span>
@@ -342,14 +338,9 @@ export default async function LeadDetailPage({
                             <div className="divide-y divide-neutral-100">
                                 {recommendedTools.map((t, i) => (
                                     <div key={i} className="px-4 py-3 flex items-start gap-3">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img
-                                            src={toolLogoUrl(t.name, t.websiteDomain)}
-                                            alt={t.name}
-                                            width={32}
-                                            height={32}
-                                            className="w-7 h-7 border border-neutral-200 bg-white p-0.5 flex-shrink-0 object-contain"
-                                        />
+                                        <div className="w-7 h-7 border border-neutral-200 bg-white p-0.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                            <LogoImage src={toolLogoUrl(t.name, t.websiteDomain)} alt={t.name} fallbackChar={t.name} className="w-5 h-5" fallbackClassName="w-7 h-7 text-[9px]" />
+                                        </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 flex-wrap mb-1">
                                                 <span className="font-mono text-xs font-bold">{t.name}</span>
