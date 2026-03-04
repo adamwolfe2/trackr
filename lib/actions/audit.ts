@@ -12,7 +12,7 @@ import { db } from "@/lib/db";
 import { auditSubmissions, workspaces, softwareSpend, architects, architectReferrals } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
-import { sendAuditScorecardEmail, sendProspectTeaserEmail } from "@/lib/email/resend";
+import { sendAuditScorecardEmail, sendProspectTeaserEmail, sendArchitectNewLead } from "@/lib/email/resend";
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
@@ -346,6 +346,13 @@ export async function processAuditSubmission(id: string): Promise<void> {
                     await db.update(architects)
                         .set({ totalClients: architect.totalClients + 1 })
                         .where(eq(architects.id, architect.id));
+                    // Notify architect of new lead — non-blocking
+                    sendArchitectNewLead(
+                        architect.email,
+                        architect.firstName,
+                        submission.companyName,
+                        submission.contactEmail,
+                    ).catch(() => {});
                 }
             }
         }

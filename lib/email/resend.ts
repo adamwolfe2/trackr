@@ -776,6 +776,43 @@ export async function sendArchitectRejected(to: string, firstName: string) {
     );
 }
 
+export async function sendArchitectNewLead(to: string, firstName: string, companyName: string, contactEmail: string) {
+    if (!process.env.RESEND_API_KEY) return;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+    const resend = getResend();
+    await sendWithRetry(() =>
+        resend.emails.send({
+            from: FROM,
+            to,
+            subject: `New lead: ${companyName}`,
+            html: emailWrapper(`
+                <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
+                    You have a new lead.
+                </h1>
+                <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 16px;">
+                    Hi ${escapeHtml(firstName)},
+                </p>
+                <p style="font-size: 13px; color: #555; line-height: 1.7; margin: 0 0 16px;">
+                    Someone you referred just completed the AI Readiness Audit. Our team will follow up to qualify them.
+                </p>
+                <div style="border: 1px solid #000; padding: 16px; margin-bottom: 20px;">
+                    <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin: 0 0 4px;">Company</p>
+                    <p style="font-size: 14px; font-weight: bold; color: #000; margin: 0 0 12px;">${escapeHtml(companyName)}</p>
+                    <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin: 0 0 4px;">Contact</p>
+                    <p style="font-size: 13px; color: #333; margin: 0;">${escapeHtml(contactEmail)}</p>
+                </div>
+                <p style="font-size: 12px; color: #777; line-height: 1.6; margin: 0 0 20px;">
+                    If they become a client, you'll earn 20% of their monthly subscription — recurring, forever.
+                </p>
+                ${emailButton(`${appUrl}/architect/dashboard`, "View Your Dashboard")}
+                <p style="font-size: 13px; color: #777; margin: 20px 0 0; line-height: 1.5;">
+                    — The Trackr Team
+                </p>
+            `),
+        })
+    );
+}
+
 export async function sendCommissionEarned(to: string, firstName: string, clientWorkspaceId: string, commissionAmount: number, totalEarnings: number) {
     if (!process.env.RESEND_API_KEY) return;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
