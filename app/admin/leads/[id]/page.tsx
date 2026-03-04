@@ -233,10 +233,10 @@ export default async function LeadDetailPage({
                                 }`}>
                                     {submission.status}
                                 </span>
-                                {submission.status === "failed" && (
+                                {(submission.status === "failed" || submission.status === "complete") && (
                                     <form action={retryScorecard}>
                                         <button type="submit" className="font-mono text-[10px] uppercase tracking-widest border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors">
-                                            Retry
+                                            {submission.status === "failed" ? "Retry" : "Regenerate"}
                                         </button>
                                     </form>
                                 )}
