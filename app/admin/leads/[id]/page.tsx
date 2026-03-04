@@ -66,18 +66,26 @@ function aiRoleBadge(role: string) {
     return colors[role] ?? colors["Non-AI core infra"];
 }
 
-function toolLogoUrl(name: string, domain?: string | null): string {
-    const d = domain ?? `${name.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
-    return `https://www.google.com/s2/favicons?sz=64&domain=${d}`;
+/** Returns Clearbit as primary, Google favicon as fallback */
+function toolLogos(name: string, domain?: string | null) {
+    const d = domain ?? `${name.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "")}.com`;
+    return {
+        src: `https://logo.clearbit.com/${d}`,
+        fallbackSrc: `https://www.google.com/s2/favicons?sz=64&domain=${d}`,
+    };
 }
 
-function companyLogoUrl(website: string): string {
+/** Returns Clearbit as primary, Google favicon sz=128 as fallback */
+function companyLogos(website: string): { src: string; fallbackSrc: string } | null {
     try {
         const url = website.startsWith("http") ? website : `https://${website}`;
         const domain = new URL(url).hostname.replace("www.", "");
-        return `https://logo.clearbit.com/${domain}`;
+        return {
+            src: `https://logo.clearbit.com/${domain}`,
+            fallbackSrc: `https://www.google.com/s2/favicons?sz=128&domain=${domain}`,
+        };
     } catch {
-        return "";
+        return null;
     }
 }
 
@@ -119,7 +127,7 @@ export default async function LeadDetailPage({
         }
     })();
 
-    const companyLogo = submission.companyWebsite ? companyLogoUrl(submission.companyWebsite) : null;
+    const companyLogoUrls = submission.companyWebsite ? companyLogos(submission.companyWebsite) : null;
 
     // Workspace info
     let workspaceName: string | null = null;
@@ -205,18 +213,24 @@ export default async function LeadDetailPage({
             {/* ── Hero Card ─────────────────────────────────────────────────── */}
             <div className="border border-black p-6">
                 <div className="flex items-start gap-5">
-                    {/* Company logo */}
-                    {companyLogo && (
-                        <div className="w-14 h-14 border border-neutral-200 bg-white p-1.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                    {/* Company logo — Clearbit → Google favicon → initial */}
+                    <div className="w-16 h-16 border border-neutral-200 p-1.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                        {companyLogoUrls ? (
                             <LogoImage
-                                src={companyLogo}
+                                src={companyLogoUrls.src}
+                                fallbackSrc={companyLogoUrls.fallbackSrc}
                                 alt={submission.companyName}
                                 fallbackChar={submission.companyName}
                                 className="w-full h-full"
-                                fallbackClassName="w-14 h-14 text-base"
+                                fallbackClassName="w-16 h-16 text-lg"
                             />
-                        </div>
-                    )}
+                        ) : (
+                            <div className="w-16 h-16 flex items-center justify-center font-mono font-bold text-xl text-neutral-400 bg-neutral-100">
+                                {submission.companyName.charAt(0).toUpperCase()}
+                            </div>
+                        )}
+                    </div>
+
                     <div className="flex-1 min-w-0">
                         <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">
                             {[submission.industry, submission.companySize, submission.employeeCount ? `${submission.employeeCount} employees` : null]
@@ -297,33 +311,69 @@ export default async function LeadDetailPage({
                 )}
             </div>
 
-            {/* ── Stack + Recommended Tools ──────────────────────────────────── */}
+            {/* ── Current Stack + Recommended Tools ─────────────────────────── */}
             {scorecard && (scorecard.currentStack.length > 0 || recommendedTools.length > 0) && (
                 <div className="grid lg:grid-cols-2 gap-6">
+
                     {/* Current Stack */}
                     {scorecard.currentStack.length > 0 && (
                         <div className="border border-black">
                             <div className="border-b border-black px-5 py-3">
                                 <h2 className="font-mono text-xs uppercase tracking-widest">Current Stack</h2>
                             </div>
+
+                            {/* Logo strip — all tool logos at a glance */}
+                            <div className="px-5 py-4 border-b border-neutral-100 flex flex-wrap gap-2.5">
+                                {scorecard.currentStack.map((t, i) => {
+                                    const logos = toolLogos(t.name);
+                                    return (
+                                        <div
+                                            key={i}
+                                            title={t.name}
+                                            className="w-10 h-10 border border-neutral-200 p-1 flex items-center justify-center overflow-hidden"
+                                        >
+                                            <LogoImage
+                                                src={logos.src}
+                                                fallbackSrc={logos.fallbackSrc}
+                                                alt={t.name}
+                                                fallbackChar={t.name}
+                                                className="w-7 h-7"
+                                                fallbackClassName="w-10 h-10 text-[10px]"
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Detailed list */}
                             <div className="divide-y divide-neutral-100">
-                                {scorecard.currentStack.map((t, i) => (
-                                    <div key={i} className="px-4 py-3 flex items-start gap-3">
-                                        <div className="w-7 h-7 border border-neutral-200 bg-white p-0.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                            <LogoImage src={toolLogoUrl(t.name)} alt={t.name} fallbackChar={t.name} className="w-5 h-5" fallbackClassName="w-7 h-7 text-[9px]" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                                                <span className="font-mono text-xs font-bold">{t.name}</span>
-                                                <span className="font-mono text-[9px] text-neutral-400">{t.category}</span>
+                                {scorecard.currentStack.map((t, i) => {
+                                    const logos = toolLogos(t.name);
+                                    return (
+                                        <div key={i} className="px-4 py-3 flex items-start gap-3">
+                                            <div className="w-9 h-9 border border-neutral-200 p-1 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                <LogoImage
+                                                    src={logos.src}
+                                                    fallbackSrc={logos.fallbackSrc}
+                                                    alt={t.name}
+                                                    fallbackChar={t.name}
+                                                    className="w-6 h-6"
+                                                    fallbackClassName="w-9 h-9 text-[10px]"
+                                                />
                                             </div>
-                                            <span className={`font-mono text-[9px] uppercase tracking-widest border px-1.5 py-0.5 ${aiRoleBadge(t.aiRole)}`}>
-                                                {t.aiRole}
-                                            </span>
-                                            <p className="font-mono text-[10px] text-neutral-500 mt-1 leading-relaxed">{t.usageNotes}</p>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                                                    <span className="font-mono text-xs font-bold">{t.name}</span>
+                                                    <span className="font-mono text-[9px] text-neutral-400">{t.category}</span>
+                                                </div>
+                                                <span className={`font-mono text-[9px] uppercase tracking-widest border px-1.5 py-0.5 ${aiRoleBadge(t.aiRole)}`}>
+                                                    {t.aiRole}
+                                                </span>
+                                                <p className="font-mono text-[10px] text-neutral-500 mt-1 leading-relaxed">{t.usageNotes}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
@@ -335,29 +385,64 @@ export default async function LeadDetailPage({
                                 <h2 className="font-mono text-xs uppercase tracking-widest">Recommended Tools</h2>
                                 <span className="font-mono text-[10px] text-neutral-400">Propose on call</span>
                             </div>
+
+                            {/* Logo strip */}
+                            <div className="px-5 py-4 border-b border-neutral-100 flex flex-wrap gap-2.5">
+                                {recommendedTools.map((t, i) => {
+                                    const logos = toolLogos(t.name, t.websiteDomain);
+                                    return (
+                                        <div
+                                            key={i}
+                                            title={t.name}
+                                            className="w-10 h-10 border border-neutral-200 p-1 flex items-center justify-center overflow-hidden"
+                                        >
+                                            <LogoImage
+                                                src={logos.src}
+                                                fallbackSrc={logos.fallbackSrc}
+                                                alt={t.name}
+                                                fallbackChar={t.name}
+                                                className="w-7 h-7"
+                                                fallbackClassName="w-10 h-10 text-[10px]"
+                                            />
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Detailed list */}
                             <div className="divide-y divide-neutral-100">
-                                {recommendedTools.map((t, i) => (
-                                    <div key={i} className="px-4 py-3 flex items-start gap-3">
-                                        <div className="w-7 h-7 border border-neutral-200 bg-white p-0.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                            <LogoImage src={toolLogoUrl(t.name, t.websiteDomain)} alt={t.name} fallbackChar={t.name} className="w-5 h-5" fallbackClassName="w-7 h-7 text-[9px]" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                <span className="font-mono text-xs font-bold">{t.name}</span>
-                                                <span className="font-mono text-[9px] uppercase tracking-widest border border-neutral-200 px-1.5 py-0.5 text-neutral-500">
-                                                    {t.category}
-                                                </span>
-                                                <span className={`font-mono text-[9px] border px-1.5 py-0.5 ${impactBadge(t.impact)}`}>
-                                                    {t.impact} Impact
-                                                </span>
+                                {recommendedTools.map((t, i) => {
+                                    const logos = toolLogos(t.name, t.websiteDomain);
+                                    return (
+                                        <div key={i} className="px-4 py-3 flex items-start gap-3">
+                                            <div className="w-9 h-9 border border-neutral-200 p-1 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                                <LogoImage
+                                                    src={logos.src}
+                                                    fallbackSrc={logos.fallbackSrc}
+                                                    alt={t.name}
+                                                    fallbackChar={t.name}
+                                                    className="w-6 h-6"
+                                                    fallbackClassName="w-9 h-9 text-[10px]"
+                                                />
                                             </div>
-                                            <p className="font-mono text-[10px] text-neutral-600 leading-relaxed">{t.reason}</p>
-                                            {t.estimatedCostPerUser && (
-                                                <p className="font-mono text-[9px] text-neutral-400 mt-1">{t.estimatedCostPerUser}</p>
-                                            )}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                                    <span className="font-mono text-xs font-bold">{t.name}</span>
+                                                    <span className="font-mono text-[9px] uppercase tracking-widest border border-neutral-200 px-1.5 py-0.5 text-neutral-500">
+                                                        {t.category}
+                                                    </span>
+                                                    <span className={`font-mono text-[9px] border px-1.5 py-0.5 ${impactBadge(t.impact)}`}>
+                                                        {t.impact} Impact
+                                                    </span>
+                                                </div>
+                                                <p className="font-mono text-[10px] text-neutral-600 leading-relaxed">{t.reason}</p>
+                                                {t.estimatedCostPerUser && (
+                                                    <p className="font-mono text-[9px] text-neutral-400 mt-1">{t.estimatedCostPerUser}</p>
+                                                )}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

@@ -275,6 +275,14 @@ async function handleSubscriptionDeleted(sub: Stripe.Subscription) {
         })
         .where(eq(subscriptions.stripeSubscriptionId, subscriptionId));
 
+    // Mark architect referrals as churned when a workspace cancels
+    await db.update(architectReferrals)
+        .set({ status: "churned" })
+        .where(and(
+            eq(architectReferrals.workspaceId, existing.workspaceId),
+            sql`${architectReferrals.status} IN ('lead', 'active')`,
+        ));
+
     await captureEvent(existing.workspaceId, "subscription_canceled", {
         workspace_id: existing.workspaceId,
         subscription_id: subscriptionId,
@@ -361,7 +369,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
                     const invoiceId = invoice.id;
 
                     if (commissionAmount > 0 && invoiceId) {
-                        // Create commission record
+                        // Create commission record — onConflictDoNothing prevents duplicate payouts on webhook retries
                         const [commission] = await db.insert(architectCommissions).values({
                             architectId: architect.id,
                             referralId: referral.id,
@@ -370,7 +378,10 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
                             commissionRate,
                             commissionAmount,
                             status: "pending",
-                        }).returning();
+                        }).onConflictDoNothing().returning();
+
+                        // If already exists (webhook retry), skip payout
+                        if (!commission) return;
 
                         // If architect has completed Stripe Connect, transfer immediately
                         if (architect.stripeOnboardingComplete && architect.stripeConnectAccountId) {

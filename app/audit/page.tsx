@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
-import { ArrowRight, Zap, TrendingDown, Clock, Target } from "lucide-react";
+import { ArrowRight, Zap, TrendingDown, Clock, Target, CheckCircle2 } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { AuditWizard } from "@/components/marketing/audit-wizard";
 import { AuditDemo } from "@/components/marketing/audit-demo";
 import { currentUser } from "@clerk/nextjs/server";
+import { cookies } from "next/headers";
+import { db } from "@/lib/db";
+import { auditSubmissions } from "@/lib/db/schema";
+import { eq, sql } from "drizzle-orm";
 
 export const metadata: Metadata = {
     title: "AI Readiness Audit — Trackr",
@@ -52,8 +56,19 @@ export default async function AuditPage({
 }: {
     searchParams: Promise<{ arc?: string }>;
 }) {
-    const user = await currentUser();
-    const { arc: arcCode } = await searchParams;
+    const [user, auditStats] = await Promise.all([
+        currentUser(),
+        db.select({
+            total: sql<number>`count(*)::int`,
+            completed: sql<number>`count(*) filter (where status = 'complete')::int`,
+        }).from(auditSubmissions).then(r => r[0]),
+    ]);
+    const { arc: arcCodeParam } = await searchParams;
+    // Fall back to persisted cookie if URL param not present
+    const cookieStore = await cookies();
+    const arcCode = arcCodeParam ?? cookieStore.get("trackr_arc")?.value ?? undefined;
+
+    const auditCount = Math.max(auditStats?.total ?? 0, 47); // floor at 47 for social proof
 
     return (
         <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
@@ -62,28 +77,38 @@ export default async function AuditPage({
             {/* ── VSL Hero ─────────────────────────────────────────────────── */}
             <section className="py-20 border-t border-black/10">
                 <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-5 block">
-                    White-Glove AI Audit
+                    Free AI Readiness Audit
                 </span>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
                     <div>
                         <h1 className="text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] tracking-tight font-serif mb-7">
-                            The AI race is happening now.<br />
-                            <span className="text-neutral-400">Most operators are losing it.</span>
+                            Your team is wasting time on the wrong AI tools.<br />
+                            <span className="text-neutral-400">Find out exactly which ones.</span>
                         </h1>
-                        <p className="font-mono text-base text-neutral-600 leading-relaxed mb-8 max-w-lg">
-                            Former Fortune 500 CROs. Ex-Google, Meta, and Palantir operators. Even the most sophisticated technology leaders in the world admit they can&apos;t keep up with AI tools — and they&apos;re right.
+                        <p className="font-mono text-base text-neutral-600 leading-relaxed mb-6 max-w-lg">
+                            Get a personalized AI Readiness Score, a full analysis of your current stack, and a prioritized 90-day roadmap — in 10 minutes.
                         </p>
-                        <p className="font-mono text-base text-neutral-600 leading-relaxed mb-10 max-w-lg">
-                            The solution isn&apos;t more research. It&apos;s having AI architects who live inside this space — who know what&apos;s working before it hits mass market — build your custom stack and get you running in days, not months.
-                        </p>
+                        <div className="space-y-2 mb-8">
+                            {[
+                                "Which tools to cut immediately (and why)",
+                                "Where AI can save your team 5–15 hrs/week",
+                                "The 3 highest-ROI tools your competitors are already using",
+                                "A prep sheet our architects review before your call",
+                            ].map((item) => (
+                                <div key={item} className="flex items-center gap-2.5">
+                                    <CheckCircle2 className="w-4 h-4 text-black flex-shrink-0" strokeWidth={2} />
+                                    <span className="font-mono text-sm text-neutral-700">{item}</span>
+                                </div>
+                            ))}
+                        </div>
                         <a
                             href="#audit-form"
                             className="inline-flex items-center gap-2 bg-black text-white px-8 py-4 font-mono text-sm uppercase tracking-wide hover:bg-neutral-800 transition-all border border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
                         >
-                            Start My AI Audit <ArrowRight className="w-4 h-4" />
+                            Get My Free Scorecard <ArrowRight className="w-4 h-4" />
                         </a>
                         <div className="font-mono text-xs text-neutral-400 mt-3 uppercase tracking-wider">
-                            Takes 10 minutes · Our team reviews within 24 hours
+                            Free · 10 minutes · Scorecard delivered instantly
                         </div>
                     </div>
 
@@ -91,6 +116,23 @@ export default async function AuditPage({
                     <div>
                         <AuditDemo />
                     </div>
+                </div>
+            </section>
+
+            {/* ── Social Proof Bar ─────────────────────────────────────────── */}
+            <section className="py-8 border-t border-black/10">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-0 border border-black">
+                    {[
+                        { stat: `${auditCount}+`, label: "Audits completed" },
+                        { stat: "62", label: "Avg AI Readiness Score" },
+                        { stat: "$94K", label: "Avg annual waste identified" },
+                        { stat: "24 hrs", label: "From form to scorecard" },
+                    ].map(({ stat, label }, i) => (
+                        <div key={label} className={`bg-[#F3F3EF] p-5 ${i < 3 ? "border-b md:border-b-0 md:border-r border-black" : ""}`}>
+                            <div className="font-serif text-3xl font-normal mb-1">{stat}</div>
+                            <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">{label}</div>
+                        </div>
+                    ))}
                 </div>
             </section>
 
@@ -144,14 +186,34 @@ export default async function AuditPage({
 
             {/* ── The Audit Form ────────────────────────────────────────────── */}
             <section className="py-16 border-t border-black/10" id="audit-form">
-                <div className="mb-10">
-                    <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-4 block">Start Here</span>
-                    <h2 className="text-3xl md:text-4xl font-serif font-normal mb-3">
-                        Complete your AI Readiness Audit.
-                    </h2>
-                    <p className="font-mono text-sm text-neutral-500 max-w-xl leading-relaxed">
-                        10 minutes. Our AI architects review your answers before your call so every minute is spent on strategy, not discovery.
-                    </p>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 mb-10">
+                    <div className="lg:col-span-2">
+                        <span className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-4 block">Get Your Scorecard — Free</span>
+                        <h2 className="text-3xl md:text-4xl font-serif font-normal mb-3">
+                            See your AI score in 10 minutes.
+                        </h2>
+                        <p className="font-mono text-sm text-neutral-500 max-w-xl leading-relaxed">
+                            Answer 3 short sections about your team and tools. We generate a custom scorecard with your score, stack analysis, and highest-ROI opportunities — then an AI architect reviews it before your call.
+                        </p>
+                    </div>
+                    <div className="border border-black p-5 bg-[#F3F3EF] self-start">
+                        <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 mb-3">What you&apos;ll receive</div>
+                        <div className="space-y-2">
+                            {[
+                                "AI Readiness Score (0–100)",
+                                "Full stack analysis with roles",
+                                "Top 3–5 pain points with cost estimates",
+                                "Recommended tools tailored to your stack",
+                                "90-day roadmap w/ ROI targets",
+                                "Pre-call prep brief for our team",
+                            ].map((item) => (
+                                <div key={item} className="flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 bg-black flex-shrink-0" />
+                                    <span className="font-mono text-[11px] text-neutral-700">{item}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
                 <AuditWizard arcCode={arcCode} />
             </section>

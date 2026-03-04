@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { db } from "@/lib/db";
 import { auditSubmissions } from "@/lib/db/schema";
+import { eq, and, gte } from "drizzle-orm";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { processAuditSubmission } from "@/lib/actions/audit";
 import { captureEvent } from "@/lib/analytics/posthog-server";
@@ -67,6 +68,19 @@ export async function POST(req: NextRequest) {
     }
 
     const data = parsed.data;
+
+    // Deduplicate: same email within 24 hours → return existing submission
+    const recentCutoff = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const existing = await db.query.auditSubmissions.findFirst({
+        where: and(
+            eq(auditSubmissions.contactEmail, data.contactEmail),
+            gte(auditSubmissions.createdAt, recentCutoff),
+        ),
+        columns: { id: true },
+    });
+    if (existing) {
+        return NextResponse.json({ success: true, id: existing.id });
+    }
 
     const [submission] = await db
         .insert(auditSubmissions)

@@ -9,6 +9,7 @@ import { redirect } from "next/navigation";
 import { createHash, timingSafeEqual } from "crypto";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { CopyShareUrlButton } from "@/components/admin/copy-share-url-button";
 
 export const metadata: Metadata = {
     title: "Admin Leads — Trackr",
@@ -80,7 +81,11 @@ function scoreColor(score: number | null): string {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function AdminLeadsPage() {
+export default async function AdminLeadsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ status?: string }>;
+}) {
     const authed = await isAdminAuthenticated();
 
     if (!authed) {
@@ -106,9 +111,18 @@ export default async function AdminLeadsPage() {
         );
     }
 
-    const submissions = await db.select().from(auditSubmissions)
+    const { status: statusFilter } = await searchParams;
+
+    const allSubmissions = await db.select().from(auditSubmissions)
         .orderBy(desc(auditSubmissions.createdAt))
-        .limit(100);
+        .limit(200);
+
+    const submissions = statusFilter
+        ? allSubmissions.filter(s => {
+            if (statusFilter === "processing") return s.status === "processing" || s.status === "pending";
+            return s.status === statusFilter;
+        })
+        : allSubmissions;
 
     return (
         <div className="space-y-8">
@@ -131,16 +145,45 @@ export default async function AdminLeadsPage() {
             {/* Summary bar */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px border border-black bg-black">
                 {[
-                    { label: "Total Leads", value: submissions.length },
-                    { label: "Complete", value: submissions.filter(s => s.status === "complete").length },
-                    { label: "Processing", value: submissions.filter(s => s.status === "processing" || s.status === "pending").length },
-                    { label: "Failed", value: submissions.filter(s => s.status === "failed").length },
+                    { label: "Total Leads", value: allSubmissions.length },
+                    { label: "Complete", value: allSubmissions.filter(s => s.status === "complete").length },
+                    { label: "Processing", value: allSubmissions.filter(s => s.status === "processing" || s.status === "pending").length },
+                    { label: "Failed", value: allSubmissions.filter(s => s.status === "failed").length },
                 ].map(({ label, value }) => (
                     <div key={label} className="bg-[#F3F3EF] p-5">
                         <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">{label}</p>
                         <p className="font-mono text-3xl font-bold">{value}</p>
                     </div>
                 ))}
+            </div>
+
+            {/* Status filter tabs */}
+            <div className="flex items-center gap-1">
+                {[
+                    { label: "All", value: undefined },
+                    { label: "Complete", value: "complete" },
+                    { label: "Processing", value: "processing" },
+                    { label: "Failed", value: "failed" },
+                ].map(({ label, value }) => {
+                    const isActive = statusFilter === value;
+                    const href = value ? `/admin/leads?status=${value}` : "/admin/leads";
+                    return (
+                        <a
+                            key={label}
+                            href={href}
+                            className={`font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border transition-colors ${
+                                isActive
+                                    ? "border-black bg-black text-white"
+                                    : "border-neutral-300 text-neutral-500 hover:border-black hover:text-black"
+                            }`}
+                        >
+                            {label}
+                        </a>
+                    );
+                })}
+                <span className="font-mono text-xs text-neutral-400 ml-2">
+                    {submissions.length} result{submissions.length !== 1 ? "s" : ""}
+                </span>
             </div>
 
             {/* Leads table */}
@@ -199,12 +242,17 @@ export default async function AdminLeadsPage() {
                                         {relativeTime(new Date(sub.createdAt))}
                                     </td>
                                     <td className="px-4 py-3">
-                                        <a
-                                            href={`/admin/leads/${sub.id}`}
-                                            className="font-mono text-xs uppercase tracking-widest border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors"
-                                        >
-                                            View →
-                                        </a>
+                                        <div className="flex items-center gap-1.5">
+                                            <a
+                                                href={`/admin/leads/${sub.id}`}
+                                                className="font-mono text-xs uppercase tracking-widest border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors"
+                                            >
+                                                View →
+                                            </a>
+                                            {sub.shareToken && (
+                                                <CopyShareUrlButton token={sub.shareToken} />
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             );

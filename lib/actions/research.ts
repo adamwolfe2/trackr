@@ -435,15 +435,15 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
             ].filter(Boolean).join("\n\n");
 
         } else {
-            // ── Full mode: 3 Tavily + Perplexity ─────────────────────────
+            // ── Full mode: 2 Tavily + Perplexity ─────────────────────────
 
-            // Step 3: Reviews + trust
-            await logProgress(toolId, `Step 3/6: Searching reviews & trust sites...`);
+            // Step 3: Reviews + trust + Reddit (merged into 1 call)
+            await logProgress(toolId, `Step 3/6: Searching reviews, trust sites & Reddit...`);
             const reviewTrustStart = Date.now();
             const reviewTrustSearch = await withTimeout(
                 tavily.search(
-                    `${tool.name} software reviews user feedback rating pros cons`,
-                    { includeDomains: [...REVIEW_DOMAINS, ...TRUST_DOMAINS], maxResults: 12, includeAnswer: true }
+                    `${tool.name} software reviews user feedback rating pros cons experience problems issues`,
+                    { includeDomains: [...REVIEW_DOMAINS, ...TRUST_DOMAINS, "reddit.com"], maxResults: 18, includeAnswer: true }
                 ),
                 30000, tavilyFallback
             );
@@ -455,38 +455,25 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
             trustResults = reviewTrustSearch.results.filter(r => {
                 try { return TRUST_DOMAINS.some(d => new URL(r.url).hostname.includes(d)); } catch { return false; }
             });
+            uniqueRedditResults = reviewTrustSearch.results.filter(r => {
+                try { return new URL(r.url).hostname.includes("reddit.com"); } catch { return false; }
+            });
             reviewTrustAnswer = reviewTrustSearch.answer;
 
             if (reviewTrustSearch.results.length > 0) {
                 const sourceNames = [...new Set(
                     reviewTrustSearch.results.map((r) => { try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; } })
                 )];
-                await logProgress(toolId, `Found ${reviewTrustSearch.results.length} review/trust sources: ${sourceNames.join(", ")}`);
+                await logProgress(toolId, `Found ${reviewTrustSearch.results.length} sources (${uniqueRedditResults.length} Reddit): ${sourceNames.join(", ")}`);
             }
 
             rawData.reviews = reviewResults.map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`).join("\n\n");
             rawData.trust = trustResults.map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`).join("\n\n");
-
-            // Step 4: Reddit
-            await logProgress(toolId, `Step 4/6: Scanning Reddit discussions...`);
-            const redditStart = Date.now();
-            const redditSearch = await withTimeout(
-                tavily.search(
-                    `"${tool.name}" review experience worth it vs alternative comparison problems issues site:reddit.com`,
-                    { includeDomains: ["reddit.com"], maxResults: 10, includeAnswer: true }
-                ),
-                30000, tavilyFallback
-            );
-            logApiCall({ service: "tavily", endpoint: "search-reddit", durationMs: Date.now() - redditStart, estimatedCost: COST_MAP.tavily.search, workspaceId: tool.workspaceId, toolId });
-
-            uniqueRedditResults = redditSearch.results;
-            await logProgress(toolId, `Found ${uniqueRedditResults.length} Reddit threads`);
-
             rawData.reddit = uniqueRedditResults.map((r) => `[${r.title}](${r.url}):\n${r.content.slice(0, 500)}`).join("\n\n");
-            rawData.redditAnswers = redditSearch.answer || "";
+            rawData.redditAnswers = reviewTrustAnswer || "";
 
-            // Step 5: Competitors + market intel
-            await logProgress(toolId, `Step 5/6: Analyzing competitive landscape + market intel...`);
+            // Step 4: Competitors + market intel (formerly step 5)
+            await logProgress(toolId, `Step 4/6: Analyzing competitive landscape + market intel...`);
             const competitorStart = Date.now();
             const competitorMarketSearch = await withTimeout(
                 tavily.search(

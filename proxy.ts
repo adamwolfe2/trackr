@@ -120,22 +120,43 @@ const clerk = hasClerkKey ? clerkMiddleware(async (auth, req: NextRequest) => {
     }
 }) : null;
 
-export default function middleware(req: NextRequest) {
+/** Persist architect referral code in a 30-day cookie when visiting /audit?arc=CODE */
+function applyArcCodeCookie(req: NextRequest, res: NextResponse): void {
+    const { pathname, searchParams } = req.nextUrl;
+    if (pathname !== "/audit") return;
+    const arcCode = searchParams.get("arc");
+    if (!arcCode) return;
+    const existing = req.cookies.get("trackr_arc")?.value;
+    // First-touch: never overwrite an existing attribution — first architect wins
+    if (existing) return;
+    res.cookies.set("trackr_arc", arcCode.toUpperCase(), {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+    });
+}
+
+export default async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
     if (
         BYPASS_PREFIXES.some((prefix) => path.startsWith(prefix)) ||
         BYPASS_EXACT.includes(path)
     ) {
-        return NextResponse.next();
+        const res = NextResponse.next();
+        applyArcCodeCookie(req, res);
+        return res;
     }
-
 
     // If Clerk is not configured and we're not in a build, block the request
     if (!clerk && !isBuilding) {
         return NextResponse.json({ error: "Authentication unavailable" }, { status: 503 });
     }
 
-    return clerk ? clerk(req, {} as never) : NextResponse.next();
+    const res = (await (clerk ? clerk(req, {} as never) : Promise.resolve(NextResponse.next()))) as NextResponse;
+    applyArcCodeCookie(req, res);
+    return res;
 }
 
 export const config = {

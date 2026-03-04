@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, integer, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, integer, boolean, index, unique } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { workspaces, auditSubmissions } from './schema';
 
@@ -55,6 +55,10 @@ export const architectReferrals = pgTable('architect_referrals', {
     attributedAt: timestamp('attributed_at').defaultNow().notNull(),
 }, (table) => [
     index('architect_referrals_architect_id_idx').on(table.architectId),
+    index('architect_referrals_workspace_id_idx').on(table.workspaceId),
+    index('architect_referrals_status_idx').on(table.status),
+    // Prevent duplicate referrals: one referral per architect+submission
+    unique('architect_referrals_architect_submission_unique').on(table.architectId, table.auditSubmissionId),
 ]);
 
 // Architect Commissions — one row per commission event
@@ -72,6 +76,9 @@ export const architectCommissions = pgTable('architect_commissions', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
     index('architect_commissions_architect_id_idx').on(table.architectId),
+    index('architect_commissions_referral_id_idx').on(table.referralId),
+    // Prevent duplicate commissions for the same Stripe invoice
+    unique('architect_commissions_stripe_invoice_unique').on(table.stripeInvoiceId),
 ]);
 
 // Architect Payouts — monthly payout batches
