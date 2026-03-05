@@ -14,6 +14,20 @@ export type PlanFeatures = {
     reportExport: boolean;
     scheduledResearch: boolean;
     apiAccess: boolean;
+    // Enterprise features
+    stackHealth: boolean | "limited"; // "limited" = score only (no breakdown/recs)
+    boardReports: boolean;
+    competitorIntel: boolean;
+    contracts: boolean;
+    procurement: boolean;
+    calendar: boolean;
+    customWeights: boolean | "limited"; // "limited" = weights only, no custom dims
+    decisionLog: boolean;
+    riskMonitor: boolean;
+    integrations: boolean;
+    teamLiteracy: boolean;
+    publicProfile: boolean;
+    embedWidget: boolean;
 };
 
 export type Plan = {
@@ -25,6 +39,7 @@ export type Plan = {
         tools: number;
         research: number;
         members: number;
+        competitors: number;
     };
     extraCreditPrice: number | null; // price per additional credit, null = can't buy
     features: PlanFeatures;
@@ -41,6 +56,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             tools: 15,
             research: 3,
             members: 1,
+            competitors: 0,
         },
         extraCreditPrice: null,
         defaultResearchDepth: "quick",
@@ -56,6 +72,19 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             reportExport: false,
             scheduledResearch: false,
             apiAccess: false,
+            stackHealth: "limited",
+            boardReports: false,
+            competitorIntel: false,
+            contracts: false,
+            procurement: false,
+            calendar: false,
+            customWeights: false,
+            decisionLog: false,
+            riskMonitor: false,
+            integrations: false,
+            teamLiteracy: false,
+            publicProfile: false,
+            embedWidget: false,
         },
     },
     TEAM: {
@@ -67,6 +96,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             tools: Infinity,
             research: 25,
             members: 5,
+            competitors: 0,
         },
         extraCreditPrice: 1.50,
         defaultResearchDepth: "full",
@@ -82,6 +112,19 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             reportExport: true,
             scheduledResearch: true,
             apiAccess: false,
+            stackHealth: "limited",
+            boardReports: false,
+            competitorIntel: false,
+            contracts: false,
+            procurement: true,
+            calendar: true,
+            customWeights: false,
+            decisionLog: true,
+            riskMonitor: false,
+            integrations: false,
+            teamLiteracy: false,
+            publicProfile: true,
+            embedWidget: false,
         },
     },
     STARTUP: {
@@ -93,6 +136,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             tools: Infinity,
             research: 75,
             members: 15,
+            competitors: 5,
         },
         extraCreditPrice: 1.00,
         defaultResearchDepth: "full",
@@ -108,6 +152,19 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             reportExport: true,
             scheduledResearch: true,
             apiAccess: false,
+            stackHealth: true,
+            boardReports: true,
+            competitorIntel: true,
+            contracts: true,
+            procurement: true,
+            calendar: true,
+            customWeights: "limited",
+            decisionLog: true,
+            riskMonitor: true,
+            integrations: true,
+            teamLiteracy: true,
+            publicProfile: true,
+            embedWidget: true,
         },
     },
     ENTERPRISE: {
@@ -119,6 +176,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             tools: Infinity,
             research: 200,
             members: Infinity,
+            competitors: Infinity,
         },
         extraCreditPrice: 0.75,
         defaultResearchDepth: "full",
@@ -134,6 +192,19 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             reportExport: true,
             scheduledResearch: true,
             apiAccess: true,
+            stackHealth: true,
+            boardReports: true,
+            competitorIntel: true,
+            contracts: true,
+            procurement: true,
+            calendar: true,
+            customWeights: true,
+            decisionLog: true,
+            riskMonitor: true,
+            integrations: true,
+            teamLiteracy: true,
+            publicProfile: true,
+            embedWidget: true,
         },
     },
 };

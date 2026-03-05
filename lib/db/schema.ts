@@ -475,3 +475,4 @@ export const auditSubmissions = pgTable('audit_submissions', {
 
 export * from './referrals-schema';
 export * from './architect-schema';
+export * from './enterprise-schema';

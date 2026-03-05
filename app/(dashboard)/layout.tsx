@@ -5,10 +5,11 @@ import { CreditUsageBanner } from "@/components/layout/credit-usage-banner"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
-import { workspaceMembers, workspaces } from "@/lib/db/schema"
+import { workspaceMembers, workspaces, subscriptions } from "@/lib/db/schema"
 import { eq } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import type { Metadata } from "next"
+import { getPlanLimits } from "@/lib/config/subscriptions"
 
 // Dashboard routes are authenticated — prevent search engines from indexing them
 export const metadata: Metadata = {
@@ -50,10 +51,15 @@ export default async function DashboardLayout({
         redirect("/onboarding");
     }
 
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspace.id),
+    });
+    const plan = getPlanLimits(subscription);
+
     return (
         <div className="flex min-h-screen bg-[#F3F3EF] text-black">
             <div className="hidden md:flex print:hidden w-64 flex-col fixed inset-y-0 z-50">
-                <AppSidebar />
+                <AppSidebar planFeatures={plan.features} />
             </div>
             <div className="flex-1 md:pl-64 print:pl-0 flex flex-col min-h-screen">
                 <div className="print:hidden"><Header /></div>

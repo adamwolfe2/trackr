@@ -57,6 +57,13 @@
       "when": 1772661824479,
       "tag": "0007_giant_bloodscream",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1772705485872,
+      "tag": "0008_natural_dragon_lord",
+      "breakpoints": true
     }
   ]
 }

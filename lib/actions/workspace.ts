@@ -161,6 +161,52 @@ export async function saveScorecardRecipe(recipe: ScorecardRecipeInput) {
     return { success: true };
 }
 
+interface ScorecardWeightsInput {
+    core: number;
+    ease: number;
+    integration: number;
+    pricing: number;
+    ai: number;
+    community: number;
+    scale: number;
+}
+
+export async function saveScorecardWeights(weights: ScorecardWeightsInput) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+    });
+    if (!member) throw new Error("No workspace found");
+    if (member.role !== "owner" && member.role !== "admin") {
+        throw new Error("Only workspace owners and admins can update scoring weights");
+    }
+
+    // Validate weights total 100
+    const total = Object.values(weights).reduce((sum, v) => sum + v, 0);
+    if (total !== 100) throw new Error("Weights must total 100%");
+
+    const workspaceId = member.workspaceId;
+
+    // Get existing scorecard config and merge weights
+    const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.id, workspaceId),
+        columns: { scorecardConfig: true },
+    });
+
+    const existingConfig = (workspace?.scorecardConfig || {}) as Record<string, unknown>;
+
+    await db.update(workspaces)
+        .set({
+            scorecardConfig: { ...existingConfig, weights } as unknown as Record<string, unknown>,
+        })
+        .where(eq(workspaces.id, workspaceId));
+
+    revalidatePath("/settings/scorecard");
+    return { success: true };
+}
+
 export async function updateCompanyContext(formData: FormData) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");

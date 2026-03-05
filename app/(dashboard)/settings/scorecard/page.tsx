@@ -7,12 +7,13 @@ import { db } from "@/lib/db";
 import { workspaceMembers, workspaces, subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { ScorecardClient, type ScorecardRecipe } from "@/components/scorecard/scorecard-client";
+import { WeightEditor, type ScorecardWeights } from "@/components/scorecard/weight-editor";
 import { PlanGate } from "@/components/billing/plan-gate";
 import { getPlanLimits, hasFeature } from "@/lib/config/subscriptions";
 
 export const metadata: Metadata = {
     title: "Scorecard — Trackr",
-    description: "Configure your custom tool evaluation scorecard.",
+    description: "Configure your custom tool evaluation scorecard and scoring weights.",
 };
 
 export default async function ScorecardPage() {
@@ -47,7 +48,18 @@ export default async function ScorecardPage() {
         columns: { scorecardConfig: true },
     });
 
-    const savedRecipe = workspace?.scorecardConfig as ScorecardRecipe | null;
+    const config = workspace?.scorecardConfig as (ScorecardRecipe & { weights?: ScorecardWeights }) | null;
+    const savedRecipe = config ? { systemContext: config.systemContext, businessUnits: config.businessUnits, evaluationCriteria: config.evaluationCriteria, dealBreakers: config.dealBreakers } : null;
+    const savedWeights = config?.weights || null;
+    const canEditWeights = hasFeature(plan, "customWeights");
 
-    return <ScorecardClient savedRecipe={savedRecipe} />;
+    return (
+        <div className="space-y-8">
+            {/* Weight Editor — always visible, editable only for Startup+ */}
+            <WeightEditor savedWeights={savedWeights} canEditWeights={canEditWeights} />
+
+            {/* Recipe Editor */}
+            <ScorecardClient savedRecipe={savedRecipe} />
+        </div>
+    );
 }

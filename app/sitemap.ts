@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 import { getAllPosts } from '@/lib/blog';
 import { db } from '@/lib/db';
-import { reports, tools } from '@/lib/db/schema';
+import { reports, tools, publicProfiles } from '@/lib/db/schema';
 import { isNotNull, eq, and } from 'drizzle-orm';
 import { CURATED_TOOLS } from '@/data/tools.seed';
 import { TEMPLATES } from '@/data/templates.seed';
@@ -50,6 +50,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             lastModified: new Date(t.updatedAt),
             changeFrequency: 'weekly' as const,
             priority: 0.8,
+        }));
+    } catch {
+        // Non-critical
+    }
+
+    // Public stack profile pages
+    let stackProfilePages: { url: string; lastModified: Date; changeFrequency: 'weekly'; priority: number }[] = [];
+    try {
+        const publishedProfiles = await db
+            .select({ slug: publicProfiles.slug, updatedAt: publicProfiles.updatedAt })
+            .from(publicProfiles)
+            .where(eq(publicProfiles.isPublished, true));
+        stackProfilePages = publishedProfiles.map((p) => ({
+            url: `${baseUrl}/stack/${p.slug}`,
+            lastModified: new Date(p.updatedAt),
+            changeFrequency: 'weekly' as const,
+            priority: 0.7,
         }));
     } catch {
         // Non-critical
@@ -243,5 +260,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...blogPosts,
         ...sharedReports,
         ...researchPages,
+        ...stackProfilePages,
     ];
 }
