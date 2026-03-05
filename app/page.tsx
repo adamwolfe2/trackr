@@ -12,6 +12,7 @@ import { MarketingIntegrations } from "@/components/marketing/marketing-integrat
 import { MarketingTestimonials } from "@/components/marketing/marketing-testimonials";
 
 // Below-fold: code-split to reduce initial JS bundle
+const MarketingTopTools = lazy(() => import("@/components/marketing/marketing-top-tools").then(m => ({ default: m.MarketingTopTools })));
 const MarketingProblem = lazy(() => import("@/components/marketing/marketing-problem").then(m => ({ default: m.MarketingProblem })));
 const MarketingHowItWorks = lazy(() => import("@/components/marketing/marketing-how-it-works").then(m => ({ default: m.MarketingHowItWorks })));
 const OffsetFeatures = lazy(() => import("@/components/marketing/offset-features").then(m => ({ default: m.OffsetFeatures })));
@@ -124,6 +125,7 @@ export default async function Home() {
         <MarketingNavigation isLoggedIn={!!user} />
         <OffsetHero />
         <MarketingIntegrations />
+        <MarketingTopTools />
         <MarketingTestimonials />
         <MarketingSocialProof />
         <MarketingProblem />
