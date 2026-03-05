@@ -23,7 +23,7 @@ const TOOLS = [
     score: 10,
     summary: "AI voice assistant that captures meetings and turns them into structured notes, action items, and CRM updates.",
     shareToken: "showcase-lemon-2026w10",
-    logoUrl: "https://logo.clearbit.com/heylemon.ai",
+    logoUrl: "/showcase-lemon.png",
   },
   {
     name: "Raycast",
@@ -31,7 +31,7 @@ const TOOLS = [
     score: 10,
     summary: "Blazing-fast macOS launcher with 1,000+ extensions, built-in AI chat, clipboard history, and window management.",
     shareToken: "showcase-raycast-2026w10",
-    logoUrl: "https://logo.clearbit.com/raycast.com",
+    logoUrl: "/showcase-raycast.png",
   },
   {
     name: "Cursive",
@@ -39,7 +39,7 @@ const TOOLS = [
     score: 10,
     summary: "AI-powered lead intelligence that identifies anonymous visitors, enriches with intent data, and delivers qualified leads.",
     shareToken: "showcase-cursive-2026w10",
-    logoUrl: "https://logo.clearbit.com/meetcursive.com",
+    logoUrl: "/showcase-cursive.png",
   },
 ];
 

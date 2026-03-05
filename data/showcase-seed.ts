@@ -29,7 +29,7 @@ export const SHOWCASE_TOOLS: ShowcaseTool[] = [
   {
     name: "Lemon",
     websiteUrl: "https://heylemon.ai",
-    logoUrl: "https://logo.clearbit.com/heylemon.ai",
+    logoUrl: "/showcase-lemon.png",
     categories: ["Voice AI", "Productivity"],
     overallScore: 8.4,
     shareToken: "showcase-lemon-2026w10",
@@ -130,7 +130,7 @@ export const SHOWCASE_TOOLS: ShowcaseTool[] = [
   {
     name: "Cursive",
     websiteUrl: "https://meetcursive.com",
-    logoUrl: "https://logo.clearbit.com/meetcursive.com",
+    logoUrl: "/showcase-cursive.png",
     categories: ["Lead Intelligence", "Sales Automation"],
     overallScore: 9.1,
     shareToken: "showcase-cursive-2026w10",
@@ -235,7 +235,7 @@ export const SHOWCASE_TOOLS: ShowcaseTool[] = [
   {
     name: "Raycast",
     websiteUrl: "https://raycast.com",
-    logoUrl: "https://logo.clearbit.com/raycast.com",
+    logoUrl: "/showcase-raycast.png",
     categories: ["Productivity", "Developer Tools"],
     overallScore: 9.5,
     shareToken: "showcase-raycast-2026w10",

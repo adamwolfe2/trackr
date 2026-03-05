@@ -89,6 +89,15 @@ export async function POST(req: NextRequest) {
 
             if (matchingTool && matchingTool.workspaceId === workspace.id) {
                 toolId = matchingTool.id;
+                // Update tool metadata on force
+                if (force) {
+                    await db.update(tools).set({
+                        logoUrl: demo.logoUrl,
+                        websiteUrl: demo.websiteUrl,
+                        overallScore: demo.overallScore.toFixed(2),
+                        category: demo.categories,
+                    }).where(eq(tools.id, toolId));
+                }
             } else {
                 const [newTool] = await db.insert(tools).values({
                     workspaceId: workspace.id,
