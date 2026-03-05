@@ -15,6 +15,14 @@ const ROW_1 = [
     { src: "/integrations/google-drive-svgrepo-com.svg", alt: "Google Drive" },
     { src: "/integrations/github.svg", alt: "GitHub" },
     { src: "/integrations/typeform.svg", alt: "Typeform" },
+    { src: "/integrations/apollo.svg", alt: "Apollo" },
+    { src: "/integrations/meta-color.svg", alt: "Meta" },
+    { src: "/integrations/tiktok.svg", alt: "TikTok" },
+    { src: "/integrations/icons8-instagram.svg", alt: "Instagram" },
+    { src: "/integrations/google-ads-svgrepo-com.svg", alt: "Google Ads" },
+    { src: "/integrations/icons8-wordpress.svg", alt: "WordPress" },
+    { src: "/integrations/X_idJxGuURW1_0.svg", alt: "X" },
+    { src: "/integrations/search-console-icon-2025-1.svg", alt: "Search Console" },
 ];
 
 const ROW_2 = [
@@ -30,6 +38,14 @@ const ROW_2 = [
     { src: "/integrations/google-docs-svgrepo-com.svg", alt: "Google Docs" },
     { src: "/integrations/Sentry_idovIhtf_y_0.svg", alt: "Sentry" },
     { src: "/integrations/google-calendar-svgrepo-com.svg", alt: "Google Calendar" },
+    { src: "/integrations/icons8-microsoft-outlook-2019.svg", alt: "Outlook" },
+    { src: "/integrations/icons8-pinterest.svg", alt: "Pinterest" },
+    { src: "/integrations/gsheet-document-svgrepo-com.svg", alt: "Google Sheets" },
+    { src: "/integrations/telegram-communication-chat-interaction-network-connection-svgrepo-com.svg", alt: "Telegram" },
+    { src: "/integrations/instantly.webp", alt: "Instantly" },
+    { src: "/integrations/attentive.webp", alt: "Attentive" },
+    { src: "/integrations/firecrawl-logo.webp", alt: "Firecrawl" },
+    { src: "/integrations/apple-logo.png", alt: "Apple" },
 ];
 
 function LogoTile({ src, alt }: { src: string; alt: string }) {
@@ -54,7 +70,7 @@ function MarqueeRow({ logos, reverse = false }: { logos: typeof ROW_1; reverse?:
             <div
                 className="flex items-center"
                 style={{
-                    animation: `marquee${reverse ? "Rev" : ""} 35s linear infinite`,
+                    animation: `marquee${reverse ? "Rev" : ""} 55s linear infinite`,
                     width: "max-content",
                 }}
             >
