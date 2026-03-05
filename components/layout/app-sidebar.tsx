@@ -90,6 +90,25 @@ export function AppSidebar({ planFeatures }: { planFeatures?: PlanFeatures }) {
             <div className="px-3 py-3 border-t border-black space-y-0.5">
                 {BOTTOM_NAV_ITEMS.map((item) => {
                     const active = isActive(item.href);
+                    const featureKey = item.featureGate as keyof PlanFeatures | undefined;
+                    const isLocked = featureKey && planFeatures
+                        ? planFeatures[featureKey] === false
+                        : false;
+
+                    if (isLocked) {
+                        return (
+                            <Link
+                                key={item.href}
+                                href="/settings/billing"
+                                className="flex items-center gap-3 w-full px-3 py-2.5 text-sm font-mono transition-all text-neutral-300 hover:text-neutral-400"
+                            >
+                                <item.icon className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
+                                <span>{item.title}</span>
+                                <Lock className="h-3 w-3 flex-shrink-0 ml-auto" strokeWidth={1.5} />
+                            </Link>
+                        );
+                    }
+
                     return (
                         <Link
                             key={item.href}

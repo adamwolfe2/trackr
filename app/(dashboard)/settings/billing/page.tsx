@@ -13,11 +13,12 @@ import { getWorkspaceId } from "@/lib/db/queries";
 import { currentUser } from "@clerk/nextjs/server";
 import { eq, and, gte, inArray, count } from "drizzle-orm";
 import { subDays } from "date-fns";
-import { getPlanLimits, PLANS } from "@/lib/config/subscriptions";
+import { getPlanLimits, PLANS, CREDIT_PACK_PRICES } from "@/lib/config/subscriptions";
 import type { Plan } from "@/lib/config/subscriptions";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 import { BillingPlanCards } from "@/components/billing/billing-plan-cards";
-import { BuyCreditsButton } from "@/components/billing/buy-credits-button";
+import { CreditPackSelector } from "@/components/billing/credit-pack-selector";
+import { AutoTopUpToggle } from "@/components/billing/auto-top-up-toggle";
 
 type BillingPlanCard = {
     key: string;
@@ -95,7 +96,7 @@ export default async function BillingPage({
                 `${PLANS.FREE.limits.tools} tools`,
                 `${PLANS.FREE.limits.research} research credits/mo`,
                 `${PLANS.FREE.limits.members} member`,
-                "Basic reports",
+                "Buy credit packs anytime",
             ],
             isCurrent: currentPlan.slug === "free",
         },
@@ -110,7 +111,11 @@ export default async function BillingPage({
                 "Slack + Chrome extension",
                 "Spend tracking + exports",
                 "Scheduled auto-research",
-                `Extra credits: $${PLANS.TEAM.extraCreditPrice}/each`,
+                "Credit packs from $10",
+                "Procurement workflows",
+                "Renewal calendar",
+                "Decision log",
+                "Public stack profile",
             ],
             isCurrent: currentPlan.slug === "team",
         },
@@ -124,7 +129,13 @@ export default async function BillingPage({
                 `${PLANS.STARTUP.limits.members} members`,
                 "Ask Trackr AI",
                 "Analytics + scorecard recipe",
-                `Extra credits: $${PLANS.STARTUP.extraCreditPrice}/each`,
+                "Credit packs from $8 (20% off)",
+                "Stack Health (full)",
+                "Board reports",
+                "Competitor intel",
+                "Risk monitor",
+                "Contract vault",
+                "Team literacy",
             ],
             isCurrent: currentPlan.slug === "startup",
         },
@@ -138,7 +149,9 @@ export default async function BillingPage({
                 "Unlimited members",
                 "API access",
                 "Dedicated success manager",
-                `Extra credits: $${PLANS.ENTERPRISE.extraCreditPrice}/each`,
+                "Credit packs from $6 (40% off)",
+                "Custom scoring weights",
+                "Best credit pack pricing",
             ],
             isCurrent: currentPlan.slug === "enterprise",
         },
@@ -158,9 +171,7 @@ export default async function BillingPage({
                 <p className="font-mono text-sm text-neutral-500 mt-1">
                     Currently on <span className="font-semibold text-black">{currentPlan.name}</span> plan
                     {" · "}{currentPlan.limits.research} research credits/month
-                    {currentPlan.extraCreditPrice && (
-                        <> · Extra credits at ${currentPlan.extraCreditPrice}/each</>
-                    )}
+                    {" · "}<span className="text-neutral-400">Credit packs from ${(CREDIT_PACK_PRICES[currentPlan.slug]?.[25] ?? 1000) / 100}</span>
                 </p>
             </div>
 
@@ -277,21 +288,26 @@ export default async function BillingPage({
                 </div>
             </div>
 
-            {/* Extra Credits */}
-            {hasActiveSubscription && currentPlan.extraCreditPrice && (
-                <div className="border border-black bg-white p-6 space-y-4">
-                    <div className="flex items-baseline justify-between">
-                        <h2 className="font-serif text-lg">Extra Credits</h2>
-                        <span className="font-mono text-sm">
-                            {subscription!.creditBalance ?? 0} <span className="text-neutral-400">credits available</span>
-                        </span>
-                    </div>
-                    <p className="font-mono text-xs text-neutral-500">
-                        When you hit your monthly limit, extra credits let you keep running research. Credits never expire.
-                    </p>
-                    <BuyCreditsButton pricePerCredit={currentPlan.extraCreditPrice} />
+            {/* Credit Packs */}
+            <div className="border border-black bg-white p-6 space-y-4">
+                <div className="flex items-baseline justify-between">
+                    <h2 className="font-serif text-lg">Credit Packs</h2>
+                    <span className="font-mono text-sm">
+                        {subscription?.creditBalance ?? 0} <span className="text-neutral-400">credits available</span>
+                    </span>
                 </div>
-            )}
+                <p className="font-mono text-xs text-neutral-500">
+                    Buy credits in bulk to keep running research after your monthly limit. Volume discounts for paid plans. Credits never expire.
+                </p>
+                <CreditPackSelector planSlug={currentPlan.slug} />
+                {hasActiveSubscription && subscription?.stripeCustomerId && (
+                    <AutoTopUpToggle
+                        enabled={subscription.autoTopUpEnabled ?? false}
+                        currentPack={subscription.autoTopUpPack ?? 25}
+                        planSlug={currentPlan.slug}
+                    />
+                )}
+            </div>
 
             <div className="border border-black/20 p-4 font-mono text-xs text-neutral-500">
                 All plans include a 14-day free trial. Per workspace, not per member. Cancel any time from the billing portal. Upgrades take effect immediately.

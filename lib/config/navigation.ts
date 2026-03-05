@@ -65,11 +65,11 @@ export const NAV_ITEMS: NavItem[] = [
     { title: "Board Reports", href: "/reports", icon: FileText, section: "Reports", featureGate: "boardReports" },
     { title: "Decision Log", href: "/decisions", icon: BookOpen, section: "Reports", featureGate: "decisionLog" },
     // Team
-    { title: "Scorecard", href: "/settings/scorecard", icon: SlidersHorizontal, section: "Team" },
+    { title: "Scorecard", href: "/settings/scorecard", icon: SlidersHorizontal, section: "Team", featureGate: "scorecardRecipe" },
     { title: "Team Literacy", href: "/literacy", icon: GraduationCap, section: "Team", featureGate: "teamLiteracy" },
     { title: "Pain Points", href: "/pain-points", icon: AlertCircle, section: "Team" },
     // Growth
-    { title: "Advertise", href: "/advertise", icon: Sparkles, section: "Growth" },
+    { title: "Advertise", href: "/advertise", icon: Sparkles, section: "Growth", featureGate: "spendTracking" },
     { title: "Referrals", href: "/referrals", icon: Gift, section: "Growth" },
 ];
 
@@ -102,8 +102,8 @@ export const NAV_SECTIONS: NavSection[] = [
 ];
 
 export const BOTTOM_NAV_ITEMS: NavItem[] = [
-    { title: "Public Profile", href: "/settings/public-profile", icon: Globe },
-    { title: "Integrations", href: "/settings/integrations", icon: Link2 },
+    { title: "Public Profile", href: "/settings/public-profile", icon: Globe, featureGate: "publicProfile" },
+    { title: "Integrations", href: "/settings/integrations", icon: Link2, featureGate: "integrations" },
     { title: "Billing", href: "/settings/billing", icon: CreditCard },
     { title: "Workspace", href: "/workspace", icon: Settings },
 ];

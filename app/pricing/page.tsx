@@ -43,6 +43,7 @@ const planCards = [
             `${formatLimit(PLANS.FREE.limits.members)} member`,
             "Basic reports",
             "Limited tool comparison",
+            "Buy credit packs anytime",
         ],
         cta: "Get started free",
         href: "/sign-up",
@@ -55,12 +56,13 @@ const planCards = [
             `${formatLimit(PLANS.TEAM.limits.tools)} tools`,
             `${formatLimit(PLANS.TEAM.limits.research)} research credits/mo`,
             `${formatLimit(PLANS.TEAM.limits.members)} members`,
-            "Slack integration",
-            "Chrome extension",
+            "Slack + Chrome extension",
             "Spend tracking + exports",
-            "Full tool comparison",
-            "Scheduled auto-research (weekly/monthly)",
-            `Extra credits: $${PLANS.TEAM.extraCreditPrice}/each`,
+            "Procurement workflows",
+            "Renewal calendar",
+            "Decision log",
+            "Public stack profile",
+            "Credit packs from $10",
         ],
         cta: "Start with Team",
         href: "/sign-up?plan=team",
@@ -74,10 +76,14 @@ const planCards = [
             `${formatLimit(PLANS.STARTUP.limits.research)} research credits/mo`,
             `${formatLimit(PLANS.STARTUP.limits.members)} members`,
             "Ask Trackr AI",
-            "Analytics dashboard",
-            "Scorecard recipe",
-            "Renewal alerts",
-            `Extra credits: $${PLANS.STARTUP.extraCreditPrice}/each`,
+            "Analytics + scorecard recipe",
+            "Stack Health (full)",
+            "Board reports",
+            "Competitor intel",
+            "Risk monitor",
+            "Contract vault",
+            "Team literacy",
+            "Credit packs from $8",
         ],
         cta: "Start with Startup",
         href: "/sign-up?plan=startup",
@@ -90,9 +96,10 @@ const planCards = [
             "Everything in Startup",
             `${formatLimit(PLANS.ENTERPRISE.limits.research)} research credits/mo`,
             `${formatLimit(PLANS.ENTERPRISE.limits.members)} members`,
+            "Custom scoring weights",
             "API access",
             "Dedicated success manager",
-            `Extra credits: $${PLANS.ENTERPRISE.extraCreditPrice}/each`,
+            "Best credit pack pricing (from $6)",
         ],
         cta: "Start with Enterprise",
         href: "/sign-up?plan=enterprise",
@@ -134,6 +141,87 @@ const faqs = [
         a: "Yes. Submit any URL — B2B SaaS, AI tools, open-source software, developer tools, or niche vertical software. Our agents are not limited to a category. If a website exists, Trackr can research it.",
     },
 ];
+
+type ComparisonRow = {
+    feature: string;
+    values: [string | boolean, string | boolean, string | boolean, string | boolean];
+};
+
+type ComparisonSection = {
+    label: string;
+    rows: ComparisonRow[];
+};
+
+const comparisonSections: ComparisonSection[] = [
+    {
+        label: "Research & Discovery",
+        rows: [
+            { feature: "Research credits/mo", values: ["5", "25", "75", "200"] },
+            { feature: "Tools tracked", values: ["15", "Unlimited", "Unlimited", "Unlimited"] },
+            { feature: "Members", values: ["1", "5", "15", "Unlimited"] },
+            { feature: "Research depth", values: ["Quick", "Full", "Full", "Full"] },
+            { feature: "Scheduled research", values: [false, true, true, true] },
+            { feature: "Bulk credit packs", values: [true, true, true, true] },
+        ],
+    },
+    {
+        label: "Intelligence & AI",
+        rows: [
+            { feature: "Ask Trackr AI", values: [false, false, true, true] },
+            { feature: "Tool comparison", values: ["2 max", "Unlimited", "Unlimited", "Unlimited"] },
+            { feature: "Stack Health", values: ["Score only", "Score only", "Full", "Full"] },
+            { feature: "Competitor intel", values: [false, false, true, true] },
+            { feature: "Risk monitor", values: [false, false, true, true] },
+            { feature: "Scorecard recipe", values: [false, false, true, true] },
+            { feature: "Custom scoring weights", values: [false, false, "Weights only", "Full"] },
+        ],
+    },
+    {
+        label: "Workflow & Operations",
+        rows: [
+            { feature: "Procurement", values: [false, true, true, true] },
+            { feature: "Renewal calendar", values: [false, true, true, true] },
+            { feature: "Contracts vault", values: [false, false, true, true] },
+            { feature: "Decision log", values: [false, true, true, true] },
+            { feature: "Spend tracking", values: [false, true, true, true] },
+            { feature: "Report export", values: [false, true, true, true] },
+            { feature: "Renewal alerts", values: [false, false, true, true] },
+        ],
+    },
+    {
+        label: "Reports & Analytics",
+        rows: [
+            { feature: "Analytics dashboard", values: [false, false, true, true] },
+            { feature: "Board reports", values: [false, false, true, true] },
+            { feature: "Team literacy", values: [false, false, true, true] },
+        ],
+    },
+    {
+        label: "Integrations & Platform",
+        rows: [
+            { feature: "Slack integration", values: [false, true, true, true] },
+            { feature: "Chrome extension", values: [false, true, true, true] },
+            { feature: "3rd-party integrations", values: [false, false, true, true] },
+            { feature: "Public stack profile", values: [false, true, true, true] },
+            { feature: "Embed widget", values: [false, false, true, true] },
+            { feature: "API access", values: [false, false, false, true] },
+        ],
+    },
+    {
+        label: "Credit Pack Pricing",
+        rows: [
+            { feature: "25 credits", values: ["$10", "$10", "$8", "$6"] },
+            { feature: "50 credits", values: ["$15", "$15", "$12", "$9"] },
+            { feature: "100 credits", values: ["$20", "$20", "$16", "$12"] },
+        ],
+    },
+];
+
+function ComparisonCell({ value }: { value: string | boolean }) {
+    if (value === true) return <Check className="w-3.5 h-3.5 mx-auto" strokeWidth={2.5} />;
+    if (value === false) return <Minus className="w-3.5 h-3.5 mx-auto text-neutral-300" strokeWidth={2} />;
+    return <span className="font-mono text-xs">{value}</span>;
+}
 
 function PricingJsonLd() {
     const offers = planCards
@@ -255,6 +343,45 @@ export default async function PricingPage() {
                             </Link>
                         </div>
                     ))}
+                </div>
+
+                {/* Full Feature Comparison Table */}
+                <div className="border border-black mb-24 overflow-x-auto">
+                    <div className="border-b border-black px-6 py-4">
+                        <h2 className="text-2xl font-serif font-normal">Full feature comparison</h2>
+                        <p className="font-mono text-xs text-neutral-500 mt-1">Every feature across all plans, side by side.</p>
+                    </div>
+                    <table className="w-full min-w-[600px]">
+                        <thead>
+                            <tr className="sticky top-0 bg-white border-b border-black">
+                                <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest font-normal">Feature</th>
+                                <th className="text-center px-4 py-3 font-mono text-[10px] uppercase tracking-widest font-normal">Free</th>
+                                <th className="text-center px-4 py-3 font-mono text-[10px] uppercase tracking-widest font-normal">Team ($50)</th>
+                                <th className="text-center px-4 py-3 font-mono text-[10px] uppercase tracking-widest font-normal">Startup ($149)</th>
+                                <th className="text-center px-4 py-3 font-mono text-[10px] uppercase tracking-widest font-normal">Enterprise ($349)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {comparisonSections.map((section) => (
+                                <>
+                                    <tr key={`section-${section.label}`}>
+                                        <td colSpan={5} className="bg-neutral-50 border-y border-black font-mono text-[10px] uppercase tracking-widest px-4 py-2">
+                                            {section.label}
+                                        </td>
+                                    </tr>
+                                    {section.rows.map((row, rowIdx) => (
+                                        <tr key={`${section.label}-${row.feature}`} className={`border-b border-neutral-200 ${rowIdx === section.rows.length - 1 ? "last:border-b-0" : ""}`}>
+                                            <td className="px-4 py-2.5 font-mono text-xs text-neutral-700">{row.feature}</td>
+                                            <td className="px-4 py-2.5 text-center"><ComparisonCell value={row.values[0]} /></td>
+                                            <td className="px-4 py-2.5 text-center"><ComparisonCell value={row.values[1]} /></td>
+                                            <td className="px-4 py-2.5 text-center"><ComparisonCell value={row.values[2]} /></td>
+                                            <td className="px-4 py-2.5 text-center"><ComparisonCell value={row.values[3]} /></td>
+                                        </tr>
+                                    ))}
+                                </>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
 
                 {/* What Trackr Replaces */}

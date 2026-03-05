@@ -243,11 +243,45 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
                     };
                 }
             } else {
-                await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
-                return {
-                    success: false,
-                    error: `Monthly research limit reached (${limits.limits.research} runs on ${limits.name} plan). Upgrade or purchase extra credits to run more research this month.`,
-                };
+                // Try auto-top-up before giving up
+                if (subscription?.autoTopUpEnabled) {
+                    const { performAutoTopUp } = await import("@/lib/actions/auto-top-up");
+                    const topUp = await performAutoTopUp(tool.workspaceId);
+                    if (topUp.success) {
+                        // Re-attempt credit deduction after top-up
+                        const [deducted] = await db.update(subscriptions)
+                            .set({
+                                creditBalance: sql`${subscriptions.creditBalance} - 1`,
+                                updatedAt: new Date(),
+                            })
+                            .where(and(
+                                eq(subscriptions.workspaceId, tool.workspaceId),
+                                gt(subscriptions.creditBalance, 0),
+                            ))
+                            .returning({ id: subscriptions.id });
+                        if (deducted) {
+                            creditDeducted = true;
+                        } else {
+                            await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+                            return {
+                                success: false,
+                                error: `Monthly research limit reached (${limits.limits.research} runs on ${limits.name} plan). Auto-top-up charged but credit deduction failed. Please contact support.`,
+                            };
+                        }
+                    } else {
+                        await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+                        return {
+                            success: false,
+                            error: `Monthly research limit reached (${limits.limits.research} runs on ${limits.name} plan). Auto-top-up failed (card may have been declined). Purchase credits manually or upgrade your plan.`,
+                        };
+                    }
+                } else {
+                    await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
+                    return {
+                        success: false,
+                        error: `Monthly research limit reached (${limits.limits.research} runs on ${limits.name} plan). Upgrade or purchase extra credits to run more research this month.`,
+                    };
+                }
             }
         }
     }

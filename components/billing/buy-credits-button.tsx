@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { purchaseExtraCredits } from "@/lib/actions/credits";
+import { purchaseCredits } from "@/lib/actions/credits";
+import type { CreditPackSize } from "@/lib/config/subscriptions";
 import { toast } from "sonner";
 
 const CREDIT_PACKS = [5, 10, 25] as const;
 
+/** @deprecated Use CreditPackSelector instead */
 export function BuyCreditsButton({ pricePerCredit }: { pricePerCredit: number }) {
     const [isPending, startTransition] = useTransition();
     const [selectedPack, setSelectedPack] = useState<number>(10);
@@ -13,7 +15,7 @@ export function BuyCreditsButton({ pricePerCredit }: { pricePerCredit: number })
     function handlePurchase() {
         startTransition(async () => {
             try {
-                const result = await purchaseExtraCredits(selectedPack);
+                const result = await purchaseCredits(selectedPack as CreditPackSize);
                 if (result.url) {
                     window.location.href = result.url;
                 } else {

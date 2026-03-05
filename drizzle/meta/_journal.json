@@ -64,6 +64,13 @@
       "when": 1772705485872,
       "tag": "0008_natural_dragon_lord",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1772733773718,
+      "tag": "0009_freezing_toad_men",
+      "breakpoints": true
     }
   ]
 }

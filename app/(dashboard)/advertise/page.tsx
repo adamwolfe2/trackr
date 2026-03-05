@@ -11,6 +11,8 @@ export const metadata: Metadata = {
 import { eq, desc } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { checkFeatureAccess } from "@/lib/middleware/require-subscription";
+import { PlanGate } from "@/components/billing/plan-gate";
 import { PlusCircle, Eye, MousePointer2, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -24,6 +26,17 @@ export default async function AdvertisePage() {
     });
 
     if (!member) redirect("/onboarding");
+
+    const plan = await checkFeatureAccess(member.workspaceId, "spendTracking");
+    if (!plan) {
+        return (
+            <PlanGate
+                featureName="Ad Manager"
+                description="Promote your tools across the Trackr network. Available on Team plan and above."
+                requiredPlan="Team"
+            />
+        );
+    }
 
     const myAds = await db.query.ads.findMany({
         where: eq(ads.workspaceId, member.workspaceId),

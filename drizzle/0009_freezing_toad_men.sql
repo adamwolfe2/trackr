@@ -1,0 +1,2 @@
+ALTER TABLE "subscriptions" ADD COLUMN "auto_top_up_enabled" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "subscriptions" ADD COLUMN "auto_top_up_pack" integer DEFAULT 25 NOT NULL;

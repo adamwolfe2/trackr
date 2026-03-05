@@ -6,57 +6,68 @@ import { db } from "@/lib/db";
 import { subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { stripe } from "@/lib/services/stripe";
-import { getPlanLimits } from "@/lib/config/subscriptions";
+import { getPlanLimits, CREDIT_PACKS, CREDIT_PACK_PRICES, type CreditPackSize } from "@/lib/config/subscriptions";
 
-const CREDIT_PACKS = [
-    { credits: 5, label: "5 credits" },
-    { credits: 10, label: "10 credits" },
-    { credits: 25, label: "25 credits" },
-] as const;
-
-export async function purchaseExtraCredits(creditCount: number) {
+export async function purchaseCredits(packSize: CreditPackSize) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
 
-    // Validate credit count
-    const pack = CREDIT_PACKS.find((p) => p.credits === creditCount);
-    if (!pack) throw new Error("Invalid credit pack");
+    // Validate packSize
+    const pack = CREDIT_PACKS.find((p) => p.credits === packSize);
+    if (!pack) throw new Error("Invalid credit pack size");
 
-    // Must have a paid subscription to purchase credits
+    // Load subscription
     const subscription = await db.query.subscriptions.findFirst({
         where: eq(subscriptions.workspaceId, workspaceId),
     });
 
-    if (!subscription || (subscription.status !== "active" && subscription.status !== "trialing")) {
-        throw new Error("Active subscription required to purchase credits");
-    }
+    const plan = getPlanLimits(subscription ?? undefined);
+    const priceInCents = CREDIT_PACK_PRICES[plan.slug]?.[packSize];
+    if (!priceInCents) throw new Error("No price found for this credit pack and plan combination");
 
-    const plan = getPlanLimits(subscription);
-    if (!plan.extraCreditPrice) {
-        throw new Error("Extra credits not available on your plan");
-    }
+    let stripeCustomerId = subscription?.stripeCustomerId;
 
-    // Calculate total price in cents
-    const unitAmountCents = Math.round(plan.extraCreditPrice * 100);
-    const totalCents = unitAmountCents * creditCount;
+    // Create Stripe customer if needed
+    if (!stripeCustomerId) {
+        const customer = await stripe.customers.create({
+            email: user.emailAddresses[0]?.emailAddress,
+            metadata: { workspaceId },
+        });
+        stripeCustomerId = customer.id;
+
+        if (subscription) {
+            // Update existing subscription row with the new customer ID
+            await db.update(subscriptions)
+                .set({ stripeCustomerId, updatedAt: new Date() })
+                .where(eq(subscriptions.workspaceId, workspaceId));
+        } else {
+            // Create a subscription row for free users
+            await db.insert(subscriptions).values({
+                workspaceId,
+                stripeCustomerId,
+                status: "free",
+                planId: "free",
+            });
+        }
+    }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
 
     const session = await stripe.checkout.sessions.create({
         mode: "payment",
-        customer: subscription.stripeCustomerId ?? undefined,
+        customer: stripeCustomerId,
         line_items: [
             {
                 price_data: {
                     currency: "usd",
                     product_data: {
                         name: `${pack.label} — Trackr Research Credits`,
-                        description: `${creditCount} additional research credits at $${plan.extraCreditPrice}/each`,
+                        description: `${packSize} research credits`,
                     },
-                    unit_amount: totalCents,
+                    unit_amount: priceInCents,
                 },
                 quantity: 1,
             },
@@ -64,11 +75,54 @@ export async function purchaseExtraCredits(creditCount: number) {
         metadata: {
             type: "extra_credits",
             workspaceId,
-            creditCount: String(creditCount),
+            creditCount: String(packSize),
         },
-        success_url: `${appUrl}/settings/billing?success=true&credits=${creditCount}`,
+        success_url: `${appUrl}/settings/billing?success=true&credits=${packSize}`,
         cancel_url: `${appUrl}/settings/billing?canceled=true`,
     });
 
     return { url: session.url };
+}
+
+export async function enableAutoTopUp(packSize: CreditPackSize) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    // Validate packSize
+    const pack = CREDIT_PACKS.find((p) => p.credits === packSize);
+    if (!pack) throw new Error("Invalid credit pack size");
+
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspaceId),
+    });
+
+    if (!subscription?.stripeCustomerId) {
+        throw new Error("A payment method is required to enable auto-refill. Please purchase a credit pack first.");
+    }
+
+    await db.update(subscriptions)
+        .set({
+            autoTopUpEnabled: true,
+            autoTopUpPack: packSize,
+            updatedAt: new Date(),
+        })
+        .where(eq(subscriptions.workspaceId, workspaceId));
+}
+
+export async function disableAutoTopUp() {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    await db.update(subscriptions)
+        .set({
+            autoTopUpEnabled: false,
+            updatedAt: new Date(),
+        })
+        .where(eq(subscriptions.workspaceId, workspaceId));
 }

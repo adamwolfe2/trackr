@@ -54,7 +54,7 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
         annualPrice: 0,
         limits: {
             tools: 15,
-            research: 3,
+            research: 5,
             members: 1,
             competitors: 0,
         },
@@ -207,6 +207,21 @@ export const PLANS: Record<"FREE" | "TEAM" | "STARTUP" | "ENTERPRISE", Plan> = {
             embedWidget: true,
         },
     },
+};
+
+export const CREDIT_PACKS = [
+    { credits: 25, label: "25 credits" },
+    { credits: 50, label: "50 credits" },
+    { credits: 100, label: "100 credits" },
+] as const;
+
+export type CreditPackSize = typeof CREDIT_PACKS[number]["credits"];
+
+export const CREDIT_PACK_PRICES: Record<string, Record<number, number>> = {
+    free:       { 25: 1000, 50: 1500, 100: 2000 },
+    team:       { 25: 1000, 50: 1500, 100: 2000 },
+    startup:    { 25: 800,  50: 1200, 100: 1600 },
+    enterprise: { 25: 600,  50: 900,  100: 1200 },
 };
 
 export type BillingInterval = "monthly" | "annual";

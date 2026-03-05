@@ -222,6 +222,8 @@ export const subscriptions = pgTable('subscriptions', {
     planId: text('plan_id').notNull(), // price_...
     currentPeriodEnd: timestamp('current_period_end'),
     creditBalance: integer('credit_balance').default(0).notNull(),
+    autoTopUpEnabled: boolean('auto_top_up_enabled').default(false).notNull(),
+    autoTopUpPack: integer('auto_top_up_pack').default(25).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => [

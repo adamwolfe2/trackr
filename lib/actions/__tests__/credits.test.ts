@@ -13,6 +13,8 @@ vi.mock("@/lib/db", () => ({
         query: {
             subscriptions: { findFirst: vi.fn() },
         },
+        insert: vi.fn(() => ({ values: vi.fn() })),
+        update: vi.fn(() => ({ set: vi.fn(() => ({ where: vi.fn() })) })),
     },
 }));
 
@@ -21,12 +23,17 @@ vi.mock("drizzle-orm", async (importOriginal) => {
     return { ...actual, eq: vi.fn((...args) => args) };
 });
 
-vi.mock("@/lib/config/subscriptions", () => ({
-    getPlanLimits: vi.fn(),
-}));
+vi.mock("@/lib/config/subscriptions", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@/lib/config/subscriptions")>();
+    return {
+        ...actual,
+        getPlanLimits: vi.fn(),
+    };
+});
 
-const { mockSessionCreate } = vi.hoisted(() => ({
+const { mockSessionCreate, mockCustomerCreate } = vi.hoisted(() => ({
     mockSessionCreate: vi.fn(),
+    mockCustomerCreate: vi.fn(),
 }));
 
 vi.mock("@/lib/services/stripe", () => ({
@@ -34,6 +41,7 @@ vi.mock("@/lib/services/stripe", () => ({
         checkout: {
             sessions: { create: mockSessionCreate },
         },
+        customers: { create: mockCustomerCreate },
     },
 }));
 
@@ -41,9 +49,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import { getWorkspaceId } from "@/lib/db/queries";
 import { db } from "@/lib/db";
 import { getPlanLimits } from "@/lib/config/subscriptions";
-import { purchaseExtraCredits } from "../credits";
+import { purchaseCredits } from "../credits";
 
-const MOCK_USER = { id: "user_1" };
+const MOCK_USER = { id: "user_1", emailAddresses: [{ emailAddress: "test@example.com" }] };
 const MOCK_SUBSCRIPTION = {
     id: "sub_1",
     workspaceId: "ws_1",
@@ -51,90 +59,59 @@ const MOCK_SUBSCRIPTION = {
     stripeCustomerId: "cus_123",
 };
 
-describe("purchaseExtraCredits", () => {
+describe("purchaseCredits", () => {
     beforeEach(() => {
         vi.resetAllMocks();
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_SUBSCRIPTION);
-        (getPlanLimits as ReturnType<typeof vi.fn>).mockReturnValue({ extraCreditPrice: 1.00 });
+        (getPlanLimits as ReturnType<typeof vi.fn>).mockReturnValue({ slug: "team" });
         mockSessionCreate.mockResolvedValue({ url: "https://checkout.stripe.com/session_abc" });
     });
 
     it("throws Unauthorized when not logged in", async () => {
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(purchaseExtraCredits(5)).rejects.toThrow("Unauthorized");
+        await expect(purchaseCredits(25)).rejects.toThrow("Unauthorized");
     });
 
     it("throws when no workspace found", async () => {
         (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(purchaseExtraCredits(5)).rejects.toThrow("No workspace found");
+        await expect(purchaseCredits(25)).rejects.toThrow("No workspace found");
     });
 
-    it("throws for invalid credit pack (not 5, 10, or 25)", async () => {
-        await expect(purchaseExtraCredits(7)).rejects.toThrow("Invalid credit pack");
+    it("throws for invalid credit pack size", async () => {
+        await expect(purchaseCredits(7 as any)).rejects.toThrow("Invalid credit pack size");
     });
 
-    it("throws for credit count of 0", async () => {
-        await expect(purchaseExtraCredits(0)).rejects.toThrow("Invalid credit pack");
-    });
-
-    it("throws when no subscription exists", async () => {
-        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(purchaseExtraCredits(5)).rejects.toThrow("Active subscription required");
-    });
-
-    it("throws when subscription status is 'canceled'", async () => {
-        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
-            ...MOCK_SUBSCRIPTION,
-            status: "canceled",
-        });
-        await expect(purchaseExtraCredits(5)).rejects.toThrow("Active subscription required");
-    });
-
-    it("accepts 'trialing' subscription status", async () => {
-        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
-            ...MOCK_SUBSCRIPTION,
-            status: "trialing",
-        });
-        const result = await purchaseExtraCredits(5);
-        expect(result.url).toBeDefined();
-    });
-
-    it("throws when plan has no extraCreditPrice", async () => {
-        (getPlanLimits as ReturnType<typeof vi.fn>).mockReturnValue({ extraCreditPrice: null });
-        await expect(purchaseExtraCredits(5)).rejects.toThrow("Extra credits not available");
-    });
-
-    it("calls stripe.checkout.sessions.create for valid pack of 5", async () => {
-        const result = await purchaseExtraCredits(5);
+    it("calls stripe.checkout.sessions.create for valid pack of 25", async () => {
+        const result = await purchaseCredits(25);
         expect(result).toEqual({ url: "https://checkout.stripe.com/session_abc" });
         expect(mockSessionCreate).toHaveBeenCalledTimes(1);
         const call = mockSessionCreate.mock.calls[0][0];
         expect(call.mode).toBe("payment");
-        expect(call.metadata.creditCount).toBe("5");
+        expect(call.metadata.creditCount).toBe("25");
         expect(call.metadata.type).toBe("extra_credits");
     });
 
-    it("calls stripe with correct credit count for pack of 25", async () => {
-        await purchaseExtraCredits(25);
+    it("calls stripe with correct credit count for pack of 100", async () => {
+        await purchaseCredits(100);
         const call = mockSessionCreate.mock.calls[0][0];
-        expect(call.metadata.creditCount).toBe("25");
+        expect(call.metadata.creditCount).toBe("100");
     });
 
     it("passes stripeCustomerId when subscription has one", async () => {
-        await purchaseExtraCredits(10);
+        await purchaseCredits(50);
         const call = mockSessionCreate.mock.calls[0][0];
         expect(call.customer).toBe("cus_123");
     });
 
-    it("passes undefined customer when stripeCustomerId is null", async () => {
-        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
-            ...MOCK_SUBSCRIPTION,
-            stripeCustomerId: null,
-        });
-        await purchaseExtraCredits(10);
-        const call = mockSessionCreate.mock.calls[0][0];
-        expect(call.customer).toBeUndefined();
+    it("accepts purchase for free plan users with no subscription", async () => {
+        (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (getPlanLimits as ReturnType<typeof vi.fn>).mockReturnValue({ slug: "free" });
+        mockCustomerCreate.mockResolvedValue({ id: "cus_new" });
+
+        const result = await purchaseCredits(25);
+        expect(result.url).toBeDefined();
+        expect(mockCustomerCreate).toHaveBeenCalledTimes(1);
     });
 });
