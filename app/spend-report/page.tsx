@@ -9,6 +9,7 @@ export const revalidate = false;
 export const metadata: Metadata = {
     title: "2026 SaaS Spend Waste Report — How Much Are Teams Wasting? | Trackr",
     description: "Benchmark data on SaaS spending waste: average spend per employee, waste percentages by company size, AI vs traditional tool split, and cost reduction strategies.",
+    keywords: ["SaaS spend waste report", "SaaS cost benchmarks 2026", "software waste statistics", "SaaS spending per employee", "AI tool cost analysis", "SaaS budget waste", "enterprise software spend"],
     openGraph: {
         title: "2026 SaaS Spend Waste Report",
         description: "How much is your team wasting on SaaS? Benchmarks by company size, category breakdowns, and waste reduction playbook.",

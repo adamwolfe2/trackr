@@ -29,6 +29,7 @@ const MarketingFooter = lazy(() => import("@/components/marketing/marketing-foot
 export const metadata: Metadata = {
   title: "Trackr — AI Tool Research for Ops Teams",
   description: "Submit any software tool. Research agents evaluate it in under 2 minutes. Get a scored report — features, pricing, pros/cons. Your team's shared AI tool database.",
+  keywords: ["AI tool research", "SaaS evaluation platform", "AI tool intelligence", "ops team software research", "tool scorecard", "SaaS spend tracking", "AI stack management", "software evaluation tool", "AI tool database", "SaaS intelligence"],
   openGraph: {
     title: "Trackr — Stop Researching Tools Manually",
     description: "Research agents evaluate any software tool in under 2 minutes. Scored reports. Shared team database. Always up to date.",

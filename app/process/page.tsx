@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     title: "Our Process — Trackr",
     description:
         "See how Trackr researches AI tools in 7 automated steps — from site crawling to structured reports — using Firecrawl, Tavily, Perplexity, and GPT-4o.",
+    keywords: ["how trackr works", "AI tool research process", "automated SaaS research", "AI research methodology", "tool evaluation process", "Firecrawl Tavily GPT research"],
     alternates: {
         canonical: "https://trytrackr.com/process",
     },

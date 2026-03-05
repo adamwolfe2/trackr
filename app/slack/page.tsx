@@ -9,11 +9,18 @@ export const revalidate = false;
 export const metadata: Metadata = {
     title: "Trackr for Slack — AI Tool Research in Your Workflow | Trackr",
     description: "Research any SaaS tool in under 2 minutes, right from Slack. Get scored reports, renewal alerts, and stack updates in the channels where your team already works.",
+    keywords: ["trackr slack integration", "slack tool research", "AI tool research slack", "slack SaaS intelligence", "trackr slack app", "tool renewal alerts slack"],
     openGraph: {
         title: "Trackr for Slack — Tool Research Without Leaving Your Workflow",
         description: "Submit any tool URL, get a scored 7-dimension report in under 2 minutes. Renewal alerts, research notifications, and stack digest — all in Slack.",
         url: "https://trytrackr.com/slack",
         images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr for Slack" }],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Trackr for Slack — AI Tool Research in Your Workflow",
+        description: "Research tools, get renewal alerts, and track your stack — all from Slack.",
+        images: ["/og.png"],
     },
     alternates: { canonical: "https://trytrackr.com/slack" },
 };
@@ -82,9 +89,70 @@ const SETUP_STEPS = [
     },
 ];
 
+const slackJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+        {
+            "@type": "SoftwareApplication",
+            name: "Trackr for Slack",
+            operatingSystem: "Slack",
+            applicationCategory: "BusinessApplication",
+            description: "Research any SaaS tool in under 2 minutes, right from Slack. Get scored reports, renewal alerts, and stack updates in the channels where your team already works.",
+            url: "https://trytrackr.com/slack",
+            offers: {
+                "@type": "Offer",
+                price: "50",
+                priceCurrency: "USD",
+                availability: "https://schema.org/InStock",
+                description: "Included with Team, Startup, and Enterprise plans starting at $50/mo",
+            },
+        },
+        {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Home", item: "https://trytrackr.com" },
+                { "@type": "ListItem", position: 2, name: "Slack Integration", item: "https://trytrackr.com/slack" },
+            ],
+        },
+        {
+            "@type": "FAQPage",
+            mainEntity: [
+                {
+                    "@type": "Question",
+                    name: "How does Trackr integrate with Slack?",
+                    acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "Trackr connects to Slack via OAuth in under 2 minutes from your workspace Settings > Integrations page. Once connected, you can use the /trackr slash command in any channel to submit tools for research, and configure channels to receive renewal alerts and research notifications.",
+                    },
+                },
+                {
+                    "@type": "Question",
+                    name: "What plans include the Slack integration?",
+                    acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "The Slack integration is included with Team ($50/mo), Startup ($149/mo), and Enterprise plans. The free plan includes 3 tool reports per month but does not include Slack integration.",
+                    },
+                },
+                {
+                    "@type": "Question",
+                    name: "What notifications does Trackr send to Slack?",
+                    acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "Trackr sends four types of Slack notifications: research completion reports, renewal alerts at 60 and 30 days before contract renewal, score change alerts when a tool's score changes on re-research, and an optional weekly stack digest every Monday morning.",
+                    },
+                },
+            ],
+        },
+    ],
+};
+
 export default function SlackPage() {
     return (
         <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(slackJsonLd) }}
+            />
             <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
                 <MarketingNavigation isLoggedIn={false} />
 

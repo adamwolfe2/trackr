@@ -9,6 +9,7 @@ export const revalidate = false;
 export const metadata: Metadata = {
     title: "AI Tool Scorecard Template — Free 7-Dimension Evaluation Framework | Trackr",
     description: "Free AI tool scorecard template based on our 7-dimension evaluation framework. Score any SaaS tool consistently in 15 minutes. Used by ops teams, RevOps, and founders.",
+    keywords: ["AI tool scorecard", "SaaS evaluation template", "tool evaluation framework", "AI tool scoring", "software evaluation checklist", "7-dimension scorecard", "ops team tool evaluation"],
     openGraph: {
         title: "AI Tool Scorecard Template — Free 7-Dimension Framework",
         description: "Score any AI tool consistently in 15 minutes with this repeatable methodology.",

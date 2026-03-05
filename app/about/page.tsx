@@ -8,6 +8,7 @@ import { ArrowRight } from "lucide-react";
 export const metadata: Metadata = {
     title: "About — Trackr",
     description: "Trackr helps operations teams research, evaluate, and track AI tools with intelligence — not spreadsheets.",
+    keywords: ["about trackr", "trackr mission", "AI tool research company", "SaaS intelligence platform", "ops team tools", "AI stack management company"],
     alternates: {
         canonical: "https://trytrackr.com/about",
     },

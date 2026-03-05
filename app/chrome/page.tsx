@@ -9,11 +9,18 @@ export const revalidate = false;
 export const metadata: Metadata = {
     title: "Trackr Chrome Extension — Research Any Tool Instantly | Trackr",
     description: "Research any SaaS tool while you browse. Get a scored 7-dimension report without leaving the page. Save results to your team workspace. Free for all Trackr users.",
+    keywords: ["trackr chrome extension", "SaaS research browser extension", "AI tool research extension", "chrome extension for SaaS", "tool research chrome", "browser extension ops"],
     openGraph: {
         title: "Trackr for Chrome — Research Any Tool Instantly",
         description: "Click any vendor site to get a scored 7-dimension research report. No tab switching. Syncs to your team workspace.",
         url: "https://trytrackr.com/chrome",
         images: [{ url: "/og.png", width: 1456, height: 816, alt: "Trackr Chrome Extension" }],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "Trackr Chrome Extension — Research Any Tool Instantly",
+        description: "Research any SaaS tool while you browse. Scored reports. No tab switching.",
+        images: ["/og.png"],
     },
     alternates: { canonical: "https://trytrackr.com/chrome" },
 };
@@ -71,9 +78,70 @@ const USE_CASES = [
     "Your CEO forwards a Product Hunt link — check if you've already evaluated it",
 ];
 
+const chromeJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+        {
+            "@type": "SoftwareApplication",
+            name: "Trackr Chrome Extension",
+            operatingSystem: "Chrome, Brave, Edge (Chromium)",
+            applicationCategory: "BusinessApplication",
+            description: "Research any SaaS tool while you browse. Get a scored 7-dimension report without leaving the page. Syncs to your team workspace automatically.",
+            url: "https://trytrackr.com/chrome",
+            offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+                availability: "https://schema.org/InStock",
+                description: "Free for all Trackr users",
+            },
+        },
+        {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Home", item: "https://trytrackr.com" },
+                { "@type": "ListItem", position: 2, name: "Chrome Extension", item: "https://trytrackr.com/chrome" },
+            ],
+        },
+        {
+            "@type": "FAQPage",
+            mainEntity: [
+                {
+                    "@type": "Question",
+                    name: "What does the Trackr Chrome extension do?",
+                    acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "The Trackr Chrome extension lets you research any SaaS tool directly from your browser. Click the icon on any vendor site to get a scored 7-dimension research report in under 2 minutes. Results sync automatically to your team workspace.",
+                    },
+                },
+                {
+                    "@type": "Question",
+                    name: "Is the Trackr Chrome extension free?",
+                    acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "Yes. The Trackr Chrome extension is free and included with all Trackr plans, including the free plan. A Trackr account is required to connect the extension to your workspace.",
+                    },
+                },
+                {
+                    "@type": "Question",
+                    name: "Does the Trackr extension track my browsing history?",
+                    acceptedAnswer: {
+                        "@type": "Answer",
+                        text: "No. The extension only activates when you click the icon. It does not track browsing history, collect personal data, or run in the background. The only permission requested is access to the current tab URL when you click the icon.",
+                    },
+                },
+            ],
+        },
+    ],
+};
+
 export default function ChromePage() {
     return (
         <>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(chromeJsonLd) }}
+            />
             <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
                 <MarketingNavigation isLoggedIn={false} />
 

@@ -10,6 +10,7 @@ import { PLANS } from "@/lib/config/subscriptions";
 export const metadata: Metadata = {
     title: "Pricing — Trackr",
     description: `Free to start. Team at ${PLANS.TEAM.price}/mo. Startup at ${PLANS.STARTUP.price}/mo. Enterprise at ${PLANS.ENTERPRISE.price}/mo.`,
+    keywords: ["trackr pricing", "AI tool research pricing", "SaaS evaluation tool cost", "trackr plans", "free AI research tool", "ops team software pricing", "tool intelligence platform pricing"],
     alternates: {
         canonical: "https://trytrackr.com/pricing",
     },

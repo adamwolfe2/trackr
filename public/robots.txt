@@ -26,5 +26,50 @@ Allow: /blog/
 Allow: /changelog
 Allow: /process
 Allow: /share/
+Allow: /vs/
+Allow: /for/
+Allow: /audit
+Allow: /scorecard
+Allow: /spend-report
+Allow: /playbook
+Allow: /chrome
+Allow: /slack
+Allow: /partners
+Allow: /security
+Allow: /about
+Allow: /contact
+Allow: /faq
+Allow: /glossary
+Allow: /use-cases
+Allow: /alternatives/
+
+# AI & LLM crawlers — explicitly allowed for Answer Engine Optimization
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: meta-externalagent
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
 
 Sitemap: https://trytrackr.com/sitemap.xml
+Sitemap: https://trytrackr.com/llms.xml

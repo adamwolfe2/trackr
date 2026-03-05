@@ -13,6 +13,7 @@ import { CuratedLibrary } from "@/components/research/curated-library";
 export const metadata: Metadata = {
     title: "AI Tool Library — Trackr",
     description: "Browse scorecards for 150+ AI tools. Research reports, templates, and competitive intelligence for teams evaluating SaaS.",
+    keywords: ["AI tool library", "SaaS tool database", "AI tool reviews", "AI tool scorecards", "software evaluation library", "best AI tools 2026", "AI tool comparison", "SaaS intelligence database"],
     openGraph: {
         title: "AI Tool Library — Trackr",
         description: "Scorecards for 150+ AI tools — features, pricing, pros, cons, and competitive analysis.",

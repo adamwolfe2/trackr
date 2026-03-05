@@ -7,7 +7,7 @@ import { CURATED_TOOLS } from '@/data/tools.seed';
 import { TEMPLATES } from '@/data/templates.seed';
 import { COMPARISON_SLUGS } from '@/data/comparisons.seed';
 import { ICP_ROLES } from '@/data/icp-pages.seed';
-import { VS_COMPETITORS } from '@/data/vs-pages.seed';
+import { VS_COMPETITORS, VS_PAGES } from '@/data/vs-pages.seed';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://trytrackr.com';
@@ -152,6 +152,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'weekly',
             priority: 0.7,
         },
+        { url: `${baseUrl}/use-cases`, lastModified: new Date('2026-03-05'), changeFrequency: 'monthly' as const, priority: 0.8 },
+        { url: `${baseUrl}/faq`, lastModified: new Date('2026-03-05'), changeFrequency: 'monthly' as const, priority: 0.7 },
+        { url: `${baseUrl}/glossary`, lastModified: new Date('2026-03-05'), changeFrequency: 'monthly' as const, priority: 0.7 },
         {
             url: `${baseUrl}/changelog`,
             lastModified: new Date(),
@@ -187,6 +190,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         ...VS_COMPETITORS.map((competitor) => ({
             url: `${baseUrl}/vs/${competitor}`,
             lastModified: new Date('2026-02-25'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        })),
+        // Alternatives hub + competitor alternatives pages
+        {
+            url: `${baseUrl}/alternatives`,
+            lastModified: new Date('2026-03-05'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.85,
+        },
+        ...VS_PAGES.map((p) => ({
+            url: `${baseUrl}/alternatives/${p.competitor}`,
+            lastModified: new Date('2026-03-05'),
             changeFrequency: 'monthly' as const,
             priority: 0.8,
         })),

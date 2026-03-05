@@ -9,6 +9,7 @@ import { ArrowRight, Mail } from "lucide-react";
 export const metadata: Metadata = {
     title: "Contact — Trackr",
     description: "Get in touch with the Trackr team. Questions, enterprise inquiries, or AI audit bookings.",
+    keywords: ["contact trackr", "trackr support", "trackr enterprise inquiry", "AI audit booking", "trackr team contact"],
     alternates: {
         canonical: "https://trytrackr.com/contact",
     },
@@ -27,10 +28,48 @@ export const metadata: Metadata = {
     },
 };
 
+const contactJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+        {
+            "@type": "ContactPage",
+            "@id": "https://trytrackr.com/contact",
+            name: "Contact Trackr",
+            description: "Get in touch with the Trackr team. Questions, enterprise inquiries, or AI audit bookings.",
+            url: "https://trytrackr.com/contact",
+        },
+        {
+            "@type": "Organization",
+            "@id": "https://trytrackr.com/#organization",
+            name: "Trackr",
+            url: "https://trytrackr.com",
+            contactPoint: {
+                "@type": "ContactPoint",
+                email: "hello@trytrackr.com",
+                contactType: "customer support",
+                availableLanguage: "English",
+                contactOption: "TollFree",
+            },
+        },
+        {
+            "@type": "BreadcrumbList",
+            itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Home", item: "https://trytrackr.com" },
+                { "@type": "ListItem", position: 2, name: "Contact", item: "https://trytrackr.com/contact" },
+            ],
+        },
+    ],
+};
+
 export default async function ContactPage() {
     const user = await currentUser();
 
     return (
+        <>
+        <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(contactJsonLd) }}
+        />
         <main className="flex-grow w-full max-w-6xl mx-auto px-6">
             <MarketingNavigation isLoggedIn={!!user} />
 
@@ -83,5 +122,6 @@ export default async function ContactPage() {
 
             <MarketingFooter />
         </main>
+        </>
     );
 }

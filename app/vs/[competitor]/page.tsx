@@ -26,11 +26,18 @@ export async function generateMetadata({
     return {
         title: `${page.title} | Trackr`,
         description: page.description,
+        keywords: [`trackr vs ${page.competitorName.toLowerCase()}`, `${page.competitorName.toLowerCase()} alternative`, `${page.competitorName.toLowerCase()} vs trackr`, "AI tool comparison", "SaaS evaluation tool", `best ${page.competitorName.toLowerCase()} alternative 2026`],
         openGraph: {
             title: page.title,
             description: page.description,
             url: `https://trytrackr.com/vs/${competitor}`,
             images: [{ url: "/og.png", width: 1456, height: 816, alt: `Trackr vs ${page.competitorName}` }],
+        },
+        twitter: {
+            card: "summary_large_image" as const,
+            title: page.title,
+            description: page.description,
+            images: ["/og.png"],
         },
         alternates: { canonical: `https://trytrackr.com/vs/${competitor}` },
     };

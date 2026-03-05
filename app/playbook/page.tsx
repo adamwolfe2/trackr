@@ -9,6 +9,7 @@ export const revalidate = false;
 export const metadata: Metadata = {
     title: "The AI-Native Ops Playbook — How to Audit, Score & Optimize Your Stack | Trackr",
     description: "Step-by-step playbook for auditing your AI tool stack, scoring tools consistently, eliminating waste, and building an AI-native operations layer that scales.",
+    keywords: ["AI ops playbook", "AI tool stack audit guide", "SaaS optimization playbook", "AI-native operations", "tool scoring methodology", "ops team AI guide", "RevOps playbook 2026"],
     openGraph: {
         title: "The AI-Native Ops Playbook",
         description: "How to audit, score, and optimize your AI stack. The complete guide for ops teams, RevOps managers, and founders.",
