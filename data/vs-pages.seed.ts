@@ -1004,6 +1004,708 @@ Trackr generates that research in 2 minutes. You'll see how Apollo's contact dat
         ],
         ctaText: "Research Apollo independently in 2 minutes",
     },
+    {
+        competitor: "getapp",
+        competitorName: "GetApp",
+        competitorTagline: "Gartner-owned software review and discovery platform",
+        title: "Trackr vs GetApp — AI Research vs Software Reviews | Trackr",
+        description: "GetApp aggregates reviews from verified buyers. Trackr generates a scored, current research report on any tool in 2 minutes — with no vendor influence.",
+        headline: "GetApp shows you reviews. Trackr shows you analysis.",
+        subheadline: "GetApp is a Gartner-owned directory of user reviews. Trackr is an AI research engine that produces scored, current intelligence on any tool — specific to your needs.",
+        switchNarrative: `GetApp, Capterra, and Software Advice are three Gartner-owned review sites that share the same underlying review database. If you've used one, you've seen the content of all three. They're useful for initial discovery — finding tools in a category — but they share the same structural limitations as every review aggregation platform.
+
+Reviews are historical, general, and influenced by vendor review solicitation campaigns. A tool rated 4.5 stars on GetApp may have shipped a terrible product update six months ago that hasn't yet registered in the rating. The vendor with the most aggressive review generation campaign often outranks genuinely better alternatives.
+
+Trackr approaches tool evaluation differently. Instead of aggregating what other buyers thought in the past, Trackr researches the tool right now — pulling live pricing, feature data, community discussion, and competitive positioning — and synthesizes it into a scored 7-dimension report in under 2 minutes. The result is current, structured, and specific enough to defend in a vendor selection meeting.`,
+        featureTable: [
+            { feature: "Data freshness", trackr: "Current at generation time", competitor: "Review-date dependent" },
+            { feature: "Scoring methodology", trackr: "7-dimension AI scorecard", competitor: "Star ratings (1–5)" },
+            { feature: "Competitive alternatives", trackr: "In every report", competitor: "Browse separately" },
+            { feature: "Vendor influence on ranking", trackr: "None", competitor: "Review solicitation campaigns" },
+            { feature: "Stack-specific evaluation", trackr: true, competitor: false },
+            { feature: "Private workspace tracking", trackr: true, competitor: false },
+            { feature: "Report generation time", trackr: "2 minutes", competitor: "Browse time" },
+            { feature: "Pricing", trackr: "Free to start", competitor: "Free (ad-supported)" },
+        ],
+        advantages: [
+            { title: "Analysis, not aggregation", description: "GetApp shows you a distribution of opinions from buyers with different needs. Trackr produces a structured analysis with scored dimensions and written justifications — actionable for your specific procurement decision." },
+            { title: "No vendor gaming", description: "Software vendors actively manage their GetApp presence — soliciting reviews, responding to criticism, and running campaigns to boost ratings. Trackr's AI research pulls from primary sources no vendor controls." },
+            { title: "Current data at every evaluation", description: "Product updates, pricing changes, and competitive shifts happen constantly. GetApp reviews reflect historical buyer experience. Trackr reflects today's market — which matters when you're making a decision today." },
+        ],
+        faqs: [
+            { q: "Is Trackr better than GetApp for evaluating software?", a: "For making a final procurement decision: yes. GetApp is better for initial category discovery when you don't know which tools exist. Use GetApp to build a shortlist, then use Trackr to evaluate each finalist with current, scored intelligence." },
+            { q: "GetApp is free — why pay for Trackr?", a: "GetApp's free model is supported by advertising and featured placements from vendors. Trackr's research is AI-generated and has no vendor advertising layer. Free isn't always neutral." },
+            { q: "Does Trackr replace analyst platforms like Gartner?", a: "For SMB and mid-market procurement, Trackr provides more actionable intelligence at a fraction of the cost. For board-level vendor selection requiring analyst credibility, Gartner's Magic Quadrant still serves a different purpose." },
+        ],
+        ctaText: "Get an unbiased tool report in 2 minutes",
+    },
+    {
+        competitor: "forrester",
+        competitorName: "Forrester Research",
+        competitorTagline: "Enterprise technology research and advisory firm",
+        title: "Trackr vs Forrester Research — AI Tool Intelligence vs Analyst Reports | Trackr",
+        description: "Forrester Wave reports cost $15K–$50K and take weeks to commission. Trackr delivers a scored AI research report on any tool in 2 minutes — free to start.",
+        headline: "Forrester takes weeks and costs $50K. Trackr takes 2 minutes.",
+        subheadline: "Forrester is an enterprise analyst firm that publishes technology research for Fortune 500 procurement teams. Trackr gives growth-stage and mid-market teams the same intelligence layer — in minutes, not months.",
+        switchNarrative: `Forrester Research publishes technology evaluation frameworks — most famously The Forrester Wave — that grade vendors on a 2x2 grid of strategy and current offering. For enterprise organizations making $500K+ vendor decisions with C-suite visibility, the analyst imprimatur adds procurement credibility. It's a legitimate business purpose.
+
+The problem is access. Forrester's full research requires a subscription that costs $30K–$200K annually. Individual Wave reports cost $15K–$50K to license. Their research is published on a quarterly cycle, meaning the "current" Wave report may already be 6–18 months out of date in a fast-moving AI tools market. And Waves only cover large, established vendors — they won't evaluate the emerging tool that might be exactly right for your use case.
+
+Trackr fills the gap below and between analyst reports. For any tool — established vendor or two-year-old startup — Trackr produces a scored research report in under 2 minutes at a cost any team can afford. For procurement decisions that don't require a $50K analyst stamp, Trackr provides more current, more specific intelligence.`,
+        featureTable: [
+            { feature: "Time to first report", trackr: "2 minutes", competitor: "Weeks to months" },
+            { feature: "Coverage of emerging/smaller tools", trackr: "Any URL", competitor: "Major vendors only" },
+            { feature: "Data freshness", trackr: "Current at generation", competitor: "Publication date" },
+            { feature: "Pricing", trackr: "Free to start", competitor: "$30K–$200K+/year" },
+            { feature: "Self-serve access", trackr: true, competitor: false },
+            { feature: "Analyst credibility for board/exec buy-in", trackr: "Limited", competitor: "Strong" },
+            { feature: "Custom to your stack", trackr: true, competitor: false },
+            { feature: "Competitive alternatives in report", trackr: true, competitor: "Partial" },
+        ],
+        advantages: [
+            { title: "Research any tool, not just major vendors", description: "Forrester Waves only cover established vendors with significant market share. Trackr researches any SaaS tool — including emerging AI-native alternatives that Forrester won't publish on for years." },
+            { title: "Current data, not last quarter's", description: "Forrester publishes on a quarterly cycle. In fast-moving AI software categories, a Wave published 8 months ago may already be obsolete. Trackr pulls current data at every generation." },
+            { title: "Accessible for teams that don't have analyst budgets", description: "Forrester's model is built for enterprise procurement with $100K+ analyst budgets. Trackr's intelligence layer is available from $0, designed for the ops leader, IT manager, or RevOps team making real procurement decisions without enterprise backing." },
+        ],
+        faqs: [
+            { q: "Can Trackr replace Forrester for enterprise procurement?", a: "For decisions requiring analyst imprimatur at the C-suite or board level, Forrester still serves a purpose Trackr doesn't. For operational procurement decisions below that threshold, Trackr provides faster, more current, and more accessible intelligence." },
+            { q: "Does Trackr cover all the vendors Forrester covers?", a: "Trackr can research any vendor with a public website — including every vendor Forrester covers and thousands Forrester doesn't. Coverage is not a constraint." },
+            { q: "How current is Trackr's data vs Forrester's Waves?", a: "Trackr pulls live data at the time of research — pricing, features, and community sentiment as of today. Forrester Waves reflect the state of the market at time of publication, which may be 6–18 months prior." },
+        ],
+        ctaText: "Get analyst-quality intelligence in 2 minutes",
+    },
+    {
+        competitor: "asana",
+        competitorName: "Asana",
+        competitorTagline: "Work management and project tracking platform",
+        title: "Trackr vs Asana for Tool Evaluation — AI Research vs Manual Tracking | Trackr",
+        description: "Teams use Asana to track tool evaluations in projects. Trackr automates the research itself — delivering a scored report on any SaaS tool in 2 minutes.",
+        headline: "Asana tracks your evaluation. Trackr does the evaluation.",
+        subheadline: "Teams build Asana projects to manage software evaluations — tracking tasks, owners, and timelines. Trackr automates the actual research, so there's less to track.",
+        switchNarrative: `Many ops and IT teams manage software evaluations using Asana: a project per vendor, tasks for each evaluation criteria, owners for each workstream, due dates for the review deadline. The process is organized. The research still takes weeks.
+
+The research phase — pulling pricing, reading reviews, benchmarking competitors, writing up recommendations — is the bottleneck. Asana helps coordinate that work. Trackr eliminates most of it. Submit a tool URL, and Trackr's research pipeline returns a scored 7-dimension report in under 2 minutes. The report covers pricing, features, competitive alternatives, community sentiment, and integration depth.
+
+The two tools are complementary. Trackr handles the research phase faster than any manual process. Asana handles coordination for complex evaluations with multiple stakeholders and approval gates. Teams that use both move from "12-week evaluation" to "3-day decision cycle."`,
+        featureTable: [
+            { feature: "AI-powered tool research", trackr: true, competitor: false },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "Competitive alternatives", trackr: "In every report", competitor: "Manual research" },
+            { feature: "Project and task management", trackr: false, competitor: true },
+            { feature: "Stakeholder coordination", trackr: "Basic", competitor: "Excellent" },
+            { feature: "Current pricing intelligence", trackr: true, competitor: false },
+            { feature: "Report generation time", trackr: "2 minutes", competitor: "Weeks of manual work" },
+            { feature: "Renewal tracking", trackr: true, competitor: "Manual" },
+        ],
+        advantages: [
+            { title: "Eliminate the research phase entirely", description: "Asana helps you coordinate research work — assign tasks, set owners, track progress. Trackr removes most of the work by generating a complete scored report in 2 minutes. Less coordination needed when the research is done." },
+            { title: "Structured output, not a to-do list", description: "An Asana evaluation project produces a collection of notes, links, and tasks. A Trackr report produces a scored, structured analysis that can be shared, compared, and used to make decisions immediately." },
+            { title: "Built for procurement, not general project management", description: "Asana is a general work management tool that teams adapt for software evaluation. Trackr is purpose-built for tool intelligence — with scoring, comparison, renewal tracking, and spend management in one place." },
+        ],
+        faqs: [
+            { q: "Should I use Trackr instead of Asana for tool evaluation?", a: "Use Trackr for the research and intelligence layer. If your evaluation process involves multiple stakeholders, approval gates, and complex coordination, Asana still adds value for project management. Many teams use both." },
+            { q: "Can Trackr track the status of evaluations?", a: "Yes — tools in Trackr move through Backlog → Researching → Active → Archived. For simple evaluation workflows, this Kanban view is sufficient. For complex enterprise procurement requiring task management and approvals, a dedicated tool like Asana is more appropriate." },
+            { q: "Does Trackr integrate with Asana?", a: "Not natively. Teams often use Trackr's export features to pull reports into their Asana evaluation projects. A native integration is on the roadmap." },
+        ],
+        ctaText: "Replace weeks of research with 2-minute reports",
+    },
+    {
+        competitor: "jira",
+        competitorName: "Jira",
+        competitorTagline: "Atlassian project and issue tracking platform",
+        title: "Trackr vs Jira for Software Evaluation — AI Research vs Manual Tracking | Trackr",
+        description: "IT teams use Jira to track software evaluation requests. Trackr delivers the actual research — a scored AI report on any tool in 2 minutes.",
+        headline: "Jira tracks the ticket. Trackr does the research.",
+        subheadline: "IT and ops teams use Jira to manage software evaluation requests. Trackr delivers the research those requests are waiting on — in 2 minutes instead of 2 weeks.",
+        switchNarrative: `The typical enterprise software evaluation starts as a Jira ticket: "Evaluate [tool name] for [team]." The ticket is assigned, a sprint is planned, and a researcher spends days pulling together pricing, feature comparisons, security documentation, and stakeholder requirements. The process is organized. It's still slow.
+
+Trackr doesn't replace Jira's workflow — it collapses the research phase that Jira tracks. Submit the tool URL at the start of the evaluation, and Trackr's AI pipeline produces a scored report covering pricing, features, competitive alternatives, integration depth, and community sentiment in under 2 minutes. The Jira ticket can close in the same sprint it opened.
+
+For IT and procurement teams processing 10–50 tool evaluation requests per quarter, the compounding time savings are significant. Research that took a week per tool takes 2 minutes. Evaluation throughput goes from 2–3 tools per sprint to 10–20. Backlogs clear.`,
+        featureTable: [
+            { feature: "AI-powered tool research", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Issue and ticket management", trackr: false, competitor: true },
+            { feature: "Developer workflow integration", trackr: false, competitor: true },
+            { feature: "Current pricing intelligence", trackr: true, competitor: false },
+            { feature: "Competitive alternatives", trackr: "In every report", competitor: "Manual research" },
+            { feature: "Report generation time", trackr: "2 minutes", competitor: "Research phase: 1–2 weeks" },
+            { feature: "Spend and renewal tracking", trackr: true, competitor: false },
+        ],
+        advantages: [
+            { title: "Close evaluation tickets in the same sprint", description: "Jira tracks how long software evaluation requests sit in backlog. Trackr collapses the research phase that causes the delay — 2-minute reports mean tickets that used to take 2 weeks can resolve in hours." },
+            { title: "Purpose-built for tool evaluation", description: "Jira is a general-purpose issue tracker that IT teams adapt for software evaluation. Trackr is built specifically for tool intelligence, with scoring, comparison, and renewal tracking designed for procurement use cases." },
+            { title: "Consistent scoring across all evaluations", description: "Jira-tracked evaluations produce different outputs depending on who does the research. Trackr applies the same 7-dimension framework to every tool — so comparison across evaluations is consistent regardless of who ran them." },
+        ],
+        faqs: [
+            { q: "How does Trackr fit into a Jira-based evaluation workflow?", a: "The typical pattern: create the Jira ticket, submit the tool to Trackr immediately, attach the Trackr report to the ticket. The structured report gives stakeholders the data they need, and the ticket moves to review instead of waiting in research." },
+            { q: "Does Trackr have Jira integration?", a: "Not natively. Teams currently paste Trackr report links into Jira tickets or export PDF reports to attach. Native Jira integration is on the roadmap." },
+            { q: "Can Trackr evaluate tools that require security review?", a: "Yes — Trackr's research covers publicly available security documentation, compliance certifications (SOC 2, ISO 27001, GDPR), and community discussions about security issues. For formal security review processes, you'll still need dedicated security assessment tooling." },
+        ],
+        ctaText: "Cut evaluation cycles from weeks to minutes",
+    },
+    {
+        competitor: "linear",
+        competitorName: "Linear",
+        competitorTagline: "Modern project management for software teams",
+        title: "Trackr vs Linear for Tool Evaluation — AI Research vs Issue Tracking | Trackr",
+        description: "Engineering teams use Linear to track software decisions. Trackr delivers the actual research — AI-scored reports on any tool in 2 minutes.",
+        headline: "Linear tracks the decision. Trackr informs it.",
+        subheadline: "Engineering and product teams use Linear to manage software evaluation cycles. Trackr accelerates those cycles by generating scored research reports on any tool in 2 minutes.",
+        switchNarrative: `Product and engineering teams often use Linear to manage internal software evaluations — "Should we adopt [new tool]?" becomes a Linear issue with owners, priority levels, and due dates. The process is clean. The research behind it still takes time.
+
+Trackr compresses that research phase. Tool evaluation issues that previously required a team member to spend 3–5 hours researching pricing, reading documentation, and benchmarking alternatives now get a complete scored report in 2 minutes. The Linear issue can be moved from "In Progress" to "Review" the same day it's created.
+
+The two tools serve different functions. Linear manages workflow. Trackr produces the intelligence that fuels the decision. Teams that value shipping fast use Trackr to parallelize evaluations — running 5 tools through research simultaneously rather than sequentially over weeks.`,
+        featureTable: [
+            { feature: "AI tool research", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Issue tracking and cycles", trackr: false, competitor: true },
+            { feature: "Engineering workflow integration", trackr: false, competitor: true },
+            { feature: "Current pricing and feature data", trackr: true, competitor: false },
+            { feature: "Competitive alternatives", trackr: "Automatic", competitor: "Manual" },
+            { feature: "Report generation time", trackr: "2 minutes", competitor: "Research: days" },
+            { feature: "Spend tracking", trackr: true, competitor: false },
+        ],
+        advantages: [
+            { title: "Fast like your team", description: "Linear is popular with fast-moving product and engineering teams. Trackr matches that pace — research that used to block decisions for a week completes in 2 minutes." },
+            { title: "Consistent evaluation output", description: "When different people evaluate tools, the outputs vary by person. Trackr applies a consistent 7-dimension framework every time, so tool evaluations are comparable regardless of who ran them." },
+            { title: "Track tools you've adopted alongside what you're evaluating", description: "Trackr's workspace tracks your full software stack — tools you're already using and tools under evaluation. Renewal dates, spend, and scores in one place." },
+        ],
+        faqs: [
+            { q: "How do fast-moving engineering teams use Trackr?", a: "The typical pattern: open the Linear issue, submit the tool to Trackr in parallel, share the report in the Linear thread. The research is ready before the team has even prioritized the issue." },
+            { q: "Does Trackr evaluate developer tools?", a: "Yes — Trackr researches any SaaS tool including developer platforms, observability tools, CI/CD systems, and infrastructure products. The 7-dimension framework adapts to the tool category." },
+            { q: "Can multiple team members collaborate on a Trackr evaluation?", a: "Yes — Trackr workspaces support multiple members. Team notes, pain points, and research are shared across the workspace. Enterprise plans include up to unlimited members." },
+        ],
+        ctaText: "Speed up tool evaluations to match your team",
+    },
+    {
+        competitor: "airtable",
+        competitorName: "Airtable",
+        competitorTagline: "Flexible database and no-code work platform",
+        title: "Trackr vs Airtable for Tool Tracking — Purpose-Built vs DIY Databases | Trackr",
+        description: "Teams build Airtable bases to track their software stack. Trackr does it for them — with AI-generated scores, renewal alerts, and 2-minute research reports.",
+        headline: "Airtable requires you to build the system. Trackr is the system.",
+        subheadline: "Teams use Airtable to build custom software tracking databases. Trackr is a purpose-built tool intelligence platform — with AI research, scoring, and renewal tracking included.",
+        switchNarrative: `The Airtable software tracker is a rite of passage for ops teams. You build a base, define fields for vendor name, pricing, renewal date, and owner, and spend a weekend getting everything populated. It looks great. Then it starts decaying.
+
+Renewal dates go untracked. Pricing fields go stale. New tools get added without research. Team members stop updating their rows. Six months later, the Airtable is 40% accurate and 100% manual to maintain.
+
+Trackr is what the Airtable tracker was trying to be. Tool research is automated — submit a URL, get a scored report in 2 minutes. Renewal alerts fire automatically. Pricing data stays current because it's pulled from live sources at research time, not manually entered once and forgotten. The stack tracks itself.`,
+        featureTable: [
+            { feature: "AI tool research", trackr: true, competitor: false },
+            { feature: "Automated scoring", trackr: true, competitor: false },
+            { feature: "Renewal alerts (60-day auto)", trackr: true, competitor: "Manual setup" },
+            { feature: "Flexible data modeling", trackr: false, competitor: true },
+            { feature: "No-code automation", trackr: false, competitor: true },
+            { feature: "Current pricing data", trackr: "AI-researched", competitor: "Manual entry" },
+            { feature: "Setup time", trackr: "5 minutes", competitor: "Days to build properly" },
+            { feature: "Maintenance overhead", trackr: "Low — AI-assisted", competitor: "High — fully manual" },
+        ],
+        advantages: [
+            { title: "No build required", description: "An Airtable software tracker requires weeks to build, configure, and populate correctly. Trackr is ready immediately — add a tool URL and the research runs automatically." },
+            { title: "Data that stays current", description: "Airtable stores whatever you type. If you don't update it, it decays. Trackr's AI pipeline can re-research tools on a schedule — weekly, bi-weekly, or monthly — so reports reflect current market data without manual intervention." },
+            { title: "Research plus tracking in one place", description: "Airtable tracks what you tell it. Trackr generates the research, scores the tool, tracks renewal dates, and monitors spend — with no manual data entry required for the intelligence layer." },
+        ],
+        faqs: [
+            { q: "Can I migrate my Airtable software tracker to Trackr?", a: "Yes. Export your Airtable base as CSV and use Trackr's bulk import to submit all tools for research at once. Your stack will have current, scored reports within an hour." },
+            { q: "Is Airtable better than Trackr for tracking custom data?", a: "Yes — for custom fields, complex relational data, and no-code workflow automation, Airtable is more flexible. Trackr is purpose-built for tool intelligence. Use Airtable for bespoke data needs; use Trackr for software stack management." },
+            { q: "Does Trackr support API access for custom integrations?", a: "Yes — Enterprise plans include API access for integrating Trackr data with other systems including Airtable, Notion, or custom internal tools." },
+        ],
+        ctaText: "Replace your spreadsheet tracker with Trackr",
+    },
+    {
+        competitor: "klue",
+        competitorName: "Klue",
+        competitorTagline: "Competitive intelligence platform for sales teams",
+        title: "Trackr vs Klue — Tool Evaluation Intelligence vs Sales Competitive Intel | Trackr",
+        description: "Klue tracks competitor moves for your sales team. Trackr researches the tools your team is evaluating — scoring, pricing, and alternatives in 2 minutes.",
+        headline: "Klue tracks your competitors. Trackr evaluates your tools.",
+        subheadline: "Klue is a competitive intelligence platform for sales teams. Trackr is a tool evaluation platform for procurement and ops teams. Different problems, different buyers.",
+        switchNarrative: `Klue and Trackr are both intelligence platforms, but they solve fundamentally different problems for different buyers in the organization.
+
+Klue serves sales and product teams. It monitors competitor positioning — tracking their marketing, pricing changes, product announcements, and win/loss intelligence. The goal is to help your sales team win competitive deals by knowing more about what the other side is selling.
+
+Trackr serves ops, IT, and finance teams. It researches the tools your organization is evaluating — scoring them across 7 dimensions, surfacing competitive alternatives, and tracking spend and renewal dates. The goal is to help your procurement team make better buying decisions by knowing more about what you're considering buying.
+
+If your team is evaluating whether to adopt a competitive intelligence platform, Trackr is the tool to use for that evaluation — including an independent report on Klue itself.`,
+        featureTable: [
+            { feature: "Tool evaluation research", trackr: true, competitor: false },
+            { feature: "Competitor monitoring for sales", trackr: false, competitor: true },
+            { feature: "Win/loss analysis", trackr: false, competitor: true },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "Renewal and spend tracking", trackr: true, competitor: false },
+            { feature: "Self-serve research in 2 minutes", trackr: true, competitor: false },
+            { feature: "Target buyer", trackr: "Ops, IT, Finance", competitor: "Sales, Product" },
+            { feature: "Pricing", trackr: "Free to start", competitor: "Custom enterprise pricing" },
+        ],
+        advantages: [
+            { title: "Evaluate Klue before you buy it", description: "Use Trackr to get an independent scored report on Klue — current pricing, feature coverage, integration depth, and community sentiment — before committing to an enterprise contract." },
+            { title: "Different intelligence, different team", description: "Klue builds battlecards for your AEs. Trackr builds evaluation reports for your ops team. Both add value; neither replaces the other." },
+            { title: "No vendor buy-in required to start", description: "Klue requires enterprise procurement and a custom contract. Trackr starts free. Evaluate the tools your team is considering today without a sales cycle." },
+        ],
+        faqs: [
+            { q: "Is Trackr a competitor to Klue?", a: "No — they solve different problems. Klue is competitive intelligence for sales teams (tracking what your competitors are doing). Trackr is tool evaluation intelligence for procurement teams (researching software your organization is considering buying)." },
+            { q: "Can I use Trackr to research Klue before buying it?", a: "Yes — and this is a common use case. Submit Klue's URL to Trackr and get a scored report covering pricing, features, competitive alternatives, and community sentiment. Makes for a better-informed conversation with their sales team." },
+            { q: "Does Trackr monitor competitor moves like Klue does?", a: "No. Trackr is not a competitive intelligence platform for sales. Trackr researches tools your organization is evaluating for internal use — it's procurement intelligence, not market intelligence." },
+        ],
+        ctaText: "Research any tool before you buy it",
+    },
+    {
+        competitor: "crayon",
+        competitorName: "Crayon",
+        competitorTagline: "Competitive intelligence and market monitoring platform",
+        title: "Trackr vs Crayon — Tool Evaluation vs Competitive Monitoring | Trackr",
+        description: "Crayon monitors market signals for your sales team. Trackr researches the SaaS tools your organization is evaluating — scored reports in 2 minutes.",
+        headline: "Crayon watches the market. Trackr evaluates your tools.",
+        subheadline: "Crayon tracks competitor moves and market signals for go-to-market teams. Trackr evaluates the tools your ops, IT, and finance teams are considering buying.",
+        switchNarrative: `Crayon is a market and competitive intelligence platform. It monitors competitor websites, pricing pages, product announcements, and job postings to surface signals for product and sales teams. The intelligence helps you understand how the competitive landscape is shifting so you can position your product and equip your sales team.
+
+Trackr is a procurement intelligence platform. It researches the software tools your organization is evaluating — pulling current pricing, scoring 7 dimensions, surfacing alternatives, and tracking spend and renewals. The intelligence helps ops, IT, and finance teams make better buying decisions faster.
+
+The organizational buyer is different. The use case is different. The information is different. If you're evaluating whether to adopt a competitive intelligence platform like Crayon, Trackr can produce an independent scored report on Crayon's pricing, features, and alternatives before you commit.`,
+        featureTable: [
+            { feature: "SaaS tool evaluation", trackr: true, competitor: false },
+            { feature: "Competitor market monitoring", trackr: false, competitor: true },
+            { feature: "Battlecard creation for sales", trackr: false, competitor: true },
+            { feature: "7-dimension tool scoring", trackr: true, competitor: false },
+            { feature: "Spend and renewal tracking", trackr: true, competitor: false },
+            { feature: "Self-serve, instant reports", trackr: true, competitor: false },
+            { feature: "Pricing", trackr: "Free to start", competitor: "Enterprise pricing" },
+            { feature: "Target buyer", trackr: "Ops / IT / Finance", competitor: "Product / Sales / Marketing" },
+        ],
+        advantages: [
+            { title: "Evaluate Crayon before you buy it", description: "Submit Crayon's URL to Trackr and get a scored independent report — pricing, feature depth, competitive alternatives, and what the market actually says about it — before your first discovery call." },
+            { title: "Purpose-built for procurement decisions", description: "Crayon is built for market intelligence. Trackr is built for procurement intelligence. The questions are different: Crayon answers 'what are competitors doing?' Trackr answers 'should we buy this tool?'" },
+            { title: "Start free, no enterprise contract required", description: "Crayon requires a custom enterprise contract. Trackr starts free — evaluate tools your team is considering today without a procurement cycle for the intelligence platform itself." },
+        ],
+        faqs: [
+            { q: "Does Trackr compete with Crayon?", a: "No — different buyers, different use cases. Crayon serves go-to-market teams monitoring the competitive landscape. Trackr serves ops and procurement teams evaluating software tools. They can coexist." },
+            { q: "Can I research Crayon using Trackr?", a: "Yes — submit crayon.com to Trackr for an independent scored report on their pricing, features, and competitive alternatives. It's a good starting point before engaging their sales team." },
+            { q: "Does Trackr do ongoing market monitoring like Crayon?", a: "Trackr can re-research tools on a schedule to keep reports current. This is different from Crayon's real-time competitive signal monitoring. Trackr monitors the tools you're using; Crayon monitors what competitors are doing in the market." },
+        ],
+        ctaText: "Get an independent report on any tool in 2 minutes",
+    },
+    {
+        competitor: "cledara",
+        competitorName: "Cledara",
+        competitorTagline: "SaaS purchasing and management platform",
+        title: "Trackr vs Cledara — Tool Intelligence vs SaaS Purchasing | Trackr",
+        description: "Cledara manages SaaS purchasing and payments. Trackr researches what you should buy — scoring, pricing, and alternatives before you commit.",
+        headline: "Cledara manages your SaaS purchases. Trackr informs them.",
+        subheadline: "Cledara is a SaaS purchasing platform that centralizes subscriptions and payments. Trackr is the intelligence layer that tells you what to purchase and whether it's worth the price.",
+        switchNarrative: `Cledara sits in the finance and IT stack as a SaaS purchasing and management tool. It centralizes subscriptions, gives finance teams visibility into SaaS spend, manages virtual cards for software purchases, and tracks renewal dates. For organizations tired of SaaS sprawl and unexpected charges, Cledara provides control.
+
+Trackr operates upstream. Before the subscription is purchased and managed in Cledara, Trackr answers whether it should be purchased at all — and at what price. The 2-minute research report covers current pricing intelligence, competitive alternatives, feature depth, and community sentiment. Trackr ensures the purchase that goes into Cledara is the right one.
+
+The two tools are complementary in a mature SaaS management stack. Trackr handles evaluation intelligence. Cledara handles purchasing control and spend management. Teams that use both make better initial decisions and control spending after the decision is made.`,
+        featureTable: [
+            { feature: "Pre-purchase tool research", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "SaaS subscription management", trackr: false, competitor: true },
+            { feature: "Virtual card management", trackr: false, competitor: true },
+            { feature: "Spend visibility across all SaaS", trackr: "Within workspace", competitor: true },
+            { feature: "Competitive alternatives in reports", trackr: true, competitor: false },
+            { feature: "Renewal alerts", trackr: true, competitor: true },
+            { feature: "Pricing", trackr: "Free to start", competitor: "Subscription-based" },
+        ],
+        advantages: [
+            { title: "Intelligence before the purchase", description: "Cledara manages subscriptions after you've committed. Trackr informs the decision before you commit — ensuring the tools that go into your SaaS portfolio are the right ones at the right price." },
+            { title: "Evaluate what you're already managing", description: "Import your existing SaaS stack into Trackr and get scored reports on every tool you're currently paying for. Identify what's underperforming and what's worth renewing before your next cycle." },
+            { title: "Competitive intelligence built in", description: "Every Trackr report includes competitive alternatives. Before renewing a subscription in Cledara, check whether a better alternative has emerged in the market." },
+        ],
+        faqs: [
+            { q: "Does Trackr integrate with Cledara?", a: "Not natively. Teams export their Cledara subscription list and import it into Trackr for bulk research. A native integration that surfaces Trackr reports inside Cledara is on the roadmap." },
+            { q: "Can Trackr replace Cledara's spend management features?", a: "No — Cledara provides purchasing controls, virtual cards, and spend consolidation that Trackr doesn't offer. Trackr focuses on the intelligence layer; Cledara focuses on the purchasing and payment layer." },
+            { q: "Which comes first — Trackr or Cledara?", a: "Trackr first: evaluate and research tools before purchasing. Then Cledara to manage the subscription and spending after the purchasing decision is made. The workflow is sequential, not competitive." },
+        ],
+        ctaText: "Research before you purchase",
+    },
+    {
+        competitor: "vertice",
+        competitorName: "Vertice",
+        competitorTagline: "SaaS procurement and contract optimization platform",
+        title: "Trackr vs Vertice — Tool Intelligence vs Procurement Services | Trackr",
+        description: "Vertice optimizes SaaS contracts through managed procurement. Trackr gives you the intelligence to evaluate tools and understand fair pricing before the negotiation.",
+        headline: "Vertice optimizes your contracts. Trackr optimizes your decisions.",
+        subheadline: "Vertice is a procurement service that optimizes SaaS contracts through benchmarking and negotiation. Trackr is the research layer that tells you what a fair price is before you engage their team.",
+        switchNarrative: `Vertice is a SaaS procurement optimization service. They maintain a database of benchmark pricing across thousands of SaaS contracts and use that data to help customers negotiate better terms. For companies with significant SaaS spend, the savings often justify the service cost.
+
+Trackr operates at a different stage of the same procurement lifecycle. Before Vertice negotiates the contract, Trackr evaluates whether the tool is the right choice — scoring it across 7 dimensions, surfacing competitive alternatives, and providing current market pricing intelligence. Trackr answers "is this the right tool, and what should we expect to pay?" Vertice answers "how do we get the best contract terms on the tool we've decided to buy?"
+
+The two serve different moments. Trackr is the evaluation layer. Vertice is the negotiation layer. For organizations with mature procurement functions, both add value at distinct stages.`,
+        featureTable: [
+            { feature: "Pre-purchase tool research", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Contract negotiation support", trackr: false, competitor: true },
+            { feature: "Benchmark pricing database", trackr: "AI-researched", competitor: "Historical contract data" },
+            { feature: "Competitive alternatives", trackr: "In every report", competitor: false },
+            { feature: "Self-serve in 2 minutes", trackr: true, competitor: false },
+            { feature: "Pricing", trackr: "Free to start", competitor: "% of savings or subscription" },
+            { feature: "Coverage of SMB / growth-stage teams", trackr: "Strong", competitor: "Limited" },
+        ],
+        advantages: [
+            { title: "Intelligence before the negotiation", description: "Vertice negotiates after you've committed to buying. Trackr informs the decision before you're in a negotiation — ensuring you're buying the right tool and entering the conversation with current pricing intelligence." },
+            { title: "Available to teams of any size", description: "Vertice's model works best for mid-market and enterprise spend levels. Trackr's intelligence layer is available from $0 — useful for growth-stage teams making their first major SaaS investments." },
+            { title: "Current market intelligence, not historical benchmarks", description: "Vertice's pricing database reflects historical contract prices. Trackr pulls live market data at research time — reflecting current pricing, not what someone paid 18 months ago." },
+        ],
+        faqs: [
+            { q: "Should I use Trackr or Vertice?", a: "Use Trackr for the evaluation phase — researching tools before you decide to buy. Use Vertice (or Vendr, or a similar service) for the negotiation phase after you've decided to buy. They're sequential, not competing." },
+            { q: "Can Trackr tell me the fair price for a SaaS tool?", a: "Trackr provides current market pricing intelligence — published pricing plus community-reported actual prices for common configurations. This gives you a realistic expectation range. Vertice has deeper benchmark data for specific negotiated contract terms." },
+            { q: "Does Trackr work for teams without a formal procurement function?", a: "Yes — Trackr is designed for ops leaders, IT managers, and finance teams at growth-stage companies that don't have formal procurement. The self-serve model is accessible without procurement expertise." },
+        ],
+        ctaText: "Make better decisions before the negotiation",
+    },
+    {
+        competitor: "gemini",
+        competitorName: "Google Gemini",
+        competitorTagline: "Google's AI assistant and model platform",
+        title: "Trackr vs Google Gemini for Tool Research — Specialized AI vs General AI | Trackr",
+        description: "Teams use Gemini to research software tools via chat. Trackr provides a structured, scored research pipeline purpose-built for tool evaluation — in 2 minutes.",
+        headline: "Gemini gives you a conversation. Trackr gives you a report.",
+        subheadline: "You can ask Gemini to research a software tool. Trackr is built specifically for that task — with a structured research pipeline, 7-dimension scoring, and live data at generation time.",
+        switchNarrative: `General AI assistants like Google Gemini, ChatGPT, and Claude can answer questions about software tools. Ask "What are the pros and cons of [tool]?" and you'll get a reasonable summary. For quick orientation, that's useful. For making a procurement decision, it falls short.
+
+The core limitation is that general AI models produce text synthesis from training data. That data has a cutoff date, may not include the most recent pricing changes or product updates, and produces unstructured prose rather than a consistent scoring framework. Two people asking Gemini about the same tool will get different answers in different formats that can't be compared side by side.
+
+Trackr is a specialized research pipeline built for tool evaluation. It pulls live data — scraping the tool's website, pulling review data, searching community discussion, and analyzing competitive positioning — then synthesizes everything into a structured 7-dimension scorecard. Every report uses the same framework, so you can compare any two tools directly. And because the research runs fresh at generation time, it reflects today's market.`,
+        featureTable: [
+            { feature: "Live web research at generation time", trackr: true, competitor: "Training data cutoff" },
+            { feature: "Consistent 7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Side-by-side tool comparison", trackr: true, competitor: "Manual" },
+            { feature: "Renewal and spend tracking", trackr: true, competitor: false },
+            { feature: "Structured report output", trackr: true, competitor: "Prose/conversation" },
+            { feature: "Workspace for team collaboration", trackr: true, competitor: false },
+            { feature: "General-purpose AI assistance", trackr: false, competitor: true },
+            { feature: "Pricing", trackr: "Free to start", competitor: "Free + paid tiers" },
+        ],
+        advantages: [
+            { title: "Structured output that informs decisions", description: "Gemini produces conversational text. Trackr produces a scored report — 7 dimensions, written justifications, competitive alternatives, and current pricing — formatted for sharing in a vendor selection meeting." },
+            { title: "Live data, not training cutoffs", description: "Gemini's knowledge has a training cutoff. Trackr's research pipeline scrapes live sources at generation time, so pricing, features, and competitive context reflect today's market — not six months ago." },
+            { title: "Purpose-built for tool evaluation", description: "Using Gemini for tool research requires crafting prompts, evaluating responses critically, and reformatting outputs. Trackr is designed for this exact task — submit a URL and get a structured report in 2 minutes." },
+        ],
+        faqs: [
+            { q: "Can I use Gemini instead of Trackr for software research?", a: "For quick orientation, yes. For making a procurement decision, Trackr provides more reliable output — live data, consistent scoring, and a structured format designed for the task. Use both: Gemini to explore a category, Trackr to evaluate finalists." },
+            { q: "How is Trackr different from asking an AI chatbot?", a: "Trackr runs a structured research pipeline — scraping, search, review aggregation, and synthesis — rather than retrieving text from training data. The output is a consistent scored report, not a conversational response that varies by how you phrase the question." },
+            { q: "Does Trackr use AI in its research?", a: "Yes — Trackr uses GPT-4o for synthesis, Perplexity for competitive intelligence, Tavily for search, and Firecrawl for web scraping. The AI is specialized for tool research, not general conversation." },
+        ],
+        ctaText: "Get a structured tool report, not a chatbot response",
+    },
+    {
+        competitor: "jasper",
+        competitorName: "Jasper AI",
+        competitorTagline: "AI writing platform for marketing teams",
+        title: "Trackr vs Jasper AI — Evaluate Jasper Before You Buy It | Trackr",
+        description: "Before committing to Jasper AI, get an independent scored report — current pricing, feature depth, competitive alternatives, and community sentiment in 2 minutes.",
+        headline: "Research Jasper before you buy Jasper.",
+        subheadline: "Jasper is a popular AI writing platform for marketing teams. Before committing to an annual contract, use Trackr for an independent, scored evaluation — pricing, alternatives, and what the market actually says.",
+        switchNarrative: `Jasper is an AI writing platform used by marketing teams for content generation, brand voice management, and campaign copywriting. It's one of the earlier enterprise-focused AI writing tools and has built significant market presence. It's also one of the more expensive AI writing platforms in a category that has become crowded.
+
+Before committing to a Jasper annual contract, it's worth doing independent research. The AI writing category has changed significantly in the past 18 months — ChatGPT, Claude, Writer, Copy.ai, and others have expanded their capabilities substantially. The pricing and value proposition that made Jasper the clear choice two years ago may look different against today's competitive set.
+
+Trackr gives your team an independent, scored view of Jasper — pulling current pricing, benchmarking features across the AI writing category, and surfacing what the community is actually saying on Reddit, G2, and review platforms. The report takes 2 minutes and covers everything you need to evaluate whether Jasper is the right choice or whether an alternative better matches your needs.`,
+        featureTable: [
+            { feature: "Independent tool research", trackr: true, competitor: false },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "AI content generation", trackr: false, competitor: true },
+            { feature: "Brand voice management", trackr: false, competitor: true },
+            { feature: "Current pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment analysis", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Trial: 2–4 weeks" },
+        ],
+        advantages: [
+            { title: "Evaluate Jasper independently before trialing", description: "Jasper's trial puts you in their onboarding funnel. A Trackr report gives you independent, scored intelligence — pricing, competitive alternatives, and real user sentiment — before you've spent two weeks in their trial process." },
+            { title: "Compare Jasper vs Writer vs Copy.ai in 10 minutes", description: "Submit all three URLs to Trackr and compare side by side on the same 7-dimension framework. Saves weeks of parallel trialing." },
+            { title: "Know the fair price before negotiations", description: "Jasper's pricing has multiple tiers and add-ons. Trackr's research surfaces current published pricing plus community-reported actual prices — giving you a realistic expectation before engaging their sales team." },
+        ],
+        faqs: [
+            { q: "How does Trackr help with evaluating AI writing tools?", a: "Submit any AI writing tool URL to Trackr and get a scored report covering pricing, feature depth, integration ecosystem, community sentiment, and competitive alternatives. It's the fastest way to compare tools in a crowded category." },
+            { q: "Does Trackr track AI tools like Jasper on an ongoing basis?", a: "Yes — you can add Jasper to your Trackr workspace and set it to auto-research on a schedule. Quarterly re-research keeps your intelligence current as the product and pricing evolve." },
+            { q: "What alternatives to Jasper does Trackr surface?", a: "Trackr's research pipeline surfaces competitive alternatives based on current market data. Common alternatives in the AI writing space include Writer, Copy.ai, Claude, and ChatGPT — but the specific alternatives surfaced reflect today's competitive landscape." },
+        ],
+        ctaText: "Research Jasper — and its alternatives — in 2 minutes",
+    },
+    {
+        competitor: "writer",
+        competitorName: "Writer",
+        competitorTagline: "Enterprise AI writing platform for teams",
+        title: "Trackr vs Writer AI — Evaluate Writer Before You Buy It | Trackr",
+        description: "Before committing to Writer's enterprise contract, get an independent scored report — current pricing, feature depth, competitive alternatives, and community sentiment.",
+        headline: "Research Writer before you commit to Writer.",
+        subheadline: "Writer is an enterprise AI writing platform. Before signing an annual contract, use Trackr to get independent intelligence on pricing, features, and what the market actually says.",
+        switchNarrative: `Writer is an enterprise-grade AI writing platform with a focus on brand consistency, compliance guardrails, and multi-model AI capabilities. It targets large organizations that need AI content generation with enterprise controls — not just a general AI assistant.
+
+Enterprise AI writing is a category where pricing, features, and competitive positioning move fast. The tool that was clearly ahead 12 months ago may have fallen behind as newer entrants ship faster and model capabilities commoditize. Before committing to an enterprise contract — which for Writer often runs $50K+ annually — independent research is worth 2 minutes.
+
+Trackr provides that independent view. Submit Writer's URL and get a scored report covering current pricing tiers, feature coverage across the enterprise AI writing category, integration depth, community sentiment from real users, and the competitive alternatives that are worth evaluating alongside Writer. The report informs a better conversation with their sales team.`,
+        featureTable: [
+            { feature: "Independent scoring and research", trackr: true, competitor: false },
+            { feature: "Enterprise AI content generation", trackr: false, competitor: true },
+            { feature: "Brand voice and style guides", trackr: false, competitor: true },
+            { feature: "Compliance guardrails", trackr: false, competitor: true },
+            { feature: "Current pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Sales cycle: weeks" },
+            { feature: "Pricing", trackr: "Free to start", competitor: "$50K+/year enterprise" },
+        ],
+        advantages: [
+            { title: "Get independent intelligence before the enterprise sales cycle", description: "Writer's enterprise sales process takes weeks. A Trackr report takes 2 minutes — and gives you independent pricing intelligence, competitive context, and community sentiment before your first discovery call." },
+            { title: "Compare Writer vs Jasper vs Notion AI in one session", description: "Submit multiple enterprise AI writing tools to Trackr and compare them on the same 7-dimension framework. Align your team on the finalists before investing weeks in parallel enterprise trials." },
+            { title: "Know what existing customers actually say", description: "Trackr's research pipeline surfaces community discussion from Reddit, G2, and TrustRadius — not the vendor's curated case studies. Real user sentiment about enterprise implementation, support quality, and model performance." },
+        ],
+        faqs: [
+            { q: "Is Writer worth the enterprise pricing?", a: "Trackr's independent research report will surface what the market says — including community discussion about ROI, implementation complexity, and value relative to alternatives. That's more reliable than asking Writer's sales team." },
+            { q: "How does Trackr compare Writer to other enterprise AI writing tools?", a: "Submit Writer alongside Jasper, Copy.ai, Notion AI, or any competitor URLs to Trackr. The side-by-side 7-dimension comparison surfaces differences that aren't obvious from marketing pages." },
+            { q: "Can Trackr research enterprise tools that don't publish pricing?", a: "Yes — Trackr's research pipeline surfaces community-reported pricing for enterprise tools, even when the vendor says 'contact sales.' This gives you a realistic expectation before entering a sales process." },
+        ],
+        ctaText: "Get independent intelligence before the enterprise sales cycle",
+    },
+    {
+        competitor: "glean",
+        competitorName: "Glean",
+        competitorTagline: "AI-powered enterprise work search platform",
+        title: "Trackr vs Glean — Evaluate Glean Before You Buy It | Trackr",
+        description: "Before committing to Glean's enterprise contract, get an independent scored report — current pricing, feature depth, competitive alternatives, and implementation realities.",
+        headline: "Research Glean before you commit to Glean.",
+        subheadline: "Glean is an enterprise AI search platform that indexes your company's internal knowledge. Before signing an enterprise contract, use Trackr to get independent intelligence on what you're buying.",
+        switchNarrative: `Glean is an AI-powered enterprise search platform that connects to your company's tools — Slack, Google Drive, Confluence, Jira, Salesforce, and more — and surfaces relevant content through natural language search. It's positioned as the "Google for your company" that makes institutional knowledge findable without knowing which app it's in.
+
+The enterprise AI search category is evolving rapidly. Microsoft Copilot, Notion AI, Guru, and specialized vertical AI tools are all competing in adjacent spaces. The evaluation question isn't just "does Glean work?" but "is Glean the right investment for our specific knowledge management problem, at their specific price point, compared to the alternatives available today?"
+
+Trackr gives you an independent view of Glean before you're inside their enterprise sales cycle. The report covers current pricing (Glean charges per-seat enterprise rates), feature depth, integration ecosystem, community discussion about implementation complexity and ROI, and what competitive alternatives are available in the enterprise AI search space right now.`,
+        featureTable: [
+            { feature: "Independent tool research", trackr: true, competitor: false },
+            { feature: "Enterprise AI search / knowledge discovery", trackr: false, competitor: true },
+            { feature: "Multi-tool knowledge indexing", trackr: false, competitor: true },
+            { feature: "Current pricing intelligence", trackr: true, competitor: "Contact sales only" },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment on implementation", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Enterprise POC: 4–8 weeks" },
+        ],
+        advantages: [
+            { title: "Intelligence before the enterprise POC", description: "Glean's evaluation process typically involves a 4–8 week enterprise proof-of-concept. A Trackr report takes 2 minutes — giving you competitive context, pricing intelligence, and community sentiment before you invest weeks in their POC process." },
+            { title: "Community reality vs sales pitch", description: "Glean's enterprise sales pitch is polished. Trackr's research surfaces what actual users say about implementation complexity, data quality, search accuracy, and ROI realization — information that's hard to get before you've signed." },
+            { title: "Compare Glean vs Microsoft Copilot vs Guru in one session", description: "Submit multiple enterprise knowledge tools to Trackr and compare on the same 7-dimension framework. Enter the vendor evaluation with a structured view of the competitive landscape." },
+        ],
+        faqs: [
+            { q: "How much does Glean actually cost?", a: "Glean doesn't publish pricing publicly — it's enterprise-quoted. Trackr's research surfaces community-reported pricing ranges and common contract structures to give you a realistic expectation before engaging their sales team." },
+            { q: "What are the best alternatives to Glean?", a: "Trackr's research report on Glean will surface competitive alternatives in the enterprise knowledge search space based on current market data. Common alternatives include Microsoft Copilot, Guru, Notion AI, and Guru — but the specific recommendation reflects today's market." },
+            { q: "Is Glean worth the investment for a growth-stage company?", a: "Glean is typically sold to mid-market and enterprise companies. Trackr's independent report on Glean includes community discussion about team-size fit and implementation complexity — which helps assess whether it's the right stage for your organization." },
+        ],
+        ctaText: "Research Glean — and its alternatives — before the POC",
+    },
+    {
+        competitor: "figma",
+        competitorName: "Figma",
+        competitorTagline: "Collaborative design and prototyping platform",
+        title: "Trackr vs Figma — Evaluate Figma Before Your Team Commits | Trackr",
+        description: "Before rolling out Figma to your design team, get an independent scored report — current pricing, feature depth, competitive alternatives, and what the design community says.",
+        headline: "Research Figma before your team rolls it out.",
+        subheadline: "Figma is the dominant design collaboration platform. But before committing to an enterprise plan, use Trackr to get independent intelligence on pricing, alternatives, and what the design community is actually saying.",
+        switchNarrative: `Figma has become the default design tool for most product teams. After Adobe's failed acquisition attempt, Figma raised prices significantly — including removing the free tier for professional teams. For ops leaders and IT teams evaluating or renewing Figma licenses, the value equation has changed.
+
+Trackr gives IT and procurement teams independent intelligence on Figma before renewal or initial enterprise commitment. The report covers current pricing across Figma's tier structure, the competitive alternatives that have gained ground (Penpot, Sketch, Adobe XD, Framer, Canva), and what the design community is saying about the post-Adobe pricing changes and product direction.
+
+For companies on Figma's Professional or Organization plans, renewal negotiations have become more complex. Trackr's pricing intelligence — including community-reported actual prices for common team sizes — gives procurement teams a realistic baseline before renewal conversations.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Collaborative design and prototyping", trackr: false, competitor: true },
+            { feature: "Developer handoff features", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment analysis", trackr: true, competitor: false },
+            { feature: "Renewal tracking with alerts", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Trial: 2–3 weeks" },
+        ],
+        advantages: [
+            { title: "Know the fair price before renewal", description: "Figma's enterprise pricing is quoted. Community-reported prices for common team configurations give IT and procurement teams a realistic baseline — and Trackr surfaces those prices in the research report." },
+            { title: "Evaluate alternatives before committing", description: "Penpot, Sketch, Framer, and others have gained ground in the post-pricing-change Figma era. Trackr surfaces these alternatives with scored comparisons — so your team evaluates with a current view of the competitive landscape." },
+            { title: "Track Figma renewal dates automatically", description: "Add Figma to your Trackr workspace and set renewal alerts. 60 days before the annual contract renews, get a reminder to re-evaluate — with a current scored report on whether the market has shifted." },
+        ],
+        faqs: [
+            { q: "Did Figma get more expensive recently?", a: "Yes — Figma adjusted pricing after the Adobe acquisition collapsed, including changes to the free tier. Trackr's research report on Figma covers current pricing tiers and community discussion about the value impact of recent changes." },
+            { q: "What are the best alternatives to Figma?", a: "Trackr's research surfaces current competitive alternatives based on live market data. Common alternatives include Penpot (open-source), Sketch (Mac-native), Framer (interactive prototyping), and Canva (simpler designs). The right alternative depends on your team's specific workflow." },
+            { q: "Can Trackr help with Figma Enterprise pricing negotiations?", a: "Trackr surfaces community-reported pricing for Figma's common enterprise configurations — giving your procurement team a realistic expectation range before engaging Figma's sales team for renewal." },
+        ],
+        ctaText: "Evaluate Figma before your next renewal",
+    },
+    {
+        competitor: "zoom",
+        competitorName: "Zoom",
+        competitorTagline: "Video conferencing and business communications platform",
+        title: "Trackr vs Zoom — Evaluate Zoom Before Your Enterprise Renewal | Trackr",
+        description: "Before renewing Zoom for your organization, get an independent scored report on current pricing, feature depth, alternatives like Teams and Google Meet, and what users say.",
+        headline: "Evaluate Zoom before your next renewal.",
+        subheadline: "Zoom is the default video conferencing platform for many organizations. Before renewing enterprise licenses, use Trackr to benchmark Zoom against Teams, Google Meet, and emerging alternatives.",
+        switchNarrative: `Zoom became the default video conferencing platform during the remote work boom. For many organizations, it's now an entrenched line item in the SaaS budget — renewed automatically each year without re-evaluation. That's exactly the pattern Trackr is designed to break.
+
+The video communications market has shifted significantly. Microsoft Teams is included in most Microsoft 365 subscriptions, making it a $0 marginal cost for organizations already paying for Office. Google Meet is included in Google Workspace. Webex, Loom, and Huddle have gained ground in specific use cases. The question is whether Zoom's continued standalone subscription is justified relative to tools the organization may already be paying for.
+
+Trackr gives IT and procurement teams an independent, current view of Zoom — pricing tiers, feature comparison against Microsoft Teams and Google Meet, community sentiment on performance and reliability, and what the market looks like at the point of renewal. The research takes 2 minutes and often surfaces meaningful questions before a renewal conversation with Zoom's account team.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Video conferencing", trackr: false, competitor: true },
+            { feature: "Webinar and events platform", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Renewal alerts (60-day auto)", trackr: true, competitor: false },
+            { feature: "Community sentiment", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "RFP/evaluation: weeks" },
+        ],
+        advantages: [
+            { title: "Know if you're overpaying before renewal", description: "Zoom's per-seat pricing adds up. Trackr's research surfaces current pricing tiers, community-reported actual prices for common configurations, and whether Teams or Meet — which you may already be paying for — can replace it." },
+            { title: "Surface the Teams and Meet overlap before you renew", description: "Many organizations pay for Zoom on top of Microsoft 365 or Google Workspace. Trackr's competitive analysis surfaces whether you're duplicating functionality you're already paying for." },
+            { title: "Track renewal dates across your full communications stack", description: "Zoom, Slack, Loom, Webex — add your full communications stack to Trackr and track renewal dates across all of them. 60-day alerts give you time to evaluate rather than auto-renew by default." },
+        ],
+        faqs: [
+            { q: "Should we switch from Zoom to Microsoft Teams?", a: "Trackr can give you an independent comparison. Submit both Zoom and Microsoft Teams to Trackr for scored reports on the same 7-dimension framework. The comparison will surface functional gaps, pricing differences, and what the community says about each for your use case." },
+            { q: "Has Zoom's pricing changed recently?", a: "Zoom has adjusted pricing multiple times. Trackr's research reflects current published pricing plus community-reported actual prices — more reliable than Zoom's published list prices, which are often negotiated." },
+            { q: "What's the best alternative to Zoom for enterprise?", a: "It depends on your existing stack. Trackr's research on Zoom includes a competitive alternatives section based on current market data. Microsoft Teams, Google Meet, and Webex are common alternatives for organizations in those ecosystems." },
+        ],
+        ctaText: "Benchmark Zoom before your next renewal",
+    },
+    {
+        competitor: "slack",
+        competitorName: "Slack",
+        competitorTagline: "Team messaging and collaboration platform by Salesforce",
+        title: "Trackr vs Slack — Evaluate Slack Before Your Enterprise Renewal | Trackr",
+        description: "Before renewing Slack for your organization, get an independent scored report — pricing vs Microsoft Teams, feature depth, and what the market actually says.",
+        headline: "Evaluate Slack before your next renewal.",
+        subheadline: "Slack is the default team messaging platform for many organizations. Before renewing enterprise licenses, use Trackr to benchmark Slack against Teams, Notion, and the alternatives.",
+        switchNarrative: `Slack is the dominant team messaging platform for technology companies and growth-stage organizations. After Salesforce's acquisition and subsequent price increases, it's also become one of the more expensive communications tools in the SaaS stack — particularly for organizations that also pay for Microsoft 365, which includes Teams.
+
+The team communications market has changed. Microsoft Teams has expanded significantly beyond messaging into meetings, collaboration, and integrations. Notion has added team discussions and wikis. Linear has messaging built in for engineering teams. Google Chat has improved for Google Workspace organizations. The question isn't whether Slack is good — it is — but whether its value relative to alternatives justifies the premium in your organization's specific context.
+
+Trackr gives procurement and IT teams an independent view of Slack at renewal time. The research covers current pricing (Slack's Pro and Business+ tiers have increased), feature comparison against Teams and other alternatives, community sentiment on performance and value, and what teams are saying about the Salesforce acquisition's impact on the product. The report takes 2 minutes.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Team messaging and channels", trackr: false, competitor: true },
+            { feature: "Workflow automation (Slack Workflows)", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Renewal tracking with 60-day alerts", trackr: true, competitor: false },
+            { feature: "Community sentiment analysis", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Evaluation: weeks" },
+        ],
+        advantages: [
+            { title: "Know if you're overpaying vs Teams", description: "Slack's Business+ plan costs significantly more per seat than Microsoft Teams — which is included in Microsoft 365. Trackr's research surfaces the actual pricing delta and helps you evaluate whether Slack's premium is justified for your team's use case." },
+            { title: "Track the full communications stack in one place", description: "Slack, Zoom, Loom, and your async tools — add your full communications stack to Trackr and track renewal dates, costs, and scores across all of them. 60-day renewal alerts prevent auto-renewal by default." },
+            { title: "Community intelligence on Salesforce-era Slack", description: "Slack's acquisition by Salesforce has changed the product roadmap and pricing. Trackr surfaces community discussion about these changes — giving your team a current view of where Slack is headed and whether that matches your organization's direction." },
+        ],
+        faqs: [
+            { q: "Is Microsoft Teams a good replacement for Slack?", a: "Trackr can give you an independent comparison. Submit both Slack and Microsoft Teams for scored reports on the same 7-dimension framework. The report surfaces functional gaps and pricing differences specific to your use case." },
+            { q: "Has Slack's pricing increased since the Salesforce acquisition?", a: "Yes — Slack has raised prices multiple times since Salesforce acquired the company. Trackr's research reflects current pricing tiers and community discussion about the value trajectory under Salesforce ownership." },
+            { q: "Can Trackr help negotiate Slack enterprise pricing?", a: "Trackr surfaces community-reported pricing for Slack's common enterprise configurations — giving your procurement team a realistic baseline before renewal conversations with Slack's account team." },
+        ],
+        ctaText: "Benchmark Slack before your next renewal",
+    },
+    {
+        competitor: "intercom",
+        competitorName: "Intercom",
+        competitorTagline: "Customer messaging and support platform",
+        title: "Trackr vs Intercom — Evaluate Intercom Before You Commit | Trackr",
+        description: "Before signing an Intercom contract, get an independent scored report — current pricing, feature depth vs Zendesk and Freshdesk, and what customers actually say.",
+        headline: "Research Intercom before you commit.",
+        subheadline: "Intercom is a leading customer support and messaging platform. Before committing to an enterprise contract, use Trackr for an independent, scored view of pricing, alternatives, and market sentiment.",
+        switchNarrative: `Intercom is a popular customer messaging platform that has evolved from live chat into a full customer support suite — AI-powered inbox, help center, product tours, and customer data platform. It's positioned aggressively in the AI-first support category and is investing heavily in AI automation features.
+
+It's also one of the more expensive tools in the customer support category. Intercom's pricing has increased substantially over the past few years, moving to a seat-plus-usage model that makes total cost unpredictable for teams with variable support volume. Before committing to an annual contract, it's worth evaluating what you're buying against today's alternatives.
+
+Trackr gives customer success, support, and operations teams an independent view of Intercom — current pricing tiers (including what AI feature costs look like in practice), competitive alternatives like Zendesk, Freshdesk, Help Scout, and Front, and what support teams are saying about Intercom's recent pricing changes and AI feature quality. The report takes 2 minutes.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Customer messaging and live chat", trackr: false, competitor: true },
+            { feature: "AI-powered support inbox", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment on pricing changes", trackr: true, competitor: false },
+            { feature: "Renewal tracking with alerts", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Trial + sales: weeks" },
+        ],
+        advantages: [
+            { title: "Understand the true cost before you sign", description: "Intercom's seat-plus-usage pricing model means total cost depends on support volume. Trackr's research surfaces community-reported actual costs for teams of various sizes — so you enter negotiations with realistic expectations." },
+            { title: "Compare Intercom vs Zendesk vs Freshdesk in 10 minutes", description: "Submit Intercom, Zendesk, and Freshdesk to Trackr for side-by-side scored comparisons on the same 7-dimension framework. Align your support team on the finalists before investing in multiple trials." },
+            { title: "Community reality on AI features", description: "Intercom's Fin AI is heavily marketed. Trackr's research surfaces community discussion about real-world performance, deflection rates, and whether the AI feature pricing justifies the cost — from teams who've deployed it." },
+        ],
+        faqs: [
+            { q: "How expensive is Intercom really?", a: "Intercom's published pricing is a starting point — actual costs depend on seat count, conversation volume, and which AI features you enable. Trackr's research surfaces community-reported actual costs for common configurations." },
+            { q: "What are the best alternatives to Intercom?", a: "Trackr's research on Intercom surfaces current competitive alternatives based on live market data. Common alternatives include Zendesk, Freshdesk, Help Scout, Front, and Kustomer — depending on your team size and use case." },
+            { q: "Has Intercom's pricing changed recently?", a: "Yes — Intercom has restructured pricing multiple times in recent years. Trackr's research reflects current pricing and community discussion about the value impact of those changes." },
+        ],
+        ctaText: "Get independent Intercom intelligence in 2 minutes",
+    },
+    {
+        competitor: "zendesk",
+        competitorName: "Zendesk",
+        competitorTagline: "Customer service and support ticketing platform",
+        title: "Trackr vs Zendesk — Evaluate Zendesk Before You Commit | Trackr",
+        description: "Before committing to Zendesk's enterprise contract, get an independent scored report — current pricing, AI feature depth, alternatives, and what support teams say.",
+        headline: "Research Zendesk before you commit.",
+        subheadline: "Zendesk is the dominant enterprise customer support platform. Before signing an annual contract, use Trackr for an independent, scored view of pricing, AI feature depth, and the alternatives.",
+        switchNarrative: `Zendesk is the enterprise default for customer support ticketing. It's deeply established in mid-market and enterprise organizations, with a wide ecosystem of integrations and a long track record. It's also one of the pricier customer support platforms, particularly after Zendesk's ownership change and subsequent pricing restructuring.
+
+The customer support platform market has changed significantly with AI. Intercom's Fin, Freshdesk's Freddy AI, Salesforce Service Cloud's AI features, and new entrants like Tidio and Gorgias have accelerated. Zendesk has responded with its own AI suite — but at an additional cost layer on top of already-substantial seat pricing.
+
+Trackr gives operations and customer success leadership an independent view of Zendesk before renewal or initial enterprise commitment. The report covers current pricing (including what the AI add-ons actually cost), competitive alternatives, community sentiment on the quality of AI features versus the marketing, and what enterprise support teams are saying about Zendesk's trajectory post-private equity acquisition.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Support ticketing and helpdesk", trackr: false, competitor: true },
+            { feature: "AI-powered routing and automation", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment on AI features", trackr: true, competitor: false },
+            { feature: "Renewal tracking with alerts", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Enterprise RFP: weeks" },
+        ],
+        advantages: [
+            { title: "Understand what you're actually paying before renewal", description: "Zendesk's enterprise pricing involves seat costs, plan tiers, and AI add-on costs. Trackr surfaces community-reported actual costs for common enterprise configurations — so you enter renewal negotiations with realistic numbers." },
+            { title: "Current view of Zendesk vs Intercom vs Freshdesk", description: "The customer support platform market moves fast. Trackr's independent research gives you a current, scored comparison of Zendesk against its alternatives — based on live data, not last year's analyst report." },
+            { title: "Community intelligence on PE-era Zendesk", description: "Zendesk was taken private in 2022. Trackr surfaces community discussion about the impact on pricing, product investment, and support quality — giving you signals that aren't in the vendor's marketing materials." },
+        ],
+        faqs: [
+            { q: "Is Zendesk too expensive for mid-market companies?", a: "It depends on your support volume and feature needs. Trackr's research surfaces community discussion about value at different company sizes — and identifies alternatives like Freshdesk or Help Scout that may offer better value for specific use cases." },
+            { q: "What are the best Zendesk alternatives?", a: "Trackr's research on Zendesk surfaces current competitive alternatives based on live market data. Common alternatives include Intercom, Freshdesk, Help Scout, Front, Salesforce Service Cloud, and newer AI-first players." },
+            { q: "Has Zendesk's pricing changed since going private?", a: "Yes — Zendesk has restructured pricing since its private equity acquisition. Trackr's research reflects current pricing and community discussion about whether the value proposition has shifted." },
+        ],
+        ctaText: "Get independent Zendesk intelligence before renewal",
+    },
+    {
+        competitor: "trelica",
+        competitorName: "Trelica",
+        competitorTagline: "SaaS management platform for IT teams",
+        title: "Trackr vs Trelica — Tool Intelligence vs SaaS Management | Trackr",
+        description: "Trelica helps IT teams discover and manage SaaS apps. Trackr adds the intelligence layer — AI-scored research on every tool before and after you adopt it.",
+        headline: "Trelica manages your SaaS. Trackr evaluates it.",
+        subheadline: "Trelica discovers and manages the SaaS apps in your organization. Trackr generates scored intelligence on those apps — helping you decide what to keep, cut, and evaluate.",
+        switchNarrative: `Trelica is a SaaS management platform designed for IT teams. It discovers the software being used across the organization — often revealing shadow IT and unknown subscriptions — and provides tools to manage licenses, renewals, and spending. For IT leaders dealing with SaaS sprawl, Trelica brings visibility.
+
+Trackr is the intelligence layer that Trelica's discovery reveals you need. Once Trelica shows you which 120 tools your organization is using, the next questions are: which ones are worth keeping? Which are underutilized? Which could be replaced by something better? Those questions require research — and Trackr automates that research with AI-generated scored reports on any tool in 2 minutes.
+
+The two tools are complementary. Trelica tells you what you have. Trackr tells you whether what you have is good. Together they give IT teams the visibility and intelligence needed to rationalize a SaaS portfolio, prioritize renewals, and make defensible cut decisions.`,
+        featureTable: [
+            { feature: "AI tool evaluation research", trackr: true, competitor: false },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "SaaS discovery and visibility", trackr: false, competitor: true },
+            { feature: "License and usage management", trackr: false, competitor: true },
+            { feature: "Shadow IT detection", trackr: false, competitor: true },
+            { feature: "Current pricing intelligence", trackr: true, competitor: "Self-reported" },
+            { feature: "Competitive alternatives in reports", trackr: true, competitor: false },
+            { feature: "Renewal alerts", trackr: true, competitor: true },
+        ],
+        advantages: [
+            { title: "Intelligence on what Trelica discovers", description: "Trelica shows you which 80 tools your organization is using. Trackr tells you which 20 of them are worth keeping — with scored reports, competitive alternatives, and utilization-informed cut recommendations." },
+            { title: "Evaluate before you approve", description: "When employees request new tools, Trelica manages the approval workflow. Trackr generates the research report that informs the approval decision — in 2 minutes, before you've said yes or no." },
+            { title: "Rationalize your SaaS portfolio with data", description: "SaaS rationalization conversations need data. Trackr's 7-dimension scores give IT and finance leaders defensible, structured justifications for renewal and cut decisions — not gut feel or informal team feedback." },
+        ],
+        faqs: [
+            { q: "Should I use Trelica and Trackr together?", a: "They're complementary: Trelica for SaaS discovery and license management, Trackr for tool evaluation intelligence. IT teams that use both have visibility into what they're using and scored intelligence on whether it's worth keeping." },
+            { q: "Does Trelica tell you if a tool is good?", a: "Trelica tells you if a tool is being used and what it costs. Trackr tells you if it's good — with AI-generated scoring across 7 dimensions, competitive alternatives, and community sentiment. Different questions, different answers." },
+            { q: "Can I import my Trelica app inventory into Trackr?", a: "Teams typically export the Trelica SaaS inventory as a list and import it into Trackr for bulk research. Trackr will run scored research on the full stack — identifying which tools score well and which have better alternatives." },
+        ],
+        ctaText: "Add intelligence to your SaaS management",
+    },
 ];
 
 export const VS_COMPETITORS = VS_PAGES.map((p) => p.competitor);
