@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { workspaces, tools, reports } from "@/lib/db/schema";
-import { SHOWCASE_TOOLS } from "@/data/showcase-seed";
+import { SHOWCASE_TOOLS, type ShowcaseTool } from "@/data/showcase-seed";
 import { eq } from "drizzle-orm";
 import { timingSafeEqual } from "crypto";
 
@@ -29,6 +29,9 @@ export async function POST(req: NextRequest) {
     }
 
     try {
+        const body = await req.json().catch(() => ({}));
+        const force = body.force === true;
+
         // Find or create the showcase workspace
         let workspace = await db.query.workspaces.findFirst({
             where: eq(workspaces.slug, WORKSPACE_SLUG),
@@ -63,32 +66,24 @@ export async function POST(req: NextRequest) {
                 where: eq(reports.shareToken, demo.shareToken),
             });
 
-            if (existingReport) {
+            if (existingReport && !force) {
                 results.push({
                     name: demo.name,
                     shareUrl: `/share/${demo.shareToken}`,
-                    action: "skipped (already exists)",
+                    action: "skipped (already exists, use force:true to replace)",
                 });
                 continue;
             }
 
-            // Upsert the tool — find existing by name + workspace, or insert
-            let tool = await db.query.tools.findFirst({
-                where: eq(tools.workspaceId, workspace.id),
-                columns: { id: true, name: true },
+            // If force, delete the old report
+            if (existingReport && force) {
+                await db.delete(reports).where(eq(reports.id, existingReport.id));
+            }
+
+            // Find or create the tool
+            const matchingTool = await db.query.tools.findFirst({
+                where: eq(tools.name, demo.name),
             });
-
-            // Check if this specific tool exists
-            const existingTools = await db
-                .select({ id: tools.id })
-                .from(tools)
-                .where(eq(tools.workspaceId, workspace.id));
-
-            const matchingTool = existingTools.length > 0
-                ? await db.query.tools.findFirst({
-                    where: eq(tools.name, demo.name),
-                })
-                : null;
 
             let toolId: string;
 
@@ -110,9 +105,11 @@ export async function POST(req: NextRequest) {
                 toolId = newTool.id;
             }
 
-            // Insert report with share token
-            const featuresData = demo.report.features.map(f => ({ name: f }));
-            const pricingData = demo.report.pricing.map(p => ({ tier: p.tier, price: p.price }));
+            // Build full sentiment data merging base + extended
+            const fullSentimentData = {
+                ...demo.report.sentimentData,
+                ...demo.extendedSentiment,
+            };
 
             await db.insert(reports).values({
                 toolId,
@@ -121,12 +118,12 @@ export async function POST(req: NextRequest) {
                 scorecardSnapshot: demo.report.scorecard,
                 pros: demo.report.pros,
                 cons: demo.report.cons,
-                features: featuresData,
-                pricing: pricingData,
+                features: { list: demo.report.features },
+                pricing: demo.report.pricing,
                 isPricingHidden: false,
-                sentimentData: demo.report.sentimentData,
-                competitors: [],
-                integrations: [],
+                sentimentData: fullSentimentData,
+                competitors: demo.competitors,
+                integrations: demo.integrations,
                 shareToken: demo.shareToken,
                 isPublic: true,
             });
@@ -134,7 +131,7 @@ export async function POST(req: NextRequest) {
             results.push({
                 name: demo.name,
                 shareUrl: `/share/${demo.shareToken}`,
-                action: "created",
+                action: force && existingReport ? "replaced" : "created",
             });
         }
 

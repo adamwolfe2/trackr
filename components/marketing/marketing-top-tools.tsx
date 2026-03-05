@@ -20,7 +20,7 @@ const TOOLS = [
   {
     name: "Lemon",
     category: "Voice AI / Productivity",
-    score: 8.4,
+    score: 10,
     summary: "AI voice assistant that captures meetings and turns them into structured notes, action items, and CRM updates.",
     shareToken: "showcase-lemon-2026w10",
     logoUrl: "https://logo.clearbit.com/heylemon.ai",
@@ -28,37 +28,29 @@ const TOOLS = [
   {
     name: "Raycast",
     category: "Productivity / Developer Tools",
-    score: 9.5,
+    score: 10,
     summary: "Blazing-fast macOS launcher with 1,000+ extensions, built-in AI chat, clipboard history, and window management.",
     shareToken: "showcase-raycast-2026w10",
     logoUrl: "https://logo.clearbit.com/raycast.com",
-    featured: true,
   },
   {
     name: "Cursive",
     category: "Lead Intelligence / Sales Automation",
-    score: 9.1,
+    score: 10,
     summary: "AI-powered lead intelligence that identifies anonymous visitors, enriches with intent data, and delivers qualified leads.",
     shareToken: "showcase-cursive-2026w10",
     logoUrl: "https://logo.clearbit.com/meetcursive.com",
   },
 ];
 
-function ScoreBar({ score, featured }: { score: number; featured?: boolean }) {
+function ScoreBar({ score }: { score: number }) {
   const pct = (score / 10) * 100;
   return (
     <div className="flex items-center gap-3">
-      <div
-        className={`flex-1 h-2 ${featured ? "bg-white/20" : "bg-neutral-200"}`}
-      >
-        <div
-          className={`h-full ${featured ? "bg-white" : "bg-black"}`}
-          style={{ width: `${pct}%` }}
-        />
+      <div className="flex-1 h-2 bg-neutral-200">
+        <div className="h-full bg-black" style={{ width: `${pct}%` }} />
       </div>
-      <span
-        className={`font-mono text-sm font-bold tabular-nums ${featured ? "text-white" : "text-black"}`}
-      >
+      <span className="font-mono text-sm font-bold tabular-nums text-black">
         {score.toFixed(1)}
       </span>
     </div>
@@ -97,37 +89,23 @@ export function MarketingTopTools() {
               href={`/share/${tool.shareToken}`}
               target="_blank"
               rel="noopener noreferrer"
-              className={`block h-full p-6 border-r border-black last:border-r-0 transition-all group ${
-                tool.featured
-                  ? "bg-black text-white"
-                  : "bg-[#F3F3EF] text-black hover:bg-neutral-100"
-              }`}
+              className="block h-full p-6 border-r border-black last:border-r-0 transition-all group bg-[#F3F3EF] text-black hover:bg-neutral-100"
             >
               {/* Logo + name */}
               <div className="flex items-center gap-3 mb-4">
-                <div
-                  className={`w-10 h-10 border flex items-center justify-center overflow-hidden ${
-                    tool.featured ? "border-white/30 bg-white/10" : "border-black bg-white"
-                  }`}
-                >
-                  <Image
-                    src={tool.logoUrl}
-                    alt={`${tool.name} logo`}
-                    width={28}
-                    height={28}
-                    className="object-contain"
-                    unoptimized
-                  />
-                </div>
+                <Image
+                  src={tool.logoUrl}
+                  alt={`${tool.name} logo`}
+                  width={32}
+                  height={32}
+                  className="object-contain"
+                  unoptimized
+                />
                 <div>
                   <h3 className="font-mono text-sm font-bold uppercase tracking-wide">
                     {tool.name}
                   </h3>
-                  <span
-                    className={`font-mono text-[10px] uppercase tracking-widest ${
-                      tool.featured ? "text-white/60" : "text-neutral-500"
-                    }`}
-                  >
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">
                     {tool.category}
                   </span>
                 </div>
@@ -136,37 +114,21 @@ export function MarketingTopTools() {
               {/* Score bar */}
               <div className="mb-4">
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <BarChart3
-                    className={`w-3 h-3 ${tool.featured ? "text-white/60" : "text-neutral-400"}`}
-                  />
-                  <span
-                    className={`font-mono text-[10px] uppercase tracking-widest ${
-                      tool.featured ? "text-white/60" : "text-neutral-500"
-                    }`}
-                  >
+                  <BarChart3 className="w-3 h-3 text-neutral-400" />
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">
                     Overall Score
                   </span>
                 </div>
-                <ScoreBar score={tool.score} featured={tool.featured} />
+                <ScoreBar score={tool.score} />
               </div>
 
               {/* Summary */}
-              <p
-                className={`font-mono text-xs leading-relaxed mb-6 ${
-                  tool.featured ? "text-white/80" : "text-neutral-600"
-                }`}
-              >
+              <p className="font-mono text-xs leading-relaxed mb-6 text-neutral-600">
                 {tool.summary}
               </p>
 
               {/* CTA */}
-              <div
-                className={`inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wide ${
-                  tool.featured
-                    ? "text-white border-b border-white/40 group-hover:border-white"
-                    : "text-black border-b border-black/30 group-hover:border-black"
-                } transition-colors`}
-              >
+              <div className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wide text-black border-b border-black/30 group-hover:border-black transition-colors">
                 View Full Scorecard
                 <ArrowUpRight className="w-3 h-3" />
               </div>
