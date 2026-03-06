@@ -65,34 +65,49 @@ export async function GET(req: Request) {
             })
             .where(inArray(researchJobs.id, stuckJobIds));
 
-        // For each stuck tool, revert status and decide whether to auto-retry:
-        // - If tool has at least one report → "active" (previous research is still valid)
-        // - If no report and stuck job count <= 2 → auto-retry via after()
-        // - Otherwise → "failed" (so user sees retry button)
-        const toolsToRetry: string[] = [];
-        for (const toolId of stuckToolIds) {
-            const existingReport = await db.query.reports.findFirst({
-                where: eq(reports.toolId, toolId),
-                columns: { id: true },
-            });
+        // Batch-fetch reports and job counts for all stuck tools to avoid N+1
+        const [existingReports, allJobsForTools] = await Promise.all([
+            db.query.reports.findMany({
+                where: inArray(reports.toolId, stuckToolIds),
+                columns: { toolId: true },
+            }),
+            db.query.researchJobs.findMany({
+                where: inArray(researchJobs.toolId, stuckToolIds),
+                columns: { toolId: true },
+            }),
+        ]);
 
-            if (existingReport) {
-                await db.update(tools).set({ status: "active" }).where(eq(tools.id, toolId));
+        const toolsWithReports = new Set(existingReports.map(r => r.toolId));
+        const jobCountByTool = new Map<string, number>();
+        for (const job of allJobsForTools) {
+            jobCountByTool.set(job.toolId, (jobCountByTool.get(job.toolId) ?? 0) + 1);
+        }
+
+        // Classify tools: revert to active (has report), auto-retry, or mark failed
+        const toolsToRetry: string[] = [];
+        const toolsToActive: string[] = [];
+        const toolsToFailed: string[] = [];
+
+        for (const toolId of stuckToolIds) {
+            if (toolsWithReports.has(toolId)) {
+                toolsToActive.push(toolId);
+            } else if ((jobCountByTool.get(toolId) ?? 0) <= 2) {
+                toolsToRetry.push(toolId);
+                toolsToFailed.push(toolId);
             } else {
-                // Count how many times this tool has been attempted (including the stuck one)
-                const allJobs = await db.query.researchJobs.findMany({
-                    where: eq(researchJobs.toolId, toolId),
-                    columns: { id: true },
-                });
-                if (allJobs.length <= 2) {
-                    // First or second attempt — auto-retry
-                    toolsToRetry.push(toolId);
-                    await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
-                } else {
-                    await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId));
-                }
+                toolsToFailed.push(toolId);
             }
         }
+
+        // Batch status updates
+        const statusUpdates: Promise<unknown>[] = [];
+        if (toolsToActive.length > 0) {
+            statusUpdates.push(db.update(tools).set({ status: "active" }).where(inArray(tools.id, toolsToActive)));
+        }
+        if (toolsToFailed.length > 0) {
+            statusUpdates.push(db.update(tools).set({ status: "failed" }).where(inArray(tools.id, toolsToFailed)));
+        }
+        await Promise.all(statusUpdates);
 
         // Fire auto-retries outside the HTTP response window
         for (const toolId of toolsToRetry) {

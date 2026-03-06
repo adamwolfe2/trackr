@@ -43,12 +43,11 @@ export async function GET(req: Request) {
 
     // Fetch all pending commissions with their architect
     const pending = await db.query.architectCommissions.findMany({
-        where: and(
-            eq(architectCommissions.status, "pending"),
-        ),
+        where: eq(architectCommissions.status, "pending"),
         with: {
             architect: true,
         },
+        limit: 200,
     });
 
     if (pending.length === 0) {

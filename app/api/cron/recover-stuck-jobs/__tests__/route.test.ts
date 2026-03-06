@@ -13,7 +13,7 @@ vi.mock("@/lib/db", () => ({
     db: {
         query: {
             researchJobs: { findMany: vi.fn() },
-            reports: { findFirst: vi.fn() },
+            reports: { findMany: vi.fn() },
         },
         update: vi.fn().mockReturnValue({
             set: vi.fn().mockReturnValue({
@@ -40,7 +40,7 @@ describe("GET /api/cron/recover-stuck-jobs", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
-        (db.query.reports.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.reports.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         (db.update as ReturnType<typeof vi.fn>).mockReturnValue({
             set: vi.fn().mockReturnValue({
                 where: vi.fn().mockResolvedValue(undefined),
@@ -70,8 +70,10 @@ describe("GET /api/cron/recover-stuck-jobs", () => {
         const stuckJobs = [
             { id: "job_1", toolId: "tool_1", triggeredAt: new Date(Date.now() - 15 * 60_000) },
         ];
-        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(stuckJobs);
-        (db.query.reports.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>)
+            .mockResolvedValueOnce(stuckJobs)        // stuck jobs query
+            .mockResolvedValueOnce([{ toolId: "tool_1" }]); // all jobs for tool (count = 1 → auto-retry)
+        (db.query.reports.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]); // no reports
 
         const res = await GET(makeRequest(VALID_AUTH));
         expect(res.status).toBe(200);
@@ -86,8 +88,10 @@ describe("GET /api/cron/recover-stuck-jobs", () => {
         const stuckJobs = [
             { id: "job_2", toolId: "tool_2", triggeredAt: new Date(Date.now() - 15 * 60_000) },
         ];
-        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(stuckJobs);
-        (db.query.reports.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "rpt_1" });
+        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>)
+            .mockResolvedValueOnce(stuckJobs)        // stuck jobs
+            .mockResolvedValueOnce([{ toolId: "tool_2" }]); // all jobs for tool
+        (db.query.reports.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([{ toolId: "tool_2" }]); // has report
 
         const res = await GET(makeRequest(VALID_AUTH));
         expect(res.status).toBe(200);
@@ -100,8 +104,10 @@ describe("GET /api/cron/recover-stuck-jobs", () => {
             { id: "job_3", toolId: "tool_3", triggeredAt: new Date(Date.now() - 15 * 60_000) },
             { id: "job_4", toolId: "tool_3", triggeredAt: new Date(Date.now() - 12 * 60_000) },
         ];
-        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(stuckJobs);
-        (db.query.reports.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>)
+            .mockResolvedValueOnce(stuckJobs)        // stuck jobs
+            .mockResolvedValueOnce([{ toolId: "tool_3" }, { toolId: "tool_3" }]); // all jobs for tool (count=2)
+        (db.query.reports.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]); // no reports
 
         const res = await GET(makeRequest(VALID_AUTH));
         expect(res.status).toBe(200);

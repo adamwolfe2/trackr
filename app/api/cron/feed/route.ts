@@ -27,6 +27,7 @@ export async function GET(req: Request) {
         const channels = await db.query.feedChannels.findMany({
             where: eq(feedChannels.enabled, true),
             columns: { workspaceId: true },
+            limit: 500,
         });
 
         // Deduplicate workspace IDs
