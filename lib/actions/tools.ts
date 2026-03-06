@@ -162,6 +162,43 @@ export async function deleteTool(toolId: string) {
 
 const VALID_TOOL_STATUSES = ["queued", "researching", "active", "failed", "paused", "archived"] as const;
 
+/** Maximum tools that can be queued in a single batch to prevent TOCTOU credit races */
+const RESEARCH_BATCH_LIMIT = 10;
+
+async function checkResearchCredits(workspaceId: string): Promise<{ allowed: boolean }> {
+    const { getPlanLimits } = await import("@/lib/config/subscriptions");
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspaceId),
+    });
+    const limits = getPlanLimits(subscription ?? undefined);
+
+    if (limits.limits.research === Infinity) return { allowed: true };
+
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const workspaceToolSubquery = db
+        .select({ id: tools.id })
+        .from(tools)
+        .where(eq(tools.workspaceId, workspaceId));
+
+    const [{ value: jobCount }] = await db
+        .select({ value: count() })
+        .from(researchJobs)
+        .where(and(
+            inArray(researchJobs.toolId, workspaceToolSubquery),
+            gte(researchJobs.triggeredAt, startOfMonth),
+            ne(researchJobs.status, "failed"),
+        ));
+
+    const creditBalance = subscription?.creditBalance ?? 0;
+    if (jobCount >= limits.limits.research && creditBalance <= 0) {
+        return { allowed: false };
+    }
+    return { allowed: true };
+}
+
 export async function triggerResearch(toolId: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
@@ -179,6 +216,10 @@ export async function triggerResearch(toolId: string) {
     if (tool.status === "researching") {
         return { success: true };
     }
+
+    // Pre-check research credits before queuing
+    const { allowed } = await checkResearchCredits(workspaceId);
+    if (!allowed) return { error: "insufficient_credits" as const };
 
     await db.update(tools)
         .set({ status: "queued" })
@@ -203,8 +244,17 @@ export async function triggerResearchBatch(toolIds: string[]) {
 
     if (!toolIds.length) return { success: true, started: 0 };
 
+    // Enforce batch limit to prevent TOCTOU credit race on concurrent after() calls
+    if (toolIds.length > RESEARCH_BATCH_LIMIT) {
+        throw new Error(`Batch research is limited to ${RESEARCH_BATCH_LIMIT} tools at a time.`);
+    }
+
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
+
+    // Pre-check research credits before queuing any tools
+    const { allowed } = await checkResearchCredits(workspaceId);
+    if (!allowed) return { error: "insufficient_credits" as const };
 
     // Verify tools belong to workspace and are not already researching
     const eligible = await db.query.tools.findMany({

@@ -42,5 +42,5 @@ export const SECURITY_HEADERS = [
 /** Only applied in production to avoid HSTS issues in local dev */
 export const HSTS_HEADER = {
     key: "Strict-Transport-Security",
-    value: "max-age=31536000; includeSubDomains",
+    value: "max-age=31536000; includeSubDomains; preload",
 } as const;

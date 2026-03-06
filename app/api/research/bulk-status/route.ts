@@ -23,7 +23,7 @@ export async function GET(req: Request) {
         const ids = idsParam
             .split(",")
             .map(s => s.trim())
-            .filter(s => /^[0-9a-f-]{36}$/.test(s)) // basic UUID validation
+            .filter(s => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(s)) // strict UUID v4 validation
             .slice(0, 50);
 
         if (!ids.length) return NextResponse.json([]);

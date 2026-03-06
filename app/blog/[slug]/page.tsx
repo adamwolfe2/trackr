@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { getPostBySlug, getAllSlugs, getAllPosts, markdownToHtml } from "@/lib/blog";
+import { getPostBySlug, getAllSlugs, getAllPosts } from "@/lib/blog";
+import { BlogContent } from "@/components/blog/blog-content";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
@@ -54,7 +55,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     if (!post) notFound();
 
     const user = await currentUser();
-    const htmlContent = markdownToHtml(post.content);
 
     const jsonLd = {
         "@context": "https://schema.org",
@@ -130,10 +130,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                             </div>
                         )}
 
-                        <article
-                            className="blog-content"
-                            dangerouslySetInnerHTML={{ __html: htmlContent }}
-                        />
+                        <BlogContent content={post.content} />
 
                         {/* Related Posts */}
                         {(() => {

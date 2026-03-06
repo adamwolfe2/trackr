@@ -131,10 +131,7 @@ export async function POST(req: NextRequest) {
         });
     } catch (error) {
         console.error("[seed-demo] error:", error);
-        return NextResponse.json(
-            { error: "Seed failed", detail: error instanceof Error ? error.message : String(error) },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: "Seed failed" }, { status: 500 });
     }
 }
 

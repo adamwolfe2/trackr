@@ -47,18 +47,22 @@ export async function getNotifications(): Promise<Notification[]> {
     const seenIds = member.seenJobIds ?? [];
     const now = new Date();
 
-    // 1. Research job completions/failures
+    // 1. Research job completions/failures — scoped to this workspace's tools
     const jobs = await db.query.researchJobs.findMany({
         where: and(
             ne(researchJobs.status, 'running'),
-            ne(researchJobs.status, 'queued')
+            ne(researchJobs.status, 'queued'),
+            inArray(
+                researchJobs.toolId,
+                db.select({ id: tools.id }).from(tools).where(eq(tools.workspaceId, member.workspaceId))
+            )
         ),
         with: { tool: true },
         orderBy: [desc(researchJobs.completedAt)],
         limit: 10
     });
 
-    const workspaceJobs = jobs.filter(job => job.tool.workspaceId === member.workspaceId);
+    const workspaceJobs = jobs;
 
     const jobNotifications: Notification[] = workspaceJobs.map(job => ({
         id: job.id,

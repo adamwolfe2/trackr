@@ -147,17 +147,10 @@ describe("getNotifications", () => {
         expect(result[0].title).toBe("Research Failed");
     });
 
-    it("filters out jobs from other workspaces", async () => {
-        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-            {
-                id: "job_other",
-                status: "complete",
-                toolId: "tool_x",
-                completedAt: new Date("2026-02-01"),
-                triggeredAt: new Date("2026-02-01"),
-                tool: { id: "tool_x", workspaceId: "ws_OTHER", name: "Stranger Tool" },
-            },
-        ]);
+    it("returns no job notifications when DB query returns empty (workspace-scoped at DB level)", async () => {
+        // The DB query now filters by workspace via inArray subquery, so cross-workspace
+        // jobs are never returned. Verify the code handles an empty result correctly.
+        (db.query.researchJobs.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         const result = await getNotifications();
         expect(result).toHaveLength(0);
     });
