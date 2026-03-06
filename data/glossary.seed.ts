@@ -747,6 +747,504 @@ export const GLOSSARY_TERMS: GlossaryTerm[] = [
       { q: "When does a company need a DAP?", a: "When software adoption rates are chronically low, support ticket volumes are high for basic tasks, and training costs are material. Companies deploying complex enterprise software to 200+ users typically see positive ROI from DAP investment." },
     ],
   },
+  // DevOps/Infrastructure
+  {
+    term: "CI/CD",
+    slug: "ci-cd",
+    definition: "Continuous Integration and Continuous Delivery — the practice of automatically building, testing, and deploying code changes through an automated pipeline.",
+    longDefinition:
+      "CI/CD automates the software release process from code commit to production deployment. Continuous Integration merges developer code changes into a shared repository multiple times per day, running automated tests on each merge to catch regressions early. Continuous Delivery extends this by automatically preparing tested code for release to production, while Continuous Deployment goes one step further by automatically releasing every passing change.\n\nA mature CI/CD pipeline includes linting, unit tests, integration tests, security scanning, container image building, staging deployment, and production rollout with rollback capability. Tools like GitHub Actions, GitLab CI, Jenkins, and CircleCI orchestrate these steps.\n\nFor teams evaluating development tools, CI/CD pipeline quality directly impacts deployment frequency, lead time for changes, and mean time to recovery — the four DORA metrics that predict software delivery performance. A tool that integrates cleanly into your CI/CD pipeline reduces friction; one that requires manual steps breaks the automation chain.",
+    relatedTerms: ["containerization", "infrastructure-as-code", "blue-green-deployment"],
+    faqs: [
+      { q: "What is the difference between Continuous Delivery and Continuous Deployment?", a: "Continuous Delivery automates everything up to a production-ready artifact, but requires a manual approval to deploy. Continuous Deployment removes the manual gate — every passing change goes to production automatically." },
+      { q: "What are the DORA metrics related to CI/CD?", a: "Deployment frequency, lead time for changes, mean time to recovery, and change failure rate. High-performing teams with mature CI/CD deploy multiple times per day with lead times under an hour." },
+    ],
+  },
+  {
+    term: "Containerization",
+    slug: "containerization",
+    definition: "A lightweight virtualization method that packages an application and its dependencies into a portable, isolated unit called a container that runs consistently across environments.",
+    longDefinition:
+      "Containerization solves the 'works on my machine' problem by bundling application code, runtime, libraries, and configuration into a single image that runs identically in development, staging, and production. Docker is the dominant container runtime, and OCI (Open Container Initiative) defines the image standard.\n\nContainers are lighter than virtual machines because they share the host OS kernel rather than running separate guest operating systems. This makes them faster to start, more memory-efficient, and easier to scale. Container orchestration platforms like Kubernetes manage scheduling, scaling, networking, and health monitoring for containerized applications.\n\nFor operations teams evaluating infrastructure strategy, containerization enables consistent deployments, faster scaling, and better resource utilization. The tradeoff is operational complexity — managing container registries, image security scanning, networking, and persistent storage requires tooling and expertise that small teams may not have in-house.",
+    relatedTerms: ["docker", "kubernetes", "microservices"],
+    faqs: [
+      { q: "What is the difference between a container and a virtual machine?", a: "A VM runs a full guest operating system on virtualized hardware. A container shares the host OS kernel and isolates only the application layer. Containers are lighter, faster to start, and more resource-efficient, but provide weaker isolation boundaries than VMs." },
+      { q: "When should a team adopt containerization?", a: "When deploying to multiple environments where consistency matters, when scaling horizontally, or when running microservices that need independent deployment cycles. Teams with a single monolithic app on a single server may not benefit enough to justify the complexity." },
+    ],
+  },
+  {
+    term: "Microservices",
+    slug: "microservices",
+    definition: "An architecture pattern that structures an application as a collection of small, independently deployable services, each responsible for a specific business capability.",
+    longDefinition:
+      "Microservices decompose a monolithic application into loosely coupled services that communicate over APIs or message queues. Each service owns its data, can be developed by a separate team, deployed independently, and scaled based on its own traffic patterns. Netflix, Amazon, and Uber are prominent adopters.\n\nThe benefits of microservices include independent deployment (ship one service without redeploying the whole application), technology flexibility (each service can use the best language or database for its task), and targeted scaling. The costs include distributed system complexity — network latency, eventual consistency, distributed tracing, and service discovery all require additional infrastructure.\n\nFor teams evaluating whether to adopt microservices, organizational structure matters as much as technical considerations. Microservices work best when teams are organized around business capabilities with clear ownership boundaries. A small team splitting a simple application into microservices prematurely adds complexity without meaningful benefit.",
+    relatedTerms: ["containerization", "kubernetes", "service-mesh"],
+    faqs: [
+      { q: "When should a company move from monolith to microservices?", a: "When deployment frequency is blocked by monolith coupling, when different components need to scale independently, or when separate teams need to ship independently. Most startups should begin with a monolith and decompose only when they hit concrete scaling or velocity limits." },
+      { q: "What are the main challenges of microservices?", a: "Distributed system complexity including network failures, data consistency across services, distributed tracing for debugging, service discovery, and the operational overhead of managing dozens to hundreds of independent deployable units." },
+    ],
+  },
+  {
+    term: "Serverless",
+    slug: "serverless",
+    definition: "A cloud execution model where the cloud provider manages all infrastructure, automatically scaling compute resources and charging only for actual execution time.",
+    longDefinition:
+      "Serverless computing abstracts away server provisioning, scaling, and maintenance entirely. Developers write functions (AWS Lambda, Vercel Edge Functions, Cloudflare Workers) that execute in response to events — HTTP requests, database changes, queue messages — and the platform handles everything else. You pay only for the compute time consumed, typically billed per invocation and execution duration.\n\nServerless excels for event-driven workloads with variable traffic patterns. An API endpoint that handles 10 requests per minute during off-hours and 10,000 during peak can scale automatically without pre-provisioned capacity. Cold start latency — the delay when a function is invoked after being idle — is the primary performance tradeoff.\n\nFor teams evaluating serverless platforms, key criteria include cold start latency for your runtime, maximum execution duration, memory limits, and cost at sustained high throughput. Serverless can be more expensive than reserved compute for consistently high-traffic workloads where you would use the capacity you are paying for regardless.",
+    relatedTerms: ["paas", "iaas", "cloud-cost-optimization"],
+    faqs: [
+      { q: "What is a cold start in serverless?", a: "A cold start occurs when a serverless function is invoked after being idle. The platform must provision a new execution environment, which adds 100ms to several seconds of latency depending on the runtime and function size. Warm functions respond without this delay." },
+      { q: "When is serverless not the right choice?", a: "For long-running processes, workloads with consistent high throughput where reserved capacity is cheaper, or applications requiring persistent connections like WebSockets. Serverless execution duration limits and per-invocation costs make these patterns expensive." },
+    ],
+  },
+  {
+    term: "Infrastructure as Code",
+    slug: "infrastructure-as-code",
+    definition: "The practice of defining and managing cloud infrastructure through machine-readable configuration files rather than manual setup, enabling version control and repeatability.",
+    longDefinition:
+      "Infrastructure as Code (IaC) treats infrastructure provisioning the same way application code is treated — it is written in declarative configuration files, stored in version control, reviewed through pull requests, tested, and applied through automated pipelines. Terraform, Pulumi, AWS CloudFormation, and the CDK are leading IaC tools.\n\nIaC eliminates configuration drift — the gradual divergence between what infrastructure is documented and what actually exists. When all infrastructure is defined in code, any environment can be reproduced exactly, disaster recovery becomes repeatable, and audit trails are built into the git history.\n\nFor operations teams evaluating infrastructure management approaches, IaC is a prerequisite for reliable CI/CD, multi-environment consistency, and compliance auditability. SOC 2 auditors increasingly expect infrastructure changes to be tracked through version-controlled configuration rather than manual console changes. The investment in learning IaC tooling pays dividends in reduced outage risk and faster environment provisioning.",
+    relatedTerms: ["ci-cd", "containerization", "cloud-cost-optimization"],
+    faqs: [
+      { q: "What is the difference between Terraform and CloudFormation?", a: "Terraform is cloud-agnostic and can manage resources across AWS, GCP, Azure, and SaaS providers. CloudFormation is AWS-specific. Terraform uses HCL syntax; CloudFormation uses JSON or YAML. Terraform has broader ecosystem support; CloudFormation has deeper AWS integration." },
+      { q: "What is configuration drift?", a: "Configuration drift occurs when the actual state of infrastructure diverges from its documented or intended state — usually due to manual changes made outside of IaC. Drift creates unpredictable behavior, failed deployments, and security gaps." },
+    ],
+  },
+  {
+    term: "Blue-Green Deployment",
+    slug: "blue-green-deployment",
+    definition: "A deployment strategy that maintains two identical production environments, routing traffic to one while deploying updates to the other, enabling instant rollback.",
+    longDefinition:
+      "Blue-green deployment runs two identical environments — blue (current production) and green (new version). Traffic routes entirely to blue while the new release is deployed and validated on green. Once verified, traffic switches to green instantly. If problems emerge, switching back to blue provides immediate rollback with zero data loss.\n\nThis strategy eliminates deployment downtime because the switchover is a routing change, not a deployment operation. It also provides a clean rollback path that does not require redeployment of the previous version. The tradeoff is infrastructure cost — maintaining two full production environments doubles the resource footprint during deployment windows.\n\nFor teams evaluating deployment strategies, blue-green is most suitable for applications where downtime is unacceptable and rollback speed is critical. It pairs well with CI/CD pipelines and is supported natively by many PaaS and container orchestration platforms. Database schema migrations require careful handling because both environments must be compatible with the same database state during the transition.",
+    relatedTerms: ["canary-release", "ci-cd", "containerization"],
+    faqs: [
+      { q: "What is the main advantage of blue-green over rolling deployments?", a: "Instant rollback. In a rolling deployment, rollback requires redeploying the previous version across all instances. In blue-green, rollback is a traffic routing switch that completes in seconds." },
+      { q: "How do you handle database migrations in blue-green?", a: "Use backward-compatible migrations — add new columns before removing old ones, support both schemas simultaneously during the transition. This ensures both blue and green environments can operate against the same database without breaking." },
+    ],
+  },
+  {
+    term: "Canary Release",
+    slug: "canary-release",
+    definition: "A deployment strategy that gradually rolls out a new version to a small subset of users before expanding to the full user base, reducing blast radius of potential issues.",
+    longDefinition:
+      "Canary releases route a small percentage of production traffic (typically 1-5%) to the new version while the majority continues using the current version. Teams monitor error rates, latency, and business metrics on the canary cohort. If metrics remain healthy, traffic is gradually shifted — 10%, 25%, 50%, 100%. If problems appear, the canary is rolled back with minimal user impact.\n\nThe canary metaphor comes from coal mine canaries — the small subset of users serves as an early warning system. This strategy is especially valuable for large-scale systems where bugs that appear under production load cannot always be caught in staging environments.\n\nFor teams evaluating deployment infrastructure, canary releases require traffic splitting capability (available in most load balancers, service meshes, and CDNs), robust monitoring to detect degradation quickly, and automated rollback triggers. The investment in canary infrastructure pays off most for systems with large user bases where a bad deployment affects thousands of users within minutes.",
+    relatedTerms: ["blue-green-deployment", "ci-cd", "feature-flag"],
+    faqs: [
+      { q: "How is a canary release different from a feature flag?", a: "A canary release rolls out a new deployment (new code version) to a subset of traffic. A feature flag toggles a specific feature on or off within the same deployed code version. They serve different purposes but are often used together." },
+      { q: "What metrics should you monitor during a canary release?", a: "Error rates (5xx responses, exceptions), latency (p50, p95, p99), business metrics (conversion rate, checkout completion), and resource utilization (CPU, memory). Any significant degradation relative to the baseline should trigger rollback." },
+    ],
+  },
+  {
+    term: "Kubernetes",
+    slug: "kubernetes",
+    definition: "An open-source container orchestration platform that automates the deployment, scaling, networking, and management of containerized applications.",
+    longDefinition:
+      "Kubernetes (K8s) is the industry standard for running containerized workloads at scale. It manages container scheduling across clusters of machines, handles service discovery and load balancing, automates rolling deployments and rollbacks, manages secrets and configuration, and provides self-healing by restarting failed containers.\n\nKubernetes abstracts infrastructure into declarative manifests — you describe the desired state (3 replicas of service X, exposed on port 443) and Kubernetes reconciles the actual state to match. This declarative model integrates naturally with infrastructure-as-code practices and GitOps workflows.\n\nFor teams evaluating container orchestration, Kubernetes is powerful but operationally complex. Managed Kubernetes services (EKS, GKE, AKS) reduce operational overhead by handling the control plane, but teams still manage node scaling, networking, storage, and security. Smaller teams with simpler architectures may find that PaaS or serverless alternatives provide sufficient capability with less operational burden.",
+    relatedTerms: ["containerization", "docker", "microservices"],
+    faqs: [
+      { q: "When is Kubernetes overkill?", a: "For small teams running a handful of services without complex scaling requirements. If your application runs on a single server or a PaaS like Vercel or Railway, Kubernetes adds operational complexity without proportional benefit." },
+      { q: "What is the difference between Kubernetes and Docker?", a: "Docker is a container runtime — it builds and runs individual containers. Kubernetes is an orchestration platform that manages many containers across many machines, handling scheduling, scaling, networking, and health monitoring." },
+    ],
+  },
+  {
+    term: "Docker",
+    slug: "docker",
+    definition: "A platform for building, sharing, and running containerized applications using lightweight, portable container images.",
+    longDefinition:
+      "Docker popularized containerization by providing a simple developer experience for packaging applications into container images. A Dockerfile defines the build steps — base image, dependency installation, code copy, startup command — and produces a portable image that runs identically on any machine with a Docker-compatible runtime.\n\nDocker Hub and private container registries (AWS ECR, GitHub Container Registry, Google Artifact Registry) store and distribute images. Docker Compose enables local multi-container development environments, defining services, networks, and volumes in a single YAML file.\n\nFor development teams, Docker standardizes the local development environment, eliminates dependency conflicts between projects, and ensures what runs locally matches what runs in production. For operations teams evaluating container strategies, Docker is the foundational building block — virtually all container orchestration platforms (Kubernetes, ECS, Cloud Run) run Docker-compatible images.",
+    relatedTerms: ["containerization", "kubernetes", "ci-cd"],
+    faqs: [
+      { q: "Do I need Docker if I use a PaaS like Vercel?", a: "Not necessarily. PaaS platforms abstract container management away. Docker is most valuable when you need fine-grained control over your runtime environment, run multiple services locally, or deploy to container orchestration platforms." },
+      { q: "What is a Dockerfile?", a: "A Dockerfile is a text file with instructions for building a container image — specifying the base image, installing dependencies, copying application code, and defining the startup command. It is the recipe that produces a reproducible, portable container image." },
+    ],
+  },
+  {
+    term: "Service Mesh",
+    slug: "service-mesh",
+    definition: "A dedicated infrastructure layer that handles service-to-service communication in microservices architectures, providing traffic management, security, and observability.",
+    longDefinition:
+      "A service mesh inserts a sidecar proxy alongside each service instance to intercept all inbound and outbound network traffic. This proxy layer — managed centrally through a control plane — provides mutual TLS encryption, load balancing, circuit breaking, retry logic, and distributed tracing without requiring changes to application code.\n\nIstio, Linkerd, and Consul Connect are the leading service mesh implementations. They solve the networking challenges that emerge as microservice architectures scale: how do services discover each other? How do you enforce encryption between services? How do you implement canary routing at the service level? How do you trace a request across 10 services?\n\nFor teams evaluating service mesh adoption, the decision should be driven by concrete pain — not architectural fashion. Service meshes add latency (proxy overhead), operational complexity, and resource consumption. They are justified when you have dozens of services, need zero-trust networking between them, and require deep traffic observability that application-level logging cannot provide.",
+    relatedTerms: ["microservices", "kubernetes", "zero-trust"],
+    faqs: [
+      { q: "What is a sidecar proxy?", a: "A sidecar proxy is a small network proxy deployed alongside each service instance. It intercepts all inbound and outbound traffic for that service, applying policies for encryption, routing, retries, and observability — without the application code being aware of it." },
+      { q: "When does a team need a service mesh?", a: "When running 20+ microservices with requirements for mutual TLS, fine-grained traffic routing, and distributed tracing that cannot be met by simpler alternatives like DNS-based service discovery and application-level logging." },
+    ],
+  },
+  // Data & Analytics
+  {
+    term: "Data Warehouse",
+    slug: "data-warehouse",
+    definition: "A centralized repository optimized for analytical queries that stores structured, historical data from multiple source systems for reporting and business intelligence.",
+    longDefinition:
+      "A data warehouse consolidates data from operational systems — CRM, ERP, marketing platforms, product databases — into a single analytical store optimized for complex queries across large datasets. Unlike operational databases optimized for transactional reads and writes, warehouses use columnar storage and query optimization for aggregate analytics.\n\nModern cloud data warehouses (Snowflake, BigQuery, Redshift, Databricks) have replaced on-premises solutions for most organizations. They offer elastic compute scaling, separation of storage and compute, near-unlimited storage, and pay-per-query pricing models that eliminate capacity planning.\n\nFor data teams evaluating warehouse solutions, key criteria include query performance at your data volume, pricing model transparency (per-query vs reserved compute), ecosystem integration with your BI tools and ETL pipelines, and data sharing capabilities for cross-organization analytics. The warehouse is the foundation of the analytics stack — getting this choice right matters more than any downstream tool selection.",
+    relatedTerms: ["data-lake", "etl", "business-intelligence"],
+    faqs: [
+      { q: "What is the difference between a data warehouse and a data lake?", a: "A data warehouse stores structured, cleaned data optimized for analytical queries. A data lake stores raw data in any format — structured, semi-structured, and unstructured — for flexible downstream processing. Warehouses enforce schema on write; lakes allow schema on read." },
+      { q: "When does a company need a data warehouse?", a: "When reporting requires joining data from multiple source systems, when analysts need to run complex queries without impacting production database performance, or when historical trend analysis across months or years of data is needed." },
+    ],
+  },
+  {
+    term: "Data Lake",
+    slug: "data-lake",
+    definition: "A centralized storage repository that holds raw data in its native format — structured, semi-structured, and unstructured — at any scale for future processing and analysis.",
+    longDefinition:
+      "A data lake stores everything: CSV files, JSON logs, Parquet files, images, video, sensor data, and database exports. Unlike a data warehouse that requires data to be cleaned and structured before loading, a data lake accepts raw data and defers transformation to the point of consumption. This 'schema on read' approach preserves data flexibility.\n\nCloud object storage (S3, GCS, Azure Blob) is the standard data lake foundation. Table formats like Delta Lake, Apache Iceberg, and Apache Hudi add ACID transactions, schema evolution, and time-travel capabilities on top of raw object storage — creating the 'lakehouse' pattern that combines lake flexibility with warehouse reliability.\n\nFor data teams evaluating storage strategies, the data lake vs warehouse decision is increasingly a false dichotomy. Most modern architectures use both: a lake for raw data retention and a warehouse for curated analytical datasets. The lakehouse pattern merges these into a single layer, but requires teams to manage table format complexity.",
+    relatedTerms: ["data-warehouse", "etl", "data-pipeline"],
+    faqs: [
+      { q: "What is a data lakehouse?", a: "A data lakehouse combines data lake flexibility (storing raw data in open formats on object storage) with data warehouse reliability (ACID transactions, schema enforcement, governance). Delta Lake and Apache Iceberg enable lakehouse patterns on top of cloud object storage." },
+      { q: "Can a data lake replace a data warehouse?", a: "For some workloads, yes — the lakehouse pattern enables direct SQL analytics on lake data. But for teams that need fast, well-governed analytical queries without managing table formats, a dedicated warehouse remains simpler and more performant." },
+    ],
+  },
+  {
+    term: "Data Pipeline",
+    slug: "data-pipeline",
+    definition: "An automated sequence of data processing steps that moves and transforms data from source systems to destination systems on a scheduled or event-driven basis.",
+    longDefinition:
+      "A data pipeline orchestrates the flow of data through extraction, validation, transformation, enrichment, and loading stages. Pipelines can be batch (processing accumulated data on a schedule), streaming (processing data in real-time as events arrive), or hybrid. Apache Airflow, Dagster, Prefect, and dbt are widely used pipeline orchestration tools.\n\nPipeline reliability is critical because downstream analytics, dashboards, and AI models depend on timely, accurate data. A failed pipeline that goes undetected can produce stale dashboards, incorrect reports, and degraded model performance. Modern pipeline tools provide monitoring, alerting, data quality checks, and automatic retry logic.\n\nFor data teams evaluating pipeline infrastructure, key criteria include orchestration flexibility, monitoring and alerting quality, support for both batch and streaming patterns, lineage tracking (understanding which downstream assets are affected when a source changes), and cost at your data volume and frequency.",
+    relatedTerms: ["etl", "data-warehouse", "data-lake"],
+    faqs: [
+      { q: "What is the difference between a data pipeline and ETL?", a: "ETL is a specific type of data pipeline pattern (Extract, Transform, Load). Data pipeline is the broader concept — it includes ETL, ELT, streaming pipelines, reverse ETL (pushing warehouse data back to operational tools), and event-driven architectures." },
+      { q: "What causes data pipeline failures?", a: "Source schema changes (a column is renamed or removed), API rate limiting, network timeouts, data quality issues (unexpected nulls or formats), and infrastructure failures. Robust pipelines include validation checks, retry logic, and alerting for each failure mode." },
+    ],
+  },
+  {
+    term: "Business Intelligence",
+    slug: "business-intelligence",
+    definition: "The tools, practices, and technologies for collecting, integrating, analyzing, and presenting business data to support better decision-making.",
+    longDefinition:
+      "Business intelligence (BI) transforms raw data into actionable insights through dashboards, reports, ad-hoc queries, and data visualization. BI platforms like Tableau, Looker, Power BI, and Metabase connect to data warehouses and enable non-technical stakeholders to explore data, build dashboards, and share insights without writing SQL.\n\nModern BI has shifted from IT-controlled report generation to self-service analytics where business users build their own dashboards. This democratization increases data utilization but introduces governance challenges — inconsistent metric definitions, duplicated dashboards, and queries that consume excessive warehouse compute.\n\nFor teams evaluating BI tools, key criteria include semantic layer support (centralized metric definitions), query performance against your warehouse, embedded analytics capabilities (embedding dashboards in your product), governance features (row-level security, usage auditing), and total cost including per-user licensing and warehouse compute generated by BI queries.",
+    relatedTerms: ["data-warehouse", "data-pipeline", "etl"],
+    faqs: [
+      { q: "What is a semantic layer in BI?", a: "A semantic layer defines business metrics, dimensions, and relationships in a central model that all BI queries use. It ensures that 'revenue' means the same thing regardless of who builds the dashboard, preventing inconsistent metric definitions across teams." },
+      { q: "What is the difference between BI and data analytics?", a: "BI typically refers to descriptive analytics — dashboards and reports showing what happened. Data analytics is broader, encompassing diagnostic (why it happened), predictive (what will happen), and prescriptive (what to do about it) analysis." },
+    ],
+  },
+  {
+    term: "Data Governance",
+    slug: "data-governance",
+    definition: "The framework of policies, processes, and standards that ensures data across an organization is accurate, consistent, secure, and used responsibly.",
+    longDefinition:
+      "Data governance defines who can access what data, how data quality is maintained, how sensitive data is classified and protected, and how data flows between systems comply with regulations. It encompasses data ownership (who is accountable for each dataset), data quality standards, access control policies, retention rules, and lineage tracking.\n\nWithout governance, organizations experience data quality degradation, inconsistent reporting, compliance violations, and security exposures. A common symptom: two teams report different revenue numbers because they pull from different sources with different definitions. Data governance establishes the single source of truth.\n\nFor teams evaluating data management tools, governance capabilities are increasingly a differentiator. Tools that support data cataloging, automated classification, access auditing, and lineage visualization reduce the manual overhead of maintaining governance standards. In regulated industries (healthcare, finance, government), governance tooling is a compliance requirement, not an optimization.",
+    relatedTerms: ["data-catalog", "gdpr", "soc-2"],
+    faqs: [
+      { q: "What is the difference between data governance and data management?", a: "Data management is the operational practice of collecting, storing, and processing data. Data governance is the policy framework that defines how data management should be performed — who owns data, what quality standards apply, and how access is controlled." },
+      { q: "When does a company need formal data governance?", a: "When regulatory requirements demand it (GDPR, HIPAA, SOX), when reporting inconsistencies cause business decisions to be questioned, or when data security incidents reveal uncontrolled access. Most companies benefit from lightweight governance by 100 employees." },
+    ],
+  },
+  {
+    term: "Data Catalog",
+    slug: "data-catalog",
+    definition: "A searchable inventory of an organization's data assets including metadata, lineage, ownership, and quality metrics that enables data discovery and governance.",
+    longDefinition:
+      "A data catalog is the index that makes an organization's data findable and understandable. It stores metadata about every table, column, dashboard, and pipeline — including descriptions, data types, ownership, freshness, quality scores, and upstream/downstream lineage. Tools like Atlan, Alation, DataHub, and dbt's documentation layer serve this function.\n\nWithout a catalog, analysts spend 30-50% of their time finding and understanding data rather than analyzing it. They resort to Slack messages asking 'who owns this table?' and 'what does this column mean?' — knowledge that is tribal and fragile. A catalog makes this knowledge searchable and persistent.\n\nFor data teams evaluating catalog solutions, key criteria include automated metadata ingestion from your warehouse and BI tools, lineage visualization depth, search quality, and integration with your governance and quality monitoring workflows. The catalog is most valuable when it is the first place anyone goes to find data — adoption rate is the primary success metric.",
+    relatedTerms: ["data-governance", "data-warehouse", "business-intelligence"],
+    faqs: [
+      { q: "What is data lineage?", a: "Data lineage traces the path of data from its source through every transformation and system it passes through to its final consumption point. It answers: where did this number come from, and what would be affected if the source changed?" },
+      { q: "How is a data catalog different from a data dictionary?", a: "A data dictionary documents the schema and definitions of a single database or system. A data catalog spans the entire organization's data assets across all systems, adding lineage, ownership, quality metrics, and search capabilities on top of basic schema documentation." },
+    ],
+  },
+  {
+    term: "Feature Store",
+    slug: "feature-store",
+    definition: "A centralized platform for storing, managing, and serving pre-computed machine learning features to ensure consistency between model training and production inference.",
+    longDefinition:
+      "A feature store solves the problem of feature consistency in ML systems. Features — the input variables that models use for predictions — are often computed through complex transformations of raw data. Without a feature store, training pipelines and serving pipelines may compute features differently, causing training-serving skew that silently degrades model performance.\n\nFeature stores provide three core capabilities: a feature registry (catalog of all available features with metadata), an offline store (historical feature values for training), and an online store (low-latency feature serving for real-time inference). Feast, Tecton, and Databricks Feature Store are prominent options.\n\nFor ML teams evaluating feature store adoption, the decision is driven by scale and complexity. A team running one or two models with simple features may not need a dedicated store. Teams running dozens of models that share common features across use cases benefit significantly from centralized feature management, reduced duplication, and guaranteed training-serving consistency.",
+    relatedTerms: ["data-pipeline", "data-warehouse", "embeddings"],
+    faqs: [
+      { q: "What is training-serving skew?", a: "Training-serving skew occurs when features are computed differently during model training and production inference — different code paths, different data sources, or different timing. This causes the model to receive inputs in production that differ from what it learned on, degrading prediction quality." },
+      { q: "When does a team need a feature store?", a: "When multiple models share the same features, when training-serving skew has caused production issues, or when feature computation is expensive and should be cached rather than recomputed for each model independently." },
+    ],
+  },
+  // Security
+  {
+    term: "Zero Trust",
+    slug: "zero-trust",
+    definition: "A security framework that assumes no user, device, or network is inherently trusted, requiring continuous verification for every access request regardless of location.",
+    longDefinition:
+      "Zero trust replaces the traditional perimeter security model — where everything inside the corporate network is trusted — with a model where every access request is authenticated, authorized, and encrypted regardless of where it originates. The core principle is 'never trust, always verify.'\n\nZero trust architectures implement several key controls: identity-based access (every request is tied to a verified identity), least-privilege access (users get only the minimum permissions needed), microsegmentation (network zones limit lateral movement), continuous monitoring (access is re-evaluated based on risk signals), and device health verification.\n\nFor teams evaluating security architecture, zero trust is increasingly the baseline expectation, especially with remote workforces accessing cloud applications from untrusted networks. Implementation is incremental — start with identity-based access via SSO/MFA, add device health checks, implement network segmentation, and layer on continuous risk scoring over time.",
+    relatedTerms: ["sso", "mfa", "rbac"],
+    faqs: [
+      { q: "How does zero trust differ from VPN-based security?", a: "VPN-based security trusts everything inside the network perimeter. Zero trust trusts nothing by default — every access request is verified regardless of network location. Zero trust provides stronger security for remote and hybrid workforces accessing cloud applications." },
+      { q: "Can small companies implement zero trust?", a: "Yes, incrementally. Start with SSO and MFA for all applications, enforce device management policies, and use conditional access policies in your identity provider. Full zero trust architecture builds over time, but the foundational elements are accessible to any size organization." },
+    ],
+  },
+  {
+    term: "MFA",
+    slug: "mfa",
+    definition: "Multi-Factor Authentication — a security method requiring users to provide two or more verification factors to gain access, combining something they know, have, or are.",
+    longDefinition:
+      "MFA strengthens authentication by requiring multiple independent verification factors: knowledge (password or PIN), possession (phone, hardware key, authenticator app), and inherence (fingerprint, face recognition). Even if an attacker steals a password, they cannot access the account without the second factor.\n\nMFA adoption is the single most impactful security control an organization can implement. Microsoft reports that MFA blocks 99.9% of automated attacks. Hardware security keys (YubiKey, FIDO2) provide the strongest protection, followed by authenticator apps (TOTP), and then SMS-based codes (which are vulnerable to SIM swapping).\n\nFor teams evaluating SaaS tools, MFA support is a baseline security requirement. Verify that the tool supports your preferred MFA method, allows organization-wide enforcement (not just optional per-user), and integrates with your identity provider for centralized MFA policy management. Tools that do not support MFA or gate it behind enterprise tiers create unnecessary security exposure.",
+    relatedTerms: ["sso", "zero-trust", "rbac"],
+    faqs: [
+      { q: "What is the strongest form of MFA?", a: "Hardware security keys using FIDO2/WebAuthn protocol (YubiKey, Google Titan) are the strongest form. They are phishing-resistant because the key cryptographically verifies the domain, preventing attackers from intercepting credentials through fake login pages." },
+      { q: "Is SMS-based MFA still recommended?", a: "SMS is better than no MFA but is the weakest factor due to SIM swapping attacks. NIST recommends against SMS-only MFA for sensitive systems. Authenticator apps or hardware keys are preferred alternatives." },
+    ],
+  },
+  {
+    term: "Penetration Testing",
+    slug: "penetration-testing",
+    definition: "A controlled, authorized cyberattack simulation against a system to identify exploitable security vulnerabilities before real attackers find them.",
+    longDefinition:
+      "Penetration testing (pen testing) simulates real-world attack scenarios against an organization's applications, networks, and infrastructure. Testers — either internal red teams or external security firms — attempt to exploit vulnerabilities using the same techniques attackers would use: SQL injection, cross-site scripting, privilege escalation, social engineering, and more.\n\nPen tests are categorized by scope and knowledge level. Black-box tests give testers no insider information. White-box tests provide full source code and architecture access. Gray-box tests fall between. External tests target internet-facing assets; internal tests simulate an attacker who has already gained initial access.\n\nFor teams evaluating their security posture, annual pen testing is a baseline expectation for SOC 2 compliance and enterprise sales. Request pen test reports from SaaS vendors during procurement — a vendor that has never been pen tested has unknown vulnerabilities. Look for vendors who remediate findings promptly and retest to confirm fixes.",
+    relatedTerms: ["vulnerability-scanning", "soc-2", "zero-trust"],
+    faqs: [
+      { q: "How often should pen testing be performed?", a: "At minimum annually for compliance (SOC 2, PCI-DSS). High-risk applications should be tested after major releases or architecture changes. Continuous bug bounty programs complement periodic pen tests with ongoing external scrutiny." },
+      { q: "What is the difference between penetration testing and vulnerability scanning?", a: "Vulnerability scanning is automated — it identifies known vulnerabilities from a database of signatures. Pen testing is manual and creative — human testers chain vulnerabilities together, exploit business logic flaws, and simulate realistic attack paths that scanners cannot detect." },
+    ],
+  },
+  {
+    term: "Vulnerability Scanning",
+    slug: "vulnerability-scanning",
+    definition: "Automated security testing that scans applications, networks, and infrastructure for known vulnerabilities, misconfigurations, and outdated software components.",
+    longDefinition:
+      "Vulnerability scanners automatically probe systems for known security weaknesses: missing patches, insecure configurations, exposed services, known CVEs in software dependencies, and common misconfigurations. Tools like Qualys, Nessus, Snyk, and Trivy scan networks, applications, container images, and code dependencies.\n\nScanning is categorized by target: network vulnerability scanning probes IP ranges and services, web application scanning tests for OWASP Top 10 vulnerabilities, container image scanning checks for vulnerable packages in Docker images, and dependency scanning (SCA) identifies vulnerable libraries in application code.\n\nFor teams evaluating security tooling, vulnerability scanning is a low-cost, high-impact baseline control. It runs continuously and automatically, catching known vulnerabilities before they are exploited. The challenge is not running scans — it is triaging and remediating findings. A scanner that produces thousands of unpriotized findings creates alert fatigue. Evaluate scanners on prioritization quality, false positive rate, and remediation guidance.",
+    relatedTerms: ["penetration-testing", "soc-2", "ci-cd"],
+    faqs: [
+      { q: "What is SCA (Software Composition Analysis)?", a: "SCA scans application dependencies (npm packages, Python libraries, Go modules) for known vulnerabilities. It identifies which third-party components you are using and whether any have published CVEs, enabling proactive patching before exploitation." },
+      { q: "How do you prioritize vulnerability scan findings?", a: "Prioritize by exploitability (is there a public exploit?), exposure (is the vulnerable system internet-facing?), business impact (what data or systems are at risk?), and CVSS score. Not all vulnerabilities require immediate action — focus on the intersection of high severity and high exposure." },
+    ],
+  },
+  {
+    term: "Encryption at Rest",
+    slug: "encryption-at-rest",
+    definition: "The practice of encrypting stored data so that it cannot be read without the decryption key, protecting against unauthorized access to storage media.",
+    longDefinition:
+      "Encryption at rest protects data stored on disk — in databases, file systems, object storage, and backups — by encrypting it with a cryptographic key. Even if an attacker gains physical access to storage hardware or a backup file, the data is unreadable without the corresponding decryption key.\n\nMost cloud providers offer encryption at rest by default using platform-managed keys (AWS SSE-S3, GCP default encryption). For stronger control, organizations can use customer-managed keys (CMK) through key management services (AWS KMS, GCP Cloud KMS, Azure Key Vault), maintaining ownership of the encryption key lifecycle.\n\nFor teams evaluating SaaS vendors, encryption at rest is a baseline security requirement for SOC 2, HIPAA, and GDPR compliance. Verify whether the vendor encrypts all data at rest (not just specific sensitive fields), what encryption algorithm is used (AES-256 is standard), and whether customer-managed keys are supported for regulated workloads that require key custody.",
+    relatedTerms: ["soc-2", "hipaa", "gdpr"],
+    faqs: [
+      { q: "What is the difference between encryption at rest and in transit?", a: "Encryption at rest protects stored data on disk. Encryption in transit (TLS/SSL) protects data moving between systems over the network. Both are needed — at rest protects against storage compromise, in transit protects against network interception." },
+      { q: "What are customer-managed encryption keys?", a: "Customer-managed keys (CMK) give you ownership of the encryption key rather than relying on the cloud provider's key. You control key rotation, access policies, and revocation. This is required in some regulated industries where key custody must remain with the data owner." },
+    ],
+  },
+  // Product/Growth
+  {
+    term: "Net Promoter Score",
+    slug: "net-promoter-score",
+    definition: "A customer loyalty metric based on a single survey question — 'How likely are you to recommend us?' — scored 0-10 and calculated as percentage of promoters minus detractors.",
+    longDefinition:
+      "NPS segments respondents into three groups: Promoters (9-10), Passives (7-8), and Detractors (0-6). The NPS score is calculated as % Promoters minus % Detractors, yielding a number from -100 to +100. A score above 0 means more promoters than detractors; above 50 is considered excellent.\n\nNPS is valued for its simplicity and benchmarkability — it enables comparison across companies and industries. SaaS companies with high NPS (above 40) typically show strong organic growth through word-of-mouth referrals. Low NPS correlates with high churn and expensive customer acquisition.\n\nFor teams evaluating software vendors, NPS data (available on review platforms like G2, TrustRadius, and vendor-published surveys) provides a proxy for customer satisfaction. A vendor with declining NPS may be experiencing product quality issues, support degradation, or pricing backlash. Compare NPS trends over time, not just point-in-time scores, to identify trajectory changes.",
+    relatedTerms: ["churn-rate", "product-led-growth", "ltv"],
+    faqs: [
+      { q: "What is a good NPS score for SaaS?", a: "Above 30 is good, above 50 is excellent, and above 70 is world-class for SaaS. B2B SaaS median NPS is approximately 30-40. Compare within your specific software category for meaningful benchmarks." },
+      { q: "What are the limitations of NPS?", a: "NPS is a lagging indicator that does not explain why customers feel the way they do. It can be gamed through survey timing and selection bias. It should be supplemented with qualitative feedback and behavioral metrics like feature adoption and support ticket trends." },
+    ],
+  },
+  {
+    term: "Product-Market Fit",
+    slug: "product-market-fit",
+    definition: "The degree to which a product satisfies strong market demand, typically evidenced by organic growth, high retention, and customers who would be very disappointed if the product disappeared.",
+    longDefinition:
+      "Product-market fit (PMF) is the inflection point where a product meets a genuine market need well enough that growth becomes pull-driven rather than push-driven. Sean Ellis's PMF survey asks users 'How would you feel if you could no longer use this product?' — if 40% or more answer 'very disappointed,' the product likely has PMF.\n\nPMF signals include: organic word-of-mouth growth, high retention rates, users finding the product without paid acquisition, short sales cycles, and customers willing to tolerate product gaps because the core value is strong. Pre-PMF companies struggle with retention regardless of acquisition spend.\n\nFor procurement teams evaluating vendors, PMF maturity is a risk signal. A vendor with strong PMF has a sustainable business with retained customers and product investment capacity. A vendor still searching for PMF may pivot, change pricing dramatically, or shut down. Evaluate customer retention data, growth trajectory, and funding stage to assess vendor PMF status.",
+    relatedTerms: ["product-led-growth", "net-promoter-score", "churn-rate"],
+    faqs: [
+      { q: "How do you measure product-market fit?", a: "The Sean Ellis survey ('very disappointed' threshold of 40%), retention curves that flatten rather than decline to zero, organic growth rate, and qualitative signals like inbound demand exceeding sales capacity are the standard PMF indicators." },
+      { q: "Why does product-market fit matter for procurement?", a: "A vendor without PMF is at high risk of pivoting, running out of funding, or being acquired at a discount. Committing to a multi-year contract with a pre-PMF vendor carries meaningful business continuity risk." },
+    ],
+  },
+  {
+    term: "Cohort Analysis",
+    slug: "cohort-analysis",
+    definition: "An analytical method that groups users by a shared characteristic or time period and tracks their behavior over time to identify retention patterns and trends.",
+    longDefinition:
+      "Cohort analysis divides users into groups based on when they signed up (acquisition cohort), what action they took (behavioral cohort), or what segment they belong to (demographic cohort), then tracks a metric — retention, revenue, feature adoption — across those groups over time. This reveals whether product changes are improving outcomes for newer cohorts.\n\nThe most common application is retention cohort analysis. A monthly cohort table shows what percentage of each month's signups are still active 1, 3, 6, and 12 months later. Improving retention curves across successive cohorts confirms that product improvements are working. Deteriorating curves signal a growing problem that aggregate metrics may be masking.\n\nFor teams evaluating product analytics tools, cohort analysis capability is a key differentiator. Tools like Amplitude, Mixpanel, and PostHog provide native cohort builders. For vendor evaluation, ask prospective SaaS vendors for their cohort retention data — vendors who share it demonstrate confidence in their retention; those who refuse may be hiding deterioration.",
+    relatedTerms: ["a-b-testing", "product-market-fit", "churn-rate"],
+    faqs: [
+      { q: "What is the difference between cohort analysis and funnel analysis?", a: "Funnel analysis tracks conversion through sequential steps (signup, activation, purchase). Cohort analysis tracks a metric for a group of users over time. Funnels show where users drop off in a process; cohorts show how behavior changes as users age." },
+      { q: "What does a healthy retention cohort curve look like?", a: "A curve that drops initially (normal early churn) then flattens — the users who remain after the initial drop stay long-term. A curve that continues to decline without flattening indicates the product is not retaining users at any tenure." },
+    ],
+  },
+  {
+    term: "A/B Testing",
+    slug: "a-b-testing",
+    definition: "A controlled experiment that compares two or more variants of a product experience to determine which performs better on a defined metric.",
+    longDefinition:
+      "A/B testing (also called split testing) randomly assigns users to different variants — a control (current experience) and one or more treatments (modified experiences) — and measures the impact on a target metric. Statistical significance testing determines whether observed differences are real or due to random chance.\n\nRigorous A/B testing requires sufficient sample size (enough users to detect the expected effect), proper randomization (no selection bias between groups), a pre-defined primary metric (to avoid p-hacking), and adequate test duration (to account for day-of-week and novelty effects). Tools like Optimizely, LaunchDarkly, Statsig, and Eppo provide experimentation infrastructure.\n\nFor product teams evaluating experimentation platforms, key criteria include statistical methodology (frequentist vs Bayesian), integration with your data warehouse, segment-level analysis, and guardrail metric monitoring (ensuring a winning variant does not degrade other important metrics while improving the primary one).",
+    relatedTerms: ["feature-flag", "cohort-analysis", "product-led-growth"],
+    faqs: [
+      { q: "How long should an A/B test run?", a: "Until statistical significance is reached at your desired confidence level (typically 95%), and for at least one full business cycle (one week minimum to capture day-of-week effects). Stopping tests early based on promising interim results leads to false positives." },
+      { q: "What is the difference between A/B testing and multivariate testing?", a: "A/B testing compares distinct complete variants. Multivariate testing varies multiple elements simultaneously (headline, image, CTA button) and measures the effect of each combination. Multivariate tests require much larger sample sizes but reveal interaction effects between elements." },
+    ],
+  },
+  {
+    term: "Feature Flag",
+    slug: "feature-flag",
+    definition: "A software mechanism that enables or disables functionality at runtime without deploying new code, allowing controlled rollouts, experimentation, and instant kill switches.",
+    longDefinition:
+      "Feature flags (also called feature toggles) wrap new functionality in conditional logic controlled by a configuration service. This decouples deployment from release — code can be deployed to production with features turned off, then enabled for specific users, percentages, or segments without a new deployment.\n\nFeature flags serve multiple purposes: gradual rollouts (enable for 5% of users, then 25%, then 100%), A/B testing (flag determines which variant a user sees), kill switches (instantly disable a problematic feature without rollback), and entitlement management (premium features toggled by subscription tier). LaunchDarkly, Statsig, Flagsmith, and PostHog provide feature flag infrastructure.\n\nFor engineering teams evaluating feature flag platforms, key criteria include evaluation latency (flags checked on every request must be fast), targeting granularity (user attributes, segments, percentages), integration with experimentation and analytics, and stale flag management (cleanup of flags that have been fully rolled out). Accumulating stale flags creates technical debt.",
+    relatedTerms: ["a-b-testing", "canary-release", "ci-cd"],
+    faqs: [
+      { q: "What is the risk of too many feature flags?", a: "Stale feature flags create technical debt — conditional code paths that are never cleaned up, making the codebase harder to understand and test. Establish a policy for removing flags once features are fully rolled out or permanently disabled." },
+      { q: "How do feature flags differ from canary releases?", a: "Feature flags control feature visibility within the same code version. Canary releases route traffic between different deployed code versions. Feature flags are application-level; canary releases are infrastructure-level. They are complementary strategies." },
+    ],
+  },
+  {
+    term: "User Onboarding",
+    slug: "user-onboarding",
+    definition: "The process and experience of guiding new users from initial signup to their first meaningful value moment in a product, directly impacting activation and retention rates.",
+    longDefinition:
+      "User onboarding is the critical path between signup and the 'aha moment' — the point where a user first experiences the product's core value. Effective onboarding reduces time-to-value through progressive disclosure (showing only what is needed at each step), guided tours, checklists, contextual tooltips, and templated starting states.\n\nOnboarding quality is one of the strongest predictors of long-term retention. Users who complete onboarding and reach the value moment within the first session retain at 2-3x the rate of those who do not. Conversely, complex onboarding with high friction is the primary driver of day-1 churn in SaaS products.\n\nFor teams evaluating SaaS tools, trial the onboarding experience yourself before purchasing. A product with poor onboarding will have poor adoption within your team regardless of its feature depth. Evaluate: How quickly did you reach value? Were instructions clear? Did you need documentation to complete basic tasks? The onboarding experience is a proxy for overall product quality and user empathy.",
+    relatedTerms: ["product-led-growth", "dap", "net-promoter-score"],
+    faqs: [
+      { q: "What is the 'aha moment' in user onboarding?", a: "The aha moment is when a user first experiences the product's core value — sending their first message in a team chat tool, creating their first dashboard, or automating their first workflow. Identifying and accelerating the path to this moment is the primary goal of onboarding optimization." },
+      { q: "How do you measure onboarding effectiveness?", a: "Track activation rate (percentage of signups who complete key onboarding actions), time-to-value (time from signup to first value moment), and day-7 or day-30 retention segmented by onboarding completion. Compare retention between users who completed onboarding and those who did not." },
+    ],
+  },
+  // AI/ML additions
+  {
+    term: "AI Hallucination",
+    slug: "ai-hallucination",
+    definition: "A specific category of AI failure where a model generates plausible but factually incorrect, unsupported, or entirely fabricated information with high confidence.",
+    longDefinition:
+      "AI hallucination is a systemic failure mode in generative AI where the model produces outputs that sound authoritative but are wrong. This includes fabricated citations, invented statistics, non-existent product features, incorrect dates, and confidently stated falsehoods. The term specifically emphasizes the danger that these errors appear indistinguishable from correct outputs.\n\nHallucination severity varies by model, task type, and domain. Factual recall tasks (specific numbers, dates, names) are most prone. Reasoning and synthesis tasks are less prone but not immune. Domain-specific content where the model has sparse training data produces the highest hallucination rates.\n\nFor teams deploying AI tools in business-critical workflows, hallucination risk management is essential. Mitigation strategies include RAG architectures (grounding in retrieved documents), tool calling (fetching real-time data), output verification pipelines, confidence scoring, and human-in-the-loop review for high-stakes outputs. No current model eliminates hallucination entirely — build verification into any workflow where accuracy matters.",
+    relatedTerms: ["hallucination", "rag", "prompt-engineering"],
+    faqs: [
+      { q: "Why do AI models hallucinate?", a: "LLMs predict the most probable next token based on training patterns, not based on factual verification. When the model encounters a query outside its strong training distribution, it generates plausible-sounding continuations rather than admitting uncertainty. The training objective optimizes for fluency, not truth." },
+      { q: "How can organizations reduce AI hallucination in production?", a: "Use RAG to ground responses in source documents, implement tool calling for real-time data retrieval, add automated fact-checking against known databases, set up human review for high-stakes outputs, and test hallucination rates on domain-specific benchmarks before deployment." },
+    ],
+  },
+  // Additional terms to reach 100
+  {
+    term: "Integration Depth",
+    slug: "integration-depth",
+    definition: "A measure of how deeply a software tool connects with other systems in your stack — from basic data sync to real-time bidirectional workflows.",
+    longDefinition:
+      "Integration depth describes the spectrum from shallow integrations (one-way data exports, CSV imports) to deep integrations (real-time bidirectional sync, webhook-driven workflows, embedded components). A tool with deep integration capability becomes a connected node in your operational system; a tool with shallow integration creates data silos that require manual bridging.\n\nEvaluating integration depth requires examining multiple dimensions: number of native integrations, API completeness (read-only vs full CRUD), webhook support for real-time events, authentication quality (OAuth vs API key), rate limits, and whether the vendor provides an iPaaS connector (Zapier, Make, Workato) for no-code integration.\n\nFor procurement teams, integration depth directly impacts total cost of ownership. A tool with deep native integrations reduces engineering time for custom work. A tool requiring custom API integration for every connection adds ongoing maintenance cost that should be factored into the TCO calculation.",
+    relatedTerms: ["api", "sdk", "total-cost-of-ownership"],
+    faqs: [
+      { q: "What is the difference between native and third-party integrations?", a: "Native integrations are built and maintained by the vendor. Third-party integrations use middleware platforms like Zapier or Make. Native integrations are typically deeper, more reliable, and faster, but third-party integrations provide breadth when native options are limited." },
+      { q: "How do you evaluate integration depth during vendor selection?", a: "Test the specific integrations you need — not just confirm they exist on a marketing page. Check API documentation quality, test data sync latency, verify bidirectional capability, and ask about rate limits and error handling for your expected volume." },
+    ],
+  },
+  {
+    term: "Data Residency",
+    slug: "data-residency",
+    definition: "The geographic location where an organization's data is physically stored and processed, subject to the data protection laws of that jurisdiction.",
+    longDefinition:
+      "Data residency requirements specify that certain data must be stored and processed within defined geographic boundaries. GDPR requires that EU personal data remain within the EU or be transferred only to countries with adequate data protection (or under specific legal mechanisms like SCCs). Similar laws exist in Canada (PIPEDA), Brazil (LGPD), Australia, and many other jurisdictions.\n\nFor SaaS procurement, data residency is a threshold requirement for companies with international operations or customers. A vendor that stores all data in US data centers may fail compliance review for EU-regulated workloads. Multi-region data residency options — where the vendor offers EU, US, APAC, or other regional hosting — are increasingly common but vary significantly in implementation quality.\n\nWhen evaluating vendors for data residency compliance, verify: Which specific regions are available? Does the vendor guarantee that all processing (not just storage) stays within the region? Are backups and disaster recovery copies also within the region? Do sub-processors comply with the same residency requirements?",
+    relatedTerms: ["gdpr", "soc-2", "encryption-at-rest"],
+    faqs: [
+      { q: "What is the difference between data residency and data sovereignty?", a: "Data residency specifies where data is stored geographically. Data sovereignty goes further — it means the data is subject to the laws and governance of that country. Data can reside in a country without the organization fully submitting to that country's legal jurisdiction in all matters." },
+      { q: "How do you verify a vendor's data residency claims?", a: "Request documentation of their infrastructure architecture including data center locations, sub-processor list with locations, DPA language specifying residency commitments, and SOC 2 report sections covering data handling. For high-sensitivity workloads, contractual guarantees with penalty clauses are appropriate." },
+    ],
+  },
+  {
+    term: "Reverse ETL",
+    slug: "reverse-etl",
+    definition: "The process of syncing data from a data warehouse back into operational tools like CRMs, marketing platforms, and customer success systems to activate analytics insights.",
+    longDefinition:
+      "Reverse ETL inverts the traditional data flow. Instead of pulling data from operational tools into the warehouse for analysis, reverse ETL pushes enriched, modeled data from the warehouse back into the tools where teams work — updating CRM fields with lead scores, syncing customer health metrics to success platforms, or pushing audience segments to ad platforms.\n\nTools like Census, Hightouch, and Polytomic enable reverse ETL by connecting to your warehouse and mapping modeled data to fields in downstream tools. This eliminates the need to build custom API integrations for each sync and ensures operational tools always reflect the latest analytics.\n\nFor data teams evaluating reverse ETL, the key benefit is activating warehouse investment. Many organizations build excellent data models in their warehouse that remain trapped in dashboards. Reverse ETL makes these models operational — a lead scoring model in the warehouse automatically updates Salesforce, a churn prediction model updates the customer success platform.",
+    relatedTerms: ["etl", "data-warehouse", "data-pipeline"],
+    faqs: [
+      { q: "Why not just build direct API integrations instead of reverse ETL?", a: "Direct integrations require custom code for each source-destination pair, are expensive to maintain, and do not leverage the data transformations already built in your warehouse. Reverse ETL uses the warehouse as the single source of truth and syncs from one place to many destinations." },
+      { q: "What are common reverse ETL use cases?", a: "Syncing lead scores to CRM, pushing customer segments to ad platforms, updating support tools with product usage data, enriching marketing platforms with warehouse-computed attributes, and activating churn predictions in customer success workflows." },
+    ],
+  },
+  {
+    term: "Observability",
+    slug: "observability",
+    definition: "The ability to understand the internal state of a system by examining its external outputs — logs, metrics, and traces — enabling teams to diagnose issues without prior knowledge of failure modes.",
+    longDefinition:
+      "Observability extends beyond traditional monitoring (checking if known metrics are within bounds) to enable investigation of unknown-unknowns — novel failure modes that were not anticipated when alerts were configured. The three pillars of observability are logs (discrete event records), metrics (time-series numerical measurements), and traces (end-to-end request paths through distributed systems).\n\nTools like Datadog, Grafana, New Relic, and Honeycomb provide observability platforms that correlate signals across these three pillars. When an alert fires, engineers can drill from a metric anomaly into the specific traces and logs that explain the root cause without switching between tools.\n\nFor engineering teams evaluating observability platforms, key criteria include data ingestion cost (observability data volumes can be enormous), query performance for investigation, correlation capabilities across pillars, and the ability to set meaningful alerts without excessive noise. Over-instrumentation creates cost problems; under-instrumentation creates blind spots.",
+    relatedTerms: ["siem", "ci-cd", "microservices"],
+    faqs: [
+      { q: "What is the difference between monitoring and observability?", a: "Monitoring checks known metrics against thresholds — it answers 'is the system healthy?' Observability enables investigation of novel problems — it answers 'why is the system unhealthy?' Monitoring is a subset of observability focused on known failure modes." },
+      { q: "What are the three pillars of observability?", a: "Logs (discrete event records with timestamps and context), metrics (aggregated numerical measurements over time like request rate and error rate), and traces (end-to-end paths of individual requests through distributed services). Together they provide comprehensive system visibility." },
+    ],
+  },
+  {
+    term: "SLA",
+    slug: "sla",
+    definition: "Service Level Agreement — a contractual commitment defining the expected level of service, typically specifying uptime, response times, and remedies for failures.",
+    longDefinition:
+      "An SLA formalizes the vendor's commitment to service quality. Common SLA metrics include uptime percentage (99.9% means ~8.7 hours of allowed downtime per year), support response times (P1 issues within 1 hour), data backup frequency, and disaster recovery time objectives. SLAs typically include financial remedies — service credits or penalties — when commitments are not met.\n\nSLA quality varies enormously between vendors. A '99.9% uptime SLA' is meaningless without understanding how uptime is measured (full outage only, or degraded performance?), what exclusions apply (maintenance windows, force majeure), and what remedy is offered (5% service credit is not meaningful compensation for a business-critical outage).\n\nFor procurement teams, SLA review is a critical contract negotiation step. Push for SLAs that measure what matters to your operations, not just what is easy for the vendor to meet. Include specific metrics, measurement methodology, reporting cadence, and meaningful financial remedies. An SLA without teeth is a marketing claim, not a commitment.",
+    relatedTerms: ["vendor-management", "renewal-management", "total-cost-of-ownership"],
+    faqs: [
+      { q: "What does 99.9% uptime actually mean?", a: "99.9% uptime allows approximately 8.7 hours of downtime per year, or about 43 minutes per month. 99.99% allows 52 minutes per year. The difference between each '9' is significant — evaluate whether the committed uptime matches your business continuity requirements." },
+      { q: "What are meaningful SLA remedies?", a: "Service credits of 10-25% of monthly fees for each violation, escalating to contract termination rights for repeated failures. A 5% credit for a full-day outage of a business-critical tool is not meaningful. Negotiate remedies proportional to the actual business impact." },
+    ],
+  },
+  {
+    term: "Technical Debt",
+    slug: "technical-debt",
+    definition: "The accumulated cost of shortcuts, workarounds, and deferred maintenance in a codebase that slows future development and increases the risk of failures.",
+    longDefinition:
+      "Technical debt is the software engineering equivalent of financial debt — taking shortcuts now (shipping without tests, skipping refactoring, copy-pasting code) accelerates short-term delivery but creates a compounding cost that must eventually be repaid through remediation work. Like financial debt, small amounts are manageable; excessive accumulation becomes crippling.\n\nCommon forms of technical debt include untested code, outdated dependencies, duplicated logic, poorly documented systems, tightly coupled architectures, and deferred infrastructure upgrades. Each form increases the time required to ship new features and the probability of production incidents.\n\nFor engineering leaders evaluating team productivity, technical debt is often the hidden variable. A team that was shipping features rapidly but accumulated debt will slow down progressively as the codebase becomes harder to change safely. Allocating 15-20% of engineering capacity to debt reduction — dependency updates, refactoring, test coverage — is a standard best practice for maintaining sustainable velocity.",
+    relatedTerms: ["ci-cd", "infrastructure-as-code", "observability"],
+    faqs: [
+      { q: "How do you measure technical debt?", a: "Track deployment frequency trends (slowing indicates growing friction), bug escape rate, time spent on unplanned work versus planned features, dependency age, and test coverage percentage. Code quality tools like SonarQube can quantify specific categories of debt." },
+      { q: "When is technical debt acceptable?", a: "When shipping speed is more valuable than code quality — early-stage product validation, time-sensitive market opportunities, or temporary prototypes. The key is to be intentional and track it for later repayment, not to accumulate it unknowingly." },
+    ],
+  },
+  {
+    term: "Vendor Risk Assessment",
+    slug: "vendor-risk-assessment",
+    definition: "A structured evaluation of the security, financial, operational, and compliance risks associated with using a third-party software vendor.",
+    longDefinition:
+      "Vendor risk assessment evaluates whether a prospective or existing vendor meets your organization's risk tolerance across multiple dimensions: security posture (SOC 2, pen test results, incident history), financial health (funding, revenue trajectory, burn rate), operational reliability (uptime history, support quality, incident response), data handling (encryption, residency, retention), and compliance (GDPR, HIPAA, industry-specific regulations).\n\nThe depth of assessment should be proportional to the risk. A tool handling sensitive customer data with broad employee access warrants a full security questionnaire, SOC 2 review, and reference checks. A non-critical utility tool used by a few people may need only a basic security review.\n\nFor procurement teams, vendor risk assessment should be a standardized process — not ad hoc — with tiered requirements based on data sensitivity and business criticality. Tools like Vanta, Drata, and SecurityScorecard automate parts of the assessment, but human review of SOC 2 reports, contract terms, and reference checks remains essential for critical vendors.",
+    relatedTerms: ["soc-2", "vendor-management", "vendor-lock-in"],
+    faqs: [
+      { q: "What are the most important vendor risk signals?", a: "Declining financial health (layoffs, leadership turnover, funding difficulties), security incidents, SOC 2 audit exceptions, support quality degradation, and loss of key engineering talent. Monitor these signals continuously for critical vendors, not just at procurement time." },
+      { q: "How often should vendor risk be reassessed?", a: "Annually for all vendors, quarterly for critical Tier 1 vendors, and immediately after any vendor security incident, acquisition announcement, or significant leadership change. Continuous monitoring services can supplement periodic reviews." },
+    ],
+  },
+  {
+    term: "API Gateway",
+    slug: "api-gateway",
+    definition: "A server that acts as the single entry point for API requests, handling routing, authentication, rate limiting, and monitoring across multiple backend services.",
+    longDefinition:
+      "An API gateway sits between clients and backend services, providing a unified entry point that abstracts the complexity of the underlying service architecture. It handles cross-cutting concerns — authentication, authorization, rate limiting, request transformation, caching, and monitoring — so individual services do not have to implement these capabilities independently.\n\nIn microservices architectures, the API gateway routes incoming requests to the appropriate service based on the URL path, headers, or other criteria. It can also aggregate responses from multiple services into a single response, reducing the number of client-server round trips. Kong, AWS API Gateway, Apigee, and Traefik are widely used implementations.\n\nFor teams evaluating API management, the gateway is the enforcement point for security policies, usage quotas, and developer experience. Key criteria include latency overhead, plugin ecosystem for custom logic, analytics and monitoring quality, and support for modern protocols (gRPC, WebSocket, GraphQL) alongside traditional REST.",
+    relatedTerms: ["api", "microservices", "service-mesh"],
+    faqs: [
+      { q: "What is the difference between an API gateway and a load balancer?", a: "A load balancer distributes traffic across instances of the same service for availability. An API gateway routes requests to different services based on the request path and applies cross-cutting logic like auth, rate limiting, and transformation. They are complementary and often used together." },
+      { q: "When does a team need an API gateway?", a: "When running multiple backend services that share common concerns (authentication, rate limiting, logging), when exposing APIs to external developers, or when you need centralized API analytics and access control. Single-service architectures can typically handle these concerns within the service itself." },
+    ],
+  },
+  {
+    term: "Compliance Automation",
+    slug: "compliance-automation",
+    definition: "Software that continuously monitors and automates compliance controls, evidence collection, and audit readiness for frameworks like SOC 2, ISO 27001, and HIPAA.",
+    longDefinition:
+      "Compliance automation platforms (Vanta, Drata, Secureframe, Sprinto) replace the manual, spreadsheet-driven process of maintaining compliance programs. They continuously monitor your infrastructure, identity provider, code repositories, and HR systems to verify that controls are operating effectively — and automatically collect the evidence auditors need.\n\nTraditional compliance management involves months of manual preparation before each audit: collecting screenshots, writing control descriptions, gathering access review evidence, and chasing owners for policy attestations. Compliance automation reduces this to continuous monitoring with real-time dashboards showing compliance posture and gaps.\n\nFor teams evaluating compliance tooling, key criteria include framework coverage (SOC 2, ISO 27001, HIPAA, PCI-DSS, GDPR), integration depth with your existing stack (cloud providers, identity provider, HRIS, code repos), quality of automated evidence collection, and auditor acceptance of the platform's output. The ROI is measured in reduced audit preparation time, fewer audit findings, and faster time to initial certification.",
+    relatedTerms: ["soc-2", "gdpr", "hipaa"],
+    faqs: [
+      { q: "Can compliance automation replace a compliance team?", a: "It reduces manual work dramatically but does not eliminate the need for compliance ownership. Someone must interpret requirements, make risk decisions, write policies, and manage the audit relationship. Automation handles monitoring and evidence; humans handle judgment and governance." },
+      { q: "How quickly can a startup achieve SOC 2 with compliance automation?", a: "With a compliance automation platform and dedicated internal owner, most startups can achieve SOC 2 Type I in 4-8 weeks and Type II in 6-12 months. Without automation, these timelines typically double due to manual evidence collection and control implementation." },
+    ],
+  },
+  {
+    term: "Shadow AI",
+    slug: "shadow-ai",
+    definition: "The unauthorized use of AI tools by employees without IT or security team knowledge, creating data privacy, accuracy, and compliance risks.",
+    longDefinition:
+      "Shadow AI is the AI-specific version of shadow IT. Employees use ChatGPT, Claude, Gemini, Copilot, and dozens of other AI tools to write emails, analyze data, generate code, and summarize documents — often pasting sensitive company data into consumer AI interfaces that may use it for training or lack enterprise security controls.\n\nThe risk surface of shadow AI is broader than traditional shadow IT because AI tools process and potentially retain the data pasted into them. An employee summarizing a confidential contract in ChatGPT may have just shared privileged legal content with a third-party model. An engineer debugging production code in an AI assistant may have exposed API keys or customer data.\n\nFor organizations managing AI adoption, the solution is not to ban AI tools — that drives adoption underground. Instead, provide approved, enterprise-grade AI tools with appropriate data handling agreements, establish clear policies on what data categories can be used with which AI tools, and monitor for unauthorized AI tool usage through the same channels used to detect shadow IT.",
+    relatedTerms: ["shadow-it", "llm", "data-governance"],
+    faqs: [
+      { q: "What data should never be put into consumer AI tools?", a: "Customer PII, financial data, trade secrets, source code with credentials, legal privileged communications, health information, and any data subject to regulatory requirements (GDPR, HIPAA, SOC 2). Establish a classification policy and communicate it clearly to all employees." },
+      { q: "How do you detect shadow AI usage?", a: "Monitor network traffic for AI tool domains, review browser extension installations on managed devices, analyze expense reports for AI subscriptions, survey teams about their AI usage, and review SSO logs for OAuth connections to AI platforms." },
+    ],
+  },
+  {
+    term: "Token",
+    slug: "token",
+    definition: "The basic unit of text that AI language models process — roughly corresponding to a word fragment, word, or punctuation mark — used to measure input/output size and pricing.",
+    longDefinition:
+      "Tokens are the fundamental unit of LLM processing. Text is split into tokens by a tokenizer before being processed by the model. In English, one token is roughly 3-4 characters or about 0.75 words. The sentence 'Hello, how are you?' is approximately 6 tokens. Different models use different tokenizers, so the same text may tokenize to different counts.\n\nTokens matter for two practical reasons: they determine what fits in the context window (a 128K-token context window holds roughly 96,000 words), and they determine cost (API pricing is per input token and per output token, with output tokens typically more expensive). Understanding token economics is essential for forecasting AI tool costs.\n\nFor teams evaluating AI tools with usage-based pricing, estimate your token consumption by analyzing typical input lengths and output lengths for your use cases. A customer support bot processing short queries consumes far fewer tokens than a document analysis tool processing full contracts. Token costs can vary 100x between models — from $0.10 to $15+ per million tokens.",
+    relatedTerms: ["llm", "context-window", "usage-based-pricing"],
+    faqs: [
+      { q: "How do you estimate token costs for an AI deployment?", a: "Count the average tokens per request (input + output) for your use case, multiply by expected request volume, and apply the per-token rate for your chosen model. Add a 20-30% buffer for prompt overhead, retries, and growth. Monitor actual usage against estimates weekly." },
+      { q: "Why are output tokens more expensive than input tokens?", a: "Output tokens require sequential generation — each token depends on all previous tokens — which is computationally more intensive than processing input tokens in parallel. This generation cost is reflected in higher per-token pricing for output." },
+    ],
+  },
+  {
+    term: "Agentic AI",
+    slug: "agentic-ai",
+    definition: "AI systems designed to operate autonomously over extended periods, making decisions, using tools, and completing multi-step workflows with minimal human intervention.",
+    longDefinition:
+      "Agentic AI represents the evolution from single-turn AI interactions (ask a question, get an answer) to autonomous, multi-step task execution. An agentic system receives a high-level goal, decomposes it into subtasks, selects and uses appropriate tools (search, code execution, API calls, file operations), evaluates intermediate results, and iterates until the goal is achieved or escalation is needed.\n\nThe agentic pattern is enabled by advances in model reasoning, tool use, and planning capabilities. Frameworks like LangGraph, CrewAI, and Anthropic's tool-use APIs provide the infrastructure for building agentic systems. Real-world applications include automated research, code review and testing pipelines, customer support escalation, and multi-step data analysis.\n\nFor teams evaluating agentic AI tools, the critical questions are about reliability and control. Agents that take autonomous actions — sending emails, modifying databases, calling external APIs — need robust guardrails, human-in-the-loop checkpoints for high-stakes decisions, comprehensive audit logging, and graceful failure handling. An unreliable agent is worse than no automation because it creates damage that must be detected and reversed.",
+    relatedTerms: ["ai-agent", "llm", "prompt-engineering"],
+    faqs: [
+      { q: "What is the difference between agentic AI and traditional automation?", a: "Traditional automation follows predefined rules and cannot handle novel situations. Agentic AI reasons about goals, adapts to unexpected inputs, and makes decisions about which tools and approaches to use. Agents handle variability; automation handles repetition." },
+      { q: "What guardrails should agentic AI systems have?", a: "Human approval for irreversible actions, spending limits on API calls and resource usage, scope restrictions on what systems the agent can access, comprehensive audit logging, automatic escalation when confidence is low, and kill switches for immediate termination." },
+    ],
+  },
 ];
 
 export const GLOSSARY_SLUGS = GLOSSARY_TERMS.map((t) => t.slug);
