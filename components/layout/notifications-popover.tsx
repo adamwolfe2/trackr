@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, CheckCircle2, XCircle, CalendarClock, Sparkles, Gift, CreditCard, CheckCheck } from "lucide-react";
+import { Bell, CheckCircle2, XCircle, CalendarClock, Sparkles, Gift, CreditCard, CheckCheck, AlertCircle } from "lucide-react";
 import { getNotifications, markNotificationsRead, type Notification, type NotificationType } from "@/lib/actions/notifications";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
@@ -114,6 +114,8 @@ export function NotificationsPopover() {
                                             <Gift className="h-4 w-4 text-neutral-500" strokeWidth={1.5} />
                                         ) : notification.type === "subscription_change" ? (
                                             <CreditCard className="h-4 w-4 text-neutral-500" strokeWidth={1.5} />
+                                        ) : notification.type === "credits_exhausted" ? (
+                                            <AlertCircle className="h-4 w-4 text-red-500" strokeWidth={1.5} />
                                         ) : (
                                             <Bell className="h-4 w-4 text-neutral-400" strokeWidth={1.5} />
                                         )}

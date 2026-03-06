@@ -3,7 +3,7 @@
 import { db } from "@/lib/db";
 import { researchJobs, workspaceMembers, softwareSpend, toolSuggestions, subscriptions, tools } from "@/lib/db/schema";
 import { referrals } from "@/lib/db/referrals-schema";
-import { eq, desc, and, ne, gte, lte, lt, isNotNull } from "drizzle-orm";
+import { eq, desc, and, ne, gte, lte, lt, isNotNull, count, inArray } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { getWorkspaceId } from "@/lib/db/queries";
@@ -16,7 +16,8 @@ export type NotificationType =
     | 'referral_signup'
     | 'subscription_change'
     | 'tool_stale'
-    | 'renewal_decision';
+    | 'renewal_decision'
+    | 'credits_exhausted';
 
 export type Notification = {
     id: string;
@@ -250,6 +251,46 @@ export async function getNotifications(): Promise<Notification[]> {
         }
     }
 
+    // 8. Credits exhausted — surface when monthly research limit is hit AND creditBalance is 0
+    const creditsExhaustedNotifications: Notification[] = [];
+    if (subscription && subscription.creditBalance === 0) {
+        const { getPlanLimits: getPlan } = await import("@/lib/config/subscriptions");
+        const plan = getPlan(subscription ?? undefined);
+        if (plan.limits.research !== Infinity) {
+            const startOfMonth = new Date(now);
+            startOfMonth.setDate(1);
+            startOfMonth.setHours(0, 0, 0, 0);
+
+            const workspaceToolSubquery = db
+                .select({ id: tools.id })
+                .from(tools)
+                .where(eq(tools.workspaceId, member.workspaceId));
+
+            const [jobRow] = await db
+                .select({ value: count() })
+                .from(researchJobs)
+                .where(and(
+                    inArray(researchJobs.toolId, workspaceToolSubquery),
+                    gte(researchJobs.triggeredAt, startOfMonth),
+                    ne(researchJobs.status, "failed"),
+                ));
+
+            const { value: monthlyJobCount } = jobRow ?? { value: 0 };
+            if (monthlyJobCount >= plan.limits.research) {
+                const id = `credits-exhausted-${member.workspaceId}-${now.getFullYear()}-${now.getMonth()}`;
+                creditsExhaustedNotifications.push({
+                    id,
+                    type: 'credits_exhausted',
+                    title: 'Research Credits Exhausted',
+                    message: 'Research credits exhausted — upgrade or purchase more to run additional research this month.',
+                    createdAt: now,
+                    read: seenIds.includes(id),
+                    link: '/settings/billing',
+                });
+            }
+        }
+    }
+
     // Merge and sort by date (newest first)
     const all = [
         ...jobNotifications,
@@ -259,6 +300,7 @@ export async function getNotifications(): Promise<Notification[]> {
         ...subscriptionNotifications,
         ...staleNotifications,
         ...renewalDecisionNotifications,
+        ...creditsExhaustedNotifications,
     ]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 15);

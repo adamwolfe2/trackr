@@ -2,9 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
-import { Loader2, ArrowRight, Globe, Sparkles } from "lucide-react";
+import { Loader2, ArrowRight, Globe, Sparkles, AlertCircle } from "lucide-react";
 import { previewTool } from "@/lib/actions/preview";
 import { submitTool } from "@/lib/actions/tools";
+import { UpgradeModal } from "@/components/common/upgrade-modal";
 import { toast } from "sonner";
 
 function SubmitButton({ pending }: { pending: boolean }) {
@@ -24,7 +25,12 @@ function SubmitButton({ pending }: { pending: boolean }) {
     );
 }
 
-export function AddToolWizard() {
+interface AddToolWizardProps {
+    creditBalance?: number;
+    workspaceId?: string;
+}
+
+export function AddToolWizard({ creditBalance = 99, workspaceId }: AddToolWizardProps) {
     const searchParams = useSearchParams();
     const [step, setStep] = useState<1 | 2>(1);
     const [url, setUrl] = useState(searchParams.get("url") ?? "");
@@ -33,13 +39,19 @@ export function AddToolWizard() {
     const [metadata, setMetadata] = useState<{ title: string; description: string; image: string } | null>(null);
     const [description, setDescription] = useState("");
     const [previewFailed, setPreviewFailed] = useState(false);
+    const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
 
     const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         startSubmit(async () => {
             try {
-                await submitTool(formData);
+                const result = await submitTool(formData);
+                // If submitTool returned an error object (vs. redirecting on success)
+                if (result && "error" in result && result.error === "insufficient_credits") {
+                    setUpgradeModalOpen(true);
+                    return;
+                }
             } catch (err) {
                 // Re-throw Next.js redirect errors — they are not real errors
                 if (err && typeof err === "object" && "digest" in err &&
@@ -88,6 +100,13 @@ export function AddToolWizard() {
 
     return (
         <div className="max-w-2xl mx-auto">
+            <UpgradeModal
+                open={upgradeModalOpen}
+                onClose={() => setUpgradeModalOpen(false)}
+                trigger="credits_exhausted"
+                workspaceId={workspaceId}
+            />
+
             {/* Header */}
             <div className="mb-8">
                 <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 mb-1">
@@ -217,6 +236,23 @@ export function AddToolWizard() {
                             Research starts immediately after submission. Our agents will map the site, pull reviews from G2, Reddit, and Trustpilot, analyze competitors, and deliver a scored report — <span className="text-black font-medium">typically under 2 minutes</span>.
                         </p>
                     </div>
+
+                    {/* Zero-credit warning */}
+                    {creditBalance === 0 && (
+                        <div className="border border-red-400 bg-red-50 px-4 py-3 flex items-start gap-3">
+                            <AlertCircle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-red-600" />
+                            <p className="font-mono text-xs text-red-700 leading-relaxed">
+                                You have 0 research credits remaining. Submitting will fail.{" "}
+                                <button
+                                    type="button"
+                                    onClick={() => setUpgradeModalOpen(true)}
+                                    className="underline font-semibold hover:text-red-900"
+                                >
+                                    Upgrade to continue →
+                                </button>
+                            </p>
+                        </div>
+                    )}
 
                     {/* Actions */}
                     <div className="flex gap-3 pt-2">

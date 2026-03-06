@@ -1,9 +1,11 @@
 import { db } from "@/lib/db";
 import { tools, reports, researchJobs, notes, workspaceMembers, subscriptions, workspaces } from "@/lib/db/schema";
+import { referrals } from "@/lib/db/referrals-schema";
 import { eq, desc, inArray, and } from "drizzle-orm";
 import { notFound, redirect } from "next/navigation";
-import { ExternalLink, ChevronLeft, GitCompare, RefreshCw, Share2, ArrowRight, AlertTriangle, Info } from "lucide-react";
+import { ExternalLink, ChevronLeft, GitCompare, RefreshCw, Share2, ArrowRight, AlertTriangle, Info, Users } from "lucide-react";
 import Link from "next/link";
+import { CopyLinkButton } from "@/components/referrals/copy-link-button";
 import { formatDistanceToNow } from "date-fns";
 import { ResearchStream } from "@/components/tools/research-stream";
 import { ResearchButton } from "@/components/tools/research-button";
@@ -77,6 +79,16 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
         where: eq(tools.workspaceId, tool.workspaceId),
         columns: { id: true, name: true, status: true },
     });
+
+    // Referral code for the "Invite a teammate" CTA in Next Steps
+    const referral = await db.query.referrals.findFirst({
+        where: eq(referrals.referrerWorkspaceId, tool.workspaceId),
+        columns: { code: true },
+    });
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
+    const referralUrl = referral
+        ? `${appUrl}/sign-up?ref=${referral.code}`
+        : null;
 
     const jobs = await db.query.researchJobs.findMany({
         where: eq(researchJobs.toolId, id),
@@ -534,6 +546,33 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                                             </span>
                                         </div>
                                     </div>
+                                )}
+
+                                {/* Referral CTA — shown after research completes */}
+                                {tool.status === "active" && referralUrl && (
+                                    <div className="pt-1">
+                                        <div className="flex items-center gap-2.5 p-2.5 border border-neutral-200 bg-neutral-50 mb-2">
+                                            <Users className="h-3.5 w-3.5 text-neutral-400 shrink-0" strokeWidth={1.5} />
+                                            <div className="flex-1 min-w-0">
+                                                <span className="font-mono text-xs block">Invite a teammate</span>
+                                                <span className="font-mono text-[10px] text-neutral-400">Share your referral link — earn 5 credits</span>
+                                            </div>
+                                        </div>
+                                        <CopyLinkButton referralUrl={referralUrl} />
+                                    </div>
+                                )}
+                                {tool.status === "active" && !referralUrl && (
+                                    <Link
+                                        href="/referrals"
+                                        className="flex items-center gap-2.5 p-2.5 border border-neutral-200 hover:border-black transition-colors group"
+                                    >
+                                        <Users className="h-3.5 w-3.5 text-neutral-400 group-hover:text-black shrink-0" strokeWidth={1.5} />
+                                        <div className="flex-1 min-w-0">
+                                            <span className="font-mono text-xs block">Invite a teammate</span>
+                                            <span className="font-mono text-[10px] text-neutral-400">Generate your referral link</span>
+                                        </div>
+                                        <ArrowRight className="h-3 w-3 text-neutral-300 group-hover:text-black shrink-0" />
+                                    </Link>
                                 )}
                             </div>
                         </div>

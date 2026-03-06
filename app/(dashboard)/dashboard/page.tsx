@@ -1,6 +1,6 @@
 import { Clock, ArrowRight, PlusCircle, DollarSign, AlertTriangle, CalendarClock, Sparkles, RefreshCw, Flame } from "lucide-react";
 import { db } from "@/lib/db";
-import { tools, painPoints, workspaceMembers, workspaces, researchJobs, reports, softwareSpend, toolSuggestions } from "@/lib/db/schema";
+import { tools, painPoints, workspaceMembers, workspaces, researchJobs, reports, softwareSpend, toolSuggestions, subscriptions } from "@/lib/db/schema";
 import { eq, sql, desc, inArray, gte, and, ne, isNotNull, lte } from "drizzle-orm";
 import type { InferSelectModel } from "drizzle-orm";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
@@ -204,6 +204,12 @@ export default async function DashboardPage() {
     const teamMembersCount = Number(teamMembersCountData[0]?.count || 1);
     const showChecklist = toolsCount < 3 || !hasActiveResearch;
 
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspaceId),
+        columns: { status: true },
+    });
+    const isPaidPlan = subscription?.status === "active" || subscription?.status === "trialing";
+
     const statusLabel = (status: string) => {
         const map: Record<string, string> = {
             complete: "DONE",
@@ -246,6 +252,7 @@ export default async function DashboardPage() {
                     toolsCount={toolsCount}
                     hasActiveResearch={hasActiveResearch}
                     teamMembersCount={teamMembersCount}
+                    isPaidPlan={isPaidPlan}
                 />
             )}
 

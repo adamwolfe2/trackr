@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { tools, reports, researchJobs, notes, subscriptions, ads, apiLogs } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { eq, and, count, inArray, ne } from "drizzle-orm";
+import { eq, and, count, inArray, ne, gte } from "drizzle-orm";
 import { performDeepResearch } from "@/lib/actions/research";
 import { ensureWorkspace } from "@/lib/db/ensure-workspace";
 
@@ -58,7 +58,7 @@ export async function submitTool(formData: FormData) {
     ]);
     const logoUrl = (preview && "image" in preview && preview.image) ? preview.image : null;
 
-    // 3. Check limit then insert (neon-http driver does not support transactions)
+    // 3. Check limits then insert (neon-http driver does not support transactions)
     const subscription = await db.query.subscriptions.findFirst({
         where: eq(subscriptions.workspaceId, workspaceId),
     });
@@ -71,6 +71,32 @@ export async function submitTool(formData: FormData) {
 
     if (limits.limits.tools !== Infinity && toolCount >= limits.limits.tools) {
         throw new Error(`Tool limit reached (${limits.limits.tools} tools on ${limits.name} plan). Upgrade to Team for unlimited tools.`);
+    }
+
+    // Pre-check research credits: if monthly limit is reached and no extra credits remain,
+    // surface the error synchronously before creating the tool record.
+    if (limits.limits.research !== Infinity) {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+
+        const workspaceToolSubquery = db
+            .select({ id: tools.id })
+            .from(tools)
+            .where(eq(tools.workspaceId, workspaceId));
+
+        const [{ value: jobCount }] = await db
+            .select({ value: count() })
+            .from(researchJobs)
+            .where(and(
+                inArray(researchJobs.toolId, workspaceToolSubquery),
+                gte(researchJobs.triggeredAt, startOfMonth),
+                ne(researchJobs.status, "failed"),
+            ));
+
+        if (jobCount >= limits.limits.research && (subscription?.creditBalance ?? 0) <= 0) {
+            return { error: "insufficient_credits" as const };
+        }
     }
 
     const [newTool] = await db.insert(tools).values({

@@ -8,20 +8,28 @@ vi.mock("next/cache", () => ({
     revalidatePath: vi.fn(),
 }));
 
-vi.mock("@/lib/db", () => ({
-    db: {
-        query: {
-            workspaceMembers: { findFirst: vi.fn() },
-            researchJobs: { findMany: vi.fn() },
-            softwareSpend: { findMany: vi.fn() },
-            toolSuggestions: { findMany: vi.fn() },
-            referrals: { findFirst: vi.fn() },
-            subscriptions: { findFirst: vi.fn() },
-            tools: { findMany: vi.fn(), findFirst: vi.fn() },
+vi.mock("@/lib/db", () => {
+    // Chainable mock for db.select().from().where() — built inline so hoisting works
+    const whereImpl = () => Promise.resolve([{ value: 0 }]);
+    const fromImpl = () => ({ where: whereImpl });
+    const selectImpl = () => ({ from: fromImpl });
+
+    return {
+        db: {
+            query: {
+                workspaceMembers: { findFirst: vi.fn() },
+                researchJobs: { findMany: vi.fn() },
+                softwareSpend: { findMany: vi.fn() },
+                toolSuggestions: { findMany: vi.fn() },
+                referrals: { findFirst: vi.fn() },
+                subscriptions: { findFirst: vi.fn() },
+                tools: { findMany: vi.fn(), findFirst: vi.fn() },
+            },
+            select: selectImpl,
+            update: vi.fn(),
         },
-        update: vi.fn(),
-    },
-}));
+    };
+});
 
 vi.mock("drizzle-orm", async (importOriginal) => {
     const actual = await importOriginal<typeof import("drizzle-orm")>();
@@ -35,6 +43,8 @@ vi.mock("drizzle-orm", async (importOriginal) => {
         lte: vi.fn((...args) => args),
         lt: vi.fn((...args) => args),
         isNotNull: vi.fn((col) => col),
+        count: vi.fn(() => "count()"),
+        inArray: vi.fn((...args) => args),
     };
 });
 
@@ -49,6 +59,15 @@ vi.mock("@/lib/db/schema", () => ({
     toolSuggestions: {},
     subscriptions: {},
     tools: {},
+}));
+
+vi.mock("@/lib/config/subscriptions", () => ({
+    getPlanLimits: vi.fn(() => ({
+        name: "Free",
+        slug: "free",
+        limits: { research: 5, tools: 15, members: 1, competitors: 0 },
+        features: {},
+    })),
 }));
 
 vi.mock("@/lib/db/referrals-schema", () => ({

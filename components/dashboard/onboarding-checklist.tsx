@@ -5,6 +5,7 @@ interface OnboardingChecklistProps {
     toolsCount: number;
     hasActiveResearch: boolean;
     teamMembersCount: number;
+    isPaidPlan?: boolean;
 }
 
 type Step = {
@@ -15,7 +16,7 @@ type Step = {
     cta: string;
 };
 
-export function OnboardingChecklist({ toolsCount, hasActiveResearch, teamMembersCount }: OnboardingChecklistProps) {
+export function OnboardingChecklist({ toolsCount, hasActiveResearch, teamMembersCount, isPaidPlan = false }: OnboardingChecklistProps) {
     const steps: Step[] = [
         {
             label: "Submit your first tool",
@@ -38,6 +39,13 @@ export function OnboardingChecklist({ toolsCount, hasActiveResearch, teamMembers
             done: teamMembersCount > 1,
             cta: "Invite someone →",
         },
+        ...(!isPaidPlan ? [{
+            label: "Secure your access",
+            description: "Add a payment method so research never stops.",
+            href: "/settings/billing",
+            done: isPaidPlan,
+            cta: "Add billing →",
+        }] : []),
     ];
 
     const doneCount = steps.filter(s => s.done).length;

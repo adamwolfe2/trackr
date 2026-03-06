@@ -6,7 +6,7 @@ import { UserButton } from "@clerk/nextjs";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { MobileNav } from "@/components/layout/mobile-nav";
 
-export function Header() {
+export function Header({ rightExtra }: { rightExtra?: React.ReactNode }) {
     const [isMac, setIsMac] = useState(true);
 
     useEffect(() => {
@@ -37,6 +37,7 @@ export function Header() {
             <div className="flex-1" />
 
             <div className="flex items-center gap-3">
+                {rightExtra}
                 <NotificationsPopover />
                 <UserButton afterSignOutUrl="/sign-in" />
             </div>
