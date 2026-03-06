@@ -1,7 +1,7 @@
 ---
-title: "Best AI Meeting Tools in 2026"
-description: "A practical guide to the best AI meeting assistants — covering transcription, AI summaries, action item extraction, and conversation intelligence. Fathom, Otter, Fireflies, Gong, and more."
-date: "2026-02-20"
+title: "The Best AI Meeting Tools in 2026: Notes, Transcription & More"
+description: "A practical guide to the best AI meeting assistants—covering transcription, AI summaries, action item extraction, and conversation intelligence. Fathom, Otter, Fireflies, Gong, and more."
+date: "2026-03-05"
 author: "Trackr Team"
 tags: ["ai tools", "meeting assistant", "transcription", "productivity", "notetaking", "remote work"]
 image: "/og.png"

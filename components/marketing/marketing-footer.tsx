@@ -26,11 +26,21 @@ const SOLUTIONS_LINKS = [
 const COMPANY_LINKS = [
     { label: "About", href: "/about" },
     { label: "Blog", href: "/blog" },
+    { label: "Use Cases", href: "/use-cases" },
+    { label: "Glossary", href: "/glossary" },
     { label: "Contact", href: "/contact" },
     { label: "Integrations", href: "/partners" },
-    { label: "AI Architects", href: "/apply" },
     { label: "Chrome Extension", href: "/chrome" },
-    { label: "Slack Integration", href: "/slack" },
+];
+
+const INDUSTRIES_LINKS = [
+    { label: "Fintech", href: "/industries/fintech" },
+    { label: "Healthcare", href: "/industries/healthcare" },
+    { label: "SaaS", href: "/industries/saas" },
+    { label: "E-Commerce", href: "/industries/ecommerce" },
+    { label: "Legal", href: "/industries/legal" },
+    { label: "Agencies", href: "/industries/agencies" },
+    { label: "All industries \u2192", href: "/industries" },
 ];
 
 const COMPARE_LINKS = [
@@ -49,7 +59,7 @@ export function MarketingFooter() {
     return (
         <footer className="w-full border-t border-black">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-8 md:gap-6 mb-16">
+                <div className="grid grid-cols-2 md:grid-cols-7 gap-8 md:gap-6 mb-16">
                     {/* Brand */}
                     <div className="col-span-2">
                         <h3 className="text-2xl font-serif font-medium mb-3 flex items-center gap-2">
@@ -80,6 +90,9 @@ export function MarketingFooter() {
 
                     {/* Solutions */}
                     <FooterColumn title="Solutions" links={SOLUTIONS_LINKS} />
+
+                    {/* Industries */}
+                    <FooterColumn title="Industries" links={INDUSTRIES_LINKS} />
 
                     {/* Company */}
                     <FooterColumn title="Company" links={COMPANY_LINKS} />

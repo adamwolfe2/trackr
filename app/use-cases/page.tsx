@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Users, DollarSign, BarChart2, Search, Layers, Lightbulb, CalendarCheck, TrendingUp } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { USE_CASE_PAGES } from "@/data/use-cases.seed";
 
 export const revalidate = false;
 
@@ -280,6 +281,39 @@ export default function UseCasesPage() {
                                     <ArrowRight className="w-3 h-3" />
                                 </Link>
                             </div>
+                        ))}
+                    </div>
+                </section>
+
+                {/* Deep Dive — detail pages */}
+                <section className="py-20 border-b border-black">
+                    <div className="flex items-center justify-between mb-8">
+                        <div>
+                            <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-2">Deep dive</p>
+                            <h2 className="font-serif text-2xl font-normal">16 detailed use case guides</h2>
+                        </div>
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 hidden sm:block">
+                            Step-by-step walkthroughs
+                        </span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-px border border-black bg-black">
+                        {USE_CASE_PAGES.map((uc) => (
+                            <Link
+                                key={uc.slug}
+                                href={`/use-cases/${uc.slug}`}
+                                className="group bg-[#F3F3EF] p-6 flex flex-col hover:bg-white transition-colors"
+                            >
+                                <h3 className="font-serif text-base font-normal leading-snug mb-2 group-hover:underline">
+                                    {uc.headline}
+                                </h3>
+                                <p className="font-mono text-[11px] text-neutral-600 leading-relaxed mb-4 flex-grow">
+                                    {uc.description}
+                                </p>
+                                <div className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest text-neutral-400 group-hover:text-black transition-colors mt-auto">
+                                    Read guide
+                                    <ArrowRight className="w-3 h-3" />
+                                </div>
+                            </Link>
                         ))}
                     </div>
                 </section>

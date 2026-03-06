@@ -912,6 +912,692 @@ export const ICP_PAGES: IcpPage[] = [
         testimonialQuote: "We now require a Trackr report before any AI tool can be expensed. It gives our team a consistent baseline and flags the data handling questions we need answered before procurement commits.",
         testimonialAttribution: "CISO, 800-person enterprise software company",
     },
+    {
+        role: "data-teams",
+        title: "AI Tools for Data Teams | Trackr",
+        description: "Data engineers, analysts, and data scientists use Trackr to evaluate AI and analytics tools — scoring them on data pipeline fit, model quality, and integration depth in under 2 minutes.",
+        headline: "The data team's AI tool intelligence layer.",
+        subheadline: "Evaluate any AI or analytics tool in 2 minutes. Get independent scoring on data pipeline compatibility, model quality, and integration depth — so your stack decisions are defensible.",
+        painPoints: [
+            {
+                title: "AI tool evaluation is a full-time job",
+                description: "The AI tooling landscape for data teams changes weekly. New vector databases, orchestration frameworks, observability platforms, and LLM wrappers launch constantly. Evaluating each one properly takes research time your team doesn't have.",
+            },
+            {
+                title: "Integration compatibility is discovered after purchase",
+                description: "A tool looks perfect in the demo. Then your engineering team spends two weeks discovering it doesn't integrate cleanly with your warehouse, pipeline orchestrator, or existing ML infrastructure. Integration depth is rarely surfaced in vendor marketing.",
+            },
+            {
+                title: "No consistent framework for cross-tool comparison",
+                description: "When your team evaluates three competing data tools, each person uses different criteria. The resulting spreadsheet is a mess of incomparable scores and subjective notes — making it impossible to present a clear recommendation to leadership.",
+            },
+        ],
+        features: [
+            {
+                title: "Integration depth scoring in every report",
+                description: "Trackr's research pipeline specifically evaluates integration compatibility — with major warehouses, orchestration tools, and the most common data stacks. Know what integrates cleanly before you commit.",
+            },
+            {
+                title: "Consistent 7-dimension scoring for every tool",
+                description: "Apply the same framework to every evaluation: Core Capability, Ease of Use, Integration Depth, Pricing Value, AI Sophistication, Community & Support, and Scalability. Compare any two tools on the same scale.",
+            },
+            {
+                title: "Community signal from real data practitioners",
+                description: "Trackr's research incorporates practitioner discussion from Reddit, data engineering communities, and technical forums — surfacing real-world integration issues, performance problems, and hidden costs that vendor marketing doesn't mention.",
+            },
+        ],
+        stat: {
+            value: "4.3x",
+            label: "Increase in AI tool evaluations requested of data teams since 2023",
+        },
+        faqs: [
+            { q: "Does Trackr evaluate tools like dbt, Snowflake, or Databricks?", a: "Yes — Trackr can research any SaaS or platform tool with a public website. Data warehouse platforms, transformation tools, orchestration frameworks, and ML platforms are all within scope." },
+            { q: "How does Trackr surface integration compatibility?", a: "The Integration Depth dimension of Trackr's 7-dimension framework specifically evaluates documented integrations, connector ecosystem breadth, and community-reported compatibility with common stack components. It's one of the seven scored dimensions in every report." },
+            { q: "Is Trackr useful for evaluating open-source tools?", a: "For open-source tools with public documentation and community discussion, Trackr generates research reports. The pricing dimension reflects open-source licensing vs managed cloud offerings, and the Community & Support dimension reflects the health and activity of the project community." },
+            { q: "Can Trackr help compare vector databases or LLM frameworks?", a: "Yes — Trackr is particularly well-suited for the AI-native tooling category where the landscape moves fast and standard review sites lack coverage. Submit any vector DB, embedding service, or LLM infrastructure tool for a scored 7-dimension report." },
+        ],
+        ctaText: "Research your next data tool in 2 minutes",
+        ctaSubtext: "Free to start. No demo required. Consistent scoring on every tool.",
+        testimonialQuote: "I used to spend a full afternoon evaluating each new tool. Trackr gives me a scored report in 2 minutes that I can actually share with my manager without embarrassing myself.",
+        testimonialAttribution: "Senior Data Engineer, Series B fintech company",
+    },
+    {
+        role: "ciso",
+        title: "AI Tools for CISOs — Security-First Tool Evaluation | Trackr",
+        description: "CISOs use Trackr to evaluate AI and SaaS tools for security posture, data handling risk, and compliance alignment — independent research in 2 minutes before procurement commits.",
+        headline: "Every AI tool your company adopts is a security decision.",
+        subheadline: "Trackr gives CISOs independent, scored evaluation of any AI or SaaS tool — covering data handling, SOC 2 status, enterprise security features, and vendor risk — before the purchase decision is made.",
+        painPoints: [
+            {
+                title: "AI tool adoption outpaces security review",
+                description: "Teams adopt AI tools on personal or department credit cards before security sees them. By the time your team is involved, company data has already been processed through an unreviewed vendor's infrastructure — sometimes trained on, depending on the terms.",
+            },
+            {
+                title: "Vendor security questionnaires take weeks per tool",
+                description: "The formal VSQ process is thorough — but slow. By the time security completes a review, the business case has moved on or the team has adopted the tool anyway. You need a faster first-pass assessment to triage which tools warrant full review.",
+            },
+            {
+                title: "No standardized baseline for AI-specific risk",
+                description: "Standard vendor questionnaires weren't designed for AI tools. LLM data retention, model training practices, third-party AI API dependencies, and emerging regulatory requirements require AI-specific evaluation criteria that most security frameworks haven't yet codified.",
+            },
+        ],
+        features: [
+            {
+                title: "Security dimension scored in every report",
+                description: "Every Trackr report includes a security and compliance dimension — covering SOC 2 / ISO 27001 certification status, data handling transparency, enterprise security features, and known community-reported concerns. A structured first-pass before the formal VSQ.",
+            },
+            {
+                title: "Centralized AI tool inventory for governance",
+                description: "Maintain a persistent record of every AI tool in your organization — when it was evaluated, what the security assessment showed, and what the current posture is. Use this for audit documentation, board reporting, and policy enforcement.",
+            },
+            {
+                title: "Independent research before the sales process starts",
+                description: "Trackr gives you an independent view of any tool before the vendor sales team has a chance to shape your perception. Use the research baseline to build targeted VSQ questions around the specific risk vectors each tool introduces.",
+            },
+        ],
+        stat: {
+            value: "61%",
+            label: "Of CISOs cite unsanctioned AI tool adoption as a top-3 security concern in 2025",
+        },
+        faqs: [
+            { q: "Does Trackr replace a formal vendor security questionnaire?", a: "No — Trackr is a fast first-pass assessment tool, not a replacement for a formal VSQ or audit. It helps security teams triage which tools warrant the full review process and what specific questions to prioritize." },
+            { q: "How does Trackr handle tools with opaque data practices?", a: "When a tool's data handling is poorly documented or unclear, Trackr flags this in the security dimension with appropriate context. Opacity in AI data practices is itself a risk signal — Trackr surfaces it consistently." },
+            { q: "Can I use Trackr to build an approved AI tools list?", a: "Yes. Trackr's workspace feature lets you track every evaluated tool with its score and security assessment. Many security leaders use this as the foundation for an approved AI tool registry and enforcement policy." },
+            { q: "Does Trackr cover regulatory compliance like GDPR or HIPAA?", a: "The security dimension includes community-reported compliance certifications and known regulatory concerns. It's not a substitute for legal review, but it surfaces which tools have documented compliance posture and which lack transparency." },
+        ],
+        ctaText: "Build a security-first AI evaluation process",
+        ctaSubtext: "Free to start. Enterprise plans for org-wide governance.",
+        testimonialQuote: "Trackr is how we triage now. Before any formal VSQ, I run a Trackr report to understand what questions I should even be asking. It saves our security team 4 hours per evaluation.",
+        testimonialAttribution: "CISO, 1,200-person SaaS company",
+    },
+    {
+        role: "compliance-officers",
+        title: "AI Tools for Compliance Officers | Trackr",
+        description: "Compliance officers use Trackr to evaluate AI and SaaS tools for regulatory risk, data handling transparency, and compliance posture — independent scoring in 2 minutes before procurement commits.",
+        headline: "Research AI tools before compliance finds out the hard way.",
+        subheadline: "Trackr gives compliance teams independent, scored evaluation of any AI or SaaS tool — covering data residency, regulatory certifications, and vendor risk — before adoption decisions are made.",
+        painPoints: [
+            {
+                title: "AI adoption creates compliance exposure nobody mapped",
+                description: "Sales adopted an AI sequencer. Finance adopted an AI forecasting tool. Legal adopted an AI contract reviewer. Each tool processes company and customer data — often with terms that create GDPR, SOC 2, or industry-specific compliance exposure nobody reviewed.",
+            },
+            {
+                title: "Regulatory requirements for AI tools are still evolving",
+                description: "EU AI Act, state-level AI regulations, and sector-specific rules are materializing faster than vendor compliance certifications. Evaluating a tool's regulatory posture requires current intelligence — not a vendor's self-reported compliance page that was last updated in 2023.",
+            },
+            {
+                title: "No systematic way to track the AI tool compliance posture",
+                description: "Compliance teams typically learn about AI tool adoption after the fact — through a security incident, an audit finding, or a vendor data breach notification. There's no proactive inventory of what tools are in use and what their compliance posture is.",
+            },
+        ],
+        features: [
+            {
+                title: "Compliance dimension in every scored report",
+                description: "Trackr surfaces SOC 2, ISO 27001, GDPR, HIPAA, and other certification status for any tool — plus data residency options, sub-processor transparency, and community-reported compliance concerns. A fast first-pass before formal review.",
+            },
+            {
+                title: "Persistent compliance inventory across your AI stack",
+                description: "Track every AI tool your organization uses with a record of its compliance posture at evaluation time. Use this for audit documentation, board reporting, and demonstrating to regulators that AI adoption was subject to structured review.",
+            },
+            {
+                title: "Community intelligence on regulatory edge cases",
+                description: "Trackr's research incorporates community discussion about real-world compliance issues — including cases where a tool's published compliance page differed from actual data handling practices discovered during audits or incidents.",
+            },
+        ],
+        stat: {
+            value: "78%",
+            label: "Of enterprise compliance teams have discovered unreviewed AI tools during audits",
+        },
+        faqs: [
+            { q: "Can Trackr tell me if a tool is GDPR-compliant?", a: "Trackr surfaces documented GDPR compliance certifications and data processing agreements from vendors, along with community-reported concerns. It's a research starting point — not a substitute for legal review of specific data processing terms." },
+            { q: "How current is Trackr's compliance data?", a: "Trackr generates reports from live sources at the time you submit. Compliance certifications, data residency options, and community concerns reflect the current state — not a cached review from 12-18 months ago." },
+            { q: "Does Trackr help with AI Act compliance specifically?", a: "Trackr surfaces available information about a tool's AI risk classification, transparency practices, and any community discussion about regulatory positioning. As EU AI Act requirements clarify, Trackr's research pipeline incorporates emerging compliance signals." },
+            { q: "Can I export Trackr reports for audit documentation?", a: "Yes — reports export as PDF and shareable links. Many compliance teams include Trackr reports in their vendor evaluation documentation to demonstrate that AI tools were subject to structured independent review." },
+        ],
+        ctaText: "Research AI tool compliance in 2 minutes",
+        ctaSubtext: "Free to start. Enterprise plans for org-wide compliance tracking.",
+        testimonialQuote: "Before Trackr, we were finding out about AI tool adoption during audits. Now compliance is part of the evaluation process — and we have documentation to show for it.",
+        testimonialAttribution: "Chief Compliance Officer, regulated financial services firm",
+    },
+    {
+        role: "office-managers",
+        title: "AI Tools for Office Managers | Trackr",
+        description: "Office managers use Trackr to research and track productivity and operations software — evaluating tools quickly, tracking renewals, and avoiding duplicate subscriptions across teams.",
+        headline: "Stop drowning in tool subscriptions you didn't fully evaluate.",
+        subheadline: "Trackr helps office managers research any productivity or operations tool in 2 minutes, track every renewal date, and flag overlapping subscriptions before the credit card charge hits.",
+        painPoints: [
+            {
+                title: "Every team asks you to evaluate a different tool",
+                description: "HR wants a new scheduling tool. Finance wants an expense platform. Facilities wants a visitor management system. You're the de facto tool evaluator for the entire office — and you have zero time to do each evaluation properly.",
+            },
+            {
+                title: "Renewal dates are scattered across inboxes and calendars",
+                description: "Eighteen different SaaS subscriptions renew at different times across the year. Some auto-renew. Some require 30-day notice to cancel. The first time you know a renewal is happening is when you see the charge on the company card.",
+            },
+            {
+                title: "You're paying for tools nobody actually uses",
+                description: "The tool the previous office manager bought in 2022 is still renewing annually. Three people have logins. Nobody can remember why they bought it. Canceling requires finding the contract, the login, and the contact — none of which are in one place.",
+            },
+        ],
+        features: [
+            {
+                title: "Research any tool in 2 minutes — no deep dives required",
+                description: "Submit a tool URL and get a scored report covering pricing, key features, ease of use, and what real users say — structured to give you a confident recommendation without spending your afternoon on G2 reviews.",
+            },
+            {
+                title: "Renewal calendar with 60-day advance alerts",
+                description: "Track every tool subscription in one place with auto-alerts 60 days before renewal. Never get surprised by an annual charge again — and have enough lead time to evaluate, negotiate, or cancel before the contract auto-renews.",
+            },
+            {
+                title: "Overlap detection across your operations stack",
+                description: "Trackr flags when two tools in your stack serve overlapping functions — helping you identify redundant subscriptions before they compound. When a new tool request comes in, see immediately if you already have something that does the same job.",
+            },
+        ],
+        stat: {
+            value: "34%",
+            label: "Of SMB office SaaS subscriptions are unused or duplicated at any given time",
+        },
+        faqs: [
+            { q: "Do I need to be technical to use Trackr?", a: "No — Trackr is designed for non-technical users. Submit a tool's website URL, read the scored report in plain language, and make a confident decision. No coding, no complex setup, no IT required." },
+            { q: "Can I track tools purchased on multiple cards?", a: "Yes. Trackr's stack tracker lets you manually add any tool regardless of how it was purchased — by credit card, invoice, or company account. You can note the cost and renewal date for each." },
+            { q: "Can I share Trackr reports with the person requesting the tool?", a: "Yes — reports are shareable via URL or PDF export. Send the scored report back to the person who requested the tool so they can see the independent evaluation before you make a recommendation." },
+            { q: "Is Trackr useful for one-off tool evaluations or only ongoing stack tracking?", a: "Both. Use it to research a single tool when a request comes in. Use the stack tracker feature for ongoing renewal management. Many office managers start with one-off research and add stack tracking once they see the renewal alert value." },
+        ],
+        ctaText: "Research your next tool request in 2 minutes",
+        ctaSubtext: "Free to start. No technical knowledge required.",
+        testimonialQuote: "I used to spend two hours per tool request pulling together research. Now I run a Trackr report, share the link, and move on. The renewal alerts alone have saved us three auto-renew surprises this year.",
+        testimonialAttribution: "Office Manager, 120-person professional services firm",
+    },
+    {
+        role: "biz-dev",
+        title: "AI Tools for Business Development | Trackr",
+        description: "Business development leaders use Trackr to evaluate AI tools for prospecting, partnership intelligence, market research, and BD workflow automation — scored research in 2 minutes.",
+        headline: "The BD team's AI tool evaluation layer.",
+        subheadline: "Research any AI or BD software tool in 2 minutes. Get independent scoring on prospecting capability, integration fit, and pricing value — before you commit to a tool that buries your team in bad workflow.",
+        painPoints: [
+            {
+                title: "AI BD tools make big promises and deliver inconsistently",
+                description: "Every AI prospecting tool claims to find better leads faster. The reality varies wildly — data freshness, intent signal quality, CRM integration depth, and actual email deliverability all differ dramatically from demo to live deployment. The only way to find out is an expensive trial.",
+            },
+            {
+                title: "BD stack decisions are made on vendor demos, not independent research",
+                description: "Your vendor evaluation process is three demos and a gut check. By the time you've discovered the tool doesn't integrate cleanly with your CRM or the data coverage is weak in your market, you're six weeks into an annual contract.",
+            },
+            {
+                title: "Stack overlap burns budget on duplicate prospecting data",
+                description: "You have ZoomInfo, Apollo, and LinkedIn Sales Navigator. Three tools that partially overlap. Nobody mapped the overlap before purchase — and now you're paying three times for data that partially duplicates.",
+            },
+        ],
+        features: [
+            {
+                title: "Integration depth scoring for your BD stack",
+                description: "Trackr evaluates how deeply any BD tool integrates with CRM platforms, sequencers, and enrichment layers. Know before you buy whether the tool plays nicely with your Salesforce, HubSpot, or Outreach setup.",
+            },
+            {
+                title: "AI nativeness scoring for prospecting tools",
+                description: "The AI Sophistication dimension evaluates how meaningfully AI is used versus how much it's just branding. Separate tools that genuinely use AI for intent data and personalization from those with AI-washed feature names.",
+            },
+            {
+                title: "Stack overlap detection across your BD tech",
+                description: "Track your full BD stack and Trackr flags functional overlap — identifying where you're paying twice for similar data sources or workflow capabilities. Run a stack rationalization before your next renewal cycle.",
+            },
+        ],
+        stat: {
+            value: "6.2x",
+            label: "Average number of BD tools evaluated before purchase in 2025",
+        },
+        faqs: [
+            { q: "Can Trackr evaluate sales intelligence platforms like ZoomInfo or Apollo?", a: "Yes — submit any BD or sales intelligence tool's URL and Trackr generates a full scored report. This includes data coverage, pricing tiers, integration depth, CRM compatibility, and community sentiment on data quality." },
+            { q: "How does Trackr's AI nativeness score work for BD tools?", a: "The AI Sophistication dimension evaluates whether AI features are core to the product's value delivery or surface-level additions. For BD tools, this includes whether AI genuinely improves lead scoring, intent detection, or personalization versus AI-branded marketing copy." },
+            { q: "Can I compare multiple BD tools side by side?", a: "Yes — Trackr applies the same 7-dimension framework to every tool you research. Research Apollo, ZoomInfo, and Clay in the same session and compare their scores across the same dimensions." },
+            { q: "Is Trackr useful for evaluating partnership intelligence tools?", a: "Yes. Partnership intelligence platforms, ecosystem management tools, and partner portal software are all within Trackr's research scope. Submit the URL and get scored research regardless of how niche the tool is." },
+        ],
+        ctaText: "Research your next BD tool in 2 minutes",
+        ctaSubtext: "Free to start. Compare multiple tools on the same framework.",
+        testimonialQuote: "We used to commit to BD tools after one demo. Now I run every finalist through Trackr first. We've avoided two bad tool decisions this year based on the integration depth scores alone.",
+        testimonialAttribution: "Head of Business Development, Series B SaaS company",
+    },
+    {
+        role: "digital-transformation",
+        title: "AI Tools for Digital Transformation Leaders | Trackr",
+        description: "Digital transformation leaders use Trackr to evaluate AI and enterprise software tools — scoring them on integration depth, scalability, change management fit, and long-term viability before committing.",
+        headline: "Digital transformation requires better tool intelligence.",
+        subheadline: "Evaluate any enterprise software or AI tool in 2 minutes. Get independent scoring on integration complexity, scalability, vendor viability, and implementation risk — before your team commits to a multi-year rollout.",
+        painPoints: [
+            {
+                title: "Tool selection mistakes are expensive to unwind",
+                description: "Choosing the wrong platform at the start of a transformation initiative costs 10x more to fix than getting it right upfront. Implementation sunk costs, change management investment, and integration debt all compound. The vendor evaluation phase is where that risk concentrates.",
+            },
+            {
+                title: "Vendor viability is hard to assess from sales materials",
+                description: "Enterprise software vendors are expert at presenting stability and roadmap confidence. The community knows which platforms are being sunsetted, which are over-promising roadmap items, and which are acquiring companies to fill gaps — but that intelligence doesn't surface in a vendor RFP response.",
+            },
+            {
+                title: "Integration complexity is always underestimated",
+                description: "Every enterprise software vendor says 'it integrates with everything.' The reality — discovered during implementation — is a patchwork of native connectors, middleware requirements, custom API work, and legacy system workarounds. Trackr surfaces integration depth scores before you commit.",
+            },
+        ],
+        features: [
+            {
+                title: "Scalability and integration depth scoring",
+                description: "Trackr's Scalability and Integration Depth dimensions are specifically designed for enterprise evaluation contexts. Understand how a platform handles growth, multi-entity complexity, and integration with your existing enterprise architecture before the Statement of Work is signed.",
+            },
+            {
+                title: "Community intelligence on implementation reality",
+                description: "Trackr's research pulls practitioner discussion about real implementation experiences — including common gotchas, timeline surprises, and post-launch issues that vendors don't mention in demos. Know what the customers who've already implemented it actually say.",
+            },
+            {
+                title: "Structured evaluation framework for RFP processes",
+                description: "Apply the same 7-dimension scoring framework across every vendor in your evaluation. Build an objective shortlist before investing in formal RFPs and multi-month evaluation cycles. Share scored reports with steering committees to align on criteria before the final decision.",
+            },
+        ],
+        stat: {
+            value: "67%",
+            label: "Of digital transformation initiatives cite tool selection as a primary risk factor",
+        },
+        faqs: [
+            { q: "Is Trackr useful for evaluating large enterprise platforms?", a: "Yes — Trackr generates research reports on any platform with a public website, including major enterprise software vendors. For platforms with opaque pricing, Trackr surfaces community-reported cost ranges alongside documented pricing." },
+            { q: "How does Trackr assess vendor viability?", a: "The Community & Support dimension incorporates signals about vendor trajectory — funding status, ownership changes, roadmap credibility, and community sentiment about long-term stability. It's one signal among seven, not a definitive financial assessment." },
+            { q: "Can Trackr help with build vs. buy analysis?", a: "Yes. By scoring the market alternatives across 7 dimensions, Trackr gives you a clear view of what commercially available solutions offer and at what cost — the starting point for any credible build vs. buy analysis." },
+            { q: "Does Trackr cover legacy migration and modernization tools?", a: "Yes — any SaaS tool, platform, or enterprise application with public documentation is within scope. This includes modernization platforms, integration middleware, API management tools, and data migration services." },
+        ],
+        ctaText: "Evaluate enterprise tools before you commit",
+        ctaSubtext: "Free to start. Structured scoring for every evaluation.",
+        testimonialQuote: "Every major tool selection in our transformation program goes through Trackr first. The integration depth scores alone have changed three vendor decisions that would have been expensive mistakes.",
+        testimonialAttribution: "VP of Digital Transformation, Fortune 500 manufacturing company",
+    },
+    {
+        role: "procurement-directors",
+        title: "AI Tools for Procurement Directors | Trackr",
+        description: "Procurement directors use Trackr to evaluate AI and SaaS tools — scoring vendors on pricing value, integration depth, and market positioning before formal RFPs and contract negotiations.",
+        headline: "Better vendor intelligence. Faster procurement cycles.",
+        subheadline: "Research any vendor in 2 minutes with independent AI scoring. Build defensible shortlists before formal RFPs, brief stakeholders with structured analysis, and enter negotiations with current market intelligence.",
+        painPoints: [
+            {
+                title: "Vendor evaluation cycles are too slow for AI tool timelines",
+                description: "The AI tool landscape moves faster than a formal procurement cycle. By the time you've completed a 90-day RFP process for an AI platform, three competing products have shipped major updates and pricing has changed. Traditional procurement timelines don't fit AI acquisition speed.",
+            },
+            {
+                title: "Stakeholders make tool requests without procurement-grade justification",
+                description: "A business unit head requests a new AI tool based on a conference demo. They want it approved in two weeks. You need vendor due diligence, competitive alternatives analysis, and pricing benchmarking — and you're starting from scratch every time.",
+            },
+            {
+                title: "Pricing benchmarking for AI tools is almost impossible",
+                description: "Most AI tools have opaque, negotiable pricing. Without benchmarks, you don't know if you're being quoted a fair rate or a top-of-funnel price that's expected to be negotiated down. Community pricing intelligence is scattered and hard to synthesize.",
+            },
+        ],
+        features: [
+            {
+                title: "Current pricing intelligence before negotiations",
+                description: "Trackr's research pipeline surfaces current vendor pricing — including community-reported actual costs for teams of comparable size. Enter negotiations with a realistic range rather than the vendor's aspirational list price.",
+            },
+            {
+                title: "Structured scoring for vendor shortlisting",
+                description: "Apply a consistent 7-dimension framework to every vendor in an evaluation. Build defensible shortlists before investing in formal RFP cycles. Share scored comparisons with stakeholders to align on selection criteria before final vendor meetings.",
+            },
+            {
+                title: "Competitive alternatives in every report",
+                description: "Every Trackr research report surfaces the leading alternatives in the category. Use this to expand beyond the vendor your stakeholder requested, pressure-test the shortlist, and enter negotiations with genuine walk-away alternatives.",
+            },
+        ],
+        stat: {
+            value: "43%",
+            label: "Reduction in time to vendor shortlist when procurement teams use AI research tools",
+        },
+        faqs: [
+            { q: "Can Trackr help me benchmark pricing before a negotiation?", a: "Yes. Trackr's research surfaces current pricing from vendor documentation and community-reported actual costs. For enterprise tools with negotiated pricing, the community pricing data gives you a realistic range to anchor negotiations." },
+            { q: "Does Trackr integrate with procurement platforms?", a: "Trackr currently operates as a standalone research tool. Reports export as PDF and shareable links that can be attached to procurement documentation in any system." },
+            { q: "Can Trackr help with RFP scoring criteria development?", a: "Yes. The 7-dimension scoring framework — Core Capability, Ease of Use, Integration Depth, Pricing Value, AI Sophistication, Community & Support, Scalability — maps naturally to RFP evaluation criteria and can be adapted for formal procurement scoring matrices." },
+            { q: "Is Trackr useful for both software and service vendor evaluation?", a: "Trackr is optimized for SaaS and technology tool evaluation. For professional services vendors, the research pipeline works when a public website and community discussion exist — but the framework is most calibrated for software products." },
+        ],
+        ctaText: "Streamline vendor evaluation with AI research",
+        ctaSubtext: "Free to start. Enterprise plans for procurement teams.",
+        testimonialQuote: "Trackr cut our initial vendor shortlisting process from three weeks to three days. The independent scoring gives us something defensible to put in front of stakeholders before we've invested in formal RFPs.",
+        testimonialAttribution: "Director of Procurement, global enterprise software company",
+    },
+    {
+        role: "devops",
+        title: "AI Tools for DevOps Engineers | Trackr",
+        description: "DevOps and platform engineers use Trackr to evaluate AI tools for CI/CD, observability, infrastructure automation, and developer experience — scored research in 2 minutes with integration depth focus.",
+        headline: "Research DevOps tools with the same rigor you apply to infrastructure decisions.",
+        subheadline: "Evaluate any DevOps, observability, or developer tooling in 2 minutes. Get independent scoring on integration depth, AI sophistication, community health, and actual pricing — not vendor claims.",
+        painPoints: [
+            {
+                title: "AI DevOps tooling is full of overpromises",
+                description: "Every observability platform and CI/CD tool now claims AI-powered anomaly detection, root cause analysis, and automated remediation. The actual AI capability behind those claims varies from genuinely useful to marketing rebrand. You need a way to evaluate substance from positioning.",
+            },
+            {
+                title: "Integration compatibility is a hidden landmine",
+                description: "A monitoring tool that doesn't work with your existing Kubernetes setup, Terraform state management, or deployment pipeline isn't a solution — it's another integration project. Integration depth evaluation requires research that demos rarely provide.",
+            },
+            {
+                title: "Open-source vs managed trade-offs are rarely analyzed objectively",
+                description: "For many DevOps tools, the choice between self-hosted open-source and managed SaaS involves total cost of ownership, maintenance burden, and feature parity questions. That analysis rarely happens in a structured way before the team commits.",
+            },
+        ],
+        features: [
+            {
+                title: "AI sophistication scoring that cuts through the hype",
+                description: "Trackr's AI Sophistication dimension specifically evaluates whether AI features deliver meaningful value or are surface-level additions. For DevOps tools, this means assessing whether 'AI-powered' observability actually improves MTTR — not just whether the marketing says so.",
+            },
+            {
+                title: "Integration depth analysis for your stack",
+                description: "The Integration Depth dimension evaluates how well a tool connects with the most common DevOps ecosystems — cloud providers, container orchestration, CI/CD systems, and infrastructure-as-code frameworks. Know before you buy, not during implementation.",
+            },
+            {
+                title: "Community health scoring for open-source and SaaS tools",
+                description: "The Community & Support dimension reflects the health of a tool's community — GitHub activity, documentation quality, issue response times, and practitioner sentiment. Evaluate the support ecosystem you're buying into, not just the product.",
+            },
+        ],
+        stat: {
+            value: "71%",
+            label: "Of DevOps teams have evaluated 5+ tools in the same category before committing",
+        },
+        faqs: [
+            { q: "Does Trackr evaluate tools like Datadog, Grafana, or PagerDuty?", a: "Yes — any observability, monitoring, or DevOps platform with a public website is within Trackr's research scope. Submit the URL and get a scored 7-dimension report in under 2 minutes." },
+            { q: "Can Trackr evaluate open-source tools?", a: "Yes. For open-source tools with public documentation and community presence, Trackr generates research reports. The pricing dimension reflects the open-source vs managed cloud cost comparison, and Community & Support reflects project health." },
+            { q: "How does Trackr handle tools with complex or opaque pricing like Datadog?", a: "For tools with usage-based or opaque pricing, Trackr surfaces community-reported actual costs for common configurations alongside documented pricing tiers. This gives you a realistic cost range, not just vendor list pricing." },
+            { q: "Is Trackr useful for evaluating AI coding assistants like GitHub Copilot or Cursor?", a: "Yes — developer AI tooling is a strong use case for Trackr. The AI Sophistication dimension is particularly relevant for evaluating the actual quality of code completion, context awareness, and model capability across competing coding assistants." },
+        ],
+        ctaText: "Research your next DevOps tool in 2 minutes",
+        ctaSubtext: "Free to start. No vendor spin — independent AI scoring.",
+        testimonialQuote: "I evaluated six observability platforms in one afternoon using Trackr. The AI sophistication scores matched what I found in actual testing — and saved me three weeks of POC work on two tools that weren't worth it.",
+        testimonialAttribution: "Senior Platform Engineer, cloud-native startup",
+    },
+    {
+        role: "solutions-architects",
+        title: "AI Tools for Solutions Architects | Trackr",
+        description: "Solutions architects use Trackr to evaluate AI and SaaS tools for client recommendations, integration fit assessments, and technology stack validation — independent scoring in 2 minutes.",
+        headline: "Research tools with the rigor your clients expect.",
+        subheadline: "Evaluate any technology tool in 2 minutes with independent AI scoring. Build defensible recommendations, assess integration fit, and present clients with structured analysis — not vendor marketing.",
+        painPoints: [
+            {
+                title: "Client tool recommendations need to be defensible",
+                description: "When you recommend a platform to a client, you're putting your credibility on the line. 'The vendor demo looked good' isn't a defensible justification. You need structured, independent evaluation that holds up to client scrutiny and implementation reality.",
+            },
+            {
+                title: "Integration assessment requires research across multiple sources",
+                description: "Assessing whether a tool integrates cleanly with a client's existing stack requires cross-referencing vendor documentation, community discussion, and practitioner experience. That research is scattered across G2, Reddit, GitHub issues, and Slack communities — time you rarely have.",
+            },
+            {
+                title: "The AI tool landscape changes faster than your knowledge base",
+                description: "New AI tools and platform updates ship faster than any architect can track. A recommendation you made 6 months ago may no longer reflect the best option in the category. Clients expect current intelligence, not cached knowledge.",
+            },
+        ],
+        features: [
+            {
+                title: "Independent scored reports you can share with clients",
+                description: "Every Trackr report includes 7-dimension scoring with written justifications. Export as PDF or share via link — a structured, independent evaluation that backs up your recommendation with analysis beyond your personal assessment.",
+            },
+            {
+                title: "Integration depth scoring for any platform",
+                description: "The Integration Depth dimension specifically evaluates connector depth, API quality, and community-reported integration success with common enterprise systems. Know which tools integrate cleanly with a client's existing stack before you recommend them.",
+            },
+            {
+                title: "Current data at the time of recommendation",
+                description: "Trackr generates reports from live sources at submission time. Pricing, features, and competitive positioning reflect today's market — not a review written before the last major release. Recommendations built on Trackr research are current when you make them.",
+            },
+        ],
+        stat: {
+            value: "2 min",
+            label: "Average time to generate a scored tool research report in Trackr",
+        },
+        faqs: [
+            { q: "Can I generate Trackr reports for multiple client engagements?", a: "Yes — Trackr's workspace lets you organize research by client or project. Generate reports in the context of a specific evaluation and export or share with the relevant stakeholders." },
+            { q: "How should I present Trackr scores in a client recommendation?", a: "Trackr reports are designed to be shared. The 7-dimension scorecard, written justifications, and competitive alternatives section provide the structured analysis that supports a professional client recommendation. Export as PDF for formal delivery." },
+            { q: "Does Trackr cover both cloud and on-premise software?", a: "Trackr's research pipeline is optimized for SaaS and cloud-native tools with public documentation. For on-premise enterprise software, coverage depends on available public information — some legacy platforms have limited data." },
+            { q: "Is Trackr useful for evaluating infrastructure and cloud platform choices?", a: "For managed cloud services and platforms with public documentation, yes. AWS, Azure, and GCP service comparisons work well. For underlying infrastructure decisions, the tool is most useful when comparing managed service alternatives." },
+        ],
+        ctaText: "Build defensible client recommendations in 2 minutes",
+        ctaSubtext: "Free to start. Shareable reports for every evaluation.",
+        testimonialQuote: "I include Trackr scores in every technology recommendation I deliver. Clients appreciate the independent validation — and it takes the 'how did you evaluate this?' question off the table completely.",
+        testimonialAttribution: "Independent Solutions Architect, enterprise cloud consulting",
+    },
+    {
+        role: "cro",
+        title: "AI Tools for Chief Revenue Officers | Trackr",
+        description: "CROs use Trackr to evaluate AI tools for the revenue stack — sales intelligence, forecasting, conversation intelligence, and enablement — with independent scoring before committing to multi-year contracts.",
+        headline: "The revenue stack deserves independent evaluation.",
+        subheadline: "Research any sales or revenue AI tool in 2 minutes. Get independent scoring across 7 dimensions before your team signs a 2-year contract on a demo that looked great and a reference call that was hand-picked.",
+        painPoints: [
+            {
+                title: "Revenue tech decisions are expensive and hard to reverse",
+                description: "Your CRM, sales intelligence platform, conversation intelligence tool, and forecasting layer are foundational. Switching costs are high — data migration, workflow re-training, integration rebuild, and productivity loss during transition. Getting these decisions right the first time matters more than most tool categories.",
+            },
+            {
+                title: "Vendor references are curated, not representative",
+                description: "Every CRM and sales platform will connect you with three happy customers. Those customers were hand-picked by the account team. The difficult implementations, the teams that churned, and the customers who hit the rough edges of the product are not on the reference list.",
+            },
+            {
+                title: "AI feature claims in the revenue tech stack are rampant",
+                description: "Every forecasting tool, conversation intelligence platform, and sales intelligence product now claims AI-powered everything. Distinguishing genuine AI capability from marketing language requires evaluation depth that demos don't provide.",
+            },
+        ],
+        features: [
+            {
+                title: "AI sophistication scoring for revenue tools",
+                description: "The AI Sophistication dimension evaluates how meaningfully AI improves the product's core function. For revenue tools, this means assessing whether AI forecasting actually improves accuracy, whether conversation intelligence genuinely surfaces useful coaching moments, and whether intent data reflects real signal.",
+            },
+            {
+                title: "Community intelligence beyond curated references",
+                description: "Trackr's research pipeline incorporates community discussion — including the customers the vendor didn't put on your reference list. Reddit, G2, and practitioner communities surface the rough edges, pricing surprises, and implementation realities that hand-picked references don't.",
+            },
+            {
+                title: "Competitive alternatives surfaced in every report",
+                description: "Every Trackr report includes the leading alternatives in the category with their own scores. Use this to build a genuine shortlist beyond the vendor your sales rep introduced, and enter negotiations with real walk-away options.",
+            },
+        ],
+        stat: {
+            value: "$127K",
+            label: "Average annual revenue tech stack spend for mid-market sales organizations",
+        },
+        faqs: [
+            { q: "Can Trackr evaluate CRM platforms like Salesforce or HubSpot?", a: "Yes — submit any CRM, sales intelligence, or revenue platform URL and Trackr generates a full scored report. This includes pricing analysis, integration depth, community sentiment, and competitive alternatives." },
+            { q: "How does Trackr handle tools with negotiated enterprise pricing?", a: "For tools where pricing is primarily negotiated rather than published, Trackr surfaces community-reported actual costs for comparable company sizes. This gives you a realistic benchmark range for negotiation anchor points." },
+            { q: "Can Trackr help evaluate forecasting tools specifically?", a: "Yes. For AI forecasting tools, the AI Sophistication and Core Capability dimensions evaluate how the forecasting engine works, what inputs it uses, and what community practitioners say about real-world accuracy versus vendor claims." },
+            { q: "Is Trackr useful for evaluating a full GTM tech stack?", a: "Yes. Research each component of your GTM stack through Trackr — CRM, SEP, conversation intelligence, forecasting, sales intelligence, and enablement. Apply the same scoring framework across all of them for a structured portfolio view." },
+        ],
+        ctaText: "Evaluate your revenue stack with independent research",
+        ctaSubtext: "Free to start. Consistent scoring across every tool.",
+        testimonialQuote: "We avoided a $180K annual contract on a CRM we would have regretted. The community intelligence Trackr surfaced — specifically around the implementation complexity — matched exactly what came up in our own diligence a week later.",
+        testimonialAttribution: "Chief Revenue Officer, Series C SaaS company",
+    },
+    {
+        role: "agency-owners",
+        title: "AI Tools for Agency Owners | Trackr",
+        description: "Agency owners use Trackr to evaluate AI tools for client delivery, business development, and internal operations — and to build a defensible AI capability story for their clients.",
+        headline: "Research AI tools before you build your agency stack around them.",
+        subheadline: "Evaluate any AI or SaaS tool in 2 minutes. Get independent scoring on capability, pricing, and integration fit — so your agency stack decisions are based on analysis, not the vendor who reached out on LinkedIn.",
+        painPoints: [
+            {
+                title: "Every AI tool vendor is pitching agencies right now",
+                description: "Your inbox has five AI tool pitches this week. They all claim to transform client delivery, improve output quality, and create new revenue streams. Evaluating each one properly takes time you're using for billable work. Most end up as untested subscriptions.",
+            },
+            {
+                title: "Building client AI recommendations requires current intelligence",
+                description: "Clients ask their agency what AI tools they should be using. That question is now a trust signal — get it right and you're an indispensable advisor, get it wrong and you look behind the times. Staying current across the AI tool landscape is a full-time job.",
+            },
+            {
+                title: "Agency stack costs compound and never get rationalized",
+                description: "You added tools during fast growth, kept them through a slower period, and now you're paying for 23 subscriptions — some of which have better, cheaper replacements that launched 12 months ago. A rationalization requires research time nobody has.",
+            },
+        ],
+        features: [
+            {
+                title: "Research any tool in 2 minutes — for client delivery or internal ops",
+                description: "Submit any AI or SaaS tool URL and get a scored 7-dimension report. Use it to make internal stack decisions or to build intelligence for client AI strategy recommendations — the same research framework applies to both.",
+            },
+            {
+                title: "Stack tracking with renewal alerts across your full tool inventory",
+                description: "Track every tool in your agency stack with renewal dates and spend. Get 60-day alerts before auto-renewals and flag tools for rationalization review. Never lose track of what you're paying for or when it renews.",
+            },
+            {
+                title: "Build an agency AI capabilities narrative backed by research",
+                description: "Export Trackr reports and scores as part of client deliverables or capability presentations. Present your AI tool recommendations with independent scoring that demonstrates structured evaluation — not a vendor pitch you're passing through.",
+            },
+        ],
+        stat: {
+            value: "89%",
+            label: "Of agencies report clients asking about AI tool strategy in every new engagement",
+        },
+        faqs: [
+            { q: "Can I use Trackr to evaluate AI tools I want to recommend to clients?", a: "Yes — this is a core use case. Run Trackr research on any tool you're considering recommending, export the report, and include it in your client deliverable. It gives your recommendation independent backing." },
+            { q: "Does Trackr track which tools my whole team is using?", a: "Trackr's workspace feature tracks the tools you add to your stack. For team-wide visibility across multiple users, Pro and team plans support shared workspaces." },
+            { q: "Can Trackr help me rationalize my current agency stack?", a: "Yes. Add your current tools to Trackr, run fresh research reports, and compare scores against current alternatives. Tools that score significantly below emerging competitors are good candidates for rationalization." },
+            { q: "Is Trackr useful for niche AI tools my agency might not have heard of?", a: "Especially yes. Trackr can research any tool with a public website — including niche tools, new entrants, and lesser-known platforms that aren't yet on G2 or mainstream review sites. This is where the advantage over review platforms is greatest." },
+        ],
+        ctaText: "Build your agency AI stack with independent research",
+        ctaSubtext: "Free to start. Research for internal use and client delivery.",
+        testimonialQuote: "We include Trackr scores in every AI audit we deliver to clients. It transformed our AI advisory practice from opinion-based to data-backed — and clients notice the difference.",
+        testimonialAttribution: "Founder, digital strategy and AI advisory agency",
+    },
+    {
+        role: "startup-ctos",
+        title: "AI Tools for Startup CTOs | Trackr",
+        description: "Startup CTOs use Trackr to research AI tools and infrastructure quickly — scoring any tool in 2 minutes so engineering decisions are based on current data, not demos and founder gut checks.",
+        headline: "Make your first AI tool decisions count.",
+        subheadline: "Evaluate any AI or infrastructure tool in 2 minutes. Get independent scoring on capability, integration fit, pricing, and AI sophistication — before early stack decisions create technical debt you'll spend the next year unwinding.",
+        painPoints: [
+            {
+                title: "Early stack decisions are permanent if you're not careful",
+                description: "The AI tool you pick in month 3 becomes the assumption every subsequent decision builds on. Get it wrong — wrong pricing model, wrong integration approach, wrong data handling — and the cost of switching compounds with every engineer you hire and every feature you build.",
+            },
+            {
+                title: "You're evaluating tool categories you've never bought before",
+                description: "As a founding or early-stage CTO, you may be making first-time purchases in categories you've only been a user of, not a buyer. Vector databases, AI observability tools, prompt management platforms, and LLM routing layers are new buying decisions with no institutional knowledge to lean on.",
+            },
+            {
+                title: "Everyone has an opinion; nobody has independent data",
+                description: "Twitter/X, Discord, and your investor's portfolio company network are full of strong tool opinions. Separating genuine insight from recency bias, vendor relationships, and community hype requires research time you're using to build product.",
+            },
+        ],
+        features: [
+            {
+                title: "Current AI tool intelligence in 2 minutes",
+                description: "Submit any AI tool, infrastructure platform, or SaaS service URL and get a scored 7-dimension report with current pricing, integration depth, AI sophistication, and community sentiment. Current data, not a review written before the last major release.",
+            },
+            {
+                title: "AI nativeness scoring for the tools your stack depends on",
+                description: "The AI Sophistication dimension evaluates how meaningfully AI is used in the product's core value delivery. Separate tools that are genuinely AI-native from those with AI-branded features bolted on — a critical distinction as you build an AI-first company.",
+            },
+            {
+                title: "Community health and vendor viability signals",
+                description: "The Community & Support dimension reflects GitHub activity, documentation quality, response times, and community sentiment. For early-stage startups especially, the health of the community and vendor you're betting on matters as much as the feature set.",
+            },
+        ],
+        stat: {
+            value: "47",
+            label: "Average number of AI tools evaluated by a startup engineering team in year one",
+        },
+        faqs: [
+            { q: "Is Trackr useful for evaluating AI infrastructure tools like LLM APIs or vector databases?", a: "Yes — AI infrastructure is a strong use case. Submit any LLM API provider, vector database, embedding service, or AI observability tool URL and Trackr generates a scored 7-dimension research report." },
+            { q: "Can Trackr help me decide between building and buying a capability?", a: "Trackr helps by giving you a clear view of what commercially available alternatives offer and at what cost. That market intelligence is the starting point for any credible build vs. buy analysis — especially for AI capabilities." },
+            { q: "How does Trackr handle tools without published pricing?", a: "For tools with opaque pricing, Trackr's research pipeline surfaces community-reported actual costs alongside documented pricing tiers. This is particularly valuable for enterprise AI platforms where list pricing is rarely what teams actually pay." },
+            { q: "Is Trackr only for technical tools, or can I research business software too?", a: "Trackr covers any SaaS or technology tool — technical infrastructure and business software alike. CTOs often research both for their company, and the same 7-dimension framework applies across all categories." },
+        ],
+        ctaText: "Make your first AI tool decisions with data",
+        ctaSubtext: "Free to start. Results in 2 minutes, no credit card required.",
+        testimonialQuote: "Trackr saved me from two early infrastructure decisions that would have been expensive to unwind. The integration depth score on the first tool and the vendor viability signals on the second both flagged things I would have missed in a demo.",
+        testimonialAttribution: "CTO, AI-native SaaS startup (Seed)",
+    },
+    {
+        role: "consultants",
+        title: "AI Tools for Consultants | Trackr",
+        description: "Strategy, management, and technology consultants use Trackr to research AI tools for client recommendations, competitive analysis, and staying current on the enterprise software landscape.",
+        headline: "Client AI recommendations backed by independent research.",
+        subheadline: "Research any AI or enterprise software tool in 2 minutes. Get independent 7-dimension scoring you can include in client deliverables — structured analysis that reflects current market reality, not vendor marketing.",
+        painPoints: [
+            {
+                title: "Clients expect current AI tool intelligence in every engagement",
+                description: "Clients now expect their consultant to have a view on AI tools — what to adopt, what to avoid, and how to evaluate new entrants. That expectation has accelerated dramatically in 18 months. Staying current across every relevant category is no longer optional.",
+            },
+            {
+                title: "Research quality varies across the team",
+                description: "When you send three consultants to evaluate a software category, you get three different research methodologies, three different scoring approaches, and three deliverables that can't be compared. A consistent evaluation framework is a practice standard problem, not a tooling problem — until Trackr.",
+            },
+            {
+                title: "Client deliverables that rely on vendor marketing are a liability",
+                description: "A technology recommendation built on vendor-provided case studies and demo impressions is professionally exposed. Independent research with documented scoring and sourcing is defensible. The difference matters when a client comes back six months after implementation.",
+            },
+        ],
+        features: [
+            {
+                title: "Independent scoring for any tool, any category",
+                description: "Submit any tool URL and get a scored 7-dimension report in 2 minutes. The same framework applies to any category — AI platforms, enterprise SaaS, analytics tools, and infrastructure. Consistent methodology across every engagement.",
+            },
+            {
+                title: "Shareable reports for client deliverables",
+                description: "Export Trackr reports as PDF or share via URL. Include scored research directly in client presentations, strategy decks, or vendor evaluation matrices. Structured, independent analysis that elevates the quality of your deliverable.",
+            },
+            {
+                title: "Current market intelligence, not cached knowledge",
+                description: "Trackr generates reports from live sources at submission time. Pricing, features, and competitive positioning reflect the current market — not your knowledge from the last engagement in this category. Every client recommendation is built on fresh intelligence.",
+            },
+        ],
+        stat: {
+            value: "3.1x",
+            label: "Increase in AI tool advisory requests received by strategy consultants since 2023",
+        },
+        faqs: [
+            { q: "Can I run multiple client evaluations simultaneously in Trackr?", a: "Yes — Trackr's workspace lets you organize research by client or project. Research in the context of a specific engagement and export or share with the client directly." },
+            { q: "Is Trackr appropriate for enterprise client engagements?", a: "Yes. Trackr's research methodology and structured scoring are designed to be defensible and shareable at the enterprise level. The PDF export and structured format are suitable for board-level and executive presentations." },
+            { q: "Can Trackr help us build a practice standard for AI tool evaluation?", a: "Yes. The 7-dimension scoring framework provides a consistent evaluation standard that can be adopted across your team. Every consultant applies the same methodology, producing comparable outputs regardless of who runs the research." },
+            { q: "Is Trackr useful for competitive landscape analysis?", a: "Yes — researching multiple tools in a category gives you a structured competitive landscape with scored comparisons. Use this to build technology market maps, vendor shortlists, and category intelligence sections of client deliverables." },
+        ],
+        ctaText: "Deliver independent AI research in 2 minutes",
+        ctaSubtext: "Free to start. Shareable reports for every engagement.",
+        testimonialQuote: "Trackr is now standard methodology for our AI advisory practice. Every technology recommendation goes through Trackr first — the scored reports are included in the deliverable and clients ask for them by name.",
+        testimonialAttribution: "Partner, technology advisory practice",
+    },
+    {
+        role: "executive-assistants",
+        title: "AI Tools for Executive Assistants | Trackr",
+        description: "Executive assistants use Trackr to research and evaluate tools on behalf of executives — producing clear, scored summaries that give leadership what they need to make fast, confident decisions.",
+        headline: "Research tools on behalf of your executive in 2 minutes.",
+        subheadline: "Submit any tool URL and get a clear, scored research report your executive can act on. No vendor spin, no hours of G2 review reading — structured intelligence that helps leadership decide faster.",
+        painPoints: [
+            {
+                title: "Executives ask for tool research with short turnaround expectations",
+                description: "Your executive saw a tool at a conference, heard about it from a peer, or got a cold pitch that caught their attention. They want your assessment by end of day. That means producing defensible research in hours — not the 8-hour deep dive the request actually warrants.",
+            },
+            {
+                title: "G2 and review sites require synthesis skills most EAs aren't hired for",
+                description: "Evaluating a software tool from raw reviews requires understanding what dimensions matter, which reviewers are comparable to your organization, and how to weight conflicting signals. That's a research skill set — and most EAs are hired for scheduling and operations, not technology evaluation.",
+            },
+            {
+                title: "There's no standard format for presenting tool research to executives",
+                description: "Even when you've done solid research, presenting it clearly to a busy executive in a format they can act on is a separate skill. A wall of notes from G2 isn't the same as a structured recommendation with a clear score and bottom line.",
+            },
+        ],
+        features: [
+            {
+                title: "Clear, structured reports your executive can read in 5 minutes",
+                description: "Trackr's reports are structured for busy decision-makers. A score, a bottom line, written justifications, and clear competitive context — formatted so your executive can read it quickly and ask informed questions rather than asking you to explain what you found.",
+            },
+            {
+                title: "Any tool, any category, in 2 minutes",
+                description: "Submit any website URL and Trackr generates a complete research report. No technical knowledge required. No research experience needed. The research happens automatically — you review and forward the report.",
+            },
+            {
+                title: "Shareable PDF and links for fast executive review",
+                description: "Export any report as PDF or share via URL. Forward it directly to your executive, include it in a briefing document, or attach it to a meeting agenda. The format is designed for professional sharing, not internal notes.",
+            },
+        ],
+        stat: {
+            value: "8 hrs",
+            label: "Average time EAs spend on tool research requests per week across their executive's stack",
+        },
+        faqs: [
+            { q: "Do I need any technical knowledge to use Trackr?", a: "No — Trackr is designed for non-technical users. Submit a tool's website URL, receive a scored report in plain language. No technical background or software evaluation experience required." },
+            { q: "Can I organize research for multiple executives?", a: "Yes — Trackr's workspace lets you track research by project or context. Research on behalf of multiple executives can be organized and exported separately." },
+            { q: "How do I present a Trackr report to my executive?", a: "The easiest approach is to share the report link or forward the PDF export. Trackr reports are formatted for executive consumption — score at the top, justifications and context below. Most executives can review the key points in under 5 minutes." },
+            { q: "What if the executive wants me to compare two or three tools?", a: "Run a Trackr report on each tool and share the comparison. Since all reports use the same 7-dimension framework, scores are directly comparable. You can present a side-by-side score comparison without building a custom matrix." },
+        ],
+        ctaText: "Research any tool your executive needs in 2 minutes",
+        ctaSubtext: "Free to start. No technical knowledge required.",
+        testimonialQuote: "My executive now expects a Trackr score for every tool that comes across his desk. It changed how he evaluates recommendations — from 'what do you think?' to 'what does it score?' in about two weeks.",
+        testimonialAttribution: "Senior Executive Assistant, public company CEO",
+    },
 ];
 
 export const ICP_ROLES = ICP_PAGES.map((p) => p.role);

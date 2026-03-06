@@ -1,7 +1,7 @@
 ---
-title: "Best AI Coding Assistants in 2026"
-description: "A ranked guide to the best AI coding assistants for software engineers — covering Cursor, GitHub Copilot, Cody, Windsurf, JetBrains AI, and more. Real comparisons, not marketing."
-date: "2026-02-20"
+title: "The Best AI Coding Assistants in 2026: Developer's Guide"
+description: "A ranked guide to the best AI coding assistants for software engineers—covering Cursor, GitHub Copilot, Windsurf, Cody, and more. Real comparisons, not marketing."
+date: "2026-03-05"
 author: "Trackr Team"
 tags: ["ai tools", "developer tools", "coding assistant", "cursor", "github copilot", "engineering"]
 image: "/og.png"

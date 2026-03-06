@@ -8,6 +8,9 @@ import { TEMPLATES } from '@/data/templates.seed';
 import { COMPARISON_SLUGS } from '@/data/comparisons.seed';
 import { ICP_ROLES } from '@/data/icp-pages.seed';
 import { VS_COMPETITORS, VS_PAGES } from '@/data/vs-pages.seed';
+import { INDUSTRY_SLUGS } from '@/data/industries.seed';
+import { USE_CASE_SLUGS } from '@/data/use-cases.seed';
+import { GLOSSARY_SLUGS } from '@/data/glossary.seed';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://trytrackr.com';
@@ -256,6 +259,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             lastModified: new Date(),
             changeFrequency: 'monthly' as const,
             priority: 0.7,
+        })),
+        // Industry hub + detail pages
+        {
+            url: `${baseUrl}/industries`,
+            lastModified: new Date('2026-03-05'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        },
+        ...INDUSTRY_SLUGS.map((slug) => ({
+            url: `${baseUrl}/industries/${slug}`,
+            lastModified: new Date('2026-03-05'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.75,
+        })),
+        // Use case detail pages
+        ...USE_CASE_SLUGS.map((slug) => ({
+            url: `${baseUrl}/use-cases/${slug}`,
+            lastModified: new Date('2026-03-05'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.75,
+        })),
+        // Glossary individual term pages
+        ...GLOSSARY_SLUGS.map((slug) => ({
+            url: `${baseUrl}/glossary/${slug}`,
+            lastModified: new Date('2026-03-05'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.6,
         })),
         ...blogPosts,
         ...sharedReports,

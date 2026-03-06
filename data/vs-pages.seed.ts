@@ -1706,6 +1706,777 @@ The two tools are complementary. Trelica tells you what you have. Trackr tells y
         ],
         ctaText: "Add intelligence to your SaaS management",
     },
+    {
+        competitor: "snow-software",
+        competitorName: "Snow Software",
+        competitorTagline: "Enterprise software asset management and SaaS visibility",
+        title: "Trackr vs Snow Software — AI Tool Intelligence vs SAM | Trackr",
+        description: "Snow Software manages software assets and licenses at enterprise scale. Trackr gives any team AI-powered tool research and stack intelligence, free to start, in 2 minutes.",
+        headline: "Snow manages what you have. Trackr evaluates what you need.",
+        subheadline: "Snow Software is an enterprise SAM platform. Trackr is the AI research layer that tells you whether the tools in your asset portfolio are worth keeping — scored in 2 minutes.",
+        switchNarrative: `Snow Software is an established enterprise Software Asset Management platform. It discovers software usage across the organization, manages license compliance, and helps IT and procurement teams optimize existing contracts. For large enterprises managing hundreds of software titles and complex license compliance requirements, Snow provides the governance infrastructure.
+
+The gap Snow doesn't fill is evaluation quality. Snow tells you what software you have and whether you're compliant. It doesn't tell you whether that software is good — whether better alternatives exist, how your tools score against current market competition, or what the AI nativeness of your stack looks like relative to modern alternatives.
+
+Trackr is the intelligence layer that complements Snow's governance function. Use Snow to discover and manage the portfolio. Use Trackr to evaluate whether the portfolio contains the right tools — with scored AI research on any tool in 2 minutes and competitive alternatives in every report.`,
+        featureTable: [
+            { feature: "AI-powered tool research reports", trackr: true, competitor: false },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "Software asset management (SAM)", trackr: false, competitor: true },
+            { feature: "License compliance management", trackr: false, competitor: true },
+            { feature: "Competitive alternatives in every report", trackr: true, competitor: false },
+            { feature: "Shadow SaaS discovery", trackr: false, competitor: true },
+            { feature: "Renewal tracking", trackr: true, competitor: true },
+            { feature: "Self-serve start", trackr: "Free, instant", competitor: "Enterprise contract required" },
+            { feature: "Starting price", trackr: "Free", competitor: "Enterprise pricing" },
+        ],
+        advantages: [
+            { title: "Evaluation intelligence Snow doesn't provide", description: "Snow tells you what software is deployed and what it costs. Trackr tells you whether it's the right software — with AI-generated scoring, competitive alternatives, and specific recommendations for improvement." },
+            { title: "Accessible to teams without enterprise SAM budgets", description: "Snow is designed for large enterprises with significant SAM requirements. Trackr's intelligence layer is useful from the first tool evaluation, free to start, with no enterprise contract required." },
+            { title: "Research intelligence before the license exists", description: "Snow works on software you've already adopted. Trackr evaluates tools before you purchase — giving your team scored research and competitive context before the license is created." },
+        ],
+        faqs: [
+            { q: "Can Trackr replace Snow Software?", a: "For most mid-market companies: the SAM and license compliance features Snow provides are enterprise-specific. Trackr's research and stack tracking covers the intelligence needs for teams under enterprise scale without the SAM overhead." },
+            { q: "Do Snow and Trackr complement each other?", a: "Yes. Snow for license governance and compliance. Trackr for evaluation intelligence and research. Together they cover both sides of the software lifecycle for mature IT organizations." },
+            { q: "Is Trackr useful for AI tool governance specifically?", a: "Trackr is particularly strong for AI tool governance — tracking the AI stack, scoring AI nativeness, and maintaining a record of what was evaluated and when. This complements Snow's broader SAM function for non-AI software." },
+        ],
+        ctaText: "Try Trackr free — no enterprise contract required",
+    },
+    {
+        competitor: "flexera",
+        competitorName: "Flexera",
+        competitorTagline: "IT asset management and software monetization platform",
+        title: "Trackr vs Flexera — AI Research vs IT Asset Management | Trackr",
+        description: "Flexera manages software licenses, spend, and compliance at enterprise scale. Trackr adds the AI research layer — scored tool intelligence in 2 minutes for any team size.",
+        headline: "Flexera governs your IT assets. Trackr evaluates them.",
+        subheadline: "Flexera is an enterprise IT asset management platform. Trackr gives teams AI-powered research on any tool in 2 minutes — the intelligence layer that tells you what should be in your portfolio.",
+        switchNarrative: `Flexera is a comprehensive IT asset management platform serving enterprise organizations. It combines software asset management, cloud cost management, and vulnerability intelligence into an integrated platform for IT governance. For enterprises managing thousands of software titles across complex environments, Flexera provides the compliance and cost optimization infrastructure.
+
+What Flexera's governance model doesn't include is tool evaluation intelligence. Flexera manages the portfolio you have. Trackr helps you evaluate whether that portfolio contains the right tools — and what better alternatives exist for the tools that don't score well against current market competition.
+
+The evaluation intelligence gap is particularly acute for AI tools, where the landscape moves faster than traditional SAM frameworks were designed to handle. Trackr's AI research pipeline generates current, scored intelligence on any AI tool in under 2 minutes — complementing Flexera's governance function with the evaluation layer it doesn't provide.`,
+        featureTable: [
+            { feature: "AI tool research reports (2 min)", trackr: true, competitor: false },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "IT asset management", trackr: false, competitor: true },
+            { feature: "Cloud cost management", trackr: false, competitor: true },
+            { feature: "Vulnerability intelligence", trackr: false, competitor: true },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Renewal tracking with alerts", trackr: true, competitor: true },
+            { feature: "Self-serve start", trackr: "Free, instant", competitor: "Enterprise implementation" },
+        ],
+        advantages: [
+            { title: "Evaluation depth Flexera doesn't provide", description: "Flexera tracks software cost and compliance. Trackr evaluates whether tools are worth keeping — with 7-dimension scoring, competitive alternatives, and current market positioning for any tool in your portfolio." },
+            { title: "Purpose-built for the AI tool category", description: "Flexera's SAM framework was built for traditional software. AI tools — with usage-based pricing, data handling implications, and rapid feature evolution — benefit from Trackr's AI-specific research intelligence layer." },
+            { title: "Free to start for teams of any size", description: "Flexera's enterprise model requires implementation and significant commitment. Trackr's research layer is free to start, with no minimum spend, making it accessible to any team evaluating or managing their AI tool stack." },
+        ],
+        faqs: [
+            { q: "Can I use both Flexera and Trackr?", a: "Yes — they're complementary. Flexera for IT asset governance and compliance at enterprise scale. Trackr for the evaluation intelligence layer that informs what tools belong in the portfolio." },
+            { q: "Does Trackr integrate with Flexera?", a: "No native integration currently. Teams typically export their tool inventory from Flexera and use Trackr to research and score each tool independently." },
+            { q: "Is Trackr useful for non-AI software evaluation?", a: "Yes — Trackr researches any SaaS tool with a public website, not just AI tools. The 7-dimension framework applies across all categories." },
+        ],
+        ctaText: "Add AI research intelligence to your tool evaluation",
+    },
+    {
+        competitor: "bettercloud",
+        competitorName: "BetterCloud",
+        competitorTagline: "SaaS operations management for IT and security teams",
+        title: "Trackr vs BetterCloud — Tool Intelligence vs SaaS Operations | Trackr",
+        description: "BetterCloud automates SaaS operations and security workflows. Trackr adds the research intelligence layer — scored AI tool evaluation in 2 minutes before you add anything to your stack.",
+        headline: "BetterCloud automates your SaaS operations. Trackr improves the decisions behind them.",
+        subheadline: "BetterCloud manages SaaS workflows, access, and security policies. Trackr generates scored research on any tool — so the tools you're automating workflows around are the right ones.",
+        switchNarrative: `BetterCloud is a SaaS operations management platform focused on IT automation — automating onboarding and offboarding workflows, managing access policies, and enforcing security controls across your SaaS application portfolio. For IT teams drowning in manual provisioning requests and access management, BetterCloud delivers operational leverage.
+
+The intelligence gap BetterCloud doesn't fill is evaluation quality. It automates the management of tools you've already adopted. It doesn't help you evaluate whether those tools should have been adopted — or what better alternatives might exist for tools that are underperforming.
+
+Trackr is the research layer upstream of BetterCloud's operational layer. Before you build automation workflows around a tool, Trackr helps you verify it's the right tool — with scored AI research, competitive alternatives, and current pricing intelligence in under 2 minutes.`,
+        featureTable: [
+            { feature: "AI tool research reports", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "SaaS access automation", trackr: false, competitor: true },
+            { feature: "Onboarding/offboarding workflows", trackr: false, competitor: true },
+            { feature: "Security policy enforcement", trackr: false, competitor: true },
+            { feature: "Competitive alternatives in reports", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: "Partial" },
+            { feature: "Self-serve start", trackr: "Free, instant", competitor: "Implementation required" },
+        ],
+        advantages: [
+            { title: "Evaluate before you automate", description: "Building BetterCloud workflows around the wrong tool creates technical debt. Trackr helps you verify a tool is the right choice before your IT team invests in automation workflows around it." },
+            { title: "Research intelligence for the tools BetterCloud manages", description: "Use Trackr to score every tool in your BetterCloud environment. Identify which ones have better-scoring alternatives, which are due for rationalization, and which are worth deeper automation investment." },
+            { title: "No implementation required to start", description: "BetterCloud requires SSO integration and implementation effort. Trackr is free to start — submit any tool URL and get a research report in under 2 minutes, with no setup or integration needed." },
+        ],
+        faqs: [
+            { q: "Can Trackr and BetterCloud work together?", a: "Yes — they're complementary. Use Trackr for evaluation intelligence before tools are added to your stack. Use BetterCloud to manage and automate the tools after adoption." },
+            { q: "Does BetterCloud tell you if a tool is good?", a: "BetterCloud tells you if a tool is being used and manages access to it. It doesn't evaluate whether the tool is the right choice. That's Trackr's function." },
+            { q: "Is Trackr useful for SaaS security evaluation?", a: "Yes — the security dimension of Trackr's 7-dimension framework evaluates data handling, compliance certifications, and enterprise security features. It's a first-pass security assessment, not a replacement for a formal vendor security review." },
+        ],
+        ctaText: "Evaluate tools before you build workflows around them",
+    },
+    {
+        competitor: "blissfully",
+        competitorName: "Blissfully",
+        competitorTagline: "SaaS management and IT workflow platform (now part of Vendr)",
+        title: "Trackr vs Blissfully — Tool Intelligence vs SaaS Management | Trackr",
+        description: "Blissfully (now part of Vendr) manages SaaS subscriptions and IT workflows. Trackr adds the research intelligence layer — AI-scored tool evaluation in 2 minutes for any team.",
+        headline: "SaaS management tells you what you have. Trackr tells you if it's right.",
+        subheadline: "Blissfully discovers and manages your SaaS subscriptions. Trackr generates scored research on any tool — so the apps you're managing are actually worth keeping.",
+        switchNarrative: `Blissfully, now part of Vendr's platform, is a SaaS management and IT workflow tool. It provides visibility into the SaaS applications your organization is using, helps manage renewals, and supports IT workflows around software requests and approvals. For IT teams dealing with SaaS sprawl, it provides the organizational layer.
+
+What SaaS management platforms like Blissfully don't provide is evaluation intelligence. They show you which tools exist in your portfolio and what you're paying. They don't evaluate whether those tools are good, how they score against market alternatives, or which are worth keeping on renewal.
+
+Trackr is the intelligence layer that complements SaaS management. Once you know your full SaaS inventory, Trackr helps you evaluate each tool — generating AI-scored research reports that tell you whether to renew, replace, or consolidate.`,
+        featureTable: [
+            { feature: "AI tool evaluation reports", trackr: true, competitor: false },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "SaaS app discovery", trackr: false, competitor: true },
+            { feature: "IT workflow management", trackr: false, competitor: true },
+            { feature: "Competitive alternatives in reports", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: true },
+            { feature: "Spend analytics", trackr: "Manual entry", competitor: "Auto-discovered" },
+            { feature: "Self-serve start", trackr: "Free, instant", competitor: "Setup required" },
+        ],
+        advantages: [
+            { title: "Intelligence for renewal and rationalization decisions", description: "Blissfully shows what you're paying and when it renews. Trackr tells you whether it's worth renewing — with scored research, competitive alternatives, and current market intelligence for any tool." },
+            { title: "Coverage of AI tools and new entrants", description: "SaaS management platforms track what's being expensed. Trackr can research any tool — including AI-native tools and new entrants that haven't yet generated financial trail in your systems." },
+            { title: "Free to start without SaaS integration", description: "Blissfully requires integration with financial systems to discover your SaaS inventory. Trackr is free to start — add tools manually and get research reports immediately, no integration required." },
+        ],
+        faqs: [
+            { q: "Is Blissfully still a standalone product?", a: "Blissfully was acquired by Vendr. Its functionality has been integrated into Vendr's platform. If you're evaluating SaaS management options, you're evaluating Vendr's combined platform." },
+            { q: "Can Trackr and a SaaS management platform work together?", a: "Yes — a common pattern is using a SaaS management tool for discovery and renewal tracking, while using Trackr for the evaluation intelligence layer at renewal decisions." },
+            { q: "Does Trackr discover shadow SaaS automatically?", a: "No — Trackr requires you to add tools manually or via CSV import. For automated discovery of unsanctioned SaaS, a dedicated SaaS management platform provides that capability." },
+        ],
+        ctaText: "Add evaluation intelligence to your SaaS management",
+    },
+    {
+        competitor: "cleanshelf",
+        competitorName: "Cleanshelf",
+        competitorTagline: "SaaS spend optimization and subscription management",
+        title: "Trackr vs Cleanshelf — AI Tool Intelligence vs Spend Management | Trackr",
+        description: "Cleanshelf optimizes SaaS spend and surfaces wasted subscriptions. Trackr adds the research layer — telling you which tools are worth keeping with AI scoring in 2 minutes.",
+        headline: "Cleanshelf finds wasted spend. Trackr evaluates if you're spending on the right tools.",
+        subheadline: "Cleanshelf identifies unused SaaS subscriptions and wasted spend. Trackr tells you whether the tools that remain are the right ones — with AI-scored research and competitive alternatives.",
+        switchNarrative: `Cleanshelf is a SaaS spend optimization platform. It connects to your financial systems, identifies unused subscriptions, surfaces duplicate tools, and helps procurement and finance teams reduce unnecessary software spend. For organizations with significant SaaS proliferation, identifying waste is genuine value.
+
+Identifying wasted spend is the first step. The second — and harder — question is: for the tools you're keeping, are they the right tools? That's where evaluation intelligence matters. A tool that's being actively used isn't necessarily a tool worth keeping if a better-scoring alternative exists at a lower price point.
+
+Trackr answers the second question. It generates AI-scored research on any tool in your stack — giving you independent scoring across 7 dimensions and competitive alternatives for every tool. Use Cleanshelf to find what to cut. Use Trackr to evaluate what to keep, replace, or upgrade.`,
+        featureTable: [
+            { feature: "AI tool evaluation reports", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "SaaS spend discovery and waste tracking", trackr: false, competitor: true },
+            { feature: "Unused license identification", trackr: false, competitor: true },
+            { feature: "Competitive alternatives in every report", trackr: true, competitor: false },
+            { feature: "Renewal calendar with alerts", trackr: true, competitor: true },
+            { feature: "Manual spend entry", trackr: true, competitor: false },
+            { feature: "Self-serve start", trackr: "Free, instant", competitor: "Integration required" },
+        ],
+        advantages: [
+            { title: "Tell you if the tools you're keeping are right", description: "Cleanshelf tells you what to cut. Trackr tells you whether the tools you're keeping are the best options — with independent scoring and competitive alternatives surfaced in every report." },
+            { title: "Research intelligence before renewal", description: "At each renewal decision, run a Trackr report to see how your incumbent tool scores against current alternatives. Make renewal decisions with current market intelligence, not inertia." },
+            { title: "Free to start with any tool", description: "Cleanshelf requires financial system integration. Trackr is free to start — add any tool and get a research report immediately, no integration or setup required." },
+        ],
+        faqs: [
+            { q: "Can I use Trackr and Cleanshelf together?", a: "Yes. Use Cleanshelf to identify and eliminate wasted SaaS spend. Use Trackr to evaluate whether the tools you keep are still the best options in their category." },
+            { q: "Does Trackr identify unused tools automatically?", a: "No — Trackr focuses on evaluation intelligence rather than usage tracking. For automated identification of unused licenses, a dedicated spend management platform provides that capability." },
+            { q: "Is Trackr useful for annual subscription rationalization?", a: "Yes — many teams run Trackr reports on their full stack annually to identify tools that score significantly below emerging alternatives. This is a common trigger for rationalization conversations." },
+        ],
+        ctaText: "Evaluate what's worth keeping in your stack",
+    },
+    {
+        competitor: "productboard",
+        competitorName: "Productboard",
+        competitorTagline: "Product management and roadmap prioritization platform",
+        title: "Trackr vs Productboard — Research Productboard Before You Commit | Trackr",
+        description: "Before committing to Productboard's enterprise contract, get an independent scored report — current pricing, AI feature depth, alternatives, and what product teams actually say.",
+        headline: "Research Productboard before you commit.",
+        subheadline: "Productboard is a product management and roadmapping platform. Before signing an annual contract, use Trackr for an independent, scored view of pricing, alternatives, and what product teams say.",
+        switchNarrative: `Productboard is a popular product management platform focused on centralizing customer feedback, prioritizing features, and aligning roadmaps. It has a strong following among product-led growth companies and has expanded into enterprise product management with more sophisticated roadmap and strategy features.
+
+Like most product management tools, Productboard pricing has moved toward complexity over time — feature tiers, seat-based pricing, and add-on modules that make total cost difficult to estimate from the pricing page. Before signing an annual contract, it's worth understanding what you're actually committing to versus what alternatives offer.
+
+Trackr gives product leaders an independent view of Productboard — current pricing across tiers, what product teams at comparable companies report paying, how it scores against alternatives like Linear, Aha!, Jira Product Discovery, and Coda, and what the community says about Productboard's AI features and recent roadmap execution.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Product roadmap management", trackr: false, competitor: true },
+            { feature: "Customer feedback centralization", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment on AI features", trackr: true, competitor: false },
+            { feature: "Renewal tracking with alerts", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Trial + sales: weeks" },
+        ],
+        advantages: [
+            { title: "Understand true cost before you sign", description: "Productboard's seat-plus-tier pricing means actual cost depends on team size and features. Trackr's research surfaces community-reported actual costs so you enter negotiations with realistic expectations." },
+            { title: "Compare Productboard vs Linear vs Aha! in 10 minutes", description: "Submit Productboard, Linear, and Aha! to Trackr for side-by-side scored comparisons on the same 7-dimension framework — before you invest in extended trials." },
+            { title: "Community reality on AI features", description: "Productboard has introduced AI features. Trackr's research surfaces practitioner discussion about real-world AI quality versus the marketing — from teams who've used it in production." },
+        ],
+        faqs: [
+            { q: "How much does Productboard actually cost?", a: "Published pricing is a starting point. Actual costs depend on seat count and feature tier. Trackr's research surfaces community-reported actual costs for common configurations." },
+            { q: "What are the best Productboard alternatives?", a: "Trackr's research on Productboard surfaces current competitive alternatives — common ones include Linear, Aha!, Jira Product Discovery, and Coda, depending on your team size and use case." },
+            { q: "Is Productboard's AI useful?", a: "Trackr's research surfaces community discussion about Productboard's AI features — including real-world assessments of AI feedback synthesis, insight clustering, and roadmap intelligence from teams who've used them." },
+        ],
+        ctaText: "Get independent Productboard intelligence in 2 minutes",
+    },
+    {
+        competitor: "leanix",
+        competitorName: "LeanIX",
+        competitorTagline: "Enterprise architecture management and SaaS discovery platform",
+        title: "Trackr vs LeanIX — AI Tool Research vs Enterprise Architecture Management | Trackr",
+        description: "LeanIX manages enterprise architecture and technology portfolios. Trackr adds the AI research layer — scored tool intelligence for any tool in 2 minutes.",
+        headline: "LeanIX maps your technology landscape. Trackr evaluates it.",
+        subheadline: "LeanIX provides enterprise architecture management and technology portfolio visibility. Trackr generates AI-scored research on any tool in that portfolio — telling you whether it deserves its place.",
+        switchNarrative: `LeanIX is an enterprise architecture management platform. It provides technology portfolio visibility, maps application landscapes, tracks capabilities, and supports IT transformation planning. For enterprises managing complex application portfolios, LeanIX provides the governance and visualization layer that architecture teams need.
+
+The evaluation intelligence gap LeanIX doesn't fill is scoring individual tools against current market alternatives. LeanIX maps what you have and how applications relate to each other. It doesn't evaluate whether each application is the best option for its function — or what better-scoring alternatives exist at lower cost.
+
+Trackr is the intelligence layer that informs LeanIX portfolio decisions. When architecture review boards are evaluating which applications to retain, consolidate, or replace, Trackr provides scored AI research on each candidate in under 2 minutes — giving the decisions data rather than internal opinion.`,
+        featureTable: [
+            { feature: "AI tool evaluation research", trackr: true, competitor: false },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Enterprise architecture management", trackr: false, competitor: true },
+            { feature: "Application portfolio mapping", trackr: false, competitor: true },
+            { feature: "Technology capability mapping", trackr: false, competitor: true },
+            { feature: "Competitive alternatives in reports", trackr: true, competitor: false },
+            { feature: "Self-serve start", trackr: "Free, instant", competitor: "Enterprise implementation" },
+            { feature: "Starting price", trackr: "Free", competitor: "Enterprise contract" },
+        ],
+        advantages: [
+            { title: "Evaluation intelligence for portfolio decisions", description: "LeanIX shows you which applications are in your portfolio and how they connect. Trackr tells you which ones are scoring well against current market alternatives — and which are candidates for replacement." },
+            { title: "Fast enough for architecture review cycles", description: "LeanIX architecture reviews are periodic and thorough. Trackr's 2-minute research reports are fast enough to evaluate multiple tool candidates in a single review session without slowing the governance process." },
+            { title: "Free to start, no implementation required", description: "LeanIX requires enterprise onboarding and implementation. Trackr is free to start — research any tool immediately, no integration or setup required." },
+        ],
+        faqs: [
+            { q: "Can Trackr and LeanIX be used together?", a: "Yes — LeanIX for architecture governance and portfolio mapping, Trackr for tool evaluation intelligence that informs portfolio rationalization decisions. They serve complementary functions." },
+            { q: "Is Trackr useful for enterprise application portfolio reviews?", a: "Yes. Architecture review boards use Trackr to score incumbent tools against current alternatives during periodic portfolio reviews — adding independent market intelligence to what is often an internal opinion-driven process." },
+            { q: "Does Trackr cover legacy enterprise applications?", a: "For legacy applications with public documentation and community discussion, Trackr generates research reports. Coverage depends on available public information — newer cloud-native tools typically have more data than legacy on-premise applications." },
+        ],
+        ctaText: "Add evaluation intelligence to your architecture reviews",
+    },
+    {
+        competitor: "servicenow",
+        competitorName: "ServiceNow",
+        competitorTagline: "Enterprise service management and workflow automation platform",
+        title: "Trackr vs ServiceNow — Research ServiceNow Before You Commit | Trackr",
+        description: "Before committing to a ServiceNow implementation, get an independent scored view of pricing, implementation complexity, alternatives, and what enterprise IT teams actually report.",
+        headline: "Research ServiceNow before you commit.",
+        subheadline: "ServiceNow is the dominant enterprise ITSM platform. Before a significant implementation commitment, use Trackr for an independent, scored view of pricing reality, alternatives, and what enterprise IT teams report.",
+        switchNarrative: `ServiceNow is the enterprise default for IT service management, and increasingly for broader enterprise workflow automation. It's deeply embedded in large organizations, with an extensive ecosystem and strong market position. It's also one of the most significant software commitments an enterprise can make — implementation timelines run 6–18 months, total cost of ownership is substantial, and switching costs are extremely high once the platform is embedded.
+
+Given that commitment level, the pre-purchase evaluation phase deserves more than three vendor demos and analyst reports. The community discussion around ServiceNow implementations — pricing in practice, implementation complexity versus sales promises, the reality of ongoing customization cost — provides signal that vendor materials don't.
+
+Trackr gives IT and procurement leadership an independent view of ServiceNow before committing. The research covers current pricing benchmarks (community-reported actual costs for organizations of comparable size), alternative platforms like Jira Service Management, Freshservice, and Ivanti, and what enterprise IT teams are saying about ServiceNow's recent AI features, pricing trajectory, and implementation experience.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "IT service management workflows", trackr: false, competitor: true },
+            { feature: "Enterprise workflow automation", trackr: false, competitor: true },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment on implementation reality", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Months-long RFP" },
+            { feature: "Starting price", trackr: "Free", competitor: "$100K+/year" },
+        ],
+        advantages: [
+            { title: "Community intelligence before a major commitment", description: "ServiceNow implementations are expensive and hard to reverse. Trackr surfaces community discussion about real implementation experiences — the complexity, the cost overruns, the post-go-live surprises — before you sign." },
+            { title: "Realistic pricing benchmarks", description: "ServiceNow pricing is heavily negotiated. Trackr surfaces community-reported actual costs for organizations of comparable size — giving procurement a realistic anchor before entering contract negotiations." },
+            { title: "Alternatives you may not have considered", description: "Every Trackr report surfaces current alternatives. For ITSM, this includes Jira Service Management, Freshservice, and Ivanti — with their own scores for side-by-side comparison before you commit to the ServiceNow path." },
+        ],
+        faqs: [
+            { q: "Is ServiceNow worth the cost?", a: "It depends on organizational scale and complexity. Trackr's research surfaces community discussion about value at different company sizes — including honest assessments from organizations that have moved away from ServiceNow to lighter-weight alternatives." },
+            { q: "What are the best ServiceNow alternatives?", a: "Trackr's research on ServiceNow surfaces current competitive alternatives — common ones include Jira Service Management, Freshservice, Ivanti, and BMC Helix, depending on your scale and requirements." },
+            { q: "How long do ServiceNow implementations typically take?", a: "Trackr's community intelligence dimension surfaces practitioner discussion about implementation timelines — including honest assessments from organizations that experienced delays versus the vendor's timeline projections." },
+        ],
+        ctaText: "Get independent ServiceNow intelligence before you commit",
+    },
+    {
+        competitor: "workday",
+        competitorName: "Workday",
+        competitorTagline: "Enterprise HCM and financial management platform",
+        title: "Trackr vs Workday — Research Workday Before You Commit | Trackr",
+        description: "Before committing to a Workday implementation, get an independent scored view of pricing, implementation complexity, alternatives, and what HR and finance teams actually report.",
+        headline: "Research Workday before a major commitment.",
+        subheadline: "Workday is the enterprise HCM and finance platform. Before a multi-year commitment, use Trackr for an independent view of pricing reality, implementation complexity, and alternatives.",
+        switchNarrative: `Workday is a dominant enterprise HCM and financial management platform. It's deeply established in large organizations with strong integration capabilities, a large partner ecosystem, and an AI-first positioning that has accelerated recently. It's also one of the most significant software commitments an enterprise HR or finance organization can make — with implementation timelines typically running 12–24 months and total cost of ownership that extends well beyond license fees.
+
+The pre-purchase evaluation phase for a platform this significant deserves more intelligence than vendor-provided materials offer. Implementation complexity, cost predictability, AI feature quality in practice, and the experience of comparable organizations during and after deployment are all signals that vendor demos and reference calls don't fully surface.
+
+Trackr provides an independent view of Workday before you commit — current pricing benchmarks for organizations of comparable size (community-reported, not vendor list pricing), competitive alternatives like SAP SuccessFactors, Oracle HCM, and Rippling, and what enterprise HR and finance teams report about Workday's AI features, implementation experience, and ongoing cost trajectory.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "HCM and payroll management", trackr: false, competitor: true },
+            { feature: "Financial management platform", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community implementation intelligence", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Multi-month RFP" },
+            { feature: "Starting price", trackr: "Free", competitor: "$200K+/year" },
+        ],
+        advantages: [
+            { title: "Realistic cost expectations before negotiations", description: "Workday pricing is heavily negotiated. Trackr's research surfaces community-reported actual costs for organizations of comparable size — a realistic anchor before you enter contract discussions." },
+            { title: "Alternatives with their own scores", description: "Every Trackr report surfaces current alternatives. For HCM, this includes SAP SuccessFactors, Oracle HCM, Rippling, and newer AI-native platforms — each with independent scoring for comparison." },
+            { title: "Community intelligence on AI features in practice", description: "Workday's AI features are heavily marketed. Trackr's research surfaces community discussion about real-world AI quality in Workday — from HR and finance teams who've deployed it in production." },
+        ],
+        faqs: [
+            { q: "What are the best Workday alternatives?", a: "Trackr's research on Workday surfaces current competitive alternatives — common ones include SAP SuccessFactors, Oracle HCM, Rippling, and Deel, depending on your organization size and requirements." },
+            { q: "How long do Workday implementations take?", a: "Trackr's community intelligence dimension surfaces practitioner discussion about implementation timelines for organizations of different sizes — including honest assessments from organizations that experienced delays." },
+            { q: "Is Workday's AI worth the premium?", a: "Trackr's research surfaces community discussion about Workday's AI features in practice — including assessments from HR and finance teams about real-world utility versus the marketing positioning." },
+        ],
+        ctaText: "Get independent Workday intelligence before you commit",
+    },
+    {
+        competitor: "brex",
+        competitorName: "Brex",
+        competitorTagline: "Corporate spend management and business card platform",
+        title: "Trackr vs Brex — Research Brex Before You Switch | Trackr",
+        description: "Before switching to Brex for corporate spend management, get an independent scored view of features, pricing, alternatives, and what finance teams report about the platform.",
+        headline: "Research Brex before you migrate your expense program.",
+        subheadline: "Brex is a corporate spend management platform. Before migrating your expense program, use Trackr for an independent, scored view of pricing, feature depth, and what finance teams report.",
+        switchNarrative: `Brex has positioned itself as the modern alternative to legacy corporate cards — combining a corporate card program with expense management, vendor payments, and travel in a single platform. It has strong traction among tech startups and growth-stage companies, and has expanded into enterprise features with more sophisticated spend controls and ERP integrations.
+
+Like most modern spend management platforms, Brex has tiered pricing that scales with company size and features enabled. Understanding the total cost across your team size, the features you actually need, and how Brex compares to alternatives like Ramp, Navan, Airbase, and Coupa is a useful evaluation exercise before migrating your expense program.
+
+Trackr gives finance leaders an independent view of Brex — current pricing for comparable company sizes, how Brex scores against the leading alternatives on the same 7-dimension framework, and what finance teams at growth-stage and enterprise companies report about platform capability, support quality, and feature gaps.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Corporate card and spend management", trackr: false, competitor: true },
+            { feature: "Expense management automation", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment on platform quality", trackr: true, competitor: false },
+            { feature: "Renewal tracking with alerts", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Sales process: weeks" },
+        ],
+        advantages: [
+            { title: "Compare Brex vs Ramp vs Airbase on the same framework", description: "Submit Brex, Ramp, and Airbase to Trackr for side-by-side scored comparisons on the same 7-dimension framework — before you invest in platform migrations or extended trials." },
+            { title: "Community intelligence beyond the sales pitch", description: "Trackr surfaces community discussion about Brex from finance teams who've used it — including honest assessments of feature gaps, customer support quality, and ERP integration depth." },
+            { title: "Current pricing benchmarks for your company size", description: "Brex pricing scales with features and company size. Trackr surfaces community-reported actual costs for comparable companies — so you understand what you're buying before platform migration." },
+        ],
+        faqs: [
+            { q: "Is Brex better than Ramp?", a: "Depends on your specific needs. Trackr can generate scored reports on both and compare them side by side on the same 7-dimension framework — giving you an objective comparison rather than competing sales pitches." },
+            { q: "What are the best Brex alternatives?", a: "Trackr's research on Brex surfaces current competitive alternatives — common ones include Ramp, Navan, Airbase, Coupa, and Expensify, depending on company size and requirements." },
+            { q: "Does Brex work for enterprise companies?", a: "Trackr's research surfaces community discussion about Brex at different company sizes — including enterprise experiences with the platform's ERP integrations, spend controls, and enterprise support tier." },
+        ],
+        ctaText: "Compare spend management platforms in 2 minutes",
+    },
+    {
+        competitor: "navan",
+        competitorName: "Navan",
+        competitorTagline: "Business travel and expense management platform",
+        title: "Trackr vs Navan — Research Navan Before You Commit | Trackr",
+        description: "Before committing to Navan for business travel and expense management, get an independent scored view of pricing, feature depth, alternatives, and what teams report about the platform.",
+        headline: "Research Navan before you migrate your travel program.",
+        subheadline: "Navan (formerly TripActions) is a business travel and expense management platform. Before committing your travel program, use Trackr for independent scoring, pricing intelligence, and what users report.",
+        switchNarrative: `Navan (formerly TripActions) is a business travel and expense management platform that has grown from travel-first into a broader spend management product — combining corporate travel booking, expense management, and corporate card functionality. It has strong adoption among mid-market and enterprise companies with significant travel programs.
+
+The travel and expense management category has become more competitive. Platforms like Brex, Ramp, SAP Concur, and Expensify offer overlapping functionality at different price points and with different strengths. Understanding how Navan scores against these alternatives on consistent dimensions — before you commit your travel program and negotiate a contract — is valuable pre-purchase diligence.
+
+Trackr gives finance and operations leaders an independent view of Navan — current pricing for comparable company sizes, how the platform scores against leading alternatives on the same 7-dimension framework, and what companies with active travel programs report about booking quality, expense workflow, and customer support responsiveness.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Business travel booking", trackr: false, competitor: true },
+            { feature: "Expense management", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment on travel experience", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Sales process" },
+        ],
+        advantages: [
+            { title: "Compare Navan vs Concur vs Brex on the same framework", description: "Submit Navan, SAP Concur, and Brex to Trackr for side-by-side scored comparisons on the same 7-dimension framework — before committing to platform migration." },
+            { title: "Pricing intelligence beyond list price", description: "Navan pricing depends on travel volume and features. Trackr surfaces community-reported actual costs for comparable companies — so you understand what you're buying before contract negotiation." },
+            { title: "Community reality on booking quality and support", description: "Trackr surfaces practitioner discussion about Navan's travel booking experience, expense workflow, and customer support — from teams with active travel programs who've used the platform daily." },
+        ],
+        faqs: [
+            { q: "Is Navan better than SAP Concur?", a: "Depends on company size and requirements. Trackr can generate scored reports on both and compare on the same 7-dimension framework." },
+            { q: "What are the best Navan alternatives?", a: "Trackr's research on Navan surfaces current competitive alternatives — common ones include SAP Concur, Brex, Ramp, Expensify, and Egencia, depending on travel volume and requirements." },
+            { q: "Does Navan work well for international travel programs?", a: "Trackr's research surfaces community discussion about Navan's international travel coverage — including honest assessments of global inventory, multi-currency support, and international customer support from teams with active global programs." },
+        ],
+        ctaText: "Compare travel and expense platforms in 2 minutes",
+    },
+    {
+        competitor: "coupa",
+        competitorName: "Coupa",
+        competitorTagline: "Enterprise business spend management platform",
+        title: "Trackr vs Coupa — Research Coupa Before You Commit | Trackr",
+        description: "Before committing to Coupa for enterprise spend management, get an independent scored view of pricing, implementation complexity, alternatives, and what procurement teams report.",
+        headline: "Research Coupa before a major spend management commitment.",
+        subheadline: "Coupa is an enterprise business spend management platform. Before a significant implementation, use Trackr for an independent view of pricing, implementation reality, and current alternatives.",
+        switchNarrative: `Coupa is an enterprise business spend management platform covering procurement, invoicing, travel, and expense management. It's positioned as a comprehensive BSM suite for organizations with complex purchasing workflows, global operations, and significant indirect spend. The platform has strong enterprise adoption and a broad integration ecosystem.
+
+Coupa is also a significant commitment. Implementation timelines run 6–12 months, total cost extends well beyond license fees into implementation services, and the platform is optimized for large enterprises with dedicated procurement functions. Understanding what you're committing to — before the implementation begins — requires intelligence that goes beyond vendor materials.
+
+Trackr provides procurement and finance leadership with an independent view of Coupa — community-reported pricing for comparable organizations, competitive alternatives like SAP Ariba, Jaggaer, and newer spend management entrants, and practitioner discussion about implementation complexity and ongoing platform management requirements.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Procurement workflow management", trackr: false, competitor: true },
+            { feature: "Invoice and AP automation", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community implementation intelligence", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Multi-month RFP" },
+            { feature: "Starting price", trackr: "Free", competitor: "Enterprise contract" },
+        ],
+        advantages: [
+            { title: "Implementation reality before you sign", description: "Coupa implementations are complex and expensive. Trackr surfaces community discussion about real implementation experiences — timelines, complexity, and ongoing customization requirements — before you commit." },
+            { title: "Realistic cost benchmarks", description: "Coupa pricing is negotiated at the enterprise level. Trackr surfaces community-reported actual costs for comparable organizations — a realistic anchor before contract negotiations begin." },
+            { title: "Current alternatives with independent scoring", description: "Every Trackr report surfaces alternatives. For enterprise spend management, this includes SAP Ariba, Jaggaer, Ivalua, and newer procurement platforms — with independent scoring for comparison." },
+        ],
+        faqs: [
+            { q: "What are the best Coupa alternatives?", a: "Trackr's research on Coupa surfaces current competitive alternatives — common ones include SAP Ariba, Jaggaer, Ivalua, and GEP SMART, depending on your procurement complexity and company size." },
+            { q: "Is Coupa worth the implementation cost?", a: "Depends on spend complexity and procurement maturity. Trackr's research surfaces community assessments from organizations with comparable procurement requirements — including honest evaluations of ROI versus implementation investment." },
+            { q: "How long do Coupa implementations typically take?", a: "Trackr's community intelligence surfaces practitioner discussion about implementation timelines at different organization sizes — including experiences with phased implementations versus full deployments." },
+        ],
+        ctaText: "Get independent Coupa intelligence before you commit",
+    },
+    {
+        competitor: "airbase",
+        competitorName: "Airbase",
+        competitorTagline: "Modern spend management for mid-market companies",
+        title: "Trackr vs Airbase — Research Airbase Before You Switch | Trackr",
+        description: "Before switching to Airbase for spend management, get an independent scored view of features, pricing, alternatives, and what finance teams report about the platform.",
+        headline: "Research Airbase before you migrate your spend program.",
+        subheadline: "Airbase is a modern spend management platform for mid-market companies. Before switching your expense program, use Trackr for independent scoring, pricing intelligence, and community feedback.",
+        switchNarrative: `Airbase is a spend management platform targeting mid-market companies — combining corporate cards, expense management, accounts payable automation, and purchase order workflows in a single platform. It has positioned itself as the modern alternative to legacy AP systems and disconnected expense tools.
+
+The spend management category for mid-market companies has become genuinely competitive. Brex, Ramp, Navan, and newer entrants all offer overlapping functionality with different pricing models and feature strengths. Understanding how Airbase scores against these alternatives on consistent dimensions — before you commit your finance operations and negotiate a contract — is valuable pre-purchase diligence.
+
+Trackr gives finance and operations leaders an independent view of Airbase — current pricing for comparable company sizes, how the platform scores against leading spend management alternatives on the same 7-dimension framework, and what mid-market finance teams report about AP automation quality, expense workflow, and implementation experience.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Corporate card and expense management", trackr: false, competitor: true },
+            { feature: "AP automation and purchase orders", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment on platform quality", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Sales process" },
+        ],
+        advantages: [
+            { title: "Compare Airbase vs Brex vs Ramp on the same framework", description: "Submit Airbase, Brex, and Ramp to Trackr for side-by-side scored comparisons — before you invest in platform migrations or extended trials." },
+            { title: "Community intelligence on AP automation quality", description: "Trackr surfaces practitioner discussion about Airbase's AP automation — including real-world assessments of invoice processing accuracy, approval workflow flexibility, and ERP integration depth." },
+            { title: "Pricing reality for your company size", description: "Airbase pricing scales with company size and modules. Trackr surfaces community-reported actual costs for comparable mid-market companies — so you understand what you're committing to before negotiation." },
+        ],
+        faqs: [
+            { q: "Is Airbase better than Ramp or Brex?", a: "Depends on your specific needs, particularly around AP automation depth. Trackr can generate scored reports on all three and compare them on the same 7-dimension framework." },
+            { q: "What are the best Airbase alternatives?", a: "Trackr's research on Airbase surfaces current competitive alternatives — common ones include Ramp, Brex, Navan, Tipalti, and Bill.com, depending on your AP and expense management priorities." },
+            { q: "Does Airbase integrate with our ERP?", a: "Trackr's integration depth dimension surfaces documented ERP integrations and community-reported integration quality for Airbase — a more realistic view than the vendor's integration checklist." },
+        ],
+        ctaText: "Compare spend management platforms in 2 minutes",
+    },
+    {
+        competitor: "ivanti",
+        competitorName: "Ivanti",
+        competitorTagline: "IT asset management, security, and service management platform",
+        title: "Trackr vs Ivanti — AI Tool Research vs IT Management | Trackr",
+        description: "Ivanti provides IT service management, security, and asset management. Trackr adds the AI research intelligence layer — scored tool evaluation in 2 minutes for any tool in your IT portfolio.",
+        headline: "Ivanti manages your IT operations. Trackr evaluates the tools behind them.",
+        subheadline: "Ivanti is an IT management and security platform. Trackr generates AI-scored research on any tool in your IT portfolio — telling you whether each one is the right choice.",
+        switchNarrative: `Ivanti is an IT management platform covering service management, asset management, endpoint security, and unified endpoint management. It has expanded through acquisitions to cover a broad range of IT operations functions, making it a comprehensive platform for IT teams managing complex environments.
+
+What Ivanti's management framework doesn't include is evaluation intelligence. It manages and secures the tools you've already deployed. It doesn't evaluate whether those tools are optimal — how they score against current alternatives, what better options exist for underperforming components, or what the AI nativeness of your IT stack looks like relative to modern alternatives.
+
+Trackr is the research layer that informs IT tool decisions. Before adding a new tool to the Ivanti-managed environment, or at renewal time for existing tools, Trackr generates scored AI research in 2 minutes that gives IT leadership defensible evaluation data rather than gut feel.`,
+        featureTable: [
+            { feature: "AI tool evaluation research", trackr: true, competitor: false },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: false },
+            { feature: "IT service management (ITSM)", trackr: false, competitor: true },
+            { feature: "Endpoint security management", trackr: false, competitor: true },
+            { feature: "Asset management", trackr: false, competitor: true },
+            { feature: "Competitive alternatives in reports", trackr: true, competitor: false },
+            { feature: "Renewal tracking with alerts", trackr: true, competitor: true },
+            { feature: "Self-serve start", trackr: "Free, instant", competitor: "Implementation required" },
+        ],
+        advantages: [
+            { title: "Evaluation intelligence Ivanti doesn't provide", description: "Ivanti manages and secures tools you've already deployed. Trackr evaluates whether those tools are the right choices — with AI-generated scoring and competitive alternatives." },
+            { title: "Research any tool in 2 minutes before adding to the environment", description: "Before a new tool is added to the Ivanti-managed environment, generate a Trackr research report to validate it's the right choice — security posture, integration depth, and scoring against alternatives." },
+            { title: "Free to start with no implementation", description: "Ivanti requires implementation and enterprise commitment. Trackr is free to start — research any tool immediately, no integration required." },
+        ],
+        faqs: [
+            { q: "Can Trackr and Ivanti be used together?", a: "Yes — Ivanti for IT operations management, Trackr for tool evaluation intelligence. They serve complementary functions across the IT tool lifecycle." },
+            { q: "Is Trackr useful for evaluating ITSM alternatives to Ivanti?", a: "Yes — submit any ITSM platform URL and Trackr generates a scored report. This is useful when evaluating ServiceNow, Jira Service Management, Freshservice, or other alternatives." },
+            { q: "Does Trackr cover security tool evaluation?", a: "Yes — the security dimension of Trackr's 7-dimension framework evaluates security posture for any tool. For dedicated security product evaluation, Trackr provides a first-pass assessment before formal vendor security review." },
+        ],
+        ctaText: "Add research intelligence to your IT tool evaluation",
+    },
+    {
+        competitor: "openai",
+        competitorName: "OpenAI",
+        competitorTagline: "Leading AI research and API provider (GPT-4o, ChatGPT)",
+        title: "Trackr vs OpenAI — Track Your AI Spend and Evaluate Alternatives | Trackr",
+        description: "OpenAI provides AI models and APIs. Trackr helps you evaluate OpenAI's offerings against alternatives, track AI spend, and make informed decisions about your AI infrastructure.",
+        headline: "Track your OpenAI spend. Evaluate the alternatives.",
+        subheadline: "OpenAI is the leading AI model provider. Trackr helps you track your AI infrastructure spend, evaluate OpenAI's models against Anthropic, Google, and others, and make informed AI platform decisions.",
+        switchNarrative: `OpenAI is the most widely deployed AI infrastructure provider — GPT-4o and GPT-4o mini underpin a substantial portion of AI-native applications, internal tools, and product features. It's likely already in your stack, whether or not you've formally evaluated it against alternatives.
+
+The AI model and API provider category has become genuinely competitive. Anthropic's Claude models, Google's Gemini, Meta's Llama ecosystem, and Mistral all offer meaningful alternatives with different pricing structures, context windows, capability profiles, and data handling terms. Understanding how OpenAI's offerings compare against these alternatives on consistent dimensions — especially as AI infrastructure spend scales — is valuable ongoing intelligence.
+
+Trackr helps AI and engineering leaders track their AI infrastructure spend, evaluate OpenAI's models and API pricing against current alternatives, and make informed decisions about model selection, provider diversification, and cost optimization. It's not a replacement for direct benchmarking — but it's the fastest way to get a current market view before doing the deeper technical evaluation.`,
+        featureTable: [
+            { feature: "AI provider comparison research", trackr: true, competitor: "N/A" },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: "N/A" },
+            { feature: "LLM API and model access", trackr: false, competitor: true },
+            { feature: "AI spend tracking", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: "N/A" },
+            { feature: "Current pricing intelligence", trackr: "Live at generation", competitor: "Published pricing page" },
+            { feature: "Provider diversification analysis", trackr: true, competitor: "N/A" },
+            { feature: "Stack-level AI infrastructure view", trackr: true, competitor: false },
+        ],
+        advantages: [
+            { title: "Track your AI infrastructure spend across providers", description: "As AI costs scale, tracking spend across OpenAI, Anthropic, and other providers becomes a real operational need. Trackr's stack tracker lets you monitor AI infrastructure costs alongside your full SaaS stack." },
+            { title: "Evaluate alternatives on the same framework", description: "Submit OpenAI, Anthropic Claude, Google Gemini, and Mistral to Trackr for scored comparisons on the same 7-dimension framework — including AI sophistication, pricing value, and community assessments of model quality." },
+            { title: "Current pricing intelligence as model pricing evolves", description: "AI model pricing changes frequently — new tiers, new models, and new pricing structures. Trackr generates research from live sources at submission time, reflecting current pricing rather than cached data from the last evaluation." },
+        ],
+        faqs: [
+            { q: "Can Trackr compare OpenAI models against Anthropic Claude?", a: "Yes — submit both OpenAI's API offerings and Anthropic's Claude to Trackr for scored comparisons. The AI Sophistication and Pricing Value dimensions are particularly relevant for AI model comparisons." },
+            { q: "Is Trackr useful for tracking OpenAI API spend?", a: "Trackr's stack tracker lets you log your AI infrastructure providers with associated costs. It's not a real-time billing integration — for per-token cost tracking, use each provider's dashboard. Trackr adds the evaluation intelligence layer." },
+            { q: "Does Trackr help with model selection decisions?", a: "Yes — Trackr's research reports provide a market view of model capability, pricing, and community assessments that informs model selection decisions. It's a starting point for evaluation, not a substitute for direct capability benchmarking." },
+        ],
+        ctaText: "Evaluate and track your AI infrastructure stack",
+    },
+    {
+        competitor: "anthropic",
+        competitorName: "Anthropic",
+        competitorTagline: "AI safety company and Claude model provider",
+        title: "Trackr vs Anthropic — Track Your AI Spend and Evaluate Providers | Trackr",
+        description: "Anthropic provides Claude AI models and APIs. Trackr helps you evaluate Anthropic's offerings against alternatives, track AI infrastructure spend, and make informed AI platform decisions.",
+        headline: "Evaluate Claude alongside every other AI provider.",
+        subheadline: "Anthropic's Claude is a leading AI model family. Trackr helps you compare Claude against OpenAI, Google Gemini, and others — with independent scoring, current pricing, and AI infrastructure spend tracking.",
+        switchNarrative: `Anthropic's Claude model family — Claude Opus, Sonnet, and Haiku — has become a serious alternative to OpenAI's GPT-4o for a range of AI applications. Claude's positioning around safety, context window size, and code quality has driven significant adoption in engineering-led teams. It's increasingly common in AI-native companies' model mix alongside or in place of OpenAI.
+
+The AI model provider category is expanding. Google Gemini, Meta's Llama ecosystem, Mistral, Cohere, and a growing number of open-source and managed alternatives offer different capability profiles, pricing structures, and data handling terms. Evaluating Anthropic's Claude against this landscape on consistent dimensions — especially as AI infrastructure spend scales — is valuable ongoing intelligence.
+
+Trackr helps AI and engineering leaders evaluate Anthropic's Claude offerings against current alternatives, track AI infrastructure spend, and make informed decisions about model selection and provider strategy. The AI sophistication and pricing value dimensions are particularly relevant for comparing model providers.`,
+        featureTable: [
+            { feature: "AI provider comparison research", trackr: true, competitor: "N/A" },
+            { feature: "7-dimension scoring framework", trackr: true, competitor: "N/A" },
+            { feature: "LLM API and model access", trackr: false, competitor: true },
+            { feature: "AI spend tracking", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: "N/A" },
+            { feature: "Current pricing intelligence", trackr: "Live at generation", competitor: "Published pricing page" },
+            { feature: "Multi-provider stack view", trackr: true, competitor: false },
+            { feature: "Starting price", trackr: "Free", competitor: "Usage-based API pricing" },
+        ],
+        advantages: [
+            { title: "Compare Claude against OpenAI, Google, and others", description: "Submit Anthropic's Claude and competing AI providers to Trackr for scored comparisons on the same 7-dimension framework — AI sophistication, pricing value, community sentiment, and integration depth." },
+            { title: "Track your AI infrastructure spend across providers", description: "As multi-provider AI stacks become common, tracking spend across Anthropic, OpenAI, and others is a real operational need. Trackr's stack tracker covers AI infrastructure alongside your full SaaS portfolio." },
+            { title: "Current pricing as the model landscape evolves", description: "AI model pricing changes frequently. Trackr generates research from live sources at submission time — reflecting current pricing and model availability rather than research from your last evaluation cycle." },
+        ],
+        faqs: [
+            { q: "Can Trackr compare Anthropic Claude against GPT-4o?", a: "Yes — submit both Anthropic's Claude and OpenAI's GPT-4o offerings to Trackr for scored comparisons. The AI Sophistication, Pricing Value, and Integration Depth dimensions are most relevant for AI model provider comparisons." },
+            { q: "Is Trackr useful for tracking Anthropic API spend?", a: "Trackr's stack tracker lets you log your AI infrastructure providers including Anthropic with associated costs. For per-token real-time billing, use Anthropic's console. Trackr adds the evaluation and portfolio tracking layer." },
+            { q: "How does Trackr evaluate AI models specifically?", a: "Trackr's AI Sophistication dimension evaluates model capability, breadth of use cases, and community assessments of performance. It's a market research tool — not a technical benchmark. Use Trackr for market intelligence and direct testing for technical evaluation." },
+        ],
+        ctaText: "Compare AI providers on the same framework",
+    },
+    {
+        competitor: "consensus",
+        competitorName: "Consensus",
+        competitorTagline: "AI-powered video demo automation platform for sales",
+        title: "Trackr vs Consensus — Research Consensus Before You Buy | Trackr",
+        description: "Before committing to Consensus for video demo automation, get an independent scored view of pricing, feature depth, alternatives, and what sales and presales teams report.",
+        headline: "Research Consensus before adding it to your presales stack.",
+        subheadline: "Consensus is an AI-powered video demo automation platform. Before committing to an annual contract, use Trackr for independent scoring, pricing intelligence, and presales team feedback.",
+        switchNarrative: `Consensus is a video demo automation platform designed to help presales teams scale demo delivery without increasing headcount. It allows buyers to self-serve through interactive product demos, tracks engagement, and helps sales teams understand which features resonated before a live conversation. For sales organizations with high demo volume and limited SE capacity, it addresses a real efficiency gap.
+
+Like most sales tech, Consensus pricing scales with seats and usage, and is primarily sold through a sales-assisted process. Understanding the total cost for your team size, what alternatives exist, and what presales teams at comparable companies report about platform quality and ROI — before committing — is useful pre-purchase diligence.
+
+Trackr gives presales leaders and sales operations teams an independent view of Consensus — current pricing benchmarks, competitive alternatives like Navattic, Reprise, and Walnut, and what presales practitioners say about demo engagement quality, buyer experience, and integration with Salesforce and other GTM tools.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Video demo automation", trackr: false, competitor: true },
+            { feature: "Buyer engagement analytics", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community sentiment on platform quality", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Sales process" },
+        ],
+        advantages: [
+            { title: "Compare Consensus vs Navattic vs Reprise in 10 minutes", description: "Submit Consensus, Navattic, and Reprise to Trackr for side-by-side scored comparisons — before investing in multiple trials or sitting through competing sales pitches." },
+            { title: "Community intelligence on presales team experiences", description: "Trackr surfaces practitioner discussion from presales and sales engineering communities about real-world Consensus experiences — engagement rates, buyer experience quality, and Salesforce integration depth." },
+            { title: "Pricing benchmarks before negotiation", description: "Consensus pricing is negotiated. Trackr surfaces community-reported actual costs for comparable sales team sizes — a useful anchor before entering contract discussions." },
+        ],
+        faqs: [
+            { q: "What are the best Consensus alternatives?", a: "Trackr's research on Consensus surfaces current competitive alternatives — common ones include Navattic, Reprise, Walnut, Demostack, and Storylane, depending on your presales workflow and buyer engagement requirements." },
+            { q: "Is Consensus worth the cost for smaller sales teams?", a: "Trackr's research surfaces community discussion about Consensus value at different team sizes — including honest assessments from smaller sales organizations about ROI versus the platform cost." },
+            { q: "How does Consensus integrate with Salesforce?", a: "Trackr's integration depth dimension surfaces documented Salesforce integrations and community-reported quality — a more realistic view than the vendor's integration page." },
+        ],
+        ctaText: "Compare presales automation platforms in 2 minutes",
+    },
+    {
+        competitor: "reprise",
+        competitorName: "Reprise",
+        competitorTagline: "Interactive product demo platform for enterprise sales",
+        title: "Trackr vs Reprise — Research Reprise Before You Commit | Trackr",
+        description: "Before committing to Reprise for interactive demo creation, get an independent scored view of pricing, feature depth, alternatives, and what presales teams report about the platform.",
+        headline: "Research Reprise before committing to your demo infrastructure.",
+        subheadline: "Reprise is an enterprise product demo platform. Before committing your presales workflow, use Trackr for independent scoring, pricing benchmarks, and what sales engineering teams report.",
+        switchNarrative: `Reprise is a product demo platform targeting enterprise sales organizations. It allows presales teams to create interactive, customized product demos without engineering involvement — capturing live application environments, enabling personalization at scale, and tracking buyer engagement through the sales cycle. For enterprise sales teams with complex, customized demo requirements, Reprise addresses a genuine workflow challenge.
+
+The product demo automation category is now well-established, with multiple platforms offering different approaches — captured demos, guided tours, sandbox environments, and video-based demos. Understanding how Reprise compares to Consensus, Navattic, Walnut, and Demostack on consistent dimensions — before you commit your presales infrastructure and negotiate an enterprise contract — is valuable evaluation work.
+
+Trackr gives presales and revenue operations leaders an independent view of Reprise — current pricing benchmarks for comparable enterprise sales organizations, how the platform scores against leading alternatives, and what presales teams at enterprise companies report about demo creation quality, customization depth, and buyer engagement analytics.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Interactive demo capture and creation", trackr: false, competitor: true },
+            { feature: "Buyer engagement tracking", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community SE team sentiment", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Enterprise sales process" },
+        ],
+        advantages: [
+            { title: "Compare Reprise vs Consensus vs Navattic before you commit", description: "Submit Reprise, Consensus, and Navattic to Trackr for side-by-side scored comparisons on the same 7-dimension framework — before investing in platform migrations or extended enterprise trials." },
+            { title: "Enterprise pricing intelligence", description: "Reprise pricing is negotiated at the enterprise level. Trackr surfaces community-reported actual costs for comparable sales organizations — a useful anchor before contract discussions with the Reprise team." },
+            { title: "Sales engineering community feedback", description: "Trackr's research surfaces presales practitioner discussion about Reprise — including real-world assessments of demo capture quality, personalization depth, and platform stability from SEs who use it daily." },
+        ],
+        faqs: [
+            { q: "What are the best Reprise alternatives?", a: "Trackr's research on Reprise surfaces current competitive alternatives — common ones include Consensus, Navattic, Walnut, Demostack, and Storylane, depending on your presales workflow and enterprise requirements." },
+            { q: "Is Reprise suitable for mid-market companies or just enterprise?", a: "Reprise positions primarily for enterprise. Trackr's research surfaces community discussion about Reprise at different company sizes — including whether mid-market organizations find the platform's complexity and cost justified." },
+            { q: "How good is Reprise's CRM integration?", a: "Trackr's integration depth dimension surfaces documented CRM integrations and community-reported quality for Reprise — including Salesforce and HubSpot integration experiences from active presales teams." },
+        ],
+        ctaText: "Compare demo platforms on the same framework",
+    },
+    {
+        competitor: "navattic",
+        competitorName: "Navattic",
+        competitorTagline: "No-code interactive product demo platform",
+        title: "Trackr vs Navattic — Research Navattic Before You Buy | Trackr",
+        description: "Before committing to Navattic for interactive demo creation, get an independent scored view of pricing, feature depth, alternatives, and what marketing and presales teams report.",
+        headline: "Research Navattic before committing your demo stack.",
+        subheadline: "Navattic is a no-code interactive demo platform. Before committing to an annual plan, use Trackr for independent scoring, pricing intelligence, and feedback from marketing and presales teams.",
+        switchNarrative: `Navattic is a no-code interactive demo platform designed for marketing and presales teams to create self-serve product tours without engineering involvement. It has strong adoption among product-led growth companies and marketing teams that want to embed interactive demos in websites and outbound campaigns — driving engagement before a live sales conversation.
+
+The interactive demo category has matured. Reprise, Consensus, Walnut, Storylane, and Demostack all offer overlapping functionality with different positioning — enterprise vs PLG, video vs interactive, guided vs exploratory. Understanding how Navattic scores against these alternatives on consistent dimensions — before you commit your demand generation and presales stack — is useful pre-purchase work.
+
+Trackr gives marketing and presales leaders an independent view of Navattic — current pricing across tiers, how the platform scores against leading alternatives, and what product-led teams and presales practitioners say about demo creation ease, conversion performance, and integration with HubSpot and other marketing tools.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "No-code interactive demo creation", trackr: false, competitor: true },
+            { feature: "Website and email demo embedding", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community marketing team sentiment", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Trial + sales" },
+        ],
+        advantages: [
+            { title: "Compare Navattic vs Reprise vs Consensus in 10 minutes", description: "Submit Navattic, Reprise, and Consensus to Trackr for side-by-side scored comparisons — before investing in multiple trials or competing evaluation processes." },
+            { title: "Marketing team feedback beyond sales demos", description: "Trackr surfaces community discussion from marketing teams about Navattic — including conversion performance data, demo creation ease, and integration quality with HubSpot, Marketo, and other demand gen tools." },
+            { title: "Pricing transparency before annual commitment", description: "Navattic pricing scales with seats and demos. Trackr surfaces community-reported actual costs for comparable marketing team sizes — useful context before annual plan negotiation." },
+        ],
+        faqs: [
+            { q: "What are the best Navattic alternatives?", a: "Trackr's research on Navattic surfaces current competitive alternatives — common ones include Reprise, Consensus, Storylane, Demostack, and Walnut, depending on your PLG vs sales-assisted motion." },
+            { q: "Is Navattic better for marketing or presales use cases?", a: "Navattic is primarily designed for marketing-led interactive demos. Trackr's research surfaces community feedback on both use cases — helping you understand which platform fits your primary workflow." },
+            { q: "Does Navattic integrate with HubSpot and Salesforce?", a: "Trackr's integration depth dimension surfaces documented integrations and community-reported quality for Navattic's key marketing and CRM connections." },
+        ],
+        ctaText: "Compare interactive demo platforms in 2 minutes",
+    },
+    {
+        competitor: "amplitude",
+        competitorName: "Amplitude",
+        competitorTagline: "Digital analytics and product intelligence platform",
+        title: "Trackr vs Amplitude — Research Amplitude Before You Commit | Trackr",
+        description: "Before committing to Amplitude for product analytics, get an independent scored view of pricing, feature depth vs Mixpanel and Heap, and what product and engineering teams report.",
+        headline: "Research Amplitude before you commit your analytics stack.",
+        subheadline: "Amplitude is a leading product analytics and experimentation platform. Before committing to an annual plan, use Trackr for independent scoring, pricing benchmarks, and community feedback.",
+        switchNarrative: `Amplitude is one of the dominant product analytics platforms — covering behavioral analytics, experimentation, session replay, and customer data infrastructure. It's positioned as the central intelligence layer for product-led growth companies and has expanded into enterprise analytics with more sophisticated data governance and BI features.
+
+The product analytics category is competitive. Mixpanel, Heap (now part of Contentsquare), PostHog, and Pendo all offer overlapping capabilities with different pricing models and feature strengths. The pricing for analytics platforms is volume-sensitive and can scale significantly as your monthly tracked users grow — making the total cost of ownership question important before commitment.
+
+Trackr gives product, engineering, and analytics leaders an independent view of Amplitude — current pricing for comparable MTU volumes, how it scores against Mixpanel, Heap, and PostHog on the same 7-dimension framework, and what product teams report about data reliability, query performance, and the depth of AI-powered features in practice.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Behavioral product analytics", trackr: false, competitor: true },
+            { feature: "A/B testing and experimentation", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community product team sentiment", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Trial + sales: weeks" },
+        ],
+        advantages: [
+            { title: "Pricing reality before MTU-based cost surprises", description: "Amplitude pricing scales with monthly tracked users. Trackr surfaces community-reported actual costs at comparable MTU levels — so you understand your cost trajectory before committing to an annual plan." },
+            { title: "Compare Amplitude vs Mixpanel vs PostHog on the same framework", description: "Submit Amplitude, Mixpanel, and PostHog to Trackr for side-by-side scored comparisons — before investing in extended trials or migrating your analytics implementation." },
+            { title: "Community intelligence on AI features in practice", description: "Amplitude's AI features are heavily marketed. Trackr's research surfaces product team discussion about real-world AI insight quality, anomaly detection accuracy, and whether the AI features justify the premium tier." },
+        ],
+        faqs: [
+            { q: "What are the best Amplitude alternatives?", a: "Trackr's research on Amplitude surfaces current competitive alternatives — common ones include Mixpanel, PostHog, Heap, Pendo, and FullStory, depending on your analytics maturity and use case." },
+            { q: "How does Amplitude pricing scale?", a: "Amplitude pricing scales with monthly tracked users and feature tier. Trackr surfaces community-reported actual costs at different MTU volumes — giving you realistic cost projections before committing." },
+            { q: "Is Amplitude's AI worth the premium?", a: "Trackr's research surfaces product team discussion about Amplitude's AI features in practice — including honest assessments of insight quality, alert usefulness, and whether AI features change product decisions meaningfully." },
+        ],
+        ctaText: "Research product analytics platforms in 2 minutes",
+    },
+    {
+        competitor: "pendo",
+        competitorName: "Pendo",
+        competitorTagline: "Product analytics and in-app guidance platform",
+        title: "Trackr vs Pendo — Research Pendo Before You Commit | Trackr",
+        description: "Before committing to Pendo for product analytics and user guidance, get an independent scored view of pricing, feature depth vs Amplitude and Appcues, and what product teams report.",
+        headline: "Research Pendo before you commit your product experience stack.",
+        subheadline: "Pendo is a product analytics and in-app guidance platform. Before committing to an annual plan, use Trackr for independent scoring, pricing benchmarks, and feedback from product and customer success teams.",
+        switchNarrative: `Pendo is a product analytics and digital adoption platform that combines behavioral analytics with in-app guidance — tooltips, walkthroughs, and onboarding flows — in a single platform. It has strong adoption among product and customer success teams that want to understand product usage and drive feature adoption without engineering involvement.
+
+The product analytics and digital adoption category has distinct segments. Pure analytics tools like Amplitude and Mixpanel, adoption-focused tools like WalkMe and Appcues, and hybrid platforms like Pendo each serve different primary jobs. Understanding how Pendo scores against alternatives in both dimensions — analytics depth and adoption capability — is important before committing to a platform that combines both.
+
+Trackr gives product, CS, and operations leaders an independent view of Pendo — current pricing for comparable MAU levels, how it scores against Amplitude, Appcues, and WalkMe on the same 7-dimension framework, and what product and CS teams report about analytics data quality, guidance authoring ease, and Salesforce integration depth.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "Product analytics and session data", trackr: false, competitor: true },
+            { feature: "In-app guidance and walkthroughs", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community product/CS team sentiment", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Trial + sales: weeks" },
+        ],
+        advantages: [
+            { title: "Understand total cost before MAU-based surprises", description: "Pendo pricing scales with monthly active users. Trackr surfaces community-reported actual costs at comparable MAU levels — so you understand your cost trajectory before committing." },
+            { title: "Compare Pendo vs Amplitude vs Appcues on the same framework", description: "Submit Pendo, Amplitude, and Appcues to Trackr for side-by-side scored comparisons — before investing in extended trials or committing your product experience stack." },
+            { title: "Community intelligence from product and CS teams", description: "Trackr surfaces practitioner discussion about Pendo from both product and customer success perspectives — including honest assessments of analytics depth, guide effectiveness, and NPS integration quality." },
+        ],
+        faqs: [
+            { q: "What are the best Pendo alternatives?", a: "Trackr's research on Pendo surfaces current competitive alternatives — common ones include Amplitude, Appcues, WalkMe, Gainsight PX, and Chameleon, depending on your analytics vs adoption emphasis." },
+            { q: "Is Pendo worth the cost for smaller product teams?", a: "Trackr's research surfaces community discussion about Pendo value at different MAU levels and team sizes — including honest assessments from smaller product teams about ROI versus alternatives." },
+            { q: "How accurate is Pendo's analytics data?", a: "Trackr's research surfaces community discussion about Pendo's data reliability, retroactive analysis capabilities, and how it compares to Amplitude or Mixpanel for analytics depth from teams who've used multiple platforms." },
+        ],
+        ctaText: "Compare product analytics platforms in 2 minutes",
+    },
+    {
+        competitor: "whatfix",
+        competitorName: "Whatfix",
+        competitorTagline: "Digital adoption platform for enterprise software",
+        title: "Trackr vs Whatfix — Research Whatfix Before You Buy | Trackr",
+        description: "Before committing to Whatfix for digital adoption, get an independent scored view of pricing, feature depth vs WalkMe and Pendo, and what IT and L&D teams report about the platform.",
+        headline: "Research Whatfix before committing to your digital adoption stack.",
+        subheadline: "Whatfix is an enterprise digital adoption platform. Before committing to an annual contract, use Trackr for independent scoring, pricing benchmarks, and what IT and learning teams report.",
+        switchNarrative: `Whatfix is a digital adoption platform designed to help enterprise IT and L&D teams drive software adoption — overlaying in-app guidance, walkthroughs, and contextual help on top of existing enterprise applications like Salesforce, SAP, and Workday. It targets organizations dealing with complex software rollouts and ongoing adoption challenges across large user populations.
+
+The digital adoption platform category has matured. WalkMe, Pendo, Appcues, and SAP Enable Now all offer overlapping capabilities. The primary differentiation points — enterprise application support, analytics depth, authoring ease, and scalability to large user populations — require evaluation against your specific rollout context.
+
+Trackr gives IT, L&D, and HR leaders an independent view of Whatfix — current pricing for comparable enterprise user populations, how it scores against WalkMe and Pendo on the same 7-dimension framework, and what IT and L&D teams report about guide authoring efficiency, enterprise application compatibility, and ROI on adoption improvement.`,
+        featureTable: [
+            { feature: "Independent pricing intelligence", trackr: true, competitor: "Self-referential" },
+            { feature: "In-app guidance and walkthroughs", trackr: false, competitor: true },
+            { feature: "Enterprise application overlay support", trackr: false, competitor: true },
+            { feature: "7-dimension scoring", trackr: true, competitor: false },
+            { feature: "Competitive alternatives surfaced", trackr: true, competitor: false },
+            { feature: "Community IT/L&D team sentiment", trackr: true, competitor: false },
+            { feature: "Renewal tracking", trackr: true, competitor: false },
+            { feature: "Evaluation time", trackr: "2 minutes", competitor: "Enterprise sales process" },
+        ],
+        advantages: [
+            { title: "Compare Whatfix vs WalkMe vs Pendo on the same framework", description: "Submit Whatfix, WalkMe, and Pendo to Trackr for side-by-side scored comparisons — before committing to an enterprise contract or investing in platform implementation." },
+            { title: "Community intelligence from IT and L&D teams", description: "Trackr surfaces practitioner discussion from IT and L&D teams about Whatfix — including real-world guide authoring experiences, enterprise application compatibility issues, and adoption improvement outcomes." },
+            { title: "Enterprise pricing benchmarks", description: "Whatfix pricing is negotiated at enterprise scale. Trackr surfaces community-reported actual costs for comparable enterprise deployments — a useful anchor before contract discussions." },
+        ],
+        faqs: [
+            { q: "What are the best Whatfix alternatives?", a: "Trackr's research on Whatfix surfaces current competitive alternatives — common ones include WalkMe, Pendo, Appcues, SAP Enable Now, and Spekit, depending on enterprise application requirements and team size." },
+            { q: "Is Whatfix suitable for non-Salesforce enterprise applications?", a: "Whatfix supports multiple enterprise applications. Trackr's research surfaces community discussion about Whatfix's compatibility with different enterprise platforms — SAP, Workday, Oracle, and others." },
+            { q: "What's the ROI on digital adoption platforms?", a: "Trackr's research surfaces community discussion about measured ROI from Whatfix deployments — including support ticket reduction, training cost savings, and feature adoption improvement from organizations that have quantified outcomes." },
+        ],
+        ctaText: "Compare digital adoption platforms in 2 minutes",
+    },
 ];
 
 export const VS_COMPETITORS = VS_PAGES.map((p) => p.competitor);

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
+import { GLOSSARY_TERMS } from "@/data/glossary.seed";
 
 export const revalidate = false;
 
@@ -497,15 +498,26 @@ export default function GlossaryPage() {
                                         <p className="font-mono text-sm text-neutral-600 leading-relaxed max-w-3xl mb-3">
                                             {term.definition}
                                         </p>
-                                        {term.link && (
-                                            <Link
-                                                href={term.link.href}
-                                                className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest hover:underline"
-                                            >
-                                                {term.link.label}
-                                                <ArrowRight className="w-3 h-3" />
-                                            </Link>
-                                        )}
+                                        <div className="flex flex-wrap gap-4">
+                                            {GLOSSARY_TERMS.find((gt) => gt.term === term.term) && (
+                                                <Link
+                                                    href={`/glossary/${GLOSSARY_TERMS.find((gt) => gt.term === term.term)!.slug}`}
+                                                    className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest hover:underline"
+                                                >
+                                                    Read full definition
+                                                    <ArrowRight className="w-3 h-3" />
+                                                </Link>
+                                            )}
+                                            {term.link && (
+                                                <Link
+                                                    href={term.link.href}
+                                                    className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-widest hover:underline"
+                                                >
+                                                    {term.link.label}
+                                                    <ArrowRight className="w-3 h-3" />
+                                                </Link>
+                                            )}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
