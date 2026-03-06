@@ -43,7 +43,7 @@ export function GenerateReportDialog({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-            <div className="w-full max-w-md border border-black bg-white p-6 mx-4">
+            <div className="w-full max-w-md border border-black bg-white p-4 sm:p-6 mx-4 max-h-[85vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <h2 className="font-serif text-xl font-normal">Generate Board Report</h2>

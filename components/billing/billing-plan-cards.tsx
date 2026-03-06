@@ -67,7 +67,7 @@ export function BillingPlanCards({
                     return (
                         <div
                             key={card.key}
-                            className={`p-5 ${i < planCards.length - 1 ? "border-b lg:border-b-0 lg:border-r border-black" : ""} ${card.isCurrent ? "bg-black text-white" : "bg-white"}`}
+                            className={`p-4 sm:p-5 ${i < planCards.length - 1 ? "border-b lg:border-b-0 lg:border-r border-black" : ""} ${card.isCurrent ? "bg-black text-white" : "bg-white"}`}
                         >
                             <div className="mb-1">
                                 <span className={`font-mono text-[10px] uppercase tracking-widest ${card.isCurrent ? "text-neutral-400" : "text-neutral-500"}`}>
@@ -75,7 +75,7 @@ export function BillingPlanCards({
                                 </span>
                             </div>
                             <div className="flex items-baseline gap-1 mb-1">
-                                <span className="text-3xl font-serif">
+                                <span className="text-2xl sm:text-3xl font-serif">
                                     ${interval === "annual" && card.plan.slug !== "free"
                                         ? displayPrice.toLocaleString("en-US", { minimumFractionDigits: displayPrice % 1 !== 0 ? 2 : 0 })
                                         : displayPrice}

@@ -23,7 +23,7 @@ export async function CreditUsageBanner({ workspaceId }: CreditUsageBannerProps)
 
         if (!cap.allowed) {
             return (
-                <div className="border-b border-red-600 bg-red-50 px-4 py-2.5 flex items-center gap-2.5">
+                <div className="border-b border-red-600 bg-red-50 px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2.5">
                     <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" strokeWidth={2} />
                     <p className="font-mono text-xs text-red-700">
                         Monthly API budget reached (${cap.usage.toFixed(2)} / ${cap.budget.toFixed(2)}).{" "}
@@ -37,7 +37,7 @@ export async function CreditUsageBanner({ workspaceId }: CreditUsageBannerProps)
         }
 
         return (
-            <div className="border-b border-amber-400 bg-amber-50 px-4 py-2.5 flex items-center gap-2.5">
+            <div className="border-b border-amber-400 bg-amber-50 px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2.5">
                 <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" strokeWidth={2} />
                 <p className="font-mono text-xs text-amber-800">
                     {pct}% of your monthly API budget used (${cap.usage.toFixed(2)} / ${cap.budget.toFixed(2)} on {plan.name} plan).{" "}

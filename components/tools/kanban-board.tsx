@@ -366,22 +366,22 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                 <div className="grid grid-cols-2 md:grid-cols-4 border border-black">
                     <div className="p-4 border-r border-b md:border-b-0 border-black">
                         <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Total Tools</div>
-                        <div className="text-3xl font-bold font-mono mt-1">{stats.totalTools}</div>
+                        <div className="text-2xl sm:text-3xl font-bold font-mono mt-1">{stats.totalTools}</div>
                     </div>
                     <div className="p-4 border-b md:border-b-0 md:border-r border-black">
                         <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Avg Score</div>
-                        <div className="text-3xl font-bold font-mono mt-1">
+                        <div className="text-2xl sm:text-3xl font-bold font-mono mt-1">
                             {stats.avgScore ?? "—"}
                             {stats.avgScore && <span className="text-sm text-neutral-400 font-normal">/10</span>}
                         </div>
                     </div>
                     <div className="p-4 border-r border-black">
                         <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Researched / Mo</div>
-                        <div className="text-3xl font-bold font-mono mt-1">{stats.researchedThisMonth}</div>
+                        <div className="text-2xl sm:text-3xl font-bold font-mono mt-1">{stats.researchedThisMonth}</div>
                     </div>
                     <div className="p-4">
                         <div className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest">Monthly Spend</div>
-                        <div className="text-3xl font-bold font-mono mt-1">
+                        <div className="text-2xl sm:text-3xl font-bold font-mono mt-1">
                             ${stats.monthlySpend.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </div>
                     </div>
@@ -435,7 +435,7 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                                                 Paste any tool URL. Our research agents will analyze it in under 2 minutes — reviews, pricing, competitors, and a scored report.
                                             </p>
                                             <div className="flex flex-col items-center gap-3">
-                                                <div className="flex items-center gap-3 text-[10px] font-mono text-neutral-400">
+                                                <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-[10px] font-mono text-neutral-400">
                                                     <span className="flex items-center gap-1"><span className="w-4 h-4 bg-black text-white flex items-center justify-center text-[8px] font-bold">1</span> Submit URL</span>
                                                     <span className="text-neutral-300">&rarr;</span>
                                                     <span className="flex items-center gap-1"><span className="w-4 h-4 bg-black text-white flex items-center justify-center text-[8px] font-bold">2</span> AI Researches</span>

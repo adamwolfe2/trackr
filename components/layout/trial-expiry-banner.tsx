@@ -17,7 +17,7 @@ export function TrialExpiryBanner({ trialEnd, status, planName }: TrialExpiryBan
 
     if (daysLeft <= 0) {
         return (
-            <div className="border-b border-red-600 bg-red-50 px-4 py-2.5 flex items-center gap-2.5 print:hidden">
+            <div className="border-b border-red-600 bg-red-50 px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2.5 print:hidden">
                 <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" strokeWidth={2} />
                 <p className="font-mono text-xs text-red-700">
                     Your trial has ended — upgrade to restore access.{" "}
@@ -30,7 +30,7 @@ export function TrialExpiryBanner({ trialEnd, status, planName }: TrialExpiryBan
     }
 
     return (
-        <div className="border-b border-amber-400 bg-amber-50 px-4 py-2.5 flex items-center gap-2.5 print:hidden">
+        <div className="border-b border-amber-400 bg-amber-50 px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2.5 print:hidden">
             <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" strokeWidth={2} />
             <p className="font-mono text-xs text-amber-800">
                 Your {planName} trial ends in {daysLeft} day{daysLeft === 1 ? "" : "s"} — add a payment method to keep access.{" "}

@@ -74,7 +74,7 @@ export function NotificationsPopover() {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 top-full mt-1 w-80 border border-black bg-white z-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <div className="absolute right-0 top-full mt-1 w-[min(320px,calc(100vw-2rem))] border border-black bg-white z-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
                     <div className="border-b border-black px-4 py-3 flex items-center justify-between">
                         <span className="font-mono text-xs uppercase tracking-widest">Notifications</span>
                         {unreadCount > 0 && (
@@ -88,7 +88,7 @@ export function NotificationsPopover() {
                             </button>
                         )}
                     </div>
-                    <div className="max-h-[300px] overflow-y-auto divide-y divide-neutral-100">
+                    <div className="max-h-[50vh] sm:max-h-[300px] overflow-y-auto divide-y divide-neutral-100">
                         {notifications.length === 0 ? (
                             <div className="p-6 text-center font-mono text-xs text-neutral-400">
                                 No new notifications

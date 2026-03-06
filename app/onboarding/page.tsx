@@ -378,7 +378,7 @@ export default function OnboardingPage() {
 
                 {/* ── STEP 2: Current Stack ── */}
                 {step === 2 && (
-                    <div className="w-full max-w-4xl">
+                    <div className="w-full max-w-lg md:max-w-4xl">
                         <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">Step 2 of 3</span>
                         <h1 className="text-3xl font-serif font-normal mb-2 leading-tight">What tools do you already use?</h1>
                         <p className="font-mono text-sm text-neutral-600 mb-6 leading-relaxed">

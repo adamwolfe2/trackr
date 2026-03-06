@@ -168,7 +168,7 @@ export function AddToolWizard({ creditBalance = 99, workspaceId }: AddToolWizard
                 <form onSubmit={handleFormSubmit} className="space-y-6">
                     <input type="hidden" name="website_url" value={url} />
 
-                    <div className="grid gap-6 md:grid-cols-[1fr_200px]">
+                    <div className="grid gap-4 sm:gap-6 md:grid-cols-[1fr_200px]">
                         <div className="space-y-5">
                             {/* Tool Name */}
                             <div>

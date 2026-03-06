@@ -223,7 +223,7 @@ export default async function DashboardPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h1 className="font-serif text-3xl font-normal">Dashboard</h1>
+                <h1 className="font-serif text-2xl sm:text-3xl font-normal">Dashboard</h1>
                 <div className="flex items-center gap-3">
                     {(member.workspace as { currentStreak?: number }).currentStreak != null && (member.workspace as { currentStreak?: number }).currentStreak! > 0 && (
                         <span className="flex items-center gap-1 font-mono text-xs border border-black px-2 py-0.5" title={`${(member.workspace as { currentStreak?: number }).currentStreak}-week activity streak`}>
@@ -289,9 +289,9 @@ export default async function DashboardPage() {
             ) : (
                 <div className="border border-black p-5">
                     <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-3">AI Nativeness Score</p>
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                    <div className="flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2">
                         <div className="flex items-end gap-1">
-                            <span className="font-serif text-4xl font-normal leading-none">{stackInsights.score}</span>
+                            <span className="font-serif text-3xl sm:text-4xl font-normal leading-none">{stackInsights.score}</span>
                             <span className="font-mono text-sm text-neutral-400 mb-0.5">/100</span>
                         </div>
                         <div>
@@ -473,7 +473,7 @@ export default async function DashboardPage() {
                                     <div key={job.id} className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
                                             <div className="font-mono text-xs">
-                                                <Link href={`/tools/${job.toolId}`} className="font-medium hover:underline">{job.tool.name}</Link>
+                                                <Link href={`/tools/${job.toolId}`} className="font-medium hover:underline truncate block">{job.tool.name}</Link>
                                             </div>
                                             <div className="font-mono text-[10px] text-neutral-400 flex items-center gap-1 mt-0.5">
                                                 <Clock className="h-2.5 w-2.5" />

@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 function InvitePage({ children }: { children: React.ReactNode }) {
     return (
         <div className="min-h-screen bg-[#F3F3EF] flex items-center justify-center p-6">
-            <div className="border-2 border-black p-8 max-w-md w-full bg-[#F3F3EF]">
+            <div className="border-2 border-black p-4 sm:p-8 max-w-md w-full bg-[#F3F3EF]">
                 {children}
             </div>
         </div>

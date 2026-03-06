@@ -83,9 +83,9 @@ export function UpgradeModal({ open, onClose, trigger, workspaceId }: UpgradeMod
             aria-modal="true"
             aria-labelledby="upgrade-modal-title"
         >
-            <div className="bg-[#F3F3EF] border border-black w-full max-w-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+            <div className="bg-[#F3F3EF] border border-black w-full max-w-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-h-[85vh] overflow-y-auto">
                 {/* Header */}
-                <div className="border-b border-black px-6 py-4 flex items-start justify-between gap-4">
+                <div className="border-b border-black px-4 sm:px-6 py-3 sm:py-4 flex items-start justify-between gap-4">
                     <div>
                         <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">
                             Upgrade Required
@@ -107,11 +107,11 @@ export function UpgradeModal({ open, onClose, trigger, workspaceId }: UpgradeMod
                 </div>
 
                 {/* Plan cards */}
-                <div className="p-6 space-y-3">
+                <div className="p-4 sm:p-6 space-y-3">
                     {PLAN_CARDS.map((card) => (
                         <div
                             key={card.slug}
-                            className="border border-black bg-white p-4 flex items-center justify-between gap-4"
+                            className="border border-black bg-white p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3"
                         >
                             <div>
                                 <div className="font-mono text-xs uppercase tracking-widest font-semibold mb-1">
@@ -128,7 +128,7 @@ export function UpgradeModal({ open, onClose, trigger, workspaceId }: UpgradeMod
                             <button
                                 onClick={() => handleUpgrade(card.slug)}
                                 disabled={loadingPlan !== null}
-                                className="flex items-center gap-1.5 border border-black px-4 py-2 font-mono text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex-shrink-0"
+                                className="flex items-center gap-1.5 border border-black px-4 py-2 font-mono text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap flex-shrink-0 w-full sm:w-auto justify-center sm:justify-start"
                             >
                                 {loadingPlan === card.slug ? (
                                     <Loader2 className="h-3 w-3 animate-spin" />
@@ -140,7 +140,7 @@ export function UpgradeModal({ open, onClose, trigger, workspaceId }: UpgradeMod
                 </div>
 
                 {/* Footer */}
-                <div className="border-t border-neutral-200 px-6 py-3 text-center">
+                <div className="border-t border-neutral-200 px-4 sm:px-6 py-3 text-center">
                     <Link
                         href="/settings/billing"
                         onClick={onClose}

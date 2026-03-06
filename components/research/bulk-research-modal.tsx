@@ -232,7 +232,7 @@ export function BulkResearchModal({ onClose }: BulkResearchModalProps) {
             <div className="absolute inset-0 bg-black/50" />
 
             {/* Panel */}
-            <div className="relative z-10 w-full max-w-2xl bg-[#F3F3EF] border border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)]">
+            <div className="relative z-10 w-full max-w-2xl bg-[#F3F3EF] border border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] max-h-[85vh] overflow-y-auto">
 
                 {/* Header */}
                 <div className="flex items-start justify-between px-6 py-4 border-b border-black">

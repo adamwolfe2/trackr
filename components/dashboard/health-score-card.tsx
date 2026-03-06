@@ -38,7 +38,7 @@ export function HealthScoreCard({ score, previousScore }: HealthScoreCardProps) 
             </div>
 
             <div className="flex items-end gap-2">
-                <span className="font-mono text-3xl font-bold">
+                <span className="font-mono text-2xl sm:text-3xl font-bold">
                     {score !== null ? score : "\u2014"}
                 </span>
                 {score !== null && (

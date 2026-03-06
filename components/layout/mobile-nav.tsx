@@ -36,7 +36,7 @@ export function MobileNav() {
             {/* Drawer */}
             <div
                 className={cn(
-                    "fixed inset-y-0 left-0 w-72 bg-white border-r border-black z-50 flex flex-col transition-transform duration-200 ease-out md:hidden",
+                    "fixed inset-y-0 left-0 w-[min(288px,85vw)] bg-white border-r border-black z-50 flex flex-col transition-transform duration-200 ease-out md:hidden",
                     open ? "translate-x-0" : "-translate-x-full"
                 )}
             >

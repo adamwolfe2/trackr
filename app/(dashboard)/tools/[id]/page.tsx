@@ -322,7 +322,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                     </div>
                 </div>
 
-                <div className="print:hidden flex items-center gap-3 flex-shrink-0">
+                <div className="print:hidden flex flex-wrap items-center gap-2 sm:gap-4 flex-shrink-0">
                     {report && (
                         <PublishButton
                             reportId={report.id}
@@ -396,7 +396,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
             )}
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
 
                 {/* Left Column (2/3) */}
                 <div className="md:col-span-2 space-y-5">
@@ -470,7 +470,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                         </div>
                         <div>
                             <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">Submitted By</span>
-                            <span className="font-mono text-xs truncate block max-w-[150px]">{tool.submittedBy || "Unknown"}</span>
+                            <span className="font-mono text-xs truncate block max-w-[120px] sm:max-w-[200px]">{tool.submittedBy || "Unknown"}</span>
                         </div>
                     </div>
 

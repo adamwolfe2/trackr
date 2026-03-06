@@ -111,9 +111,9 @@ export default async function StackReportPage() {
                 {/* AI Nativeness Score */}
                 <div className="border border-black p-6">
                     <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-4">AI Nativeness Score</p>
-                    <div className="flex flex-wrap items-end gap-6">
+                    <div className="flex flex-wrap items-end gap-4 sm:gap-6">
                         <div>
-                            <div className="font-serif text-6xl leading-none">{insights.score}</div>
+                            <div className="font-serif text-4xl sm:text-6xl leading-none">{insights.score}</div>
                             <div className="font-mono text-sm text-neutral-400">/100</div>
                         </div>
                         <div className="space-y-1">
@@ -132,7 +132,7 @@ export default async function StackReportPage() {
                 {totalMonthly > 0 && (
                     <div className="border border-black p-6">
                         <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-4">Spend Summary</p>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
                             <div>
                                 <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">Monthly Total</div>
                                 <div className="font-serif text-2xl">${Math.round(totalMonthly)}</div>
@@ -169,7 +169,7 @@ export default async function StackReportPage() {
                                 const report = latestReportsMap.get(tool.id);
                                 const score = Number(tool.overallScore ?? 0);
                                 return (
-                                    <div key={tool.id} className="px-6 py-4 flex items-start gap-4">
+                                    <div key={tool.id} className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start gap-2 sm:gap-4">
                                         <span className={`font-mono text-sm px-2 py-0.5 shrink-0 ${scoreColor(score)}`}>
                                             {score.toFixed(1)}
                                         </span>
@@ -206,7 +206,7 @@ export default async function StackReportPage() {
                                 const report = latestReportsMap.get(tool.id);
                                 const topCon = report?.cons?.[0];
                                 return (
-                                    <div key={tool.id} className="px-6 py-4 flex items-start gap-4">
+                                    <div key={tool.id} className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start gap-2 sm:gap-4">
                                         <span className="font-mono text-sm border border-neutral-400 text-neutral-500 px-2 py-0.5 shrink-0">
                                             {Number(tool.overallScore ?? 0).toFixed(1)}
                                         </span>

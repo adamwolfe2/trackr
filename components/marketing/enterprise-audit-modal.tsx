@@ -25,9 +25,9 @@ function Modal({ onClose }: { onClose: () => void }) {
             <div className="absolute inset-0 bg-black/60" />
 
             {/* Panel */}
-            <div className="relative z-10 w-full max-w-xl bg-[#F3F3EF] border-2 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)]">
+            <div className="relative z-10 w-full max-w-xl bg-[#F3F3EF] border-2 border-black shadow-[8px_8px_0_0_rgba(0,0,0,1)] max-h-[85vh] overflow-y-auto">
                 {/* Header */}
-                <div className="flex items-start justify-between p-6 pb-4 border-b border-black">
+                <div className="flex items-start justify-between p-4 sm:p-6 pb-4 border-b border-black">
                     <div>
                         <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 block mb-1">
                             Custom Engagement
@@ -44,7 +44,7 @@ function Modal({ onClose }: { onClose: () => void }) {
                 </div>
 
                 {/* Body */}
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                     <p className="font-mono text-sm text-neutral-600 leading-relaxed mb-6">
                         Is your organization actually AI-native — or just AI-adjacent? We&apos;ll audit your
                         team&apos;s full AI stack, surface the gaps, and deliver a prioritized action plan
@@ -97,7 +97,7 @@ export function EnterpriseAuditBanner() {
         <>
             {/* Banner strip */}
             <div className="border border-black mb-24 grid md:grid-cols-[1fr_auto] gap-0">
-                <div className="p-8 border-b md:border-b-0 md:border-r border-black">
+                <div className="p-4 sm:p-8 border-b md:border-b-0 md:border-r border-black">
                     <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-2">
                         Custom Engagement
                     </span>
@@ -109,7 +109,7 @@ export function EnterpriseAuditBanner() {
                         and team readiness — with a prioritized action plan delivered in 5 business days.
                     </p>
                 </div>
-                <div className="p-8 flex flex-col items-start md:items-center justify-center gap-3">
+                <div className="p-4 sm:p-8 flex flex-col items-start md:items-center justify-center gap-3">
                     <button
                         onClick={() => setOpen(true)}
                         className="flex items-center gap-2 bg-black text-white px-6 py-3.5 font-mono text-xs uppercase tracking-widest hover:bg-neutral-800 transition-colors border border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none whitespace-nowrap"

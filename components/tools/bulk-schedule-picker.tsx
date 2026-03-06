@@ -93,7 +93,7 @@ export function BulkSchedulePicker({ tools, canSchedule }: { tools: BulkTool[]; 
                     />
 
                     {/* Modal */}
-                    <div className="relative z-10 w-full max-w-md bg-white border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="relative z-10 w-full max-w-md bg-white border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-h-[85vh] overflow-y-auto">
                         {/* Header */}
                         <div className="flex items-center justify-between border-b border-black px-5 py-4">
                             <div>
@@ -130,7 +130,7 @@ export function BulkSchedulePicker({ tools, canSchedule }: { tools: BulkTool[]; 
                         </div>
 
                         {/* Tool list */}
-                        <div className="px-5 py-3 border-b border-neutral-100 max-h-64 overflow-y-auto">
+                        <div className="px-5 py-3 border-b border-neutral-100 max-h-[40vh] sm:max-h-64 overflow-y-auto">
                             {activePlanTools.length === 0 ? (
                                 <p className="font-mono text-xs text-neutral-400 py-4 text-center">No active tools.</p>
                             ) : (

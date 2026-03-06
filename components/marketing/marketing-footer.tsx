@@ -59,9 +59,9 @@ export function MarketingFooter() {
     return (
         <footer className="w-full border-t border-black">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-                <div className="grid grid-cols-2 md:grid-cols-7 gap-8 md:gap-6 mb-16">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-7 gap-6 sm:gap-8 md:gap-6 mb-16">
                     {/* Brand */}
-                    <div className="col-span-2">
+                    <div className="col-span-1 sm:col-span-2">
                         <h3 className="text-2xl font-serif font-medium mb-3 flex items-center gap-2">
                             <TrackrLogo size={24} />
                             Trackr

@@ -31,7 +31,7 @@ export function ToolsView({ tools, stats, isEmpty, canSchedule = false, scoreDel
     return (
         <div className="space-y-4">
             {/* View toggle + bulk actions */}
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
                 <BulkSchedulePicker tools={tools} canSchedule={canSchedule} />
                 <div className="flex items-center gap-1">
                     <button
