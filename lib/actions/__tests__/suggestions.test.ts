@@ -17,6 +17,10 @@ vi.mock("@/lib/db", () => ({
     },
 }));
 
+vi.mock("@/lib/db/queries", () => ({
+    getWorkspaceId: vi.fn().mockResolvedValue("ws_1"),
+}));
+
 vi.mock("drizzle-orm", async (importOriginal) => {
     const actual = await importOriginal<typeof import("drizzle-orm")>();
     return { ...actual, eq: vi.fn((...args) => args), and: vi.fn((...args) => args) };
@@ -24,6 +28,7 @@ vi.mock("drizzle-orm", async (importOriginal) => {
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { getWorkspaceId } from "@/lib/db/queries";
 import { dismissSuggestion } from "../suggestions";
 
 const MOCK_USER = { id: "user_1" };
@@ -40,21 +45,22 @@ describe("dismissSuggestion", () => {
         vi.resetAllMocks();
         setupDbChains();
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
     });
 
     it("throws Unauthorized when not logged in", async () => {
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(dismissSuggestion("sug_1")).rejects.toThrow("Unauthorized");
+        await expect(dismissSuggestion("00000000-0000-0000-0000-000000000001")).rejects.toThrow("Unauthorized");
     });
 
     it("throws when no workspace member found", async () => {
-        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(dismissSuggestion("sug_1")).rejects.toThrow("No workspace");
+        (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        await expect(dismissSuggestion("00000000-0000-0000-0000-000000000001")).rejects.toThrow("No workspace");
     });
 
     it("calls db.update to set status to dismissed", async () => {
-        await dismissSuggestion("sug_1");
+        await dismissSuggestion("00000000-0000-0000-0000-000000000001");
         expect(db.update).toHaveBeenCalledTimes(1);
         const setCall = (
             (db.update as ReturnType<typeof vi.fn>).mock.results[0].value.set as ReturnType<typeof vi.fn>

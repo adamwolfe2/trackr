@@ -2,8 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { contracts, softwareSpend } from "@/lib/db/schema";
+import { contracts, softwareSpend, workspaceMembers } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { currentUser } from "@clerk/nextjs/server";
+
+async function requireWorkspace() {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+        columns: { workspaceId: true },
+        orderBy: (wm, { asc }) => [asc(wm.joinedAt)],
+    });
+    if (!member) throw new Error("No workspace found");
+    return member.workspaceId;
+}
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -29,6 +42,8 @@ export async function addContract(
     }
 ) {
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
 
     const fileName = data.fileName?.trim();
     if (!fileName || fileName.length > 500) throw new Error("File name is required (max 500 characters)");
@@ -62,6 +77,8 @@ export async function updateContractTerms(
 ) {
     if (!UUID_RE.test(contractId)) throw new Error("Invalid contract ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
 
     // Determine status based on terms
     let status = "active";
@@ -87,6 +104,8 @@ export async function updateContractTerms(
 
 export async function listContracts(workspaceId: string) {
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
 
     const results = await db.query.contracts.findMany({
         where: eq(contracts.workspaceId, workspaceId),
@@ -104,6 +123,8 @@ export async function listContracts(workspaceId: string) {
 export async function getContract(contractId: string, workspaceId: string) {
     if (!UUID_RE.test(contractId)) throw new Error("Invalid contract ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
 
     const contract = await db.query.contracts.findFirst({
         where: and(
@@ -124,6 +145,8 @@ export async function getContract(contractId: string, workspaceId: string) {
 export async function deleteContract(contractId: string, workspaceId: string) {
     if (!UUID_RE.test(contractId)) throw new Error("Invalid contract ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
 
     await db.delete(contracts).where(
         and(eq(contracts.id, contractId), eq(contracts.workspaceId, workspaceId))
@@ -141,6 +164,8 @@ export async function linkContractToSpend(
     if (!UUID_RE.test(contractId)) throw new Error("Invalid contract ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
     if (!UUID_RE.test(softwareSpendId)) throw new Error("Invalid software spend ID");
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
 
     // Verify the spend entry belongs to this workspace
     const spend = await db.query.softwareSpend.findFirst({
@@ -164,6 +189,8 @@ export async function linkContractToSpend(
 
 export async function getSpendEntries(workspaceId: string) {
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
 
     return db.query.softwareSpend.findMany({
         where: eq(softwareSpend.workspaceId, workspaceId),

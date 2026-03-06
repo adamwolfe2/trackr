@@ -6,6 +6,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { and, eq } from "drizzle-orm";
+import { getWorkspaceId } from "@/lib/db/queries";
 
 const addNoteSchema = z.object({
     toolId: z.string().uuid(),
@@ -16,9 +17,15 @@ export async function addNote(toolId: string, content: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
     // Get workspace member
     const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id)
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId),
+        ),
     });
 
     if (!member) throw new Error("User is not a member of any workspace");

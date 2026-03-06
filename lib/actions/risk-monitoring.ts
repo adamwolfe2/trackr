@@ -2,8 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { riskAssessments, tools } from "@/lib/db/schema";
+import { riskAssessments, tools, workspaceMembers } from "@/lib/db/schema";
 import { eq, and, desc, inArray, sql } from "drizzle-orm";
+import { currentUser } from "@clerk/nextjs/server";
+
+async function requireWorkspace() {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+        columns: { workspaceId: true },
+        orderBy: (wm, { asc }) => [asc(wm.joinedAt)],
+    });
+    if (!member) throw new Error("No workspace found");
+    return member.workspaceId;
+}
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -68,6 +81,9 @@ export async function createRiskAssessment(
     if (!UUID_RE.test(toolId)) throw new Error("Invalid tool ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
 
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
+
     // Verify tool belongs to workspace
     const tool = await db.query.tools.findFirst({
         where: and(eq(tools.id, toolId), eq(tools.workspaceId, workspaceId)),
@@ -96,6 +112,9 @@ export async function createRiskAssessment(
 
 export async function getRiskDashboard(workspaceId: string) {
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
 
     // Get all workspace tools
     const workspaceTools = await db.query.tools.findMany({
@@ -164,6 +183,9 @@ export async function getToolRiskHistory(toolId: string, workspaceId: string) {
     if (!UUID_RE.test(toolId)) throw new Error("Invalid tool ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
 
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
+
     return db.query.riskAssessments.findMany({
         where: and(
             eq(riskAssessments.toolId, toolId),
@@ -175,6 +197,9 @@ export async function getToolRiskHistory(toolId: string, workspaceId: string) {
 
 export async function getRiskAlerts(workspaceId: string) {
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
 
     // Get tool IDs for this workspace
     const workspaceTools = await db.query.tools.findMany({

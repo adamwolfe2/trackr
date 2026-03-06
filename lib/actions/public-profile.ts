@@ -8,9 +8,23 @@ import {
     softwareSpend,
     stackHealthScores,
     workspaces,
+    workspaceMembers,
 } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
+import { currentUser } from "@clerk/nextjs/server";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
+
+async function requireWorkspace() {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+        columns: { workspaceId: true, role: true },
+        orderBy: (wm, { asc }) => [asc(wm.joinedAt)],
+    });
+    if (!member) throw new Error("No workspace found");
+    return member;
+}
 
 // ── Types ────────────────────────────────────────────────────────
 
@@ -32,6 +46,10 @@ type UpdateProfileInput = {
 // ── Create Public Profile ────────────────────────────────────────
 
 export async function createPublicProfile(workspaceId: string, data: CreateProfileInput) {
+    const member = await requireWorkspace();
+    if (member.workspaceId !== workspaceId) throw new Error("Unauthorized");
+    if (member.role !== "owner" && member.role !== "admin") throw new Error("Only workspace owners or admins can manage public profiles");
+
     // Validate slug format
     const slug = data.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
     if (!slug || slug.length < 3) {
@@ -71,6 +89,10 @@ export async function createPublicProfile(workspaceId: string, data: CreateProfi
 // ── Update Public Profile ────────────────────────────────────────
 
 export async function updatePublicProfile(workspaceId: string, data: UpdateProfileInput) {
+    const member = await requireWorkspace();
+    if (member.workspaceId !== workspaceId) throw new Error("Unauthorized");
+    if (member.role !== "owner" && member.role !== "admin") throw new Error("Only workspace owners or admins can manage public profiles");
+
     // If slug is being changed, validate uniqueness
     if (data.slug !== undefined) {
         const slug = data.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
@@ -110,6 +132,10 @@ export async function updatePublicProfile(workspaceId: string, data: UpdateProfi
 // ── Publish / Unpublish ──────────────────────────────────────────
 
 export async function publishProfile(workspaceId: string) {
+    const member = await requireWorkspace();
+    if (member.workspaceId !== workspaceId) throw new Error("Unauthorized");
+    if (member.role !== "owner" && member.role !== "admin") throw new Error("Only workspace owners or admins can manage public profiles");
+
     const [updated] = await db
         .update(publicProfiles)
         .set({ isPublished: true, updatedAt: new Date() })
@@ -121,6 +147,10 @@ export async function publishProfile(workspaceId: string) {
 }
 
 export async function unpublishProfile(workspaceId: string) {
+    const member = await requireWorkspace();
+    if (member.workspaceId !== workspaceId) throw new Error("Unauthorized");
+    if (member.role !== "owner" && member.role !== "admin") throw new Error("Only workspace owners or admins can manage public profiles");
+
     const [updated] = await db
         .update(publicProfiles)
         .set({ isPublished: false, updatedAt: new Date() })
@@ -219,6 +249,9 @@ export async function getPublicProfile(slug: string) {
 // ── Get Profile For Dashboard (auth required) ────────────────────
 
 export async function getWorkspaceProfile(workspaceId: string) {
+    const member = await requireWorkspace();
+    if (member.workspaceId !== workspaceId) throw new Error("Unauthorized");
+
     return db.query.publicProfiles.findFirst({
         where: eq(publicProfiles.workspaceId, workspaceId),
     });

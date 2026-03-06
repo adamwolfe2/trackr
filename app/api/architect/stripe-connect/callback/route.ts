@@ -28,15 +28,22 @@ export async function GET() {
         return NextResponse.redirect(new URL("/architect/settings", appUrl));
     }
 
-    // Check account status
-    const account = await stripe.accounts.retrieve(architect.stripeConnectAccountId);
+    try {
+        // Check account status
+        const account = await stripe.accounts.retrieve(architect.stripeConnectAccountId);
 
-    if (account.charges_enabled) {
-        await db
-            .update(architects)
-            .set({ stripeOnboardingComplete: true })
-            .where(eq(architects.id, architect.id));
+        if (account.charges_enabled) {
+            await db
+                .update(architects)
+                .set({ stripeOnboardingComplete: true })
+                .where(eq(architects.id, architect.id));
+        }
+
+        return NextResponse.redirect(new URL("/architect/dashboard", appUrl));
+    } catch (err) {
+        console.error("[stripe-connect/callback] Failed to retrieve Stripe account:", err instanceof Error ? err.message : err);
+        const errUrl = new URL("/architect/settings", appUrl);
+        errUrl.searchParams.set("stripe_error", "Unable to verify account status. Please try again.");
+        return NextResponse.redirect(errUrl);
     }
-
-    return NextResponse.redirect(new URL("/architect/dashboard", appUrl));
 }

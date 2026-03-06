@@ -145,15 +145,36 @@ export async function saveScorecardRecipe(recipe: ScorecardRecipeInput) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
+    // Validate input
+    if (!recipe || typeof recipe !== "object") throw new Error("Invalid recipe");
+    if (typeof recipe.systemContext !== "string" || recipe.systemContext.length > 5000)
+        throw new Error("System context must be a string (max 5000 characters)");
+    if (typeof recipe.evaluationCriteria !== "string" || recipe.evaluationCriteria.length > 5000)
+        throw new Error("Evaluation criteria must be a string (max 5000 characters)");
+    if (typeof recipe.dealBreakers !== "string" || recipe.dealBreakers.length > 5000)
+        throw new Error("Deal breakers must be a string (max 5000 characters)");
+    if (!Array.isArray(recipe.businessUnits) || recipe.businessUnits.length > 20)
+        throw new Error("Business units must be an array (max 20)");
+    for (const bu of recipe.businessUnits) {
+        if (typeof bu.key !== "string" || bu.key.length > 100) throw new Error("Invalid business unit key");
+        if (typeof bu.name !== "string" || bu.name.length > 200) throw new Error("Invalid business unit name");
+        if (typeof bu.description !== "string" || bu.description.length > 2000) throw new Error("Invalid business unit description");
+        if (typeof bu.priorities !== "string" || bu.priorities.length > 2000) throw new Error("Invalid business unit priorities");
+    }
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
     const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId),
+        ),
     });
     if (!member) throw new Error("No workspace found");
     if (member.role !== "owner" && member.role !== "admin") {
         throw new Error("Only workspace owners and admins can update the scorecard configuration");
     }
-
-    const workspaceId = member.workspaceId;
 
     await db.update(workspaces)
         .set({ scorecardConfig: recipe as unknown as Record<string, unknown> })
@@ -177,19 +198,31 @@ export async function saveScorecardWeights(weights: ScorecardWeightsInput) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
+    // Validate all weight values are finite numbers
+    const keys: (keyof ScorecardWeightsInput)[] = ["core", "ease", "integration", "pricing", "ai", "community", "scale"];
+    for (const k of keys) {
+        if (typeof weights[k] !== "number" || !Number.isFinite(weights[k]) || weights[k] < 0 || weights[k] > 100) {
+            throw new Error(`Invalid weight for ${k}`);
+        }
+    }
+
+    // Validate weights total 100
+    const total = keys.reduce((sum, k) => sum + weights[k], 0);
+    if (total !== 100) throw new Error("Weights must total 100%");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
     const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId),
+        ),
     });
     if (!member) throw new Error("No workspace found");
     if (member.role !== "owner" && member.role !== "admin") {
         throw new Error("Only workspace owners and admins can update scoring weights");
     }
-
-    // Validate weights total 100
-    const total = Object.values(weights).reduce((sum, v) => sum + v, 0);
-    if (total !== 100) throw new Error("Weights must total 100%");
-
-    const workspaceId = member.workspaceId;
 
     // Get existing scorecard config and merge weights
     const workspace = await db.query.workspaces.findFirst({
@@ -413,6 +446,14 @@ export async function revokeInviteLink() {
 }
 
 export async function updateSlackSettings(channelId: string | null, enabled: boolean) {
+    // Slack channel IDs are alphanumeric, typically start with C/G/D and are 9-12 chars
+    if (channelId !== null) {
+        if (typeof channelId !== "string" || !/^[A-Z0-9]{1,15}$/i.test(channelId)) {
+            throw new Error("Invalid Slack channel ID");
+        }
+    }
+    if (typeof enabled !== "boolean") throw new Error("Invalid enabled value");
+
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 

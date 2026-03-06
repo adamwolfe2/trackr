@@ -20,6 +20,10 @@ vi.mock("@/lib/db", () => ({
     },
 }));
 
+vi.mock("@/lib/db/queries", () => ({
+    getWorkspaceId: vi.fn().mockResolvedValue("ws_1"),
+}));
+
 vi.mock("drizzle-orm", async (importOriginal) => {
     const actual = await importOriginal<typeof import("drizzle-orm")>();
     return {
@@ -32,6 +36,7 @@ vi.mock("drizzle-orm", async (importOriginal) => {
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { getWorkspaceId } from "@/lib/db/queries";
 import {
     createFeedChannel,
     deleteFeedChannel,
@@ -42,7 +47,7 @@ import {
 
 const MOCK_USER = { id: "user_1" };
 const MOCK_MEMBER = { id: "mem_1", userId: "user_1", workspaceId: "ws_1" };
-const MOCK_CHANNEL = { id: "ch_1", workspaceId: "ws_1", name: "AI News" };
+const MOCK_CHANNEL = { id: "00000000-0000-0000-0000-000000000010", workspaceId: "ws_1", name: "AI News" };
 
 function setupDbChains() {
     const returning = vi.fn().mockResolvedValue([MOCK_CHANNEL]);
@@ -64,6 +69,7 @@ describe("createFeedChannel", () => {
         vi.resetAllMocks();
         setupDbChains();
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
     });
 
@@ -140,16 +146,17 @@ describe("deleteFeedChannel", () => {
         vi.resetAllMocks();
         setupDbChains();
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
     });
 
     it("throws when not logged in", async () => {
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(deleteFeedChannel("ch_1")).rejects.toThrow("Unauthorized");
+        await expect(deleteFeedChannel("00000000-0000-0000-0000-000000000010")).rejects.toThrow("Unauthorized");
     });
 
     it("calls db.delete with channel id", async () => {
-        await deleteFeedChannel("ch_1");
+        await deleteFeedChannel("00000000-0000-0000-0000-000000000010");
         expect(db.delete).toHaveBeenCalledTimes(1);
     });
 });
@@ -159,16 +166,17 @@ describe("updateFeedChannel", () => {
         vi.resetAllMocks();
         setupDbChains();
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
     });
 
     it("throws when not logged in", async () => {
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(updateFeedChannel("ch_1", { name: "Updated" })).rejects.toThrow("Unauthorized");
+        await expect(updateFeedChannel("00000000-0000-0000-0000-000000000010", { name: "Updated" })).rejects.toThrow("Unauthorized");
     });
 
     it("calls db.update with provided data", async () => {
-        await updateFeedChannel("ch_1", { name: "Updated Name", enabled: false });
+        await updateFeedChannel("00000000-0000-0000-0000-000000000010", { name: "Updated Name", enabled: false });
         expect(db.update).toHaveBeenCalledTimes(1);
     });
 });
@@ -178,16 +186,17 @@ describe("markFeedItemRead", () => {
         vi.resetAllMocks();
         setupDbChains();
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
     });
 
     it("throws when not logged in", async () => {
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(markFeedItemRead("item_1")).rejects.toThrow("Unauthorized");
+        await expect(markFeedItemRead("00000000-0000-0000-0000-000000000020")).rejects.toThrow("Unauthorized");
     });
 
     it("calls db.update to mark item as read", async () => {
-        await markFeedItemRead("item_1");
+        await markFeedItemRead("00000000-0000-0000-0000-000000000020");
         const setArgs = (
             (db.update as ReturnType<typeof vi.fn>).mock.results[0].value.set as ReturnType<typeof vi.fn>
         ).mock.calls[0][0];
@@ -200,6 +209,7 @@ describe("markAllRead", () => {
         vi.resetAllMocks();
         setupDbChains();
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
     });
 
@@ -214,7 +224,7 @@ describe("markAllRead", () => {
     });
 
     it("marks all items in specific channel as read when channelId provided", async () => {
-        await markAllRead("ch_1");
+        await markAllRead("00000000-0000-0000-0000-000000000010");
         expect(db.update).toHaveBeenCalledTimes(1);
     });
 });

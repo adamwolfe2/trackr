@@ -23,6 +23,10 @@ vi.mock("@/lib/db", () => ({
     },
 }));
 
+vi.mock("@/lib/db/queries", () => ({
+    getWorkspaceId: vi.fn().mockResolvedValue("ws_1"),
+}));
+
 vi.mock("drizzle-orm", async (importOriginal) => {
     const actual = await importOriginal<typeof import("drizzle-orm")>();
     return { ...actual, eq: vi.fn((...args) => args), and: vi.fn((...args) => args) };
@@ -30,6 +34,7 @@ vi.mock("drizzle-orm", async (importOriginal) => {
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { getWorkspaceId } from "@/lib/db/queries";
 import { addNote } from "../notes";
 
 const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
@@ -42,6 +47,7 @@ describe("addNote", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
+        (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
         (db.query.tools.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_TOOL);
     });
@@ -52,9 +58,9 @@ describe("addNote", () => {
     });
 
     it("throws when user is not a workspace member", async () => {
-        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         await expect(addNote(VALID_UUID, "Some note content")).rejects.toThrow(
-            "not a member of any workspace"
+            "No workspace found"
         );
     });
 

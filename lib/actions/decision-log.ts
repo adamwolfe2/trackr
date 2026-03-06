@@ -1,8 +1,21 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { decisionLog, tools } from "@/lib/db/schema";
+import { decisionLog, tools, workspaceMembers } from "@/lib/db/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
+import { currentUser } from "@clerk/nextjs/server";
+
+async function requireWorkspace() {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, user.id),
+        columns: { workspaceId: true },
+        orderBy: (wm, { asc }) => [asc(wm.joinedAt)],
+    });
+    if (!member) throw new Error("No workspace found");
+    return member.workspaceId;
+}
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -32,6 +45,9 @@ export async function logDecision(
         details?: Record<string, unknown>;
     }
 ) {
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
+
     const action = data.action;
     if (!VALID_ACTIONS.includes(action as typeof VALID_ACTIONS[number])) {
         throw new Error(`Invalid action: ${action}`);
@@ -70,6 +86,9 @@ export async function getDecisionLog(
         offset?: number;
     }
 ) {
+    const authedWorkspaceId = await requireWorkspace();
+    if (authedWorkspaceId !== workspaceId) throw new Error("Unauthorized");
+
     const limit = Math.min(options?.limit ?? 50, 200);
     const offset = options?.offset ?? 0;
 
@@ -128,8 +147,10 @@ export async function getDecisionLog(
 export async function getToolDecisions(toolId: string) {
     if (!UUID_RE.test(toolId)) throw new Error("Invalid tool ID");
 
+    const authedWorkspaceId = await requireWorkspace();
+
     const entries = await db.query.decisionLog.findMany({
-        where: eq(decisionLog.toolId, toolId),
+        where: and(eq(decisionLog.toolId, toolId), eq(decisionLog.workspaceId, authedWorkspaceId)),
         orderBy: [desc(decisionLog.createdAt)],
     });
 

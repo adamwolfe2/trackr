@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { tools, workspaceMembers } from "@/lib/db/schema";
+import { tools } from "@/lib/db/schema";
 import { eq, and, inArray } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { getWorkspaceId } from "@/lib/db/queries";
 
 export type ResearchInterval = "manual" | "weekly" | "biweekly" | "monthly";
 
@@ -49,14 +50,11 @@ export async function updateResearchSchedule(
     const user = await currentUser();
     if (!user) return { success: false, error: "Not authenticated" };
 
-    const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
-        columns: { workspaceId: true },
-    });
-    if (!member) return { success: false, error: "Workspace not found" };
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) return { success: false, error: "Workspace not found" };
 
     const tool = await db.query.tools.findFirst({
-        where: and(eq(tools.id, toolId), eq(tools.workspaceId, member.workspaceId)),
+        where: and(eq(tools.id, toolId), eq(tools.workspaceId, workspaceId)),
         columns: { id: true },
     });
     if (!tool) return { success: false, error: "Tool not found" };
@@ -94,11 +92,8 @@ export async function updateBulkResearchSchedule(
     const user = await currentUser();
     if (!user) return { success: false, updated: 0, error: "Not authenticated" };
 
-    const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
-        columns: { workspaceId: true },
-    });
-    if (!member) return { success: false, updated: 0, error: "Workspace not found" };
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) return { success: false, updated: 0, error: "Workspace not found" };
 
     // Only update tools that belong to this workspace (ownership check via AND)
     const nextResearchAt = getNextResearchAt(interval);
@@ -108,7 +103,7 @@ export async function updateBulkResearchSchedule(
         .where(
             and(
                 inArray(tools.id, toolIds),
-                eq(tools.workspaceId, member.workspaceId),
+                eq(tools.workspaceId, workspaceId),
             ),
         )
         .returning({ id: tools.id });

@@ -6,6 +6,7 @@ import { referrals } from "@/lib/db/referrals-schema";
 import { eq, desc, and, ne, gte, lte, lt, isNotNull } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { getWorkspaceId } from "@/lib/db/queries";
 
 export type NotificationType =
     | 'job_complete'
@@ -31,8 +32,14 @@ export async function getNotifications(): Promise<Notification[]> {
     const user = await currentUser();
     if (!user) return [];
 
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) return [];
+
     const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId),
+        ),
     });
     if (!member) return [];
 
@@ -264,8 +271,14 @@ export async function markNotificationsRead(notificationIds: string[]) {
     if (!user || notificationIds.length === 0) return;
     if (notificationIds.length > 500) throw new Error("Too many notification IDs");
 
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) return;
+
     const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId),
+        ),
     });
     if (!member) return;
 

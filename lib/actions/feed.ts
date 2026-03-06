@@ -1,10 +1,11 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { feedChannels, feedItems, workspaceMembers } from "@/lib/db/schema";
+import { feedChannels, feedItems } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
+import { getWorkspaceId as getWorkspaceIdFromDb } from "@/lib/db/queries";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -16,12 +17,12 @@ async function getWorkspaceId(): Promise<string> {
         throw new Error("Authentication error — please refresh and try again.");
     }
     if (!user) throw new Error("Unauthorized");
-    const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
-    });
-    if (!member) throw new Error("No workspace");
-    return member.workspaceId;
+    const workspaceId = await getWorkspaceIdFromDb(user.id);
+    if (!workspaceId) throw new Error("No workspace");
+    return workspaceId;
 }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // ── Channel CRUD ────────────────────────────────────────────────────────────
 
@@ -76,6 +77,7 @@ export async function updateFeedChannel(id: string, data: {
     enabled?: boolean;
     config?: ChannelConfig;
 }) {
+    if (!UUID_RE.test(id)) throw new Error("Invalid channel ID");
     const workspaceId = await getWorkspaceId();
     await db.update(feedChannels)
         .set({ ...data, updatedAt: new Date() })
@@ -85,6 +87,7 @@ export async function updateFeedChannel(id: string, data: {
 }
 
 export async function deleteFeedChannel(id: string) {
+    if (!UUID_RE.test(id)) throw new Error("Invalid channel ID");
     const workspaceId = await getWorkspaceId();
     await db.delete(feedChannels)
         .where(and(eq(feedChannels.id, id), eq(feedChannels.workspaceId, workspaceId)));
@@ -95,6 +98,7 @@ export async function deleteFeedChannel(id: string) {
 // ── Feed Item Actions ───────────────────────────────────────────────────────
 
 export async function markFeedItemRead(id: string) {
+    if (!UUID_RE.test(id)) throw new Error("Invalid feed item ID");
     const workspaceId = await getWorkspaceId();
     await db.update(feedItems)
         .set({ isRead: true })
@@ -103,6 +107,7 @@ export async function markFeedItemRead(id: string) {
 }
 
 export async function toggleFeedItemSaved(id: string) {
+    if (!UUID_RE.test(id)) throw new Error("Invalid feed item ID");
     const workspaceId = await getWorkspaceId();
     await db.execute(sql`
         UPDATE feed_items
@@ -132,6 +137,7 @@ export async function seedDefaultChannels(workspaceId: string) {
 }
 
 export async function markAllRead(channelId?: string) {
+    if (channelId && !UUID_RE.test(channelId)) throw new Error("Invalid channel ID");
     const workspaceId = await getWorkspaceId();
     if (channelId) {
         await db.update(feedItems)

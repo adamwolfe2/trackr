@@ -144,7 +144,6 @@ export async function POST(req: NextRequest) {
                     cons: reports.cons,
                     scorecardSnapshot: reports.scorecardSnapshot,
                     pricing: reports.pricing,
-                    features: reports.features,
                     competitors: reports.competitors,
                     integrations: reports.integrations,
                 })

@@ -32,7 +32,12 @@ export async function GET(req: NextRequest) {
 
         const allTools = await db.query.tools.findMany({
             where: eq(tools.workspaceId, workspaceId),
+            columns: {
+                id: true, name: true, websiteUrl: true, status: true,
+                category: true, overallScore: true, lastResearchedAt: true,
+            },
             orderBy: [desc(tools.overallScore)],
+            limit: 500,
         });
 
         const toolIds = allTools.map(t => t.id);
