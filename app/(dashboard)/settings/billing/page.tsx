@@ -194,8 +194,9 @@ export default async function BillingPage({
             )}
 
             {success && (
-                <div className="border border-black bg-white p-4 font-mono text-sm">
-                    Subscription activated. Welcome to {currentPlan.name}!
+                <div className="border border-black bg-white p-4 font-mono text-sm space-y-1">
+                    <p className="font-semibold">Payment received — thank you!</p>
+                    <p className="text-neutral-500">Your plan will activate within a few seconds. Refresh if your plan details haven't updated yet.</p>
                 </div>
             )}
 

@@ -7,8 +7,8 @@ import { TrialExpiryBanner } from "@/components/layout/trial-expiry-banner"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
-import { workspaceMembers, workspaces, subscriptions } from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
+import { workspaceMembers, workspaces, subscriptions, tools, researchJobs } from "@/lib/db/schema"
+import { eq, and, gte, ne, count, inArray } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import type { Metadata } from "next"
 import { getPlanLimits } from "@/lib/config/subscriptions"
@@ -61,13 +61,34 @@ export default async function DashboardLayout({
     const trialEnd = subscription?.currentPeriodEnd ?? null;
     const subStatus = subscription?.status;
 
-    const creditBadge = (
+    // Compute actual runs remaining this month (plan allowance + extra credits)
+    // Only do the DB count if the plan has a finite monthly research limit
+    let runsRemaining: number | null = null;
+    if (plan.limits.research !== Infinity) {
+        const startOfMonth = new Date();
+        startOfMonth.setDate(1);
+        startOfMonth.setHours(0, 0, 0, 0);
+        const workspaceToolSubq = db.select({ id: tools.id }).from(tools).where(eq(tools.workspaceId, workspace.id));
+        const [row] = await db.select({ value: count() }).from(researchJobs).where(
+            and(
+                inArray(researchJobs.toolId, workspaceToolSubq),
+                gte(researchJobs.triggeredAt, startOfMonth),
+                ne(researchJobs.status, "failed"),
+            )
+        );
+        const jobsThisMonth = Number(row?.value ?? 0);
+        runsRemaining = Math.max(0, plan.limits.research - jobsThisMonth) + creditBalance;
+    }
+
+    // Only render the badge when the plan has a finite limit
+    const creditBadge = runsRemaining !== null ? (
         <CreditStatusBadge
-            creditBalance={creditBalance}
+            runsRemaining={runsRemaining}
+            monthlyLimit={plan.limits.research}
             planName={plan.name}
             workspaceId={workspace.id}
         />
-    );
+    ) : null;
 
     return (
         <div className="flex min-h-screen bg-[#F3F3EF] text-black">
