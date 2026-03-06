@@ -320,6 +320,7 @@ export default async function ArchitectDetailPage({
                                 <input type="hidden" name="reviewNotes" value={application.reviewNotes ?? ""} />
                                 <button
                                     type="submit"
+                                    onClick={(e) => { if (!confirm("Reject this application? This cannot be undone.")) e.preventDefault(); }}
                                     className="font-mono text-xs uppercase tracking-widest border border-red-600 text-red-600 px-4 py-2 hover:bg-red-600 hover:text-white transition-colors"
                                 >
                                     Reject Application
@@ -341,6 +342,7 @@ export default async function ArchitectDetailPage({
                             <form action={handleTerminate}>
                                 <button
                                     type="submit"
+                                    onClick={(e) => { if (!confirm("Terminate this architect? This cannot be undone.")) e.preventDefault(); }}
                                     className="font-mono text-xs uppercase tracking-widest border border-red-600 text-red-600 px-4 py-2 hover:bg-red-600 hover:text-white transition-colors"
                                 >
                                     Terminate

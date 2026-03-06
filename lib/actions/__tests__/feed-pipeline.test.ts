@@ -245,29 +245,36 @@ describe("createDefaultChannels", () => {
 
     it("inserts 2 default channels when no companyContext provided", async () => {
         await createDefaultChannels("ws_1");
-        expect(db.insert).toHaveBeenCalledTimes(2);
+        expect(db.insert).toHaveBeenCalledTimes(1);
+        const valuesCall = (db.insert as ReturnType<typeof vi.fn>).mock.results[0].value.values as ReturnType<typeof vi.fn>;
+        expect(valuesCall.mock.calls[0][0]).toHaveLength(2);
     });
 
     it("inserts 3 channels when companyContext is long enough (> 20 chars)", async () => {
         await createDefaultChannels("ws_1", "A company that builds B2B SaaS tools for engineering teams.");
-        expect(db.insert).toHaveBeenCalledTimes(3);
+        expect(db.insert).toHaveBeenCalledTimes(1);
+        const valuesCall = (db.insert as ReturnType<typeof vi.fn>).mock.results[0].value.values as ReturnType<typeof vi.fn>;
+        expect(valuesCall.mock.calls[0][0]).toHaveLength(3);
     });
 
     it("inserts only 2 channels when companyContext is too short (<= 20 chars)", async () => {
         await createDefaultChannels("ws_1", "Short context");
-        expect(db.insert).toHaveBeenCalledTimes(2);
+        expect(db.insert).toHaveBeenCalledTimes(1);
+        const valuesCall = (db.insert as ReturnType<typeof vi.fn>).mock.results[0].value.values as ReturnType<typeof vi.fn>;
+        expect(valuesCall.mock.calls[0][0]).toHaveLength(2);
     });
 
     it("inserts only 2 channels when companyContext is null", async () => {
         await createDefaultChannels("ws_1", null);
-        expect(db.insert).toHaveBeenCalledTimes(2);
+        expect(db.insert).toHaveBeenCalledTimes(1);
+        const valuesCall = (db.insert as ReturnType<typeof vi.fn>).mock.results[0].value.values as ReturnType<typeof vi.fn>;
+        expect(valuesCall.mock.calls[0][0]).toHaveLength(2);
     });
 
     it("creates channels with 'topic' type", async () => {
         await createDefaultChannels("ws_1");
-        const calls = (db.insert as ReturnType<typeof vi.fn>).mock.results.map(
-            (r) => (r.value.values as ReturnType<typeof vi.fn>).mock.calls[0][0]
-        );
-        expect(calls.every((c: { type: string }) => c.type === "topic")).toBe(true);
+        const valuesCall = (db.insert as ReturnType<typeof vi.fn>).mock.results[0].value.values as ReturnType<typeof vi.fn>;
+        const channels = valuesCall.mock.calls[0][0] as Array<{ type: string }>;
+        expect(channels.every((c) => c.type === "topic")).toBe(true);
     });
 });

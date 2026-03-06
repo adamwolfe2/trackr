@@ -13,6 +13,8 @@ function hashApiKey(key: string): string {
     return createHash("sha256").update(key).digest("hex");
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function updateWorkspaceName(formData: FormData) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
@@ -264,6 +266,7 @@ export async function regenerateApiKey() {
 }
 
 export async function removeMember(memberId: string) {
+    if (!UUID_RE.test(memberId)) throw new Error("Invalid member ID");
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
@@ -323,8 +326,6 @@ export async function disconnectSlackWorkspace() {
     revalidatePath("/workspace");
     return { success: true };
 }
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function cancelInvitation(invitationId: string) {
     if (!UUID_RE.test(invitationId)) throw new Error("Invalid invitation ID");

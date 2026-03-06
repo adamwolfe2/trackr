@@ -95,11 +95,13 @@ export default async function AdminArchitectsPage({
 
     const { filter } = await searchParams;
 
-    // Fetch stats
-    const [totalApps] = await db.select({ count: count() }).from(architectApplications);
-    const [pendingApps] = await db.select({ count: count() }).from(architectApplications).where(eq(architectApplications.status, "pending"));
-    const [approvedApps] = await db.select({ count: count() }).from(architectApplications).where(eq(architectApplications.status, "approved"));
-    const [activeArchitects] = await db.select({ count: count() }).from(architects).where(eq(architects.status, "active"));
+    // Fetch stats — batched into 2 parallel queries instead of 4 sequential
+    const [[totalApps], [pendingApps], [approvedApps], [activeArchitects]] = await Promise.all([
+        db.select({ count: count() }).from(architectApplications),
+        db.select({ count: count() }).from(architectApplications).where(eq(architectApplications.status, "pending")),
+        db.select({ count: count() }).from(architectApplications).where(eq(architectApplications.status, "approved")),
+        db.select({ count: count() }).from(architects).where(eq(architects.status, "active")),
+    ]);
 
     // Fetch top architects for leaderboard
     const topArchitects = activeArchitects.count > 0
@@ -111,28 +113,25 @@ export default async function AdminArchitectsPage({
             .limit(10)
         : [];
 
-    // For each top architect, get referral counts
+    // For each top architect, get referral counts (with error resilience)
     const leaderboard = await Promise.all(
         topArchitects.map(async (arch) => {
-            const [totalRef] = await db
-                .select({ count: count() })
-                .from(architectReferrals)
-                .where(eq(architectReferrals.architectId, arch.id));
-            const [activeRef] = await db
-                .select({ count: count() })
-                .from(architectReferrals)
-                .where(and(
-                    eq(architectReferrals.architectId, arch.id),
-                    eq(architectReferrals.status, "active"),
-                ));
-            const total = totalRef?.count ?? 0;
-            const active = activeRef?.count ?? 0;
-            return {
-                ...arch,
-                referralCount: total,
-                activeCount: active,
-                conversionRate: total > 0 ? ((active / total) * 100).toFixed(0) : "N/A",
-            };
+            try {
+                const [[totalRef], [activeRef]] = await Promise.all([
+                    db.select({ count: count() }).from(architectReferrals).where(eq(architectReferrals.architectId, arch.id)),
+                    db.select({ count: count() }).from(architectReferrals).where(and(eq(architectReferrals.architectId, arch.id), eq(architectReferrals.status, "active"))),
+                ]);
+                const total = totalRef?.count ?? 0;
+                const active = activeRef?.count ?? 0;
+                return {
+                    ...arch,
+                    referralCount: total,
+                    activeCount: active,
+                    conversionRate: total > 0 ? ((active / total) * 100).toFixed(0) : "N/A",
+                };
+            } catch {
+                return { ...arch, referralCount: 0, activeCount: 0, conversionRate: "N/A" as string };
+            }
         })
     );
 

@@ -211,16 +211,21 @@ export async function getNotifications(): Promise<Notification[]> {
         limit: 5,
     });
 
-    // Match spend items to tools with low scores
+    // Match spend items to tools with low scores — batch query all active tools once
     const renewalDecisionNotifications: Notification[] = [];
-    for (const spend of renewalDecisionSpend) {
-        const matchedTool = await db.query.tools.findFirst({
+    const activeTools = renewalDecisionSpend.length > 0
+        ? await db.query.tools.findMany({
             where: and(
                 eq(tools.workspaceId, member.workspaceId),
                 eq(tools.status, 'active'),
             ),
             columns: { id: true, name: true, overallScore: true },
-        });
+        })
+        : [];
+    const toolsByName = new Map(activeTools.map(t => [t.name.toLowerCase(), t]));
+
+    for (const spend of renewalDecisionSpend) {
+        const matchedTool = toolsByName.get(spend.toolName.toLowerCase());
 
         // Check if tool name matches and score < 7
         if (matchedTool && matchedTool.overallScore && parseFloat(matchedTool.overallScore) < 7) {

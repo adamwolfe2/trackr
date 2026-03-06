@@ -3,7 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { workspaces, workspaceMembers, subscriptions } from "@/lib/db/schema";
-import { eq, count } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import Link from "next/link";
 import { getPlanLimits } from "@/lib/config/subscriptions";
 
@@ -96,9 +96,12 @@ export default async function InviteLinkPage({
         );
     }
 
-    // Check if already a member — idempotent
+    // Check if already a member of THIS workspace — idempotent
     const existing = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspace.id),
+        ),
     });
 
     if (!existing) {

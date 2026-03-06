@@ -89,6 +89,7 @@ const updatePainPointSchema = z.object({
 });
 
 export async function updatePainPoint(id: string, data: { title: string; description?: string; category?: string }) {
+    if (!UUID_RE.test(id)) throw new Error("Invalid pain point ID");
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 

@@ -154,33 +154,33 @@ describe("workspace server actions", () => {
     describe("removeMember", () => {
         it("throws Unauthorized when not logged in", async () => {
             (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-            await expect(removeMember("mem_2")).rejects.toThrow("Unauthorized");
+            await expect(removeMember("00000000-0000-0000-0000-000000000002")).rejects.toThrow("Unauthorized");
         });
 
         it("throws when current user is not owner or admin", async () => {
             (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(VIEWER);
-            await expect(removeMember("mem_2")).rejects.toThrow("Only workspace owners");
+            await expect(removeMember("00000000-0000-0000-0000-000000000002")).rejects.toThrow("Only workspace owners");
         });
 
         it("throws when member to remove is not found", async () => {
             (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>)
                 .mockResolvedValueOnce(OWNER)         // current user check
                 .mockResolvedValueOnce(null);          // member to remove
-            await expect(removeMember("mem_2")).rejects.toThrow("Member not found");
+            await expect(removeMember("00000000-0000-0000-0000-000000000002")).rejects.toThrow("Member not found");
         });
 
         it("throws when trying to remove the workspace owner", async () => {
             (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>)
                 .mockResolvedValueOnce(OWNER)                             // current user
                 .mockResolvedValueOnce({ ...MEMBER_TO_REMOVE, role: "owner" }); // target is also owner
-            await expect(removeMember("mem_2")).rejects.toThrow("Cannot remove the workspace owner");
+            await expect(removeMember("00000000-0000-0000-0000-000000000002")).rejects.toThrow("Cannot remove the workspace owner");
         });
 
         it("succeeds for valid non-owner member removal", async () => {
             (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>)
                 .mockResolvedValueOnce(OWNER)           // current user
                 .mockResolvedValueOnce(MEMBER_TO_REMOVE); // target viewer
-            const result = await removeMember("mem_2");
+            const result = await removeMember("00000000-0000-0000-0000-000000000002");
             expect(result).toEqual({ success: true });
         });
     });

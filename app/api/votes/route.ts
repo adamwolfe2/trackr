@@ -24,8 +24,8 @@ export async function GET(req: NextRequest) {
         });
     }
 
-    // Return all votes as a map
-    const rows = await db.select().from(communityVotes);
+    // Return all votes as a map (capped at 500 for safety)
+    const rows = await db.select().from(communityVotes).limit(500);
     const map: Record<string, { up: number; down: number }> = {};
     for (const row of rows) {
         map[row.toolSlug] = { up: row.upVotes, down: row.downVotes };

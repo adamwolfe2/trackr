@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
         // Fetch all software spend entries for this workspace
         const spendEntries = await db.query.softwareSpend.findMany({
             where: eq(softwareSpend.workspaceId, workspace.id),
+            limit: 200,
         });
 
         // Compute stack insights

@@ -138,17 +138,15 @@ export async function GET(req: Request) {
                     await sendRenewalAlertEmail(email, renewalData);
                     renewalsSent++;
 
-                    // Also post to Slack if enabled
-                    const workspace = await db.query.workspaces.findFirst({
-                        where: eq(workspaces.id, owner.workspaceId),
-                    });
-                    if (workspace?.slackEnabled && workspace.slackChannelId) {
+                    // Also post to Slack if enabled (workspace already loaded via `with`)
+                    const ws = owner.workspace as { slackEnabled?: boolean; slackChannelId?: string | null; slackBotToken?: string | null };
+                    if (ws?.slackEnabled && ws.slackChannelId) {
                         try {
                             await postMessage(
-                                workspace.slackChannelId,
+                                ws.slackChannelId,
                                 `${renewalData.length} upcoming renewal${renewalData.length !== 1 ? "s" : ""} in the next 30 days`,
                                 renewalAlertBlocks(renewalData),
-                                workspace.slackBotToken ?? undefined,
+                                ws.slackBotToken ?? undefined,
                             );
                         } catch {
                             // Non-critical

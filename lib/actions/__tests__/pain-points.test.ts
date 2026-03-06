@@ -184,15 +184,15 @@ describe("updatePainPoint", () => {
 
     it("throws Unauthorized when not logged in", async () => {
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(updatePainPoint("pp_1", { title: "Updated" })).rejects.toThrow("Unauthorized");
+        await expect(updatePainPoint("00000000-0000-0000-0000-000000000001", { title: "Updated" })).rejects.toThrow("Unauthorized");
     });
 
     it("throws when title is empty", async () => {
-        await expect(updatePainPoint("pp_1", { title: "" })).rejects.toThrow("Title is required");
+        await expect(updatePainPoint("00000000-0000-0000-0000-000000000001", { title: "" })).rejects.toThrow("Title is required");
     });
 
     it("returns success for valid update", async () => {
-        const result = await updatePainPoint("pp_1", { title: "Better title" });
+        const result = await updatePainPoint("00000000-0000-0000-0000-000000000001", { title: "Better title" });
         expect(result).toEqual({ success: true });
         expect(db.update).toHaveBeenCalledTimes(1);
     });

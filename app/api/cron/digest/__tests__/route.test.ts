@@ -202,16 +202,14 @@ describe("GET /api/cron/digest", () => {
     });
 
     it("also posts to Slack when workspace has Slack enabled", async () => {
-        (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([MOCK_OWNER]);
+        const slackOwner = {
+            ...MOCK_OWNER,
+            workspace: { ...MOCK_OWNER.workspace, slackEnabled: true, slackChannelId: "C001", slackBotToken: "xoxb-token" },
+        };
+        (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([slackOwner]);
         (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
             { toolName: "HubSpot", renewalDate: new Date(), monthlyCost: "200" },
         ]);
-        (db.query.workspaces.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
-            id: "ws_1",
-            slackEnabled: true,
-            slackChannelId: "C001",
-            slackBotToken: "xoxb-token",
-        });
 
         const res = await GET(makeRequest(VALID_AUTH));
         expect(res.status).toBe(200);
@@ -224,16 +222,14 @@ describe("GET /api/cron/digest", () => {
     });
 
     it("does not post to Slack when workspace has Slack disabled", async () => {
-        (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([MOCK_OWNER]);
+        const noSlackOwner = {
+            ...MOCK_OWNER,
+            workspace: { ...MOCK_OWNER.workspace, slackEnabled: false, slackChannelId: null, slackBotToken: null },
+        };
+        (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([noSlackOwner]);
         (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
             { toolName: "Zoom", renewalDate: new Date(), monthlyCost: "50" },
         ]);
-        (db.query.workspaces.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
-            id: "ws_1",
-            slackEnabled: false,
-            slackChannelId: null,
-            slackBotToken: null,
-        });
 
         const res = await GET(makeRequest(VALID_AUTH));
         expect(res.status).toBe(200);

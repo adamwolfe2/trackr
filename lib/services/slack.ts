@@ -18,23 +18,6 @@ export function getSlackClient(botToken?: string): WebClient | null {
     return _client;
 }
 
-/**
- * Get a Slack client for a specific workspace using its stored OAuth token.
- * Falls back to the global env var if no workspace token is stored.
- */
-export async function getWorkspaceSlackClient(workspaceId: string): Promise<WebClient | null> {
-    const workspace = await db.query.workspaces.findFirst({
-        where: eq(workspaces.id, workspaceId),
-        columns: { slackBotToken: true },
-    });
-
-    if (workspace?.slackBotToken) {
-        return new WebClient(workspace.slackBotToken);
-    }
-
-    // Fallback to global env var
-    return getSlackClient();
-}
 
 /**
  * Disconnect Slack from a workspace by clearing all OAuth fields.
@@ -179,11 +162,3 @@ export function renewalAlertBlocks(tools: Array<{ name: string; renewalDate: Dat
     ];
 }
 
-export function toolAddedBlocks(toolName: string, addedBy: string) {
-    return [
-        {
-            type: "section",
-            text: { type: "mrkdwn", text: `*${addedBy}* added *${toolName}* to the research queue.` },
-        },
-    ];
-}

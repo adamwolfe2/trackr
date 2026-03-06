@@ -175,13 +175,20 @@ export async function ingestAllChannels(workspaceId: string): Promise<number> {
         where: and(eq(feedChannels.workspaceId, workspaceId), eq(feedChannels.enabled, true)),
     });
 
+    // Process channels in parallel batches of 3 to avoid rate limits
+    const BATCH_SIZE = 3;
     let total = 0;
-    for (const ch of channels) {
-        try {
-            const count = await ingestChannel(ch.id);
-            total += count;
-        } catch (err) {
-            console.error(`[feed-pipeline] Channel ${ch.id} ingestion failed:`, err);
+    for (let i = 0; i < channels.length; i += BATCH_SIZE) {
+        const batch = channels.slice(i, i + BATCH_SIZE);
+        const results = await Promise.allSettled(
+            batch.map(ch => ingestChannel(ch.id))
+        );
+        for (const result of results) {
+            if (result.status === "fulfilled") {
+                total += result.value;
+            } else {
+                console.error(`[feed-pipeline] Channel ingestion failed:`, result.reason);
+            }
         }
     }
     return total;
@@ -211,12 +218,12 @@ export async function createDefaultChannels(workspaceId: string, companyContext?
         });
     }
 
-    for (const d of defaults) {
-        await db.insert(feedChannels).values({
+    await db.insert(feedChannels).values(
+        defaults.map(d => ({
             workspaceId,
             name: d.name,
             type: d.type,
             config: d.config,
-        });
-    }
+        }))
+    );
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { workspaces, tools, subscriptions } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { createHmac, timingSafeEqual } from "crypto";
 import { after } from "next/server";
 import { performDeepResearch } from "@/lib/actions/research";
@@ -162,11 +162,8 @@ async function handleResearch(urlArg: string, channelId: string, slackUserId: st
         where: eq(subscriptions.workspaceId, workspace.id),
     });
     const limits = getPlanLimits(subscription);
-    const toolCount = await db.query.tools.findMany({
-        where: eq(tools.workspaceId, workspace.id),
-        columns: { id: true },
-    });
-    if (limits.limits.tools !== Infinity && toolCount.length >= limits.limits.tools) {
+    const [{ value: toolCount }] = await db.select({ value: count() }).from(tools).where(eq(tools.workspaceId, workspace.id));
+    if (limits.limits.tools !== Infinity && toolCount >= limits.limits.tools) {
         return NextResponse.json({
             response_type: "ephemeral",
             text: `Tool limit reached (${limits.limits.tools} on ${limits.name} plan). Upgrade at trytrackr.com to add more.`,

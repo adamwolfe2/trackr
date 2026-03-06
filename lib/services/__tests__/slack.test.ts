@@ -39,7 +39,6 @@ import {
     researchCompleteBlocks,
     researchFailedBlocks,
     renewalAlertBlocks,
-    toolAddedBlocks,
 } from "../slack";
 
 function restoreMockWebClient() {
@@ -266,15 +265,3 @@ describe("renewalAlertBlocks", () => {
     });
 });
 
-describe("toolAddedBlocks", () => {
-    it("returns a section block with tool name and user", () => {
-        const blocks = toolAddedBlocks("Linear", "Adam") as Array<{
-            type: string;
-            text: { text: string };
-        }>;
-        expect(blocks).toHaveLength(1);
-        expect(blocks[0].type).toBe("section");
-        expect(blocks[0].text.text).toContain("Linear");
-        expect(blocks[0].text.text).toContain("Adam");
-    });
-});

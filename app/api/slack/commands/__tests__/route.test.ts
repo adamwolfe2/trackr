@@ -11,6 +11,11 @@ vi.mock("@/lib/db", () => ({
             subscriptions: { findFirst: vi.fn() },
             tools: { findMany: vi.fn() },
         },
+        select: vi.fn().mockReturnValue({
+            from: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([{ value: 0 }]),
+            }),
+        }),
         insert: vi.fn().mockReturnValue({
             values: vi.fn().mockReturnValue({
                 returning: vi.fn().mockResolvedValue([{ id: "tool_new_1" }]),
@@ -73,6 +78,11 @@ describe("POST /api/slack/commands", () => {
         (db.query.workspaces.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_WORKSPACE);
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.select as ReturnType<typeof vi.fn>).mockReturnValue({
+            from: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([{ value: 0 }]),
+            }),
+        });
         (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({
             values: vi.fn().mockReturnValue({
                 returning: vi.fn().mockResolvedValue([{ id: "tool_new_1" }]),

@@ -42,6 +42,13 @@ export async function addSoftwareSpend(formData: FormData) {
         renewalDate = parsed;
     }
 
+    const VALID_BILLING_CYCLES = ["monthly", "annual", "quarterly"] as const;
+    const VALID_STATUSES = ["active", "evaluating", "canceling", "canceled"] as const;
+    const billingCycle = (formData.get("billingCycle") as string) || "monthly";
+    const status = (formData.get("status") as string) || "active";
+    if (!VALID_BILLING_CYCLES.includes(billingCycle as typeof VALID_BILLING_CYCLES[number])) throw new Error("Invalid billing cycle");
+    if (!VALID_STATUSES.includes(status as typeof VALID_STATUSES[number])) throw new Error("Invalid status");
+
     await db.insert(softwareSpend).values({
         workspaceId,
         toolName,
@@ -49,8 +56,8 @@ export async function addSoftwareSpend(formData: FormData) {
         vendorUrl: (formData.get("vendorUrl") as string)?.trim() || null,
         monthlyCost,
         seatCount,
-        billingCycle: (formData.get("billingCycle") as string) || "monthly",
-        status: (formData.get("status") as string) || "active",
+        billingCycle,
+        status,
         notes: (formData.get("notes") as string)?.trim() || null,
         renewalDate,
     });

@@ -130,12 +130,15 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
     const prevReport = allReports[1];
     let scoreTrend: { delta: number; direction: "up" | "down" | "flat" } | null = null;
     if (prevReport?.scorecardSnapshot && tool.overallScore) {
-        const prevScores = Object.values(prevReport.scorecardSnapshot as Record<string, { score: number }>).map(s => s.score);
+        const currentScore = parseFloat(tool.overallScore);
+        const prevScores = Object.values(prevReport.scorecardSnapshot as Record<string, { score: number }>)
+            .map(s => s.score)
+            .filter(s => Number.isFinite(s));
         const prevAvg = prevScores.length > 0
             ? prevScores.reduce((a, b) => a + b, 0) / prevScores.length
             : null;
-        if (prevAvg !== null) {
-            const delta = parseFloat(tool.overallScore) - prevAvg;
+        if (prevAvg !== null && Number.isFinite(currentScore)) {
+            const delta = currentScore - prevAvg;
             scoreTrend = {
                 delta: Math.abs(parseFloat(delta.toFixed(1))),
                 direction: delta > 0.05 ? "up" : delta < -0.05 ? "down" : "flat",

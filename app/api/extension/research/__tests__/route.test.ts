@@ -18,6 +18,11 @@ vi.mock("@/lib/db", () => ({
             subscriptions: { findFirst: vi.fn() },
             tools: { findMany: vi.fn() },
         },
+        select: vi.fn().mockReturnValue({
+            from: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([{ value: 0 }]),
+            }),
+        }),
         insert: vi.fn().mockReturnValue({
             values: vi.fn().mockReturnValue({
                 returning: vi.fn().mockResolvedValue([{ id: "tool_new_1" }]),
@@ -75,7 +80,11 @@ describe("POST /api/extension/research", () => {
         (getWorkspaceFromApiKey as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_WORKSPACE);
         (rateLimit as ReturnType<typeof vi.fn>).mockReturnValue({ success: true, remaining: 4, reset: Date.now() + 60000 });
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.select as ReturnType<typeof vi.fn>).mockReturnValue({
+            from: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([{ value: 0 }]),
+            }),
+        });
         (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({
             values: vi.fn().mockReturnValue({
                 returning: vi.fn().mockResolvedValue([{ id: "tool_new_1" }]),
@@ -117,9 +126,11 @@ describe("POST /api/extension/research", () => {
             slug: "free",
             limits: { tools: 3, research: 5, members: 1 },
         });
-        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-            { id: "t1" }, { id: "t2" }, { id: "t3" },
-        ]);
+        (db.select as ReturnType<typeof vi.fn>).mockReturnValue({
+            from: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([{ value: 3 }]),
+            }),
+        });
 
         const res = await POST(makeRequest({ url: "https://notion.so" }, "valid_key"));
         expect(res.status).toBe(403);

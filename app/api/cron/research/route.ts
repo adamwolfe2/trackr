@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { tools, researchJobs } from "@/lib/db/schema";
-import { eq, and, lte, ne, isNotNull, lt } from "drizzle-orm";
+import { eq, and, lte, ne, isNotNull, lt, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { after } from "next/server";
@@ -52,13 +52,17 @@ export async function GET(req: Request) {
             columns: { id: true, toolId: true },
             limit: 20,
         });
-        for (const job of stuckJobs) {
-            await db.update(tools).set({ status: "failed" }).where(eq(tools.id, job.toolId));
-            await db.update(researchJobs).set({
-                status: "failed",
-                completedAt: now,
-                errorMessage: "Timed out — process did not complete within 15 minutes.",
-            }).where(eq(researchJobs.id, job.id));
+        if (stuckJobs.length > 0) {
+            const stuckToolIds = stuckJobs.map(j => j.toolId);
+            const stuckJobIds = stuckJobs.map(j => j.id);
+            await Promise.all([
+                db.update(tools).set({ status: "failed" }).where(inArray(tools.id, stuckToolIds)),
+                db.update(researchJobs).set({
+                    status: "failed",
+                    completedAt: now,
+                    errorMessage: "Timed out — process did not complete within 15 minutes.",
+                }).where(inArray(researchJobs.id, stuckJobIds)),
+            ]);
         }
 
         // ── Scheduled research ───────────────────────────────────────────────
@@ -74,16 +78,30 @@ export async function GET(req: Request) {
             limit: MAX_PER_RUN,
         });
 
-        // Advance nextResearchAt for each tool before triggering research
-        for (const tool of dueTools) {
-            const next = new Date(now);
-            switch (tool.researchInterval) {
-                case "weekly":    next.setDate(next.getDate() + 7);    break;
-                case "biweekly":  next.setDate(next.getDate() + 14);   break;
-                case "monthly":   next.setMonth(next.getMonth() + 1);  break;
-                default:          next.setDate(next.getDate() + 7);    break;
+        // Advance nextResearchAt — batch by interval to reduce round-trips
+        if (dueTools.length > 0) {
+            const byInterval = new Map<string, string[]>();
+            for (const tool of dueTools) {
+                const key = tool.researchInterval ?? "weekly";
+                const ids = byInterval.get(key) ?? [];
+                ids.push(tool.id);
+                byInterval.set(key, ids);
             }
-            await db.update(tools).set({ nextResearchAt: next }).where(eq(tools.id, tool.id));
+
+            const updates: Promise<unknown>[] = [];
+            for (const [interval, ids] of byInterval) {
+                const next = new Date(now);
+                switch (interval) {
+                    case "weekly":    next.setDate(next.getDate() + 7);    break;
+                    case "biweekly":  next.setDate(next.getDate() + 14);   break;
+                    case "monthly":   next.setMonth(next.getMonth() + 1);  break;
+                    default:          next.setDate(next.getDate() + 7);    break;
+                }
+                updates.push(
+                    db.update(tools).set({ nextResearchAt: next }).where(inArray(tools.id, ids))
+                );
+            }
+            await Promise.all(updates);
         }
 
         // Kick off research in background (cron returns quickly)

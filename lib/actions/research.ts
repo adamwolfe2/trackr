@@ -930,7 +930,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
             await logProgress(toolId, "Emergency fallback report saved — re-run research to generate full analysis.");
         } catch {
             // Absolute last resort — at least mark tool as failed so UI doesn't spin forever
-            await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId)).catch(() => null);
+            await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId)).catch(err => { console.error("[research] failed to mark tool as failed:", err); });
         }
 
         // Refund credit if we deducted one but research didn't complete successfully
@@ -941,7 +941,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                     updatedAt: new Date(),
                 })
                 .where(eq(subscriptions.workspaceId, tool.workspaceId))
-                .catch(() => null);
+                .catch(err => { console.error("[research] failed to refund credit:", err); });
         }
 
         // Mark researchJob as failed
@@ -950,7 +950,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                 status: "failed",
                 completedAt: new Date(),
                 errorMessage: message,
-            }).where(eq(researchJobs.id, researchJob.id)).catch(() => null);
+            }).where(eq(researchJobs.id, researchJob.id)).catch(err => { console.error("[research] failed to mark job as failed:", err); });
         }
 
         // Send notifications only if we couldn't save any report at all
