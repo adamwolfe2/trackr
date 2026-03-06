@@ -17,6 +17,7 @@ vi.mock("@/lib/db", () => ({
             toolSuggestions: { findMany: vi.fn() },
             referrals: { findFirst: vi.fn() },
             subscriptions: { findFirst: vi.fn() },
+            tools: { findMany: vi.fn(), findFirst: vi.fn() },
         },
         update: vi.fn(),
     },
@@ -32,12 +33,23 @@ vi.mock("drizzle-orm", async (importOriginal) => {
         desc: vi.fn((col) => col),
         gte: vi.fn((...args) => args),
         lte: vi.fn((...args) => args),
+        lt: vi.fn((...args) => args),
+        isNotNull: vi.fn((col) => col),
     };
 });
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { getNotifications, markNotificationsRead } from "../notifications";
+
+vi.mock("@/lib/db/schema", () => ({
+    researchJobs: {},
+    workspaceMembers: {},
+    softwareSpend: {},
+    toolSuggestions: {},
+    subscriptions: {},
+    tools: {},
+}));
 
 vi.mock("@/lib/db/referrals-schema", () => ({
     referrals: {},
@@ -61,6 +73,8 @@ describe("getNotifications", () => {
         (db.query.toolSuggestions.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         (db.query.referrals.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.tools.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     });
 
     it("returns empty array when not logged in", async () => {
@@ -297,6 +311,8 @@ describe("getNotifications — referral_signup type", () => {
         (db.query.toolSuggestions.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         (db.query.referrals.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.tools.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     });
 
     it("returns no referral notification when referral row is null", async () => {
@@ -360,6 +376,8 @@ describe("getNotifications — subscription_change type", () => {
         (db.query.toolSuggestions.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         (db.query.referrals.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.tools.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     });
 
     it("returns no subscription notification when no subscription exists", async () => {

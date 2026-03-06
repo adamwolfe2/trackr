@@ -119,7 +119,8 @@ describe("ingestChannel", () => {
             ],
         });
         const result = await ingestChannel("ch_1");
-        expect(db.insert).toHaveBeenCalledTimes(2);
+        // Batch insert: 1 call for all results + 1 update for lastFetchedAt
+        expect(db.insert).toHaveBeenCalledTimes(1);
         expect(result).toBe(2);
     });
 

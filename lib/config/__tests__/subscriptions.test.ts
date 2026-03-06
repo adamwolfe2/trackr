@@ -5,7 +5,7 @@ describe("getPlanLimits", () => {
   it("returns FREE plan when no subscription", () => {
     const plan = getPlanLimits(undefined);
     expect(plan.slug).toBe("free");
-    expect(plan.limits.research).toBe(3);
+    expect(plan.limits.research).toBe(5);
   });
 
   it("returns FREE plan when subscription is canceled", () => {
@@ -63,7 +63,7 @@ describe("hasFeature", () => {
 describe("plan limits", () => {
   it("FREE plan has correct limits", () => {
     expect(PLANS.FREE.limits.tools).toBe(15);
-    expect(PLANS.FREE.limits.research).toBe(3);
+    expect(PLANS.FREE.limits.research).toBe(5);
     expect(PLANS.FREE.limits.members).toBe(1);
     expect(PLANS.FREE.extraCreditPrice).toBeNull();
   });

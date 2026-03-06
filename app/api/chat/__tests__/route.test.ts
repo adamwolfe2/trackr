@@ -4,17 +4,28 @@ vi.mock("@clerk/nextjs/server", () => ({
     currentUser: vi.fn(),
 }));
 
-vi.mock("@/lib/db", () => ({
-    db: {
-        query: {
-            workspaceMembers: { findFirst: vi.fn() },
-            softwareSpend: { findMany: vi.fn() },
-            painPoints: { findMany: vi.fn() },
+vi.mock("@/lib/db", () => {
+    const selectChain = {
+        from: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+                orderBy: vi.fn().mockReturnValue({
+                    limit: vi.fn().mockResolvedValue([]),
+                }),
+            }),
+        }),
+    };
+    return {
+        db: {
+            query: {
+                workspaceMembers: { findFirst: vi.fn() },
+                softwareSpend: { findMany: vi.fn() },
+                painPoints: { findMany: vi.fn() },
+            },
+            selectDistinctOn: vi.fn(),
+            select: vi.fn().mockReturnValue(selectChain),
         },
-        selectDistinctOn: vi.fn(),
-        select: vi.fn(),
-    },
-}));
+    };
+});
 
 vi.mock("@/lib/ai/embedding", () => ({
     generateEmbedding: vi.fn().mockResolvedValue(null),
