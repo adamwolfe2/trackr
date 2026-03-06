@@ -9,7 +9,8 @@ import { redirect } from "next/navigation";
 import { createHash, timingSafeEqual } from "crypto";
 import { PLANS, getPlanLimits } from "@/lib/config/subscriptions";
 import { rateLimit } from "@/lib/middleware/rate-limit";
-import { AdminTrendChart } from "@/components/admin/admin-trend-chart";
+import nextDynamic from "next/dynamic";
+const AdminTrendChart = nextDynamic(() => import("@/components/admin/admin-trend-chart").then(m => m.AdminTrendChart), { ssr: false });
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 export const metadata: Metadata = {

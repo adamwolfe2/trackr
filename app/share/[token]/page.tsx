@@ -5,7 +5,8 @@ import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { ShareActions } from "./share-actions";
 import { TrackrLogo } from "@/components/common/trackr-logo";
-import { ShareRadarChart } from "@/components/share/share-radar-chart";
+import nextDynamic from "next/dynamic";
+const ShareRadarChart = nextDynamic(() => import("@/components/share/share-radar-chart").then(m => m.ShareRadarChart), { ssr: false });
 import { MarkdownText, CompetitorAnalysisBlock } from "@/components/share/markdown-text";
 import type { Metadata } from "next";
 

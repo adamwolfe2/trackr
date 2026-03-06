@@ -8,15 +8,43 @@ const {
     mockGetUser,
     mockEmailSend,
     mockSendRenewalAlertEmail,
+    mockSendStackHealthDigest,
     mockPostMessage,
     mockRenewalAlertBlocks,
-} = vi.hoisted(() => ({
-    mockGetUser: vi.fn(),
-    mockEmailSend: vi.fn().mockResolvedValue({ id: "email_1" }),
-    mockSendRenewalAlertEmail: vi.fn().mockResolvedValue(undefined),
-    mockPostMessage: vi.fn().mockResolvedValue(undefined),
-    mockRenewalAlertBlocks: vi.fn().mockReturnValue([]),
-}));
+    mockComputeStackInsights,
+    mockSelectChain,
+} = vi.hoisted(() => {
+    const selectChain = {
+        from: vi.fn().mockReturnValue({
+            innerJoin: vi.fn().mockReturnValue({
+                where: vi.fn().mockResolvedValue([{ count: 0 }]),
+            }),
+            where: vi.fn().mockResolvedValue([{ count: 0 }]),
+        }),
+    };
+    return {
+        mockGetUser: vi.fn(),
+        mockEmailSend: vi.fn().mockResolvedValue({ id: "email_1" }),
+        mockSendRenewalAlertEmail: vi.fn().mockResolvedValue(undefined),
+        mockSendStackHealthDigest: vi.fn().mockResolvedValue(undefined),
+        mockPostMessage: vi.fn().mockResolvedValue(undefined),
+        mockRenewalAlertBlocks: vi.fn().mockReturnValue([]),
+        mockComputeStackInsights: vi.fn().mockReturnValue({
+            score: 60,
+            label: "Mixed",
+            totalActiveSpend: 5000,
+            aiNativeCount: 2,
+            aiEnabledCount: 3,
+            traditionalCount: 4,
+            unknownCount: 0,
+            timeSavedPerMonth: 10,
+            dollarValueSaved: 800,
+            opportunities: [],
+            enrichedTools: [],
+        }),
+        mockSelectChain: selectChain,
+    };
+});
 
 vi.mock("@clerk/nextjs/server", () => ({
     clerkClient: vi.fn().mockResolvedValue({
@@ -32,6 +60,10 @@ vi.mock("@/lib/db", () => ({
             softwareSpend: { findMany: vi.fn() },
             workspaces: { findFirst: vi.fn() },
         },
+        select: vi.fn().mockReturnValue(mockSelectChain),
+        update: vi.fn().mockReturnValue({
+            set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+        }),
     },
 }));
 
@@ -43,6 +75,11 @@ vi.mock("resend", () => ({
 
 vi.mock("@/lib/email/resend", () => ({
     sendRenewalAlertEmail: mockSendRenewalAlertEmail,
+    sendStackHealthDigest: mockSendStackHealthDigest,
+}));
+
+vi.mock("@/lib/utils/stack-insights", () => ({
+    computeStackInsights: mockComputeStackInsights,
 }));
 
 vi.mock("@/lib/services/slack", () => ({
@@ -59,6 +96,7 @@ vi.mock("drizzle-orm", async (importOriginal) => {
         gte: vi.fn((...args) => args),
         lte: vi.fn((...args) => args),
         desc: vi.fn((...args) => args),
+        sql: vi.fn((...args) => args),
     };
 });
 
@@ -76,7 +114,7 @@ function makeRequest(authHeader?: string) {
 const MOCK_OWNER = {
     userId: "user_1",
     workspaceId: "ws_1",
-    workspace: { id: "ws_1", name: "Acme Inc" },
+    workspace: { id: "ws_1", name: "Acme Inc", currentStreak: 3, longestStreak: 5 },
 };
 
 describe("GET /api/cron/digest", () => {
@@ -200,5 +238,60 @@ describe("GET /api/cron/digest", () => {
         const res = await GET(makeRequest(VALID_AUTH));
         expect(res.status).toBe(200);
         expect(mockPostMessage).not.toHaveBeenCalled();
+    });
+
+    it("sends stack health digest when workspace has spend data", async () => {
+        (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([MOCK_OWNER]);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { id: "sp_1", toolName: "Slack", status: "active", monthlyCost: "100", renewalDate: null, workspaceId: "ws_1", createdAt: new Date() },
+        ]);
+
+        const res = await GET(makeRequest(VALID_AUTH));
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.stackDigestsSent).toBe(1);
+        expect(mockSendStackHealthDigest).toHaveBeenCalledWith("owner@acme.com", expect.objectContaining({
+            workspaceName: "Acme Inc",
+            totalMonthlySpend: expect.any(Number),
+            aiScore: expect.any(Number),
+        }));
+    });
+
+    it("does not send stack health digest when workspace has no spend data", async () => {
+        (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([MOCK_OWNER]);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+
+        const res = await GET(makeRequest(VALID_AUTH));
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.stackDigestsSent).toBe(0);
+        expect(mockSendStackHealthDigest).not.toHaveBeenCalled();
+    });
+
+    it("includes streak in stack health digest", async () => {
+        (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([MOCK_OWNER]);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { id: "sp_1", toolName: "Notion", status: "active", monthlyCost: "50", renewalDate: null, workspaceId: "ws_1", createdAt: new Date() },
+        ]);
+
+        const res = await GET(makeRequest(VALID_AUTH));
+        expect(res.status).toBe(200);
+        expect(mockSendStackHealthDigest).toHaveBeenCalledWith("owner@acme.com", expect.objectContaining({
+            currentStreak: expect.any(Number),
+        }));
+    });
+
+    it("returns stackDigestsSent count in response", async () => {
+        (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([MOCK_OWNER]);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+
+        const res = await GET(makeRequest(VALID_AUTH));
+        const body = await res.json();
+        expect(body).toHaveProperty("stackDigestsSent");
+        expect(typeof body.stackDigestsSent).toBe("number");
     });
 });
