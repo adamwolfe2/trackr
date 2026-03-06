@@ -405,6 +405,84 @@ export async function sendRenewalAlertEmail(
     }));
 }
 
+// ── Stack Health Digest Email ────────────────────────────────────────────────
+
+export interface StackHealthDigestData {
+    workspaceName: string;
+    totalMonthlySpend: number;
+    spendDelta: number; // vs previous period (positive = increased)
+    aiScore: number;
+    renewals: Array<{ name: string; renewalDate: Date; monthlyCost: string | null }>;
+    currentStreak: number;
+    recommendation?: string; // AI-generated single recommendation
+}
+
+export async function sendStackHealthDigest(to: string, data: StackHealthDigestData) {
+    if (!process.env.RESEND_API_KEY) return;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+
+    const spendDirection = data.spendDelta >= 0 ? "+" : "";
+    const spendDeltaStr = `${spendDirection}$${Math.abs(Math.round(data.spendDelta))}/mo`;
+
+    const renewalRows = data.renewals.slice(0, 5).map(r => {
+        const date = new Date(r.renewalDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+        const cost = r.monthlyCost && parseFloat(r.monthlyCost) > 0
+            ? `$${parseFloat(r.monthlyCost).toLocaleString("en-US", { minimumFractionDigits: 0 })}/mo`
+            : "";
+        return `<tr>
+            <td style="padding:6px 8px;font-size:12px;border-bottom:1px solid #D0D0CC;">${escapeHtml(r.name)}</td>
+            <td style="padding:6px 8px;font-size:12px;text-align:right;border-bottom:1px solid #D0D0CC;">${date}</td>
+            <td style="padding:6px 8px;font-size:12px;text-align:right;border-bottom:1px solid #D0D0CC;">${cost}</td>
+        </tr>`;
+    }).join("");
+
+    const streakLine = data.currentStreak > 1
+        ? `<p style="font-size:12px;color:#555;margin:0 0 16px;">Week ${data.currentStreak} streak — keep it going.</p>`
+        : "";
+
+    const recommendationBlock = data.recommendation
+        ? `<div style="background:#fff;border:1px solid #000;padding:12px;margin:0 0 16px;">
+               <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#999;margin:0 0 6px;">AI Recommendation</p>
+               <p style="font-size:12px;color:#333;margin:0;line-height:1.5;">${escapeHtml(data.recommendation)}</p>
+           </div>`
+        : "";
+
+    const renewalSection = data.renewals.length > 0
+        ? `<p style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#999;margin:16px 0 6px;">Upcoming Renewals</p>
+           <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+               <tbody>${renewalRows}</tbody>
+           </table>`
+        : "";
+
+    const resend = getResend();
+    await sendWithRetry(() => resend.emails.send({
+        from: FROM,
+        to,
+        subject: `Stack Health Pulse — $${Math.round(data.totalMonthlySpend)}/mo | AI Score: ${data.aiScore}/100`,
+        html: emailWrapper(`
+            <p style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:#999;margin:0 0 8px;">Weekly Stack Health</p>
+            <h1 style="font-family:Georgia,'Newsreader',serif;font-weight:normal;font-size:22px;margin:0 0 16px;">
+                ${escapeHtml(data.workspaceName)}
+            </h1>
+            ${streakLine}
+            <div style="display:flex;gap:16px;margin:0 0 16px;">
+                <div style="flex:1;background:#fff;border:1px solid #000;padding:12px;text-align:center;">
+                    <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#999;margin:0 0 4px;">Monthly Spend</p>
+                    <p style="font-family:Georgia,serif;font-size:20px;margin:0;">$${Math.round(data.totalMonthlySpend)}</p>
+                    <p style="font-size:11px;color:${data.spendDelta > 0 ? "#c00" : data.spendDelta < 0 ? "#060" : "#999"};margin:4px 0 0;">${spendDeltaStr} vs last week</p>
+                </div>
+                <div style="flex:1;background:#fff;border:1px solid #000;padding:12px;text-align:center;">
+                    <p style="font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#999;margin:0 0 4px;">AI Nativeness</p>
+                    <p style="font-family:Georgia,serif;font-size:20px;margin:0;">${data.aiScore}/100</p>
+                </div>
+            </div>
+            ${recommendationBlock}
+            ${renewalSection}
+            ${emailButton(`${appUrl}/stack`, "View Full Stack →")}
+        `),
+    }));
+}
+
 // ── Audit Scorecard Email ─────────────────────────────────────────────────────
 
 import type { AuditScorecard } from "@/lib/actions/audit";

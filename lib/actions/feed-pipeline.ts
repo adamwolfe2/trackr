@@ -43,24 +43,24 @@ async function ingestTopic(workspaceId: string, channelId: string, config: Chann
         includeAnswer: false,
     });
 
-    let count = 0;
-    for (const item of result.results) {
-        try {
-            await db.insert(feedItems).values({
-                workspaceId,
-                channelId,
-                title: item.title,
-                url: item.url,
-                source: extractDomain(item.url),
-                publishedAt: new Date(),
-                summary: item.content?.slice(0, 400) || null,
-            }).onConflictDoNothing(); // relies on URL uniqueness per workspace
-            count++;
-        } catch (err) {
-            console.error("[feed-pipeline] Failed to insert feed item:", err);
-        }
+    const rows = result.results.map(item => ({
+        workspaceId,
+        channelId,
+        title: item.title,
+        url: item.url,
+        source: extractDomain(item.url),
+        publishedAt: new Date(),
+        summary: item.content?.slice(0, 400) || null,
+    }));
+
+    if (rows.length === 0) return 0;
+
+    try {
+        await db.insert(feedItems).values(rows).onConflictDoNothing();
+    } catch (err) {
+        console.error("[feed-pipeline] Failed to batch insert feed items:", err);
     }
-    return count;
+    return rows.length;
 }
 
 async function ingestRss(workspaceId: string, channelId: string, config: ChannelConfig): Promise<number> {
@@ -82,27 +82,29 @@ async function ingestRss(workspaceId: string, channelId: string, config: Channel
         const entries = extractFeedEntries(parsed);
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-        let count = 0;
-        for (const entry of entries.slice(0, 20)) {
-            const pubDate = entry.publishedAt ? new Date(entry.publishedAt) : null;
-            if (pubDate && pubDate < oneDayAgo) continue; // Skip old entries
+        const rows = entries.slice(0, 20)
+            .filter(entry => {
+                const pubDate = entry.publishedAt ? new Date(entry.publishedAt) : null;
+                return !(pubDate && pubDate < oneDayAgo);
+            })
+            .map(entry => ({
+                workspaceId,
+                channelId,
+                title: entry.title || "Untitled",
+                url: entry.url,
+                source: extractDomain(feedUrl),
+                publishedAt: entry.publishedAt ? new Date(entry.publishedAt) : new Date(),
+                summary: entry.summary?.slice(0, 400) || null,
+            }));
 
-            try {
-                await db.insert(feedItems).values({
-                    workspaceId,
-                    channelId,
-                    title: entry.title || "Untitled",
-                    url: entry.url,
-                    source: extractDomain(feedUrl),
-                    publishedAt: pubDate || new Date(),
-                    summary: entry.summary?.slice(0, 400) || null,
-                }).onConflictDoNothing();
-                count++;
-            } catch (err) {
-                console.error("[feed-pipeline] Failed to insert RSS item:", err);
-            }
+        if (rows.length === 0) return 0;
+
+        try {
+            await db.insert(feedItems).values(rows).onConflictDoNothing();
+        } catch (err) {
+            console.error("[feed-pipeline] Failed to batch insert RSS items:", err);
         }
-        return count;
+        return rows.length;
     } catch (err) {
         console.error("[feed-pipeline] RSS ingestion failed:", err);
         return 0;

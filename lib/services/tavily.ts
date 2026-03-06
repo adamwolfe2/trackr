@@ -1,3 +1,6 @@
+import { createHash } from "crypto";
+import { cachedFetch, buildCacheKey } from "@/lib/services/research-cache";
+
 export interface TavilyResult {
     title: string;
     url: string;
@@ -32,6 +35,24 @@ export class TavilyService {
             return { answer: "", results: [] };
         }
 
+        const queryHash = createHash("sha256")
+            .update(query + JSON.stringify(options))
+            .digest("hex")
+            .slice(0, 16);
+        const cacheKey = buildCacheKey("tavily", queryHash);
+
+        return cachedFetch(cacheKey, 6 * 3600, () => this._doSearch(query, options));
+    }
+
+    private async _doSearch(
+        query: string,
+        options: {
+            searchDepth?: "basic" | "advanced";
+            maxResults?: number;
+            includeDomains?: string[];
+            includeAnswer?: boolean;
+        }
+    ): Promise<TavilySearchResponse> {
         try {
             const body: Record<string, unknown> = {
                 api_key: this.apiKey,

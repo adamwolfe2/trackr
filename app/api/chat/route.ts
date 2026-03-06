@@ -102,9 +102,11 @@ export async function POST(req: NextRequest) {
         // Fetch all context in parallel
         const [queryEmbedding, spendEntries, activePainPoints] = await Promise.all([
             generateEmbedding(query).catch(() => null),
-            db.query.softwareSpend.findMany({
-                where: eq(softwareSpend.workspaceId, wsId),
-            }),
+            db.select()
+                .from(softwareSpend)
+                .where(and(eq(softwareSpend.workspaceId, wsId), eq(softwareSpend.status, "active")))
+                .orderBy(desc(softwareSpend.monthlyCost))
+                .limit(30),
             db.query.painPoints.findMany({
                 where: and(eq(painPoints.workspaceId, wsId), eq(painPoints.active, true)),
             }),
@@ -228,7 +230,7 @@ ${toolContext ? `## Researched Tool Reports\n${toolContext}\n` : ""}
 - If asked about a tool not in the workspace, say so and suggest they research it via Trackr's research pipeline.`;
 
         const result = await streamText({
-            model: openai("gpt-4o"),
+            model: openai("gpt-4o-mini"),
             messages: [
                 { role: "system", content: systemPrompt },
                 ...messages,

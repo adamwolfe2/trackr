@@ -1,12 +1,13 @@
 import { db } from "@/lib/db";
-import { tools, workspaceMembers, workspaces, softwareSpend } from "@/lib/db/schema";
-import { desc, eq, gte, and, lte } from "drizzle-orm";
+import { tools, workspaceMembers, workspaces, softwareSpend, researchJobs } from "@/lib/db/schema";
+import { desc, eq, gte, and, lte, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { Resend } from "resend";
-import { sendRenewalAlertEmail } from "@/lib/email/resend";
+import { sendRenewalAlertEmail, sendStackHealthDigest } from "@/lib/email/resend";
 import { postMessage, renewalAlertBlocks } from "@/lib/services/slack";
 import { timingSafeEqual } from "crypto";
+import { computeStackInsights } from "@/lib/utils/stack-insights";
 
 export const dynamic = 'force-dynamic';
 
@@ -56,6 +57,7 @@ export async function GET(req: Request) {
 
         let digestsSent = 0;
         let renewalsSent = 0;
+        let stackDigestsSent = 0;
         const clerk = await clerkClient();
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
 
@@ -153,12 +155,83 @@ export async function GET(req: Request) {
                         }
                     }
                 }
+
+                // --- Streak Update ---
+                // Check if workspace had any research completions or spend changes this week
+                const wsData = owner.workspace;
+                const [completedJobsThisWeek, spendChangesThisWeek] = await Promise.all([
+                    db.select({ count: sql<number>`count(*)` })
+                        .from(researchJobs)
+                        .innerJoin(tools, eq(researchJobs.toolId, tools.id))
+                        .where(and(
+                            eq(tools.workspaceId, owner.workspaceId),
+                            eq(researchJobs.status, "complete"),
+                            gte(researchJobs.completedAt, sevenDaysAgo),
+                        )),
+                    db.select({ count: sql<number>`count(*)` })
+                        .from(softwareSpend)
+                        .where(and(
+                            eq(softwareSpend.workspaceId, owner.workspaceId),
+                            gte(softwareSpend.createdAt, sevenDaysAgo),
+                        )),
+                ]);
+
+                const hadActivity = (Number(completedJobsThisWeek[0]?.count) || 0) > 0
+                    || (Number(spendChangesThisWeek[0]?.count) || 0) > 0;
+
+                const currentStreak = (wsData as { currentStreak?: number }).currentStreak ?? 0;
+                const longestStreak = (wsData as { longestStreak?: number }).longestStreak ?? 0;
+
+                if (hadActivity) {
+                    const newStreak = currentStreak + 1;
+                    const newLongest = Math.max(longestStreak, newStreak);
+                    await db.update(workspaces).set({
+                        currentStreak: newStreak,
+                        longestStreak: newLongest,
+                    }).where(eq(workspaces.id, owner.workspaceId));
+                } else if (currentStreak > 0) {
+                    await db.update(workspaces).set({ currentStreak: 0 })
+                        .where(eq(workspaces.id, owner.workspaceId));
+                }
+
+                // --- Weekly Stack Health Digest ---
+                const allSpend = await db.query.softwareSpend.findMany({
+                    where: eq(softwareSpend.workspaceId, owner.workspaceId),
+                });
+
+                if (allSpend.length > 0) {
+                    const insights = computeStackInsights(allSpend);
+
+                    // Upcoming renewals within 14 days for the digest
+                    const fourteenDays = new Date();
+                    fourteenDays.setDate(fourteenDays.getDate() + 14);
+                    const digestRenewals = allSpend
+                        .filter(s => s.status === "active" && s.renewalDate && new Date(s.renewalDate) >= now && new Date(s.renewalDate) <= fourteenDays)
+                        .map(s => ({ name: s.toolName, renewalDate: s.renewalDate!, monthlyCost: s.monthlyCost }));
+
+                    // Simple recommendation from opportunities
+                    const topOpp = insights.opportunities[0];
+                    const recommendation = topOpp ? `${topOpp.title}${topOpp.description ? ` — ${topOpp.description.slice(0, 120)}` : ""}` : undefined;
+
+                    const updatedStreak = hadActivity ? currentStreak + 1 : 0;
+
+                    await sendStackHealthDigest(email, {
+                        workspaceName: wsData.name,
+                        totalMonthlySpend: insights.totalActiveSpend,
+                        spendDelta: 0, // TODO: track previous week's spend for delta calculation
+                        aiScore: insights.score,
+                        renewals: digestRenewals,
+                        currentStreak: updatedStreak,
+                        recommendation,
+                    });
+                    stackDigestsSent++;
+                }
             } catch {
                 // Skip users we can't email
             }
         }
 
-        return NextResponse.json({ success: true, digestsSent, renewalsSent });
+        return NextResponse.json({ success: true, digestsSent, renewalsSent, stackDigestsSent });
     } catch (err) {
         console.error("[api/cron/digest]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

@@ -5,6 +5,9 @@ export type ParsedStackItem = {
     estimatedSeats?: number | null;
     billingCycle?: string | null;
     notes?: string | null;
+    monthlyCost?: number | null;
+    renewalDate?: string | null;
+    contractLengthMonths?: number | null;
 };
 
 /**
@@ -36,14 +39,34 @@ export function parseStackJson(
             (i: unknown) =>
                 i && typeof i === "object" && typeof (i as Record<string, unknown>).toolName === "string"
         )
-        .map((i: Record<string, unknown>) => ({
-            toolName: String(i.toolName),
-            category: typeof i.category === "string" ? i.category : null,
-            vendorUrl: typeof i.vendorUrl === "string" ? i.vendorUrl : null,
-            estimatedSeats: typeof i.estimatedSeats === "number" ? i.estimatedSeats : null,
-            billingCycle: typeof i.billingCycle === "string" ? i.billingCycle : "monthly",
-            notes: typeof i.notes === "string" ? i.notes : null,
-        }));
+        .map((i: Record<string, unknown>) => {
+            // Normalize renewalDate to ISO string
+            let renewalDate: string | null = null;
+            if (typeof i.renewalDate === "string" && i.renewalDate) {
+                const d = new Date(i.renewalDate);
+                if (!isNaN(d.getTime())) renewalDate = d.toISOString().slice(0, 10);
+            }
+
+            // Parse monthlyCost — convert annual/quarterly if billingCycle hints at it
+            let monthlyCost: number | null = null;
+            const rawCost = typeof i.monthlyCost === "number" ? i.monthlyCost
+                : typeof i.monthlyCost === "string" ? parseFloat(i.monthlyCost) : null;
+            if (rawCost !== null && !isNaN(rawCost) && rawCost >= 0) {
+                monthlyCost = rawCost;
+            }
+
+            return {
+                toolName: String(i.toolName),
+                category: typeof i.category === "string" ? i.category : null,
+                vendorUrl: typeof i.vendorUrl === "string" ? i.vendorUrl : null,
+                estimatedSeats: typeof i.estimatedSeats === "number" ? i.estimatedSeats : null,
+                billingCycle: typeof i.billingCycle === "string" ? i.billingCycle : "monthly",
+                notes: typeof i.notes === "string" ? i.notes : null,
+                monthlyCost,
+                renewalDate,
+                contractLengthMonths: typeof i.contractLengthMonths === "number" ? i.contractLengthMonths : null,
+            };
+        });
 
     if (items.length === 0) {
         return { error: "No valid tools found. Each item needs a 'toolName' field." };

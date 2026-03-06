@@ -1,9 +1,9 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { researchJobs, workspaceMembers, softwareSpend, toolSuggestions, subscriptions } from "@/lib/db/schema";
+import { researchJobs, workspaceMembers, softwareSpend, toolSuggestions, subscriptions, tools } from "@/lib/db/schema";
 import { referrals } from "@/lib/db/referrals-schema";
-import { eq, desc, and, ne, gte, lte } from "drizzle-orm";
+import { eq, desc, and, ne, gte, lte, lt, isNotNull } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
@@ -13,7 +13,9 @@ export type NotificationType =
     | 'renewal_soon'
     | 'new_suggestion'
     | 'referral_signup'
-    | 'subscription_change';
+    | 'subscription_change'
+    | 'tool_stale'
+    | 'renewal_decision';
 
 export type Notification = {
     id: string;
@@ -170,6 +172,72 @@ export async function getNotifications(): Promise<Notification[]> {
         }
     }
 
+    // 6. Stale tools (not researched in 90+ days)
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+    const staleTools = await db.query.tools.findMany({
+        where: and(
+            eq(tools.workspaceId, member.workspaceId),
+            eq(tools.status, 'active'),
+            isNotNull(tools.lastResearchedAt),
+            lt(tools.lastResearchedAt, ninetyDaysAgo),
+        ),
+        columns: { id: true, name: true, lastResearchedAt: true },
+        limit: 5,
+    });
+
+    const staleNotifications: Notification[] = staleTools.map(t => {
+        const daysSince = Math.floor((now.getTime() - new Date(t.lastResearchedAt!).getTime()) / (1000 * 60 * 60 * 24));
+        return {
+            id: `stale-${t.id}`,
+            type: 'tool_stale' as const,
+            title: 'Needs Refresh',
+            message: `${t.name} hasn't been researched in ${daysSince} days.`,
+            createdAt: now,
+            read: seenIds.includes(`stale-${t.id}`),
+            link: `/tools/${t.id}`,
+        };
+    });
+
+    // 7. Renewal decision prompts (14-21 days away, score < 7)
+    const fourteenDays = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+    const twentyOneDays = new Date(now.getTime() + 21 * 24 * 60 * 60 * 1000);
+    const renewalDecisionSpend = await db.query.softwareSpend.findMany({
+        where: and(
+            eq(softwareSpend.workspaceId, member.workspaceId),
+            eq(softwareSpend.status, 'active'),
+            gte(softwareSpend.renewalDate, fourteenDays),
+            lte(softwareSpend.renewalDate, twentyOneDays),
+        ),
+        limit: 5,
+    });
+
+    // Match spend items to tools with low scores
+    const renewalDecisionNotifications: Notification[] = [];
+    for (const spend of renewalDecisionSpend) {
+        const matchedTool = await db.query.tools.findFirst({
+            where: and(
+                eq(tools.workspaceId, member.workspaceId),
+                eq(tools.status, 'active'),
+            ),
+            columns: { id: true, name: true, overallScore: true },
+        });
+
+        // Check if tool name matches and score < 7
+        if (matchedTool && matchedTool.overallScore && parseFloat(matchedTool.overallScore) < 7) {
+            const daysUntil = Math.ceil((new Date(spend.renewalDate!).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            const annualCost = (parseFloat(spend.monthlyCost ?? "0") * 12).toFixed(0);
+            renewalDecisionNotifications.push({
+                id: `renewal-decision-${spend.id}`,
+                type: 'renewal_decision' as const,
+                title: 'Review Before Renewal',
+                message: `${spend.toolName} renews in ${daysUntil} days ($${annualCost}/yr). Score: ${parseFloat(matchedTool.overallScore).toFixed(1)}/10. Research alternatives?`,
+                createdAt: now,
+                read: seenIds.includes(`renewal-decision-${spend.id}`),
+                link: '/submit',
+            });
+        }
+    }
+
     // Merge and sort by date (newest first)
     const all = [
         ...jobNotifications,
@@ -177,6 +245,8 @@ export async function getNotifications(): Promise<Notification[]> {
         ...suggestionNotifications,
         ...referralNotifications,
         ...subscriptionNotifications,
+        ...staleNotifications,
+        ...renewalDecisionNotifications,
     ]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 15);

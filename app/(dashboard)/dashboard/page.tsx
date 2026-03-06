@@ -1,4 +1,4 @@
-import { Clock, ArrowRight, PlusCircle, DollarSign, AlertTriangle, CalendarClock, Sparkles, RefreshCw } from "lucide-react";
+import { Clock, ArrowRight, PlusCircle, DollarSign, AlertTriangle, CalendarClock, Sparkles, RefreshCw, Flame } from "lucide-react";
 import { db } from "@/lib/db";
 import { tools, painPoints, workspaceMembers, workspaces, researchJobs, reports, softwareSpend, toolSuggestions } from "@/lib/db/schema";
 import { eq, sql, desc, inArray, gte, and, ne, isNotNull, lte } from "drizzle-orm";
@@ -218,9 +218,17 @@ export default async function DashboardPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h1 className="font-serif text-3xl font-normal">Dashboard</h1>
-                <span className="font-mono text-xs text-neutral-400">
-                    {member.workspace.name}
-                </span>
+                <div className="flex items-center gap-3">
+                    {(member.workspace as { currentStreak?: number }).currentStreak != null && (member.workspace as { currentStreak?: number }).currentStreak! > 0 && (
+                        <span className="flex items-center gap-1 font-mono text-xs border border-black px-2 py-0.5" title={`${(member.workspace as { currentStreak?: number }).currentStreak}-week activity streak`}>
+                            <Flame className="h-3 w-3" />
+                            {(member.workspace as { currentStreak?: number }).currentStreak}w streak
+                        </span>
+                    )}
+                    <span className="font-mono text-xs text-neutral-400">
+                        {member.workspace.name}
+                    </span>
+                </div>
             </div>
 
             <DashboardStats

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Star, Loader2, X, Search, Clock } from "lucide-react";
+import { Star, Loader2, X, Search, Clock, AlertCircle } from "lucide-react";
 import {
     DndContext,
     DragEndEvent,
@@ -67,12 +67,25 @@ function ToolLogo({ name, logoUrl, websiteUrl }: { name: string; logoUrl?: strin
     return <img src={src} alt={name} className="w-6 h-6 object-contain flex-shrink-0" width={24} height={24} onError={() => setHasError(true)} />;
 }
 
+function isStale(tool: KanbanTool): boolean {
+    if (tool.status !== "active" || !tool.lastResearchedAt) return false;
+    const daysSince = (Date.now() - new Date(tool.lastResearchedAt).getTime()) / (1000 * 60 * 60 * 24);
+    return daysSince >= 90;
+}
+
 function CardContent({ tool }: { tool: KanbanTool }) {
+    const stale = isStale(tool);
     return (
         <div className="border border-black bg-white p-3 hover:bg-[#F3F3EF] transition-colors">
             <div className="flex items-center gap-2 mb-1.5">
                 <ToolLogo name={tool.name} logoUrl={tool.logoUrl} websiteUrl={tool.websiteUrl} />
                 <span className="text-sm font-semibold leading-tight line-clamp-1 flex-1 font-sans">{tool.name}</span>
+                {stale && (
+                    <span className="flex items-center gap-0.5 border border-neutral-400 text-neutral-500 text-[9px] font-mono px-1 py-0.5 shrink-0" title="Not researched in 90+ days">
+                        <AlertCircle className="w-2.5 h-2.5" />
+                        Refresh
+                    </span>
+                )}
                 {tool.overallScore && (
                     <span className="flex items-center gap-0.5 bg-black text-white text-[10px] font-mono px-1.5 py-0.5 shrink-0">
                         <Star className="w-2.5 h-2.5 fill-yellow-400 text-yellow-400" />

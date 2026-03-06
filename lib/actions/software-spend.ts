@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { softwareSpend } from "@/lib/db/schema";
 import { currentUser } from "@clerk/nextjs/server";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { getWorkspaceId } from "@/lib/db/queries";
 
 export async function addSoftwareSpend(formData: FormData) {
@@ -107,6 +107,8 @@ export async function batchAddSoftwareSpend(items: Array<{
     seatCount?: number | null;
     billingCycle?: string | null;
     notes?: string | null;
+    renewalDate?: string | null;
+    contractLengthMonths?: number | null;
 }>) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
@@ -134,6 +136,11 @@ export async function batchAddSoftwareSpend(items: Array<{
     await db.insert(softwareSpend).values(
         deduped.map(i => {
             const cost = i.monthlyCost ? parseFloat(i.monthlyCost) : null;
+            let renewalDate: Date | null = null;
+            if (i.renewalDate) {
+                const d = new Date(i.renewalDate);
+                if (!isNaN(d.getTime())) renewalDate = d;
+            }
             return {
                 workspaceId,
                 toolName: i.toolName.trim(),
@@ -144,6 +151,9 @@ export async function batchAddSoftwareSpend(items: Array<{
                 billingCycle: i.billingCycle || "monthly",
                 status: "active",
                 notes: i.notes?.trim() || null,
+                renewalDate,
+                contractLength: i.contractLengthMonths != null && i.contractLengthMonths >= 1 && i.contractLengthMonths <= 120
+                    ? i.contractLengthMonths : null,
             };
         })
     );
@@ -151,6 +161,25 @@ export async function batchAddSoftwareSpend(items: Array<{
     const skipped = valid.length - deduped.length;
     revalidatePath("/stack");
     return { success: true, count: deduped.length, skipped };
+}
+
+export async function bulkDeleteSoftwareSpend(ids: string[]) {
+    if (ids.length === 0) throw new Error("No items to delete");
+    if (ids.length > 100) throw new Error("Bulk delete limit exceeded (max 100)");
+    if (!ids.every(id => UUID_RE.test(id))) throw new Error("Invalid ID in selection");
+
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const workspaceId = await getWorkspaceId(user.id);
+    if (!workspaceId) throw new Error("No workspace found");
+
+    await db.delete(softwareSpend).where(
+        and(inArray(softwareSpend.id, ids), eq(softwareSpend.workspaceId, workspaceId))
+    );
+
+    revalidatePath("/stack");
+    return { success: true, count: ids.length };
 }
 
 export async function updateSoftwareSpendDetails(

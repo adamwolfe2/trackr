@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addSoftwareSpend, deleteSoftwareSpend, updateSoftwareSpendStatus, updateSoftwareSpendDetails, batchAddSoftwareSpend } from "@/lib/actions/software-spend";
-import { PlusCircle, Trash2, ExternalLink, DollarSign, Users, Pencil, Check, X, AlertTriangle, Sparkles, Clipboard, ChevronDown, CalendarClock, Download } from "lucide-react";
+import { addSoftwareSpend, deleteSoftwareSpend, updateSoftwareSpendStatus, updateSoftwareSpendDetails, batchAddSoftwareSpend, bulkDeleteSoftwareSpend } from "@/lib/actions/software-spend";
+import { PlusCircle, Trash2, ExternalLink, DollarSign, Users, Pencil, Check, X, AlertTriangle, Sparkles, Clipboard, ChevronDown, CalendarClock, Download, Loader2, Square, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import type { StackInsights } from "@/lib/utils/stack-insights";
@@ -36,6 +36,9 @@ For each tool you identify, please return a JSON array in this exact format (no 
     "vendorUrl": "https://slack.com",
     "estimatedSeats": 25,
     "billingCycle": "monthly",
+    "monthlyCost": 187.50,
+    "renewalDate": "2026-06-15",
+    "contractLengthMonths": 12,
     "notes": "Primary team chat"
   },
   {
@@ -43,7 +46,10 @@ For each tool you identify, please return a JSON array in this exact format (no 
     "category": "Documentation",
     "vendorUrl": "https://notion.so",
     "estimatedSeats": 25,
-    "billingCycle": "monthly",
+    "billingCycle": "annual",
+    "monthlyCost": 200,
+    "renewalDate": null,
+    "contractLengthMonths": null,
     "notes": ""
   }
 ]
@@ -52,7 +58,11 @@ Guidelines:
 - estimatedSeats should be your best estimate of how many people use this tool (0 if unknown)
 - billingCycle should be "monthly", "annual", or "one-time"
 - category should be one of: Communication, Project Management, CRM, Marketing, Development, Design, HR, Finance, Analytics, Productivity, Support, Security, AI, Other
-- Include ALL tools even if you're unsure of the price — we'll fill in costs later
+- monthlyCost: the MONTHLY cost as a number. If the source data shows annual cost, divide by 12. If quarterly, divide by 3. If you can estimate from per-seat pricing, do so (seats x per-seat price). Use 0 if truly unknown.
+- renewalDate: ISO date string (YYYY-MM-DD) if a renewal or contract end date is mentioned or can be inferred. null if unknown.
+- contractLengthMonths: integer number of months for the contract term (e.g. 12, 24, 36). null if unknown.
+- If the data looks like a QuickBooks export, accounting ledger, or invoice history, extract billing amounts and dates. Convert annual costs to monthly by dividing by 12.
+- Include ALL tools even if you're unsure of the price — use 0 for monthlyCost if unknown
 - Return ONLY the JSON array, nothing else`;
 
 type SpendEntry = {
@@ -91,6 +101,14 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
     const [parsedItems, setParsedItems] = useState<ParsedStackItem[] | null>(null);
     const [isImporting, startImportTransition] = useTransition();
     const [showOptBanner, setShowOptBanner] = useState(true);
+
+    // Bulk delete state
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [isBulkDeleting, startBulkDeleteTransition] = useTransition();
+
+    // AI cost estimate state
+    const [estimatingId, setEstimatingId] = useState<string | null>(null);
 
     const copyPrompt = async () => {
         await navigator.clipboard.writeText(STACK_PROMPT);
@@ -148,9 +166,12 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                         toolName: i.toolName,
                         category: i.category,
                         vendorUrl: i.vendorUrl,
+                        monthlyCost: i.monthlyCost != null && i.monthlyCost > 0 ? i.monthlyCost.toFixed(2) : null,
                         seatCount: i.estimatedSeats,
                         billingCycle: i.billingCycle,
                         notes: i.notes,
+                        renewalDate: i.renewalDate,
+                        contractLengthMonths: i.contractLengthMonths,
                     }))
                 );
                 const skippedMsg = result.skipped ? ` (${result.skipped} duplicate${result.skipped === 1 ? "" : "s"} skipped)` : "";
@@ -163,6 +184,62 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                 toast.error(e instanceof Error ? e.message : "Import failed");
             }
         });
+    };
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectedIds.size === initialData.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(initialData.map(e => e.id)));
+        }
+    };
+
+    const handleBulkDelete = () => {
+        startBulkDeleteTransition(async () => {
+            try {
+                const ids = Array.from(selectedIds);
+                const result = await bulkDeleteSoftwareSpend(ids);
+                toast.success(`Deleted ${result.count} tool${result.count === 1 ? "" : "s"}`);
+                setSelectedIds(new Set());
+                setShowDeleteConfirm(false);
+                router.refresh();
+            } catch (e) {
+                toast.error(e instanceof Error ? e.message : "Failed to delete");
+            }
+        });
+    };
+
+    const handleEstimateCost = async (entry: SpendEntry) => {
+        setEstimatingId(entry.id);
+        try {
+            const res = await fetch("/api/stack/estimate-cost", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ toolName: entry.toolName, seats: entry.seatCount || 1 }),
+            });
+            if (!res.ok) throw new Error("Estimate failed");
+            const data = await res.json();
+            // Enter edit mode with the estimated cost pre-filled
+            setEditingId(entry.id);
+            setEditCost(data.totalMonthlyCost?.toString() ?? "0");
+            setEditSeats(entry.seatCount?.toString() ?? "");
+            setEditRenewalDate(entry.renewalDate ? new Date(entry.renewalDate).toISOString().slice(0, 10) : "");
+            setEditContractLength(entry.contractLength?.toString() ?? "");
+            const confLabel = data.confidence === "high" ? "High" : data.confidence === "medium" ? "Medium" : "Low";
+            toast.success(`Estimated $${data.totalMonthlyCost}/mo (${confLabel} confidence)${data.source ? ` — ${data.source}` : ""}`);
+        } catch {
+            toast.error("Could not estimate cost for this tool");
+        } finally {
+            setEstimatingId(null);
+        }
     };
 
     const totalMonthly = initialData
@@ -304,7 +381,10 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                             </button>
                         </div>
 
-                        {parsedItems && parsedItems.length > 0 && (
+                        {parsedItems && parsedItems.length > 0 && (() => {
+                            const hasCosts = parsedItems.some(i => i.monthlyCost != null && i.monthlyCost > 0);
+                            const hasRenewals = parsedItems.some(i => i.renewalDate);
+                            return (
                             <div className="space-y-3">
                                 <p className="font-mono text-xs font-semibold">Step 3 — Review and import</p>
                                 <div className="border border-black divide-y divide-neutral-100 max-h-64 overflow-y-auto">
@@ -320,6 +400,16 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-3 shrink-0 text-neutral-400 font-mono">
+                                                {hasCosts && (
+                                                    <span className={item.monthlyCost && item.monthlyCost > 0 ? "text-black" : ""}>
+                                                        {item.monthlyCost && item.monthlyCost > 0
+                                                            ? `$${item.monthlyCost.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}/mo`
+                                                            : "—"}
+                                                    </span>
+                                                )}
+                                                {hasRenewals && item.renewalDate && (
+                                                    <span>{item.renewalDate}</span>
+                                                )}
                                                 {item.estimatedSeats ? <span>{item.estimatedSeats} seats</span> : null}
                                                 {item.billingCycle && <span>{item.billingCycle}</span>}
                                             </div>
@@ -334,11 +424,14 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                     <PlusCircle className="h-3.5 w-3.5" />
                                     {isImporting ? "Importing..." : `Import All ${parsedItems.length} Tool${parsedItems.length === 1 ? "" : "s"}`}
                                 </button>
-                                <p className="font-mono text-[10px] text-neutral-400">
-                                    Costs will be $0 initially — edit each row to add your actual monthly spend.
-                                </p>
+                                {!hasCosts && (
+                                    <p className="font-mono text-[10px] text-neutral-400">
+                                        Costs will be $0 initially — edit each row to add your actual monthly spend.
+                                    </p>
+                                )}
                             </div>
-                        )}
+                            );
+                        })()}
                     </div>
                 </div>
             )}
@@ -626,12 +719,18 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                 <span className="font-mono text-[10px] text-neutral-400 ml-2">{e.contractLength}mo contract</span>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-4 shrink-0">
+                                        <div className="flex items-center gap-3 shrink-0">
                                             {annualCost > 0 && (
                                                 <span className="font-mono text-xs text-neutral-500">
                                                     ${annualCost.toLocaleString("en-US", { minimumFractionDigits: 0 })}/yr
                                                 </span>
                                             )}
+                                            <a
+                                                href={`/submit?category=${encodeURIComponent(e.category || e.toolName)}`}
+                                                className="font-mono text-[10px] border border-black px-2 py-0.5 hover:bg-black hover:text-white transition-colors whitespace-nowrap hidden sm:inline-block"
+                                            >
+                                                Research Alt
+                                            </a>
                                             <span className={`font-mono text-xs border px-2 py-0.5 ${
                                                 daysUntil <= 7
                                                     ? "border-black bg-black text-white"
@@ -661,6 +760,15 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-black bg-neutral-50">
+                                {!editingId && (
+                                    <th className="w-10 px-3 py-3">
+                                        <button onClick={toggleSelectAll} className="text-neutral-400 hover:text-black">
+                                            {selectedIds.size === initialData.length && initialData.length > 0
+                                                ? <CheckSquare className="h-4 w-4" />
+                                                : <Square className="h-4 w-4" />}
+                                        </button>
+                                    </th>
+                                )}
                                 <th className="text-left px-4 py-3 font-mono text-xs uppercase tracking-widest">Tool</th>
                                 <th className="text-left px-4 py-3 font-mono text-xs uppercase tracking-widest hidden md:table-cell">Category</th>
                                 <th className="text-right px-4 py-3 font-mono text-xs uppercase tracking-widest">Monthly</th>
@@ -679,6 +787,15 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                         key={entry.id}
                                         className={`border-b border-neutral-100 ${flagged ? "bg-neutral-50" : "hover:bg-neutral-100/50"}`}
                                     >
+                                        {!editingId && (
+                                            <td className="w-10 px-3 py-3">
+                                                <button onClick={() => toggleSelect(entry.id)} className="text-neutral-400 hover:text-black">
+                                                    {selectedIds.has(entry.id)
+                                                        ? <CheckSquare className="h-4 w-4" />
+                                                        : <Square className="h-4 w-4" />}
+                                                </button>
+                                            </td>
+                                        )}
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 {/* AI classification dot */}
@@ -720,10 +837,22 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                     className="w-24 border border-black px-2 py-1 text-right text-xs font-mono focus:outline-none ml-auto block"
                                                     placeholder="0.00"
                                                 />
+                                            ) : parseFloat(entry.monthlyCost || "0") > 0 ? (
+                                                `$${parseFloat(entry.monthlyCost!).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
                                             ) : (
-                                                parseFloat(entry.monthlyCost || "0") > 0
-                                                    ? `$${parseFloat(entry.monthlyCost!).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
-                                                    : "—"
+                                                <span className="inline-flex items-center gap-1 justify-end">
+                                                    <span>—</span>
+                                                    <button
+                                                        onClick={() => handleEstimateCost(entry)}
+                                                        disabled={estimatingId === entry.id}
+                                                        title="AI cost estimate"
+                                                        className="border border-neutral-200 p-1 hover:border-black text-neutral-400 hover:text-black transition-colors disabled:opacity-50"
+                                                    >
+                                                        {estimatingId === entry.id
+                                                            ? <Loader2 className="h-3 w-3 animate-spin" />
+                                                            : <Sparkles className="h-3 w-3" />}
+                                                    </button>
+                                                </span>
                                             )}
                                         </td>
                                         <td className="px-4 py-3 text-right font-mono text-sm hidden sm:table-cell">
@@ -862,6 +991,47 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                             })}
                         </tbody>
                     </table>
+                </div>
+            )}
+
+            {/* Bulk Delete Floating Bar */}
+            {selectedIds.size > 0 && (
+                <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 border border-black bg-white px-5 py-3 flex items-center gap-4 shadow-lg">
+                    <span className="font-mono text-xs font-semibold">{selectedIds.size} selected</span>
+                    {showDeleteConfirm ? (
+                        <div className="flex items-center gap-2">
+                            <span className="font-mono text-xs text-neutral-500">Confirm delete?</span>
+                            <button
+                                onClick={handleBulkDelete}
+                                disabled={isBulkDeleting}
+                                className="border border-black px-3 py-1.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 disabled:opacity-60"
+                            >
+                                {isBulkDeleting ? "Deleting..." : "Yes, Delete"}
+                            </button>
+                            <button
+                                onClick={() => setShowDeleteConfirm(false)}
+                                className="border border-black px-3 py-1.5 font-mono text-xs hover:bg-neutral-100"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <button
+                                onClick={() => setShowDeleteConfirm(true)}
+                                className="flex items-center gap-1.5 border border-black px-3 py-1.5 font-mono text-xs text-red-600 hover:bg-red-50"
+                            >
+                                <Trash2 className="h-3 w-3" />
+                                Delete Selected
+                            </button>
+                            <button
+                                onClick={() => setSelectedIds(new Set())}
+                                className="border border-black px-3 py-1.5 font-mono text-xs hover:bg-neutral-100"
+                            >
+                                Clear
+                            </button>
+                        </>
+                    )}
                 </div>
             )}
         </div>

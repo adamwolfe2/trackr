@@ -16,6 +16,8 @@ export const workspaces = pgTable('workspaces', {
     slackTeamId: text('slack_team_id'),         // Slack workspace ID
     slackTeamName: text('slack_team_name'),     // Slack workspace name for display
     inviteCode: text('invite_code').unique(),    // Persistent public invite link token
+    currentStreak: integer('current_streak').default(0).notNull(),
+    longestStreak: integer('longest_streak').default(0).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
     index('workspaces_slack_channel_id_idx').on(table.slackChannelId),
@@ -275,6 +277,8 @@ export const softwareSpend = pgTable('software_spend', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
     index('software_spend_workspace_id_idx').on(table.workspaceId),
+    index('software_spend_renewal_date_idx').on(table.renewalDate),
+    index('software_spend_status_idx').on(table.status),
 ]);
 
 export const softwareSpendRelations = relations(softwareSpend, ({ one }) => ({
@@ -392,6 +396,7 @@ export const apiLogs = pgTable('api_logs', {
     index('api_logs_service_idx').on(table.service),
     index('api_logs_created_at_idx').on(table.createdAt),
     index('api_logs_workspace_id_idx').on(table.workspaceId),
+    index('api_logs_workspace_created_idx').on(table.workspaceId, table.createdAt),
 ]);
 
 // Webhook event idempotency log — prevents duplicate processing
