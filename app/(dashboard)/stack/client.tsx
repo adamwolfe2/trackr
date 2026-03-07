@@ -109,6 +109,8 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
 
     // AI cost estimate state
     const [estimatingId, setEstimatingId] = useState<string | null>(null);
+    const [isEstimatingAll, setIsEstimatingAll] = useState(false);
+    const [editFocusField, setEditFocusField] = useState<"cost" | "seats" | null>(null);
 
     const copyPrompt = async () => {
         await navigator.clipboard.writeText(STACK_PROMPT);
@@ -259,7 +261,8 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
         (insights?.enrichedTools ?? []).map(t => [t.id, t.classification])
     );
 
-    const startEdit = (entry: SpendEntry) => {
+    const startEdit = (entry: SpendEntry, focus: "cost" | "seats" = "cost") => {
+        setEditFocusField(focus);
         setEditingId(entry.id);
         setEditCost(entry.monthlyCost ? parseFloat(entry.monthlyCost).toString() : "");
         setEditSeats(entry.seatCount?.toString() ?? "");
@@ -278,12 +281,55 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                     editContractLength ? parseInt(editContractLength, 10) : null
                 );
                 setEditingId(null);
+                setEditFocusField(null);
                 toast.success("Updated");
                 router.refresh();
             } catch {
                 toast.error("Failed to save");
             }
         });
+    };
+
+    const handleEstimateAllCosts = async () => {
+        setIsEstimatingAll(true);
+        const entries = initialData.filter(e => e.status !== "canceled");
+        let updated = 0;
+        let failed = 0;
+        for (const entry of entries) {
+            try {
+                const seats = entry.seatCount || 1;
+                const res = await fetch("/api/stack/estimate-cost", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ toolName: entry.toolName, seats }),
+                });
+                if (!res.ok) { failed++; continue; }
+                const data = await res.json();
+                if (typeof data.totalMonthlyCost === "number" && data.totalMonthlyCost >= 0) {
+                    await updateSoftwareSpendDetails(
+                        entry.id,
+                        data.totalMonthlyCost.toString(),
+                        entry.seatCount,
+                        entry.renewalDate ? new Date(entry.renewalDate).toISOString().slice(0, 10) : null,
+                        entry.contractLength
+                    );
+                    updated++;
+                } else {
+                    failed++;
+                }
+            } catch {
+                failed++;
+            }
+        }
+        setIsEstimatingAll(false);
+        if (updated > 0) {
+            toast.success(`Updated pricing for ${updated} tool${updated === 1 ? "" : "s"}${failed > 0 ? ` (${failed} failed)` : ""}`);
+            router.refresh();
+        } else if (failed > 0) {
+            toast.error("Could not estimate pricing for any tools");
+        } else {
+            toast.info("No tools to estimate");
+        }
     };
 
     const flaggedCount = initialData.filter(isLowScored).length;
@@ -300,6 +346,18 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                     </p>
                 </div>
                 <div className="flex items-center gap-2 flex-wrap">
+                    {initialData.length > 0 && (
+                        <button
+                            onClick={handleEstimateAllCosts}
+                            disabled={isEstimatingAll}
+                            className="flex items-center gap-2 border border-black px-4 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 whitespace-nowrap disabled:opacity-50"
+                        >
+                            {isEstimatingAll
+                                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                : <Sparkles className="h-3.5 w-3.5" />}
+                            {isEstimatingAll ? "Fetching Prices..." : "AI Price Lookup"}
+                        </button>
+                    )}
                     <button
                         onClick={() => { setShowPaste(prev => !prev); setShowForm(false); }}
                         className="flex items-center gap-2 border border-black px-4 py-2.5 font-mono text-xs bg-white hover:bg-neutral-100 whitespace-nowrap"
@@ -834,14 +892,31 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                     min="0"
                                                     value={editCost}
                                                     onChange={e => setEditCost(e.target.value)}
+                                                    onKeyDown={e => {
+                                                        if (e.key === "Enter") saveEdit(entry.id);
+                                                        if (e.key === "Escape") { setEditingId(null); setEditFocusField(null); }
+                                                    }}
+                                                    autoFocus={editFocusField === "cost"}
                                                     className="w-24 border border-black px-2 py-1 text-right text-xs font-mono focus:outline-none ml-auto block"
                                                     placeholder="0.00"
                                                 />
                                             ) : parseFloat(entry.monthlyCost || "0") > 0 ? (
-                                                `$${parseFloat(entry.monthlyCost!).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                                                <button
+                                                    onClick={() => startEdit(entry, "cost")}
+                                                    title="Click to edit"
+                                                    className="hover:underline underline-offset-2 cursor-pointer"
+                                                >
+                                                    ${parseFloat(entry.monthlyCost!).toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                                                </button>
                                             ) : (
                                                 <span className="inline-flex items-center gap-1 justify-end">
-                                                    <span>—</span>
+                                                    <button
+                                                        onClick={() => startEdit(entry, "cost")}
+                                                        title="Click to edit"
+                                                        className="hover:underline underline-offset-2 cursor-pointer text-neutral-400 hover:text-black"
+                                                    >
+                                                        —
+                                                    </button>
                                                     <button
                                                         onClick={() => handleEstimateCost(entry)}
                                                         disabled={estimatingId === entry.id}
@@ -862,11 +937,30 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                     min="1"
                                                     value={editSeats}
                                                     onChange={e => setEditSeats(e.target.value)}
+                                                    onKeyDown={e => {
+                                                        if (e.key === "Enter") saveEdit(entry.id);
+                                                        if (e.key === "Escape") { setEditingId(null); setEditFocusField(null); }
+                                                    }}
+                                                    autoFocus={editFocusField === "seats"}
                                                     className="w-16 border border-black px-2 py-1 text-right text-xs font-mono focus:outline-none ml-auto block"
                                                     placeholder="0"
                                                 />
+                                            ) : entry.seatCount ? (
+                                                <button
+                                                    onClick={() => startEdit(entry, "seats")}
+                                                    title="Click to edit"
+                                                    className="hover:underline underline-offset-2 cursor-pointer"
+                                                >
+                                                    {entry.seatCount}
+                                                </button>
                                             ) : (
-                                                entry.seatCount || "—"
+                                                <button
+                                                    onClick={() => startEdit(entry, "seats")}
+                                                    title="Click to edit"
+                                                    className="text-neutral-300 hover:text-black cursor-pointer"
+                                                >
+                                                    —
+                                                </button>
                                             )}
                                         </td>
                                         <td className="px-4 py-3 hidden md:table-cell">
@@ -934,7 +1028,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                             <Check className="h-3 w-3" />
                                                         </button>
                                                         <button
-                                                            onClick={() => setEditingId(null)}
+                                                            onClick={() => { setEditingId(null); setEditFocusField(null); }}
                                                             className="border border-black p-1.5 hover:bg-black hover:text-white transition-colors"
                                                         >
                                                             <X className="h-3 w-3" />
