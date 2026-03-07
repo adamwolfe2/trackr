@@ -12,6 +12,7 @@ import { ensureWorkspace } from "@/lib/db/ensure-workspace";
 
 import { getWorkspaceId } from "@/lib/db/queries";
 import { captureEvent } from "@/lib/analytics/posthog-server";
+import { rateLimit } from "@/lib/middleware/rate-limit";
 
 export async function submitTool(formData: FormData) {
     let user;
@@ -203,6 +204,9 @@ export async function triggerResearch(toolId: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
+    const rl = await rateLimit(`research:${user.id}`, { limit: 5, windowSeconds: 60 });
+    if (!rl.success) throw new Error("Too many research requests — please wait a moment and try again.");
+
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
 
@@ -241,6 +245,9 @@ export async function triggerResearch(toolId: string) {
 export async function triggerResearchBatch(toolIds: string[]) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
+
+    const rl = await rateLimit(`research:${user.id}`, { limit: 5, windowSeconds: 60 });
+    if (!rl.success) throw new Error("Too many research requests — please wait a moment and try again.");
 
     if (!toolIds.length) return { success: true, started: 0 };
 

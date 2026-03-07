@@ -62,10 +62,9 @@ export async function GET() {
 
         return NextResponse.redirect(accountLink.url);
     } catch (err) {
-        const message = err instanceof Error ? err.message : "Stripe error";
-        console.error("[stripe-connect]", message);
+        console.error("[stripe-connect]", err);
         const errUrl = new URL("/architect/settings", appUrl);
-        errUrl.searchParams.set("stripe_error", message);
+        errUrl.searchParams.set("stripe_error", "connection_failed");
         return NextResponse.redirect(errUrl);
     }
 }

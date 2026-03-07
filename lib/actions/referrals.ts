@@ -29,8 +29,8 @@ export async function createReferralCode() {
         revalidatePath("/referrals");
         return { success: true };
     } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to create referral code";
-        return { success: false, error: message };
+        console.error("[createReferralCode]", error);
+        return { success: false, error: "Failed to create referral code" };
     }
 }
 

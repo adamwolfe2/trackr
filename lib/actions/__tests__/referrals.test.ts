@@ -80,7 +80,7 @@ describe("createReferralCode", () => {
         (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values: insertValues });
         const result = await createReferralCode();
         expect(result.success).toBe(false);
-        expect((result as { success: false; error: string }).error).toContain("unique constraint");
+        expect((result as { success: false; error: string }).error).toBe("Failed to create referral code");
     });
 });
 
