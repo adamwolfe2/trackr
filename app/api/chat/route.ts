@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
+    const MAX_MESSAGE_LENGTH = 4000;
+
     // Normalize UIMessage[] → CoreMessage[] (extract text from parts when content is empty)
     const messages = parsed.data.messages
         .filter(m => ["user", "assistant", "system"].includes(m.role))
@@ -91,6 +93,12 @@ export async function POST(req: NextRequest) {
 
     if (messages.length === 0) {
         return NextResponse.json({ error: "No valid messages" }, { status: 400 });
+    }
+
+    // Reject oversized messages to prevent token exhaustion DoS
+    const oversized = messages.find(m => m.content.length > MAX_MESSAGE_LENGTH);
+    if (oversized) {
+        return NextResponse.json({ error: "Message too long (max 4000 characters)" }, { status: 400 });
     }
 
     const lastMessage = messages[messages.length - 1];

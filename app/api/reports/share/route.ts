@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { reports, tools, workspaceMembers } from "@/lib/db/schema";
@@ -76,7 +77,8 @@ export async function POST(req: NextRequest) {
     // Generate and write new share token — only if shareToken is still null.
     // The isNull() condition in the WHERE clause means concurrent requests that
     // race here only one will write; we re-fetch to return whatever was stored.
-    const token = crypto.randomUUID().replace(/-/g, "");
+    // Use randomBytes for uniform 256-bit entropy (better than UUID v4 stripped of hyphens)
+    const token = randomBytes(32).toString("hex");
 
     await db.update(reports)
         .set({ shareToken: token })

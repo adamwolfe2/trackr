@@ -18,7 +18,7 @@ import { GET } from "../route";
 const APP_URL = "https://trytrackr.com";
 const CLIENT_ID = "slack_client_id";
 const CLIENT_SECRET = "slack_client_secret_abc";
-const WORKSPACE_ID = "ws_abc";
+const WORKSPACE_ID = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
 
 /** Generate a valid signed state parameter for the test workspace */
 function makeValidState(workspaceId: string = WORKSPACE_ID, secret: string = CLIENT_SECRET): string {

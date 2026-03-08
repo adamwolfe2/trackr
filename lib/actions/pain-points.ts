@@ -112,6 +112,8 @@ export async function updatePainPoint(id: string, data: { title: string; descrip
 }
 
 export async function togglePainPointActive(id: string, currentState: boolean) {
+    if (!UUID_RE.test(id)) throw new Error("Invalid pain point ID");
+
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 

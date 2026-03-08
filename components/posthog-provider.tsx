@@ -54,7 +54,12 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
             person_profiles: "identified_only",
             capture_pageview: false, // manual via PostHogPageView
             capture_pageleave: true,
-            autocapture: true,
+            // Restrict autocapture to buttons and links only — prevents form values, passwords,
+            // and other sensitive input data from being captured and sent to PostHog
+            autocapture: {
+                dom_event_allowlist: ["click"],
+                element_allowlist: ["button", "a"],
+            },
         });
     }, []);
 

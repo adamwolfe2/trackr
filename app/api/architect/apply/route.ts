@@ -20,16 +20,20 @@ const ArchitectApplySchema = z.object({
     lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Valid email is required"),
     phone: z.string().optional(),
-    linkedinUrl: z.string().url().optional().or(z.literal("")),
+    linkedinUrl: z.string().url().refine(u => u.startsWith("https://"), "URL must use HTTPS").optional().or(z.literal("")),
     roleSlug: z.string().min(1, "Role is required"),
     experience: z.string().optional(),
-    portfolioUrl: z.string().url().optional().or(z.literal("")),
+    portfolioUrl: z.string().url().refine(u => u.startsWith("https://"), "URL must use HTTPS").optional().or(z.literal("")),
     referralSource: z.string().optional(),
 });
 
 export async function POST(req: NextRequest) {
     // Rate limit: 3 per email per day + 10 per IP per hour
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    // Use rightmost IP from x-forwarded-for to prevent header spoofing
+    const forwarded = req.headers.get("x-forwarded-for");
+    const ip = forwarded
+        ? (forwarded.split(",").pop()?.trim() ?? "unknown")
+        : (req.headers.get("x-real-ip") ?? "unknown");
     const ipRl = await rateLimit(`architect-apply-ip:${ip}`, { limit: 10, windowSeconds: 3600 });
     if (!ipRl.success) {
         return NextResponse.json(
@@ -55,13 +59,10 @@ export async function POST(req: NextRequest) {
 
     const data = parsed.data;
 
-    // Rate limit per email: 3 per day
+    // Rate limit per email: 3 per day — return silent success to prevent email enumeration
     const emailRl = await rateLimit(`architect-apply-email:${data.email}`, { limit: 3, windowSeconds: 86400 });
     if (!emailRl.success) {
-        return NextResponse.json(
-            { error: "You've already submitted an application. Please wait for a response." },
-            { status: 429 }
-        );
+        return NextResponse.json({ success: true }, { status: 200 });
     }
 
     const [application] = await db

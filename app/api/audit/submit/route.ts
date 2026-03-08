@@ -43,7 +43,11 @@ const AuditSubmitSchema = z.object({
 
 export async function POST(req: NextRequest) {
     // Rate limit: 5 submissions per IP per hour
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    // Use the rightmost (most trustworthy) IP from x-forwarded-for to prevent spoofing
+    const forwarded = req.headers.get("x-forwarded-for");
+    const ip = forwarded
+        ? (forwarded.split(",").pop()?.trim() ?? "unknown")
+        : (req.headers.get("x-real-ip") ?? "unknown");
     const rl = await rateLimit(`audit-submit:${ip}`, { limit: 5, windowSeconds: 3600 });
     if (!rl.success) {
         return NextResponse.json(

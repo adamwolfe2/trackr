@@ -82,7 +82,7 @@ export async function inviteMember(formData: FormData) {
         throw new Error(`Your ${limits.name} plan allows up to ${limits.limits.members} member${limits.limits.members === 1 ? "" : "s"}. Upgrade to add more.`);
     }
 
-    // Rate limit: max 20 invites per hour per user
+    // Rate limit: max 20 invites per hour per user across ALL workspaces to prevent bypass
     const [{ value: recentInviteCount }] = await db
         .select({ value: count() })
         .from(pendingInvitations)
@@ -390,7 +390,11 @@ export async function cancelInvitation(invitationId: string) {
 
     if (!invitation) throw new Error("Invitation not found");
 
-    await db.delete(pendingInvitations).where(eq(pendingInvitations.id, invitationId));
+    // Delete scoped to workspace — defense in depth
+    await db.delete(pendingInvitations).where(and(
+        eq(pendingInvitations.id, invitationId),
+        eq(pendingInvitations.workspaceId, workspaceId)
+    ));
 
     revalidatePath("/workspace");
     return { success: true };

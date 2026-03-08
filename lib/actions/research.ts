@@ -615,8 +615,15 @@ ${painPointsList.length > 0 ? `COMPANY PAIN POINTS:\n${painPointsList.map(pp =>
 ).join("\n")}` : ""}
 ` : `COMPANY CONTEXT: ${companyContext}`;
 
+        // Sanitize tool name before embedding into AI prompt to prevent prompt injection
+        const safeToolName = tool.name
+            .replace(/\n/g, " ")
+            .replace(/\r/g, " ")
+            .replace(/`/g, "'")
+            .slice(0, 200);
+
         const synthesisPrompt = `
-You are a rigorous software procurement analyst evaluating ${tool.name} (${tool.websiteUrl}).
+You are a rigorous software procurement analyst evaluating ${safeToolName} (${tool.websiteUrl}).
 You have access to data from ${totalDataSources.length} unique sources. Cross-reference all sources to form your analysis.
 
 ${recipeSection}

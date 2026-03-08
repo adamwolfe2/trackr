@@ -37,10 +37,11 @@ export async function GET(req: NextRequest) {
 // body: { slug: string, type: 'up' | 'down', prevType?: 'up' | 'down' }
 export async function POST(req: NextRequest) {
     // Rate-limit by IP — 20 votes per minute
-    const ip =
-        req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-        req.headers.get("x-real-ip") ??
-        "unknown";
+    // Use rightmost IP from x-forwarded-for to prevent header spoofing
+    const forwarded = req.headers.get("x-forwarded-for");
+    const ip = forwarded
+        ? (forwarded.split(",").pop()?.trim() ?? "unknown")
+        : (req.headers.get("x-real-ip") ?? "unknown");
     const rl = await rateLimit(`votes:${ip}`, { limit: 20, windowSeconds: 60 });
     if (!rl.success) {
         return NextResponse.json(

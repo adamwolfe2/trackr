@@ -19,6 +19,13 @@ function verifyState(state: string): string | null {
 
     const [workspaceId, signature] = parts;
 
+    // Reject empty workspaceId or signature — prevents "." bypass
+    if (!workspaceId || !signature) return null;
+
+    // Validate workspaceId is a UUID to prevent unexpected values reaching the DB
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(workspaceId)) return null;
+
     const expectedSignature = createHmac("sha256", secret)
         .update(workspaceId)
         .digest("hex")

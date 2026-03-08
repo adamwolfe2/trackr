@@ -7,8 +7,8 @@ export const dynamic = "force-dynamic";
 export async function GET() {
     try {
         await db.execute(sql`SELECT 1`);
-        return NextResponse.json({ status: "ok", db: "ok", ts: new Date().toISOString() });
+        return NextResponse.json({ ok: true });
     } catch {
-        return NextResponse.json({ status: "error", db: "unreachable" }, { status: 503 });
+        return NextResponse.json({ ok: false }, { status: 503 });
     }
 }

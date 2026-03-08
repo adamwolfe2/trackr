@@ -208,11 +208,11 @@ describe("togglePainPointActive", () => {
 
     it("throws Unauthorized when not logged in", async () => {
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        await expect(togglePainPointActive("pp_1", true)).rejects.toThrow("Unauthorized");
+        await expect(togglePainPointActive("00000000-0000-0000-0000-000000000001", true)).rejects.toThrow("Unauthorized");
     });
 
     it("calls db.update when toggling", async () => {
-        await togglePainPointActive("pp_1", true);
+        await togglePainPointActive("00000000-0000-0000-0000-000000000001", true);
         expect(db.update).toHaveBeenCalledTimes(1);
     });
 });
