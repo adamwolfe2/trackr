@@ -1,4 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { createHash } from "crypto";
+
+function hashTestKey(key: string): string {
+    return createHash("sha256").update(key).digest("hex");
+}
 
 vi.mock("@/lib/db", () => ({
     db: {
@@ -20,7 +25,8 @@ function makeRequest(authHeader?: string) {
     } as unknown as Request;
 }
 
-const MOCK_WORKSPACE = { id: "ws_1", name: "Acme Corp", apiKey: "hashed_key" };
+const TEST_API_KEY = "valid_api_key_123";
+const MOCK_WORKSPACE = { id: "ws_1", name: "Acme Corp", apiKey: hashTestKey(TEST_API_KEY) };
 
 describe("getWorkspaceFromApiKey", () => {
     beforeEach(() => {
@@ -44,9 +50,8 @@ describe("getWorkspaceFromApiKey", () => {
     });
 
     it("returns workspace when valid API key matches hashed key", async () => {
-        // The route hashes the key with SHA-256 before querying
-        // Mock returns MOCK_WORKSPACE regardless of hash — just verify the DB was queried
-        const result = await getWorkspaceFromApiKey(makeRequest("Bearer valid_api_key_123"));
+        // The route hashes the key with SHA-256; mock stores the real hash so timingSafeEqual passes
+        const result = await getWorkspaceFromApiKey(makeRequest(`Bearer ${TEST_API_KEY}`));
         expect(result).toBe(MOCK_WORKSPACE);
         expect(db.query.workspaces.findFirst).toHaveBeenCalled();
     });

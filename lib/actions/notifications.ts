@@ -312,10 +312,16 @@ export async function getNotifications(): Promise<Notification[]> {
     return all;
 }
 
+const NOTIFICATION_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function markNotificationsRead(notificationIds: string[]) {
     const user = await currentUser();
     if (!user || notificationIds.length === 0) return;
     if (notificationIds.length > 500) throw new Error("Too many notification IDs");
+
+    // Only accept valid UUIDs to prevent garbage from filling seenJobIds
+    const validIds = notificationIds.filter(id => NOTIFICATION_UUID_RE.test(id));
+    if (validIds.length === 0) return;
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) return;
@@ -329,7 +335,7 @@ export async function markNotificationsRead(notificationIds: string[]) {
     if (!member) return;
 
     const existing = member.seenJobIds ?? [];
-    const merged = Array.from(new Set([...existing, ...notificationIds]));
+    const merged = Array.from(new Set([...existing, ...validIds]));
 
     // Cap at 200 to prevent unbounded growth
     const capped = merged.slice(-200);

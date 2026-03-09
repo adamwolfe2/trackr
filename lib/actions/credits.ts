@@ -7,6 +7,7 @@ import { subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { stripe } from "@/lib/services/stripe";
 import { getPlanLimits, CREDIT_PACKS, CREDIT_PACK_PRICES, type CreditPackSize } from "@/lib/config/subscriptions";
+import { rateLimit } from "@/lib/middleware/rate-limit";
 
 export async function purchaseCredits(packSize: CreditPackSize) {
     const user = await currentUser();
@@ -14,6 +15,9 @@ export async function purchaseCredits(packSize: CreditPackSize) {
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) throw new Error("No workspace found");
+
+    const rl = await rateLimit(`purchase-credits:${user.id}`, { limit: 5, windowSeconds: 60 });
+    if (!rl.success) throw new Error("Too many requests. Please wait before trying again.");
 
     // Validate packSize
     const pack = CREDIT_PACKS.find((p) => p.credits === packSize);

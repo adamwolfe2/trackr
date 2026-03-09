@@ -274,37 +274,42 @@ describe("markNotificationsRead", () => {
     });
 
     it("merges new IDs with existing seenJobIds deduplicating", async () => {
+        const JOB_OLD = "00000000-0000-0000-0000-000000000001";
+        const JOB_NEW = "00000000-0000-0000-0000-000000000002";
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
             ...MOCK_MEMBER,
-            seenJobIds: ["job_old"],
+            seenJobIds: [JOB_OLD],
         });
-        await markNotificationsRead(["job_old", "job_new"]);
+        await markNotificationsRead([JOB_OLD, JOB_NEW]);
         const setArgs = (
             (db.update as ReturnType<typeof vi.fn>).mock.results[0].value.set as ReturnType<typeof vi.fn>
         ).mock.calls[0][0];
-        // job_old should only appear once (deduped via Set)
-        expect(setArgs.seenJobIds).toEqual(expect.arrayContaining(["job_old", "job_new"]));
-        expect(setArgs.seenJobIds.filter((id: string) => id === "job_old")).toHaveLength(1);
+        // JOB_OLD should only appear once (deduped via Set)
+        expect(setArgs.seenJobIds).toEqual(expect.arrayContaining([JOB_OLD, JOB_NEW]));
+        expect(setArgs.seenJobIds.filter((id: string) => id === JOB_OLD)).toHaveLength(1);
     });
 
     it("persists updated seenJobIds to database", async () => {
-        await markNotificationsRead(["job_new"]);
+        const JOB_NEW = "00000000-0000-0000-0000-000000000002";
+        await markNotificationsRead([JOB_NEW]);
         expect(db.update).toHaveBeenCalledTimes(1);
         const setArgs = (
             (db.update as ReturnType<typeof vi.fn>).mock.results[0].value.set as ReturnType<typeof vi.fn>
         ).mock.calls[0][0];
-        expect(setArgs.seenJobIds).toContain("job_new");
+        expect(setArgs.seenJobIds).toContain(JOB_NEW);
     });
 
     it("caps seenJobIds at 200 entries to prevent unbounded growth", async () => {
-        // Start with 195 existing IDs
-        const existing = Array.from({ length: 195 }, (_, i) => `old_${i}`);
+        // Start with 195 existing IDs (stored in DB — format doesn't matter for existing)
+        const existing = Array.from({ length: 195 }, (_, i) => `existing-id-${i}`);
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
             ...MOCK_MEMBER,
             seenJobIds: existing,
         });
-        // Add 10 new ones → merged total = 205 → capped at 200
-        const newIds = Array.from({ length: 10 }, (_, i) => `new_${i}`);
+        // Add 10 new valid UUIDs → merged total = 205 → capped at 200
+        const newIds = Array.from({ length: 10 }, (_, i) =>
+            `00000000-0000-0000-0000-${String(i).padStart(12, "0")}`
+        );
         await markNotificationsRead(newIds);
         const setArgs = (
             (db.update as ReturnType<typeof vi.fn>).mock.results[0].value.set as ReturnType<typeof vi.fn>

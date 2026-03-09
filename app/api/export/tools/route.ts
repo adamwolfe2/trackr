@@ -117,8 +117,14 @@ export async function GET(req: NextRequest) {
             ];
         });
 
+        // Escape CSV cells — prefix formula-injection characters with a tab to neutralize
+        const escapeCell = (cell: unknown) => {
+            const str = String(cell ?? "");
+            const safe = /^[=+\-@\t]/.test(str) ? `\t${str}` : str;
+            return `"${safe.replace(/"/g, '""')}"`;
+        };
         const csv = [headers, ...rows]
-            .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+            .map(row => row.map(escapeCell).join(","))
             .join("\n");
 
         const today = new Date().toISOString().slice(0, 10);

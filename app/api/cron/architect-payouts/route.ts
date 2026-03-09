@@ -114,7 +114,9 @@ export async function GET(req: Request) {
                     "",
                     total,
                     architect.totalEarnings + total,
-                ).catch(() => {});
+                ).catch((err: unknown) => {
+                    console.warn("[architect-payouts] Failed to send commission email:", err);
+                });
 
                 transferred++;
             } catch (err) {

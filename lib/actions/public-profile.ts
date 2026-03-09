@@ -56,6 +56,17 @@ export async function createPublicProfile(workspaceId: string, data: CreateProfi
         throw new Error("Slug must be at least 3 characters");
     }
 
+    // Block slugs that shadow system routes
+    const RESERVED_SLUGS = new Set([
+        "admin", "api", "research", "audit", "apply", "terms", "privacy", "security",
+        "faq", "changelog", "blog", "about", "contact", "playbook", "industries",
+        "share", "sign-in", "sign-up", "onboarding", "dashboard", "settings",
+        "workspace", "invite", "stack",
+    ]);
+    if (RESERVED_SLUGS.has(slug)) {
+        throw new Error(`"${slug}" is a reserved slug. Please choose a different URL.`);
+    }
+
     // Check slug uniqueness
     const existing = await db.query.publicProfiles.findFirst({
         where: eq(publicProfiles.slug, slug),

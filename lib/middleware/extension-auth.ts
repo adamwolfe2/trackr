@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { workspaces } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { createHash } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 
 function hashApiKey(key: string): string {
     return createHash("sha256").update(key).digest("hex");
@@ -21,7 +21,15 @@ export async function getWorkspaceFromApiKey(req: Request) {
     const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.apiKey, hashedKey),
     });
-    return workspace ?? null;
+    if (!workspace?.apiKey) return null;
+
+    // Constant-time comparison to prevent timing oracle attacks
+    const storedBuf = Buffer.from(workspace.apiKey, "hex");
+    const incomingBuf = Buffer.from(hashedKey, "hex");
+    if (storedBuf.length !== incomingBuf.length || !timingSafeEqual(storedBuf, incomingBuf)) {
+        return null;
+    }
+    return workspace;
 }
 
 /**

@@ -38,6 +38,9 @@ export async function generateCompanyContext(websiteUrl: string): Promise<{ cont
                 return { context: "", error: "Invalid URL" };
             }
             const hostname = parsed.hostname.toLowerCase();
+            if (hostname.length > 253) {
+                return { context: "", error: "Invalid URL" };
+            }
             if (
                 hostname === "localhost" || hostname === "0.0.0.0" ||
                 hostname === "[::1]" || hostname.endsWith(".local") || hostname.endsWith(".internal") ||
@@ -47,6 +50,10 @@ export async function generateCompanyContext(websiteUrl: string): Promise<{ cont
                 /^192\.168\./.test(hostname) ||
                 /^172\.(1[6-9]|2[0-9]|3[01])\./.test(hostname)
             ) {
+                return { context: "", error: "Invalid URL" };
+            }
+            // Block scraping the app itself to prevent redirect loops
+            if (hostname === "trytrackr.com" || hostname === "www.trytrackr.com") {
                 return { context: "", error: "Invalid URL" };
             }
         } catch {
