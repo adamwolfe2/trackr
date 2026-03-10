@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Loader2, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const RESEARCH_STEPS = [
     { id: 1, label: "Mapping Site", pattern: /step 1/i },
@@ -36,6 +37,7 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [elapsed, setElapsed] = useState(0);
     const [networkError, setNetworkError] = useState(false);
+    const [scoreReveal, setScoreReveal] = useState<{ score: string | null; toolName: string } | null>(null);
     const consecutiveFailsRef = useRef(0);
     const router = useRouter();
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -57,6 +59,8 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
                     logs?: { message: string; timestamp: string }[];
                     status?: string;
                     errorMessage?: string | null;
+                    score?: string | null;
+                    toolName?: string | null;
                 };
 
                 if (data.logs) setLogs(data.logs);
@@ -76,7 +80,9 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
                 if (data.status === "active" || data.status === "failed") {
                     if (intervalRef.current) clearInterval(intervalRef.current);
                     if (timerRef.current) clearInterval(timerRef.current);
-                    if (data.status === "active") router.refresh();
+                    if (data.status === "active" && !scoreReveal) {
+                        setScoreReveal({ score: data.score ?? null, toolName: data.toolName ?? "" });
+                    }
                 }
             } catch {
                 consecutiveFailsRef.current += 1;
@@ -97,11 +103,63 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
         };
     }, [toolId, router]);
 
+    // Auto-dismiss score reveal after 8 seconds
+    useEffect(() => {
+        if (!scoreReveal) return;
+        const timer = setTimeout(() => {
+            setScoreReveal(null);
+            router.refresh();
+        }, 8000);
+        return () => clearTimeout(timer);
+    }, [scoreReveal, router]);
+
     // Auto-scroll to bottom
     const bottomRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [logs]);
+
+    if (scoreReveal !== null) {
+        return (
+            <div className="border border-black bg-[#F3F3EF] p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 shrink-0" />
+                    <span className="font-serif text-xl">Research Complete</span>
+                </div>
+                {scoreReveal.score && (
+                    <div className="flex items-center gap-3">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">Overall Score</span>
+                        <span className="bg-black text-white font-mono text-xl px-3 py-1">
+                            {Number(scoreReveal.score).toFixed(1)} / 10
+                        </span>
+                    </div>
+                )}
+                <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                        onClick={() => { setScoreReveal(null); router.refresh(); }}
+                        className="border border-black bg-black text-white font-mono text-xs px-4 py-2 hover:bg-neutral-800 transition-colors"
+                    >
+                        View Full Report
+                    </button>
+                    <Link
+                        href="/compare"
+                        onClick={() => setScoreReveal(null)}
+                        className="border border-black font-mono text-xs px-4 py-2 hover:bg-black hover:text-white transition-colors"
+                    >
+                        Compare
+                    </Link>
+                    <Link
+                        href={`/tools?share=${toolId}`}
+                        onClick={() => setScoreReveal(null)}
+                        className="border border-black font-mono text-xs px-4 py-2 hover:bg-black hover:text-white transition-colors"
+                    >
+                        Share
+                    </Link>
+                </div>
+                <p className="font-mono text-[10px] text-neutral-400">Auto-loading report in 8 seconds...</p>
+            </div>
+        );
+    }
 
     if (logs.length === 0 && status !== "researching" && status !== "queued" && status !== "initializing") return null;
 

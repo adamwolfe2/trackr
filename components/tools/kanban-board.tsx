@@ -429,23 +429,44 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                                         <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} isNew={newlyActiveIds.has(tool.id)} />
                                     ))}
                                     {colTools.length === 0 && col.id === "backlog" && isEmpty ? (
-                                        <div className="border border-dashed border-neutral-300 p-6 text-center space-y-4">
-                                            <p className="font-serif text-xl">Submit your first tool.</p>
-                                            <p className="font-mono text-xs text-neutral-500 leading-relaxed">
-                                                Paste any tool URL. Our research agents will analyze it in under 2 minutes — reviews, pricing, competitors, and a scored report.
-                                            </p>
-                                            <div className="flex flex-col items-center gap-3">
-                                                <div className="flex flex-wrap items-center gap-1 sm:gap-2 text-[10px] font-mono text-neutral-400">
-                                                    <span className="flex items-center gap-1"><span className="w-4 h-4 bg-black text-white flex items-center justify-center text-[8px] font-bold">1</span> Submit URL</span>
-                                                    <span className="text-neutral-300">&rarr;</span>
-                                                    <span className="flex items-center gap-1"><span className="w-4 h-4 bg-black text-white flex items-center justify-center text-[8px] font-bold">2</span> AI Researches</span>
-                                                    <span className="text-neutral-300">&rarr;</span>
-                                                    <span className="flex items-center gap-1"><span className="w-4 h-4 bg-black text-white flex items-center justify-center text-[8px] font-bold">3</span> Get Report</span>
-                                                </div>
-                                                <Link href="/submit" className="inline-block border border-black px-5 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
-                                                    Submit Tool →
-                                                </Link>
+                                        <div className="border border-dashed border-neutral-300 p-5 space-y-4">
+                                            <div>
+                                                <p className="font-serif text-xl">Submit your first tool.</p>
+                                                <p className="font-mono text-xs text-neutral-500 mt-1 leading-relaxed">
+                                                    Paste any tool URL. Research agents analyze it in under 2 minutes.
+                                                </p>
                                             </div>
+
+                                            {/* Sample report preview */}
+                                            <div className="border border-black bg-white p-4 space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Sample Report</span>
+                                                    <span className="bg-black text-white font-mono text-xs px-2 py-0.5">8.4 / 10</span>
+                                                </div>
+                                                <div className="font-sans text-sm font-semibold">Notion</div>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { label: "Value", score: 81 },
+                                                        { label: "Support", score: 74 },
+                                                        { label: "Integration", score: 88 },
+                                                        { label: "Security", score: 80 },
+                                                    ].map(({ label, score }) => (
+                                                        <div key={label} className="space-y-0.5">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="font-mono text-[10px] text-neutral-500">{label}</span>
+                                                                <span className="font-mono text-[10px] text-neutral-500">{(score / 10).toFixed(1)}</span>
+                                                            </div>
+                                                            <div className="bg-neutral-200 h-1.5 w-full">
+                                                                <div className="bg-black h-1.5" style={{ width: `${score}%` }} />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <Link href="/submit" className="inline-block border border-black px-5 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
+                                                Submit Tool →
+                                            </Link>
                                         </div>
                                     ) : colTools.length === 0 ? (
                                         <div className="border border-dashed border-neutral-300 p-4 text-center text-[10px] font-mono text-neutral-400">

@@ -20,7 +20,7 @@ import { GET } from "../route";
 
 const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
 const MOCK_MEMBER = { id: "mem_1", workspaceId: "ws_1", userId: "usr_1" };
-const MOCK_TOOL = { id: VALID_UUID, status: "active", researchLogs: ["Step 1 complete", "Step 2 complete"] };
+const MOCK_TOOL = { id: VALID_UUID, status: "active", researchLogs: ["Step 1 complete", "Step 2 complete"], overallScore: "8.4", name: "Notion" };
 
 function makeParams(id: string) {
     return { params: Promise.resolve({ id }) };
@@ -64,6 +64,8 @@ describe("GET /api/tools/[id]/logs", () => {
         expect(body.logs).toEqual(["Step 1 complete", "Step 2 complete"]);
         expect(body.status).toBe("active");
         expect(body.errorMessage).toBeNull();
+        expect(body.score).toBe("8.4");
+        expect(body.toolName).toBe("Notion");
     });
 
     it("returns errorMessage from latest failed job for failed tool", async () => {

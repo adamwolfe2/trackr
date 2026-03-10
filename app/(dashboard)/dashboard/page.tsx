@@ -7,6 +7,7 @@ import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
+import { InviteTeamNudge } from "@/components/dashboard/invite-team-nudge";
 import { ToolLogo } from "@/components/tools/tool-logo";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
@@ -255,6 +256,8 @@ export default async function DashboardPage() {
                     isPaidPlan={isPaidPlan}
                 />
             )}
+
+            {teamMembersCount === 1 && <InviteTeamNudge role={member.role} />}
 
             {/* Quick Actions */}
             {quickActions.length > 0 && (

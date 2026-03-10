@@ -29,7 +29,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             where: and(eq(tools.id, id), eq(tools.workspaceId, member.workspaceId)),
             columns: {
                 researchLogs: true,
-                status: true
+                status: true,
+                overallScore: true,
+                name: true,
             }
         });
 
@@ -50,7 +52,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             errorMessage = latestJob?.errorMessage ?? null;
         }
 
-        return NextResponse.json({ logs, status: tool.status, errorMessage });
+        return NextResponse.json({ logs, status: tool.status, errorMessage, score: tool.overallScore ?? null, toolName: tool.name ?? null });
     } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Command } from "cmdk";
 import { useRouter } from "next/navigation";
 import {
@@ -8,6 +8,14 @@ import {
     Layers, BarChart3, AlertCircle, GitCompareArrows, SlidersHorizontal,
     Sparkles, Gift, CreditCard, Settings, PlusCircle,
 } from "lucide-react";
+
+interface PaletteTool {
+    id: string;
+    name: string;
+    overallScore: string | null;
+    status: string;
+    websiteUrl: string | null;
+}
 
 const NAVIGATION_ITEMS = [
     { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "Navigation" },
@@ -30,6 +38,8 @@ const NAVIGATION_ITEMS = [
 
 export function CommandPalette() {
     const [open, setOpen] = useState(false);
+    const [workspaceTools, setWorkspaceTools] = useState<PaletteTool[]>([]);
+    const fetchedRef = useRef(false);
     const router = useRouter();
 
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -43,6 +53,18 @@ export function CommandPalette() {
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [handleKeyDown]);
+
+    useEffect(() => {
+        if (open && !fetchedRef.current) {
+            fetchedRef.current = true;
+            fetch("/api/tools/palette")
+                .then(r => r.ok ? r.json() : null)
+                .then((data: { tools: PaletteTool[] } | null) => {
+                    if (data?.tools) setWorkspaceTools(data.tools);
+                })
+                .catch(() => { /* silent — palette still shows nav items */ });
+        }
+    }, [open]);
 
     const handleSelect = (href: string) => {
         setOpen(false);
@@ -84,6 +106,30 @@ export function CommandPalette() {
                         <Command.Empty className="py-8 text-center font-mono text-xs text-neutral-400">
                             No results found.
                         </Command.Empty>
+
+                        {workspaceTools.length > 0 && (
+                            <Command.Group
+                                heading="Your Tools"
+                                className="[&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-neutral-400 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5"
+                            >
+                                {workspaceTools.map((tool) => (
+                                    <Command.Item
+                                        key={tool.id}
+                                        value={`tool ${tool.name}`}
+                                        onSelect={() => handleSelect(`/tools/${tool.id}`)}
+                                        className="flex items-center gap-3 px-3 py-2.5 font-mono text-sm cursor-pointer data-[selected=true]:bg-black data-[selected=true]:text-white transition-colors"
+                                    >
+                                        <Database className="h-4 w-4 shrink-0" />
+                                        <span className="flex-1 truncate">{tool.name}</span>
+                                        {tool.overallScore && (
+                                            <span className="ml-auto font-mono text-[10px] border border-black px-1 data-[selected=true]:border-white">
+                                                {Number(tool.overallScore).toFixed(1)}
+                                            </span>
+                                        )}
+                                    </Command.Item>
+                                ))}
+                            </Command.Group>
+                        )}
 
                         {["Navigation", "Actions", "Settings"].map((group) => {
                             const items = NAVIGATION_ITEMS.filter((i) => i.group === group);
