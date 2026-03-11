@@ -103,14 +103,26 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
         };
     }, [toolId, router]);
 
-    // Auto-dismiss score reveal after 8 seconds
+    const [revealCountdown, setRevealCountdown] = useState(8);
+
+    // Auto-dismiss score reveal after 8 seconds with live countdown
     useEffect(() => {
         if (!scoreReveal) return;
-        const timer = setTimeout(() => {
+        setRevealCountdown(8);
+        const countInterval = setInterval(() => {
+            setRevealCountdown(c => {
+                if (c <= 1) clearInterval(countInterval);
+                return c - 1;
+            });
+        }, 1000);
+        const dismissTimer = setTimeout(() => {
             setScoreReveal(null);
             router.refresh();
         }, 8000);
-        return () => clearTimeout(timer);
+        return () => {
+            clearInterval(countInterval);
+            clearTimeout(dismissTimer);
+        };
     }, [scoreReveal, router]);
 
     // Auto-scroll to bottom
@@ -156,7 +168,7 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
                         Share
                     </Link>
                 </div>
-                <p className="font-mono text-[10px] text-neutral-400">Auto-loading report in 8 seconds...</p>
+                <p className="font-mono text-[10px] text-neutral-400">Auto-loading report in {revealCountdown}s...</p>
             </div>
         );
     }
