@@ -312,15 +312,19 @@ export async function getNotifications(): Promise<Notification[]> {
     return all;
 }
 
-const NOTIFICATION_UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Accepts bare UUIDs (job notifications) and compound IDs (renewal-<uuid>,
+// stale-<uuid>, suggestion-<uuid>, sub-<uuid>, referral-<uuid>,
+// renewal-decision-<uuid>, credits-exhausted-<uuid>-<year>-<month>).
+// Allows alphanumeric + hyphens only — blocks arbitrary garbage / injection.
+const NOTIFICATION_ID_RE = /^[a-z0-9-]{3,200}$/i;
 
 export async function markNotificationsRead(notificationIds: string[]) {
     const user = await currentUser();
     if (!user || notificationIds.length === 0) return;
     if (notificationIds.length > 500) throw new Error("Too many notification IDs");
 
-    // Only accept valid UUIDs to prevent garbage from filling seenJobIds
-    const validIds = notificationIds.filter(id => NOTIFICATION_UUID_RE.test(id));
+    // Accept any safe notification ID (bare UUID or compound string)
+    const validIds = notificationIds.filter(id => NOTIFICATION_ID_RE.test(id));
     if (validIds.length === 0) return;
 
     const workspaceId = await getWorkspaceId(user.id);

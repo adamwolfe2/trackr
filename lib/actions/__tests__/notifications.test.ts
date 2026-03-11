@@ -316,6 +316,44 @@ describe("markNotificationsRead", () => {
         ).mock.calls[0][0];
         expect(setArgs.seenJobIds).toHaveLength(200);
     });
+
+    it("stores compound notification IDs like renewal-<uuid>, stale-<uuid>, sub-<uuid>", async () => {
+        // Previously these were silently dropped because the UUID-only regex rejected them.
+        // They must now be accepted so non-job notifications can be marked as read.
+        const compoundIds = [
+            "renewal-00000000-0000-0000-0000-000000000001",
+            "stale-00000000-0000-0000-0000-000000000002",
+            "suggestion-00000000-0000-0000-0000-000000000003",
+            "sub-00000000-0000-0000-0000-000000000004",
+            "referral-00000000-0000-0000-0000-000000000005",
+            "renewal-decision-00000000-0000-0000-0000-000000000006",
+        ];
+        await markNotificationsRead(compoundIds);
+        expect(db.update).toHaveBeenCalledTimes(1);
+        const setArgs = (
+            (db.update as ReturnType<typeof vi.fn>).mock.results[0].value.set as ReturnType<typeof vi.fn>
+        ).mock.calls[0][0];
+        expect(setArgs.seenJobIds).toEqual(expect.arrayContaining(compoundIds));
+    });
+
+    it("still rejects IDs with spaces, quotes, or other unsafe characters", async () => {
+        const unsafeIds = [
+            "valid-id-123", // this one is valid
+            "id with spaces",
+            "id'with'quotes",
+            "id<with>tags",
+            "", // empty
+        ];
+        await markNotificationsRead(unsafeIds);
+        const setArgs = (
+            (db.update as ReturnType<typeof vi.fn>).mock.results[0].value.set as ReturnType<typeof vi.fn>
+        ).mock.calls[0][0];
+        // Only the valid-id-123 should be stored
+        expect(setArgs.seenJobIds).toContain("valid-id-123");
+        expect(setArgs.seenJobIds).not.toContain("id with spaces");
+        expect(setArgs.seenJobIds).not.toContain("id'with'quotes");
+        expect(setArgs.seenJobIds).not.toContain("");
+    });
 });
 
 describe("getNotifications — referral_signup type", () => {
