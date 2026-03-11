@@ -11,6 +11,7 @@ import { VS_COMPETITORS, VS_PAGES } from '@/data/vs-pages.seed';
 import { INDUSTRY_SLUGS } from '@/data/industries.seed';
 import { USE_CASE_SLUGS } from '@/data/use-cases.seed';
 import { GLOSSARY_SLUGS } from '@/data/glossary.seed';
+import { ARCHITECT_ROLES } from '@/lib/config/architect-roles';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://trytrackr.com';
@@ -181,6 +182,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             changeFrequency: 'weekly',
             priority: 0.6,
         },
+        // Architect program pages
+        {
+            url: `${baseUrl}/apply`,
+            lastModified: new Date('2026-03-01'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        },
+        ...ARCHITECT_ROLES.map((role) => ({
+            url: `${baseUrl}/apply/${role.slug}`,
+            lastModified: new Date('2026-03-01'),
+            changeFrequency: 'monthly' as const,
+            priority: 0.7,
+        })),
         // Lead magnet pages
         {
             url: `${baseUrl}/scorecard`,

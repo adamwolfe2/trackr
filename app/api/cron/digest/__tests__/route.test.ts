@@ -290,4 +290,45 @@ describe("GET /api/cron/digest", () => {
         expect(body).toHaveProperty("stackDigestsSent");
         expect(typeof body.stackDigestsSent).toBe("number");
     });
+
+    it("passes a positive spendDelta when spend was added this week", async () => {
+        (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([MOCK_OWNER]);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        // One old entry ($200/mo) + one new entry ($100/mo added today)
+        const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { id: "sp_old", toolName: "Salesforce", status: "active", monthlyCost: "200", renewalDate: null, workspaceId: "ws_1", createdAt: tenDaysAgo },
+            { id: "sp_new", toolName: "Linear", status: "active", monthlyCost: "100", renewalDate: null, workspaceId: "ws_1", createdAt: new Date() },
+        ]);
+
+        const res = await GET(makeRequest(VALID_AUTH));
+        expect(res.status).toBe(200);
+        expect(mockSendStackHealthDigest).toHaveBeenCalledWith("owner@acme.com", expect.objectContaining({
+            spendDelta: expect.any(Number),
+        }));
+        // spendDelta should be positive (new spend added this week)
+        const callArg = mockSendStackHealthDigest.mock.calls[0][1] as { spendDelta: number };
+        expect(callArg.spendDelta).toBeGreaterThan(0);
+    });
+
+    it("passes zero spendDelta when no new spend was added this week", async () => {
+        (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([MOCK_OWNER]);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+        const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
+        // Override computeStackInsights to return totalActiveSpend matching the one old entry ($500)
+        mockComputeStackInsights.mockReturnValueOnce({
+            score: 60, label: "Mixed", totalActiveSpend: 500,
+            aiNativeCount: 0, aiEnabledCount: 0, traditionalCount: 1, unknownCount: 0,
+            timeSavedPerMonth: 0, timeSavedPerYear: 0, dollarValueSaved: 0,
+            opportunities: [], enrichedTools: [],
+        });
+        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { id: "sp_old", toolName: "Salesforce", status: "active", monthlyCost: "500", renewalDate: null, workspaceId: "ws_1", createdAt: tenDaysAgo },
+        ]);
+
+        const res = await GET(makeRequest(VALID_AUTH));
+        expect(res.status).toBe(200);
+        const callArg = mockSendStackHealthDigest.mock.calls[0][1] as { spendDelta: number };
+        expect(callArg.spendDelta).toBe(0);
+    });
 });

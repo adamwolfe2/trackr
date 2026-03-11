@@ -213,10 +213,17 @@ export async function GET(req: Request) {
 
                     const updatedStreak = hadActivity ? currentStreak + 1 : 0;
 
+                    // Spend delta: compare current total to what existed before this week.
+                    // Entries added in the last 7 days represent new spend added this period.
+                    const previousWeekTotal = allSpend
+                        .filter(s => s.status === "active" && s.createdAt < sevenDaysAgo)
+                        .reduce((sum, s) => sum + parseFloat(s.monthlyCost ?? "0"), 0);
+                    const spendDelta = insights.totalActiveSpend - previousWeekTotal;
+
                     await sendStackHealthDigest(email, {
                         workspaceName: wsData.name,
                         totalMonthlySpend: insights.totalActiveSpend,
-                        spendDelta: 0, // TODO: track previous week's spend for delta calculation
+                        spendDelta,
                         aiScore: insights.score,
                         renewals: digestRenewals,
                         currentStreak: updatedStreak,
