@@ -41,10 +41,19 @@ export const env = createEnv({
 
         // Firecrawl — optional, used for URL scraping
         FIRECRAWL_API_KEY: z.string().optional(),
+
+        // xAI/Grok — optional enrichment provider
+        XAI_API_KEY: z.string().optional(),
+
+        // Admin access — at least one should be set for /admin dashboard
+        ADMIN_PASSWORD: z.string().optional(),
+        ADMIN_EMAILS: z.string().optional(),
     },
     client: {
         NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
+        NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
+        NEXT_PUBLIC_POSTHOG_HOST: z.string().optional(),
     },
     runtimeEnv: {
         DATABASE_URL: process.env.DATABASE_URL,
@@ -66,8 +75,13 @@ export const env = createEnv({
         SLACK_CLIENT_SECRET: process.env.SLACK_CLIENT_SECRET,
         SLACK_SIGNING_SECRET: process.env.SLACK_SIGNING_SECRET,
         FIRECRAWL_API_KEY: process.env.FIRECRAWL_API_KEY,
+        XAI_API_KEY: process.env.XAI_API_KEY,
+        ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+        ADMIN_EMAILS: process.env.ADMIN_EMAILS,
         NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
         NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+        NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+        NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     },
     skipValidation: !!process.env.SKIP_ENV_VALIDATION || process.env.NODE_ENV === "test",
 });

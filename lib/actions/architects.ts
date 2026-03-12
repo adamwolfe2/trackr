@@ -53,7 +53,8 @@ export async function approveApplication(applicationId: string) {
         .returning();
 
     // Send approval email with onboarding link
-    const onboardingUrl = `https://trytrackr.com/architect/dashboard`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
+    const onboardingUrl = `${appUrl}/architect/dashboard`;
     await sendArchitectApproved(application.email, application.firstName, arcCode, onboardingUrl);
 
     return architect;

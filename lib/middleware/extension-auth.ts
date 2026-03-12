@@ -39,13 +39,13 @@ export async function getWorkspaceFromApiKey(req: Request) {
 export function corsHeaders(req?: Request): Record<string, string> {
     const origin = req?.headers.get("Origin") || "";
 
-    // Allow Chrome extensions (strict pattern), localhost dev ports, and production domain
+    // Allow Chrome extensions (strict pattern), production domain, and localhost only in dev
     const productionOrigin = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
+    const isDev = process.env.NODE_ENV === "development";
     const isAllowed =
         /^chrome-extension:\/\/[a-z0-9]{20,}$/.test(origin) ||
-        origin === "http://localhost:3000" ||
-        origin === "http://localhost:3001" ||
-        origin === productionOrigin;
+        origin === productionOrigin ||
+        (isDev && (origin === "http://localhost:3000" || origin === "http://localhost:3001"));
 
     return {
         "Access-Control-Allow-Origin": isAllowed ? origin : "",

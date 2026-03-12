@@ -1,10 +1,11 @@
 import { db } from "@/lib/db";
 import { subscriptions } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
-import { stripe } from "@/lib/services/stripe";
+import { stripe, assertStripeConfigured } from "@/lib/services/stripe";
 import { getPlanLimits, CREDIT_PACK_PRICES } from "@/lib/config/subscriptions";
 
 export async function performAutoTopUp(workspaceId: string): Promise<{ success: boolean; creditsAdded?: number }> {
+    assertStripeConfigured();
     const subscription = await db.query.subscriptions.findFirst({
         where: eq(subscriptions.workspaceId, workspaceId),
     });

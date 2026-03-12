@@ -1,7 +1,7 @@
 "use server";
 
 import { after } from "next/server";
-import { stripe } from "@/lib/services/stripe";
+import { stripe, assertStripeConfigured } from "@/lib/services/stripe";
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { workspaceMembers, subscriptions } from "@/lib/db/schema";
@@ -25,6 +25,7 @@ export async function createCheckoutSession(
     plan: PaidPlanSlug = "team",
     interval: BillingInterval = "monthly"
 ) {
+    assertStripeConfigured();
     const user = await currentUser();
     if (!user) {
         throw new Error("Unauthorized");

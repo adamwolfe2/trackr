@@ -32,6 +32,7 @@ vi.mock("@/lib/services/stripe", () => ({
         checkout: { sessions: { create: mockCheckoutCreate } },
         billingPortal: { sessions: { create: mockPortalCreate } },
     },
+    assertStripeConfigured: vi.fn(),
 }));
 
 import { currentUser } from "@clerk/nextjs/server";

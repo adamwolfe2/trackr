@@ -5,11 +5,12 @@ import { getWorkspaceId } from "@/lib/db/queries";
 import { db } from "@/lib/db";
 import { subscriptions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { stripe } from "@/lib/services/stripe";
+import { stripe, assertStripeConfigured } from "@/lib/services/stripe";
 import { getPlanLimits, CREDIT_PACKS, CREDIT_PACK_PRICES, type CreditPackSize } from "@/lib/config/subscriptions";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 
 export async function purchaseCredits(packSize: CreditPackSize) {
+    assertStripeConfigured();
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 

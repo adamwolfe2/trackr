@@ -72,10 +72,22 @@ describe("corsHeaders", () => {
         expect(headers["Access-Control-Allow-Origin"]).toBe(extOrigin);
     });
 
-    it("allows localhost origins", () => {
+    it("allows localhost origins in development", () => {
+        const prev = process.env.NODE_ENV;
+        process.env.NODE_ENV = "development";
         const req = { headers: { get: () => "http://localhost:3000" } } as unknown as Request;
         const headers = corsHeaders(req);
         expect(headers["Access-Control-Allow-Origin"]).toBe("http://localhost:3000");
+        process.env.NODE_ENV = prev;
+    });
+
+    it("blocks localhost origins in production", () => {
+        const prev = process.env.NODE_ENV;
+        process.env.NODE_ENV = "production";
+        const req = { headers: { get: () => "http://localhost:3000" } } as unknown as Request;
+        const headers = corsHeaders(req);
+        expect(headers["Access-Control-Allow-Origin"]).toBe("");
+        process.env.NODE_ENV = prev;
     });
 
     it("returns empty string for unknown origins (not trytrackr.com)", () => {

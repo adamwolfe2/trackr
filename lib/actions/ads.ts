@@ -1,6 +1,6 @@
 "use server";
 
-import { stripe } from "@/lib/services/stripe";
+import { stripe, assertStripeConfigured } from "@/lib/services/stripe";
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { workspaceMembers, ads, tools } from "@/lib/db/schema";
@@ -8,6 +8,7 @@ import { eq, and } from "drizzle-orm";
 import { getWorkspaceId } from "@/lib/db/queries";
 
 export async function createAdCampaign(_workspaceId: string, toolId: string, budget: number) {
+    assertStripeConfigured();
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 

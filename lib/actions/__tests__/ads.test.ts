@@ -34,6 +34,7 @@ vi.mock("@/lib/services/stripe", () => ({
             sessions: { create: mockSessionCreate },
         },
     },
+    assertStripeConfigured: vi.fn(),
 }));
 
 import { currentUser } from "@clerk/nextjs/server";
