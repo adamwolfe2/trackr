@@ -2,12 +2,27 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { competitorIntel, subscriptions } from "@/lib/db/schema";
+import { competitorIntel, subscriptions, workspaceMembers } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { getPlanLimits } from "@/lib/config/subscriptions";
+import { currentUser } from "@clerk/nextjs/server";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DOMAIN_RE = /^[a-zA-Z0-9][a-zA-Z0-9-]*\.[a-zA-Z]{2,}$/;
+
+async function requireWorkspaceMembership(workspaceId: string) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+    const member = await db.query.workspaceMembers.findFirst({
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId),
+        ),
+        columns: { id: true },
+    });
+    if (!member) throw new Error("Unauthorized: not a workspace member");
+    return user;
+}
 
 function normalizeDomain(input: string): string {
     let domain = input.trim().toLowerCase();
@@ -25,6 +40,7 @@ export async function addCompetitor(
     data: { competitorName: string; competitorDomain: string; createdBy: string }
 ) {
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    await requireWorkspaceMembership(workspaceId);
 
     const name = data.competitorName?.trim();
     if (!name || name.length > 200) throw new Error("Competitor name is required (max 200 characters)");
@@ -79,6 +95,7 @@ export async function addCompetitor(
 export async function removeCompetitor(competitorId: string, workspaceId: string) {
     if (!UUID_RE.test(competitorId)) throw new Error("Invalid competitor ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    await requireWorkspaceMembership(workspaceId);
 
     await db.delete(competitorIntel).where(
         and(eq(competitorIntel.id, competitorId), eq(competitorIntel.workspaceId, workspaceId))
@@ -90,16 +107,19 @@ export async function removeCompetitor(competitorId: string, workspaceId: string
 
 export async function listCompetitors(workspaceId: string) {
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    await requireWorkspaceMembership(workspaceId);
 
     return db.query.competitorIntel.findMany({
         where: eq(competitorIntel.workspaceId, workspaceId),
         orderBy: (ci, { desc }) => [desc(ci.createdAt)],
+        limit: 200,
     });
 }
 
 export async function getCompetitorDetail(competitorId: string, workspaceId: string) {
     if (!UUID_RE.test(competitorId)) throw new Error("Invalid competitor ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    await requireWorkspaceMembership(workspaceId);
 
     const competitor = await db.query.competitorIntel.findFirst({
         where: and(
@@ -115,6 +135,7 @@ export async function getCompetitorDetail(competitorId: string, workspaceId: str
 export async function pauseCompetitor(competitorId: string, workspaceId: string) {
     if (!UUID_RE.test(competitorId)) throw new Error("Invalid competitor ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    await requireWorkspaceMembership(workspaceId);
 
     const existing = await db.query.competitorIntel.findFirst({
         where: and(
@@ -152,6 +173,7 @@ export async function updateDiscoveredTools(
 ) {
     if (!UUID_RE.test(competitorId)) throw new Error("Invalid competitor ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    await requireWorkspaceMembership(workspaceId);
 
     if (!Array.isArray(tools)) throw new Error("Tools must be an array");
     if (tools.length > 200) throw new Error("Maximum 200 discovered tools per competitor");

@@ -27,6 +27,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                     <a href="/admin/architects" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
                         Architects
                     </a>
+                    <span className="font-mono text-neutral-300 text-xs">|</span>
+                    <a href="/admin/payouts" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
+                        Payouts
+                    </a>
                 </nav>
                 {children}
             </div>

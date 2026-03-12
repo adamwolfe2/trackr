@@ -11,6 +11,8 @@ export const env = createEnv({
         PERPLEXITY_API_KEY: z.string().optional(),
         STRIPE_SECRET_KEY: z.string().optional(),
         STRIPE_WEBHOOK_SECRET: z.string().optional(),
+        CRON_SECRET: z.string().min(16).optional(),
+        ADMIN_PASSWORD: z.string().min(8).optional(),
         NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
     },
     client: {

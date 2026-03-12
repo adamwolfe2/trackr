@@ -12,12 +12,19 @@ import {
     sendArchitectApproved,
     sendArchitectRejected,
 } from "@/lib/email/resend";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 function generateArcCode(): string {
     return randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
 }
 
+async function requireAdmin() {
+    const authed = await isAdminAuthenticated();
+    if (!authed) throw new Error("Unauthorized: admin access required");
+}
+
 export async function approveApplication(applicationId: string) {
+    await requireAdmin();
     const application = await db.query.architectApplications.findFirst({
         where: eq(architectApplications.id, applicationId),
     });
@@ -53,6 +60,7 @@ export async function approveApplication(applicationId: string) {
 }
 
 export async function rejectApplication(applicationId: string, notes?: string) {
+    await requireAdmin();
     const application = await db.query.architectApplications.findFirst({
         where: eq(architectApplications.id, applicationId),
     });
@@ -72,6 +80,7 @@ export async function rejectApplication(applicationId: string, notes?: string) {
 }
 
 export async function updateArchitectCalendarUrl(architectId: string, calendarUrl: string) {
+    await requireAdmin();
     await db
         .update(architects)
         .set({ calendarUrl: calendarUrl || null })
@@ -79,6 +88,7 @@ export async function updateArchitectCalendarUrl(architectId: string, calendarUr
 }
 
 export async function pauseArchitect(architectId: string) {
+    await requireAdmin();
     await db
         .update(architects)
         .set({ status: "paused" })
@@ -86,6 +96,7 @@ export async function pauseArchitect(architectId: string) {
 }
 
 export async function terminateArchitect(architectId: string) {
+    await requireAdmin();
     await db
         .update(architects)
         .set({ status: "terminated" })

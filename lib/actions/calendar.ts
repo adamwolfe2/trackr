@@ -65,6 +65,7 @@ export async function createCalendarEvent(
 
 export async function updateCalendarEvent(
     eventId: string,
+    workspaceId: string,
     data: {
         title?: string;
         description?: string;
@@ -75,6 +76,7 @@ export async function updateCalendarEvent(
     }
 ) {
     if (!UUID_RE.test(eventId)) throw new Error("Invalid event ID");
+    if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
 
     const updates: Record<string, unknown> = {};
 
@@ -120,10 +122,17 @@ export async function updateCalendarEvent(
         throw new Error("No fields to update");
     }
 
+    // Verify event belongs to workspace before updating
+    const existing = await db.query.calendarEvents.findFirst({
+        where: and(eq(calendarEvents.id, eventId), eq(calendarEvents.workspaceId, workspaceId)),
+        columns: { id: true },
+    });
+    if (!existing) throw new Error("Event not found or unauthorized");
+
     await db
         .update(calendarEvents)
         .set(updates)
-        .where(eq(calendarEvents.id, eventId));
+        .where(and(eq(calendarEvents.id, eventId), eq(calendarEvents.workspaceId, workspaceId)));
 
     revalidatePath("/calendar");
     return { success: true };
@@ -131,12 +140,13 @@ export async function updateCalendarEvent(
 
 // ─── Delete Event ──────────────────────────────────────────────────────────
 
-export async function deleteCalendarEvent(eventId: string) {
+export async function deleteCalendarEvent(eventId: string, workspaceId: string) {
     if (!UUID_RE.test(eventId)) throw new Error("Invalid event ID");
+    if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
 
     await db
         .delete(calendarEvents)
-        .where(eq(calendarEvents.id, eventId));
+        .where(and(eq(calendarEvents.id, eventId), eq(calendarEvents.workspaceId, workspaceId)));
 
     revalidatePath("/calendar");
     return { success: true };

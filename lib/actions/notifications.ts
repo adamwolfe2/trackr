@@ -234,6 +234,7 @@ export async function getNotifications(): Promise<Notification[]> {
                 eq(tools.status, 'active'),
             ),
             columns: { id: true, name: true, overallScore: true },
+            limit: 500, // Safety cap
         })
         : [];
     const toolsByName = new Map(activeTools.map(t => [t.name.toLowerCase(), t]));

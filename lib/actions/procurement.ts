@@ -2,8 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { procurementRequests } from "@/lib/db/schema";
+import { procurementRequests, workspaceMembers } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { currentUser } from "@clerk/nextjs/server";
+
+async function requireWorkspaceMembership(workspaceId: string) {
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
+    const member = await db.query.workspaceMembers.findFirst({
+        where: and(
+            eq(workspaceMembers.userId, user.id),
+            eq(workspaceMembers.workspaceId, workspaceId),
+        ),
+        columns: { id: true },
+    });
+    if (!member) throw new Error("Unauthorized: not a workspace member");
+    return user;
+}
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -32,6 +47,7 @@ export async function submitProcurementRequest(
     workspaceId: string,
     data: SubmitProcurementData
 ) {
+    await requireWorkspaceMembership(workspaceId);
     const toolName = data.toolName.trim();
     if (!toolName || toolName.length > 200) {
         throw new Error("Tool name must be 1-200 characters");
@@ -83,6 +99,7 @@ export async function updateProcurementStatus(
     workspaceId: string,
     data: UpdateProcurementStatusData
 ) {
+    await requireWorkspaceMembership(workspaceId);
     const validStatuses = [
         "pending",
         "researching",
@@ -130,6 +147,7 @@ export async function listProcurementRequests(
     workspaceId: string,
     status?: string
 ) {
+    await requireWorkspaceMembership(workspaceId);
     if (status) {
         return db.query.procurementRequests.findMany({
             where: and(
@@ -137,11 +155,13 @@ export async function listProcurementRequests(
                 eq(procurementRequests.status, status)
             ),
             orderBy: [desc(procurementRequests.createdAt)],
+            limit: 200,
         });
     }
     return db.query.procurementRequests.findMany({
         where: eq(procurementRequests.workspaceId, workspaceId),
         orderBy: [desc(procurementRequests.createdAt)],
+        limit: 200,
     });
 }
 
@@ -149,6 +169,7 @@ export async function getProcurementRequest(
     requestId: string,
     workspaceId: string
 ) {
+    await requireWorkspaceMembership(workspaceId);
     return db.query.procurementRequests.findFirst({
         where: and(
             eq(procurementRequests.id, requestId),
@@ -161,6 +182,7 @@ export async function startProcurementResearch(
     requestId: string,
     workspaceId: string
 ) {
+    await requireWorkspaceMembership(workspaceId);
     const existing = await db.query.procurementRequests.findFirst({
         where: and(
             eq(procurementRequests.id, requestId),

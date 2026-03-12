@@ -73,6 +73,10 @@ export async function POST(req: NextRequest) {
                 await handleTrialWillEnd(event.data.object as Stripe.Subscription);
                 break;
             }
+            case "charge.refunded": {
+                await handleChargeRefunded(event.data.object as Stripe.Charge);
+                break;
+            }
             case "account.updated": {
                 await handleAccountUpdated(event.data.object as Stripe.Account);
                 break;
@@ -406,9 +410,9 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
                                     })
                                     .where(eq(architectCommissions.id, commission.id));
 
-                                // Update architect lifetime earnings
+                                // Update architect lifetime earnings (atomic increment to prevent race conditions)
                                 await db.update(architects)
-                                    .set({ totalEarnings: architect.totalEarnings + commissionAmount })
+                                    .set({ totalEarnings: sql`${architects.totalEarnings} + ${commissionAmount}` })
                                     .where(eq(architects.id, architect.id));
 
                                 // Notify architect
@@ -471,6 +475,78 @@ async function handleTrialWillEnd(sub: Stripe.Subscription) {
     } catch {
         // Non-critical — don't fail webhook if email errors
     }
+}
+
+async function handleChargeRefunded(charge: Stripe.Charge) {
+    // Commission clawback: reverse commissions for refunded charges within 60-day window
+    // In Stripe v20, invoice is not directly on Charge — look up via payment_intent
+    const piRef = charge.payment_intent;
+    if (!piRef) return;
+    const piId = typeof piRef === "string" ? piRef : piRef.id;
+
+    // Find the invoice associated with this payment intent
+    const invoices = await stripe.invoices.list({ payment_intent: piId, limit: 1 });
+    const invoiceId = invoices.data[0]?.id;
+    if (!invoiceId) return;
+
+    // Find commissions tied to this invoice
+    const commission = await db.query.architectCommissions.findFirst({
+        where: eq(architectCommissions.stripeInvoiceId, invoiceId),
+    });
+
+    if (!commission) return; // No architect commission for this invoice
+
+    // Only claw back if within 60-day window (per affiliate agreement)
+    const daysSinceCommission = (Date.now() - new Date(commission.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+    if (daysSinceCommission > 60) {
+        console.log(`[webhook] Skipping clawback for commission ${commission.id} — outside 60-day window (${Math.floor(daysSinceCommission)} days)`);
+        return;
+    }
+
+    // Calculate clawback: proportional to refund amount vs original invoice
+    const refundedAmount = charge.amount_refunded; // total refunded so far in cents
+    const originalAmount = charge.amount; // original charge amount
+    const refundRatio = originalAmount > 0 ? refundedAmount / originalAmount : 1;
+    const clawbackAmount = Math.floor(commission.commissionAmount * refundRatio);
+
+    if (clawbackAmount <= 0) return;
+
+    // If commission was already paid via Stripe Connect, reverse the transfer
+    if (commission.status === "paid" && commission.stripeTransferId) {
+        try {
+            await stripe.transfers.createReversal(commission.stripeTransferId, {
+                amount: clawbackAmount,
+                description: `Clawback: refund on invoice ${invoiceId}`,
+            });
+        } catch (reversalErr) {
+            console.error("[webhook] Transfer reversal failed for commission", commission.id, reversalErr);
+            // Mark as failed so admin can handle manually
+            await db.update(architectCommissions)
+                .set({ status: "failed" })
+                .where(eq(architectCommissions.id, commission.id));
+            return;
+        }
+    }
+
+    // Full refund → mark commission as failed; partial → reduce amount
+    if (refundRatio >= 1) {
+        await db.update(architectCommissions)
+            .set({ status: "failed" })
+            .where(eq(architectCommissions.id, commission.id));
+    } else {
+        await db.update(architectCommissions)
+            .set({ commissionAmount: commission.commissionAmount - clawbackAmount })
+            .where(eq(architectCommissions.id, commission.id));
+    }
+
+    // Decrement architect's lifetime earnings (atomic, floor at 0)
+    await db.update(architects)
+        .set({
+            totalEarnings: sql`GREATEST(${architects.totalEarnings} - ${clawbackAmount}, 0)`,
+        })
+        .where(eq(architects.id, commission.architectId));
+
+    console.log(`[webhook] Commission clawback: ${clawbackAmount} cents from architect ${commission.architectId} (invoice ${invoiceId}, ${Math.floor(refundRatio * 100)}% refund)`);
 }
 
 async function handleAccountUpdated(account: Stripe.Account) {

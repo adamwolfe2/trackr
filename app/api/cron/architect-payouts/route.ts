@@ -15,7 +15,7 @@ import {
     architectCommissions,
     architectPayouts,
 } from "@/lib/db/schema";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { stripe } from "@/lib/services/stripe";
 import { sendCommissionEarned } from "@/lib/email/resend";
 
@@ -102,9 +102,9 @@ export async function GET(req: Request) {
                     periodEnd,
                 });
 
-                // Update lifetime earnings
+                // Update lifetime earnings (atomic increment to prevent race conditions)
                 await db.update(architects)
-                    .set({ totalEarnings: architect.totalEarnings + total })
+                    .set({ totalEarnings: sql`${architects.totalEarnings} + ${total}` })
                     .where(eq(architects.id, architectId));
 
                 // Email the architect

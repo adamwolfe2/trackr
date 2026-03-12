@@ -248,7 +248,7 @@ export function CalendarClient({
                                         <button
                                             onClick={() => {
                                                 startTransition(async () => {
-                                                    await deleteCalendarEvent(evt.id);
+                                                    await deleteCalendarEvent(evt.id, workspaceId);
                                                     const fetched = await getMonthEvents(workspaceId, year, month);
                                                     setEvents(fetched);
                                                 });

@@ -99,6 +99,7 @@ export const notes = pgTable('notes', {
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
     index('notes_tool_id_idx').on(table.toolId),
+    index('notes_workspace_member_id_idx').on(table.workspaceMemberId),
 ]);
 
 // Pain Points
@@ -128,6 +129,7 @@ export const researchJobs = pgTable('research_jobs', {
 }, (table) => [
     index('research_jobs_tool_id_idx').on(table.toolId),
     index('research_jobs_triggered_at_idx').on(table.triggeredAt),
+    index('research_jobs_status_idx').on(table.status),
 ]);
 
 // Relations
@@ -397,6 +399,7 @@ export const apiLogs = pgTable('api_logs', {
     index('api_logs_created_at_idx').on(table.createdAt),
     index('api_logs_workspace_id_idx').on(table.workspaceId),
     index('api_logs_workspace_created_idx').on(table.workspaceId, table.createdAt),
+    index('api_logs_tool_id_idx').on(table.toolId),
 ]);
 
 // Webhook event idempotency log — prevents duplicate processing

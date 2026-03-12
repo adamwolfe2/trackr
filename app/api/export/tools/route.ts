@@ -49,6 +49,7 @@ export async function GET(req: NextRequest) {
         }>();
 
         if (toolIds.length > 0) {
+            // Fetch latest report per tool using DISTINCT ON to avoid loading all historical reports
             const allReports = await db
                 .select({
                     toolId: reports.toolId,
@@ -59,7 +60,8 @@ export async function GET(req: NextRequest) {
                 })
                 .from(reports)
                 .where(inArray(reports.toolId, toolIds))
-                .orderBy(desc(reports.createdAt));
+                .orderBy(desc(reports.createdAt))
+                .limit(toolIds.length * 2); // Safety: at most 2 reports per tool to find latest
 
             for (const r of allReports) {
                 if (!latestReportMap.has(r.toolId)) {
