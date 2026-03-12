@@ -6,19 +6,22 @@ import { getWorkspaceId } from "@/lib/db/queries";
 export const dynamic = "force-dynamic";
 
 /**
- * Generate a signed state parameter that encodes the workspace ID.
- * Format: workspaceId.signature
+ * Generate a signed state parameter that encodes the workspace ID and timestamp.
+ * Format: workspaceId.timestamp.signature
+ * Timestamp prevents replay attacks (callback verifies <10 min window).
  */
 function generateState(workspaceId: string): string {
     const secret = process.env.SLACK_CLIENT_SECRET;
     if (!secret) throw new Error("SLACK_CLIENT_SECRET not configured");
 
-    const signature = createHmac("sha256", secret)
-        .update(workspaceId)
-        .digest("hex")
-        .slice(0, 32); // Full 32-char HMAC for CSRF protection
+    const timestamp = Math.floor(Date.now() / 1000);
+    const payload = `${workspaceId}.${timestamp}`;
 
-    return `${workspaceId}.${signature}`;
+    const signature = createHmac("sha256", secret)
+        .update(payload)
+        .digest("hex");
+
+    return `${payload}.${signature}`;
 }
 
 export async function GET() {

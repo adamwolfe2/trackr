@@ -34,29 +34,28 @@ export default async function WorkspacePage() {
 
     if (!currentMember) redirect("/onboarding");
 
-    const workspace = await db.query.workspaces.findFirst({
-        where: eq(workspaces.id, currentMember.workspaceId),
-    });
-
-    const members = await db.query.workspaceMembers.findMany({
-        where: eq(workspaceMembers.workspaceId, currentMember.workspaceId),
-        orderBy: [asc(workspaceMembers.joinedAt)],
-    });
-
-    // Fetch active (non-expired) pending invitations for this workspace
-    // Wrapped in try/catch — table may not exist in all environments yet
-    let pendingInvites: (typeof pendingInvitations.$inferSelect)[] = [];
-    try {
-        pendingInvites = await db.query.pendingInvitations.findMany({
+    // Run all workspace queries in parallel — they all depend on currentMember.workspaceId
+    const [workspace, members, pendingInvitesResult, subscription] = await Promise.all([
+        db.query.workspaces.findFirst({
+            where: eq(workspaces.id, currentMember.workspaceId),
+        }),
+        db.query.workspaceMembers.findMany({
+            where: eq(workspaceMembers.workspaceId, currentMember.workspaceId),
+            orderBy: [asc(workspaceMembers.joinedAt)],
+        }),
+        db.query.pendingInvitations.findMany({
             where: and(
                 eq(pendingInvitations.workspaceId, currentMember.workspaceId),
                 gt(pendingInvitations.expiresAt, new Date())
             ),
             orderBy: [asc(pendingInvitations.createdAt)],
-        });
-    } catch {
-        // Degrade gracefully — workspace page still renders without pending invites
-    }
+        }).catch(() => [] as (typeof pendingInvitations.$inferSelect)[]),
+        db.query.subscriptions.findFirst({
+            where: eq(subscriptions.workspaceId, currentMember.workspaceId),
+        }),
+    ]);
+
+    const pendingInvites = pendingInvitesResult;
 
     // Resolve Clerk user data for all members (names, emails)
     let memberUserMap = new Map<string, { userId: string; firstName: string | null; lastName: string | null; email: string | null | undefined }>();
@@ -87,10 +86,6 @@ export default async function WorkspacePage() {
 
     const isOwnerOrAdmin = currentMember.role === "owner" || currentMember.role === "admin";
 
-    // Plan check for feature gating
-    const subscription = await db.query.subscriptions.findFirst({
-        where: eq(subscriptions.workspaceId, currentMember.workspaceId),
-    });
     const plan = getPlanLimits(subscription);
     const canUseSlack = hasFeature(plan, "slackIntegration");
     const canUseChromeExtension = hasFeature(plan, "chromeExtension");

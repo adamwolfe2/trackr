@@ -3,7 +3,7 @@
 
 import { db } from "@/lib/db";
 import { feedItems, workspaces } from "@/lib/db/schema";
-import { and, eq, isNull, desc, gte } from "drizzle-orm";
+import { and, eq, isNull, desc, gte, inArray } from "drizzle-orm";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
@@ -67,56 +67,46 @@ For each article, generate a concise 2-3 sentence summary, a relevance score (0-
             // Map results back by URL
             const resultMap = new Map(result.object.items.map(r => [r.url, r]));
 
+            // Batch updates: collect enriched and fallback IDs separately
+            const enrichedUpdates: { id: string; summary: string; relevanceScore: string; categories: string[] }[] = [];
+            const fallbackIds: string[] = [];
+
             for (const item of batch) {
                 const enrichment = resultMap.get(item.url);
                 if (enrichment) {
-                    await db.update(feedItems).set({
+                    enrichedUpdates.push({
+                        id: item.id,
                         summary: enrichment.summary,
                         relevanceScore: String(enrichment.relevanceScore),
                         categories: enrichment.categories,
-                    }).where(eq(feedItems.id, item.id));
-                    enrichedCount++;
+                    });
                 } else {
-                    // Fallback: set a low relevance so we don't re-process
-                    await db.update(feedItems).set({
-                        relevanceScore: "0.3",
-                    }).where(eq(feedItems.id, item.id));
-                    enrichedCount++;
+                    fallbackIds.push(item.id);
                 }
             }
+
+            // Apply enriched updates individually (different values per row)
+            for (const update of enrichedUpdates) {
+                await db.update(feedItems).set({
+                    summary: update.summary,
+                    relevanceScore: update.relevanceScore,
+                    categories: update.categories,
+                }).where(eq(feedItems.id, update.id));
+            }
+
+            // Batch-update all fallback items in one query
+            if (fallbackIds.length > 0) {
+                await db.update(feedItems)
+                    .set({ relevanceScore: "0.3" })
+                    .where(inArray(feedItems.id, fallbackIds));
+            }
+
+            enrichedCount += batch.length;
         } catch (batchErr) {
             console.error(`[feed-enrichment] Batch enrichment failed for workspace ${workspaceId}:`, batchErr);
-            // Batch failed — try enriching each item individually so partial data is saved
-            for (const item of batch) {
-                try {
-                    const single = await generateObject({
-                        model: openai("gpt-4o-mini"),
-                        schema: z.object({
-                            summary: z.string().describe("2-3 sentence summary of the article"),
-                            relevanceScore: z.number().min(0).max(1).describe("Relevance to the company: 0 = not relevant, 1 = highly relevant"),
-                            categories: z.array(z.string()).describe("1-3 topic categories"),
-                        }),
-                        prompt: `Analyze this article for relevance to: ${workspace.companyContext || workspace.name || "a B2B technology company"}
-
-Article: "${item.title}" — ${item.source || "unknown"}
-Snippet: ${item.summary || "No snippet available"}
-URL: ${item.url}
-
-Return a summary, relevance score (0-1), and 1-3 categories.`,
-                    });
-                    await db.update(feedItems).set({
-                        summary: single.object.summary,
-                        relevanceScore: String(single.object.relevanceScore),
-                        categories: single.object.categories,
-                    }).where(eq(feedItems.id, item.id));
-                    enrichedCount++;
-                } catch (itemErr) {
-                    console.error(`[feed-enrichment] Individual item failed (${item.url}):`, itemErr);
-                    // Mark with fallback score to prevent infinite re-processing
-                    await db.update(feedItems).set({ relevanceScore: "0.3" }).where(eq(feedItems.id, item.id));
-                    enrichedCount++;
-                }
-            }
+            // Leave relevanceScore as NULL so items are retried on next cron cycle.
+            // Items older than 48 hours naturally age out of the query window (line 30).
+            // Don't mark them "enriched" with a fallback score — that's permanent.
         }
     }
 

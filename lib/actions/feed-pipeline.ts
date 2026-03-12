@@ -8,6 +8,8 @@ import { tavily } from "@/lib/services/tavily";
 import { XMLParser } from "fast-xml-parser";
 import type { ChannelConfig } from "./feed";
 
+const EMPTY_TOPIC_RESULT = { answer: "", results: [] as { title: string; url: string; content: string; score: number }[] };
+
 export async function ingestChannel(channelId: string) {
     const channel = await db.query.feedChannels.findFirst({
         where: eq(feedChannels.id, channelId),
@@ -36,12 +38,20 @@ async function ingestTopic(workspaceId: string, channelId: string, config: Chann
     if (keywords.length === 0) return 0;
 
     const query = keywords.join(" ") + " " + new Date().toISOString().slice(0, 7); // add current month for recency
-    const result = await tavily.search(query, {
+    const searchPromise = tavily.search(query, {
         searchDepth: "basic",
         maxResults: 8,
         includeDomains: config.domains?.length ? config.domains : undefined,
         includeAnswer: false,
     });
+    // Hard timeout on topic search — Tavily service has its own 30s timeout + retries,
+    // but if something hangs beyond that, don't block the entire feed cron.
+    const result = await Promise.race([
+        searchPromise,
+        new Promise<typeof EMPTY_TOPIC_RESULT>((resolve) =>
+            setTimeout(() => resolve(EMPTY_TOPIC_RESULT), 45_000)
+        ),
+    ]);
 
     const rows = result.results.map(item => ({
         workspaceId,

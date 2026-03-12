@@ -141,7 +141,7 @@ describe("enrichFeedItems", () => {
         expect(setArgs.relevanceScore).toBe("0.3");
     });
 
-    it("sets relevanceScore to '0.3' fallback for all items in batch when generateObject throws", async () => {
+    it("leaves relevanceScore null for retry when generateObject throws", async () => {
         const items = [
             makeItem("item_1", "https://example.com/1"),
             makeItem("item_2", "https://example.com/2"),
@@ -149,10 +149,10 @@ describe("enrichFeedItems", () => {
         (db.query.feedItems.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(items);
         (generateObject as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("AI error"));
         const result = await enrichFeedItems("ws_1");
-        // Batch fails, then each item is retried individually → all get fallback score
-        expect(result).toBe(2); // enrichedCount incremented once per item in fallback path
-        // db.update called for each item with fallback score
-        expect(db.update).toHaveBeenCalledTimes(2);
+        // Batch fails → items left unenriched for retry on next cron cycle
+        expect(result).toBe(0);
+        // No db.update calls — items stay null so they're retried
+        expect(db.update).not.toHaveBeenCalled();
     });
 
     it("returns total count of enriched items across multiple batches", async () => {

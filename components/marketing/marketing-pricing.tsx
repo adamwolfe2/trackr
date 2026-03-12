@@ -5,7 +5,6 @@ import Link from "next/link";
 import { motion, useInView, type Variants } from "framer-motion";
 import { useRef, useState } from "react";
 import type { BillingInterval } from "@/lib/config/subscriptions";
-import { PAYMENT_LINKS } from "@/lib/config/subscriptions";
 
 const containerVariants: Variants = {
     hidden: {},
@@ -123,8 +122,9 @@ function getCtaForPlan(plan: PlanCard, interval: BillingInterval): { label: stri
     if (plan.slug === "free") {
         return { label: "Start for free", href: "/sign-up" };
     }
-    const link = PAYMENT_LINKS[plan.slug][interval];
-    return { label: "Start 14-day free trial", href: link };
+    // Route through app sign-up so workspaceId is captured in Stripe metadata.
+    // Direct buy.stripe.com links omit workspaceId and break subscription activation.
+    return { label: "Start 14-day free trial", href: `/sign-up?plan=${plan.slug}&interval=${interval}` };
 }
 
 export function MarketingPricing() {

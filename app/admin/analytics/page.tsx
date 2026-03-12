@@ -75,8 +75,10 @@ async function getAnalytics(windowDays: number) {
         .from(workspaces)
         .where(gte(workspaces.createdAt, since));
 
-    // Subscription breakdown
-    const allSubs = await db.query.subscriptions.findMany();
+    // Subscription breakdown — limit to reasonable cap to prevent memory issues at scale
+    const allSubs = await db.query.subscriptions.findMany({
+        limit: 10000,
+    });
     const activeSubs = allSubs.filter(s => s.status === "active" || s.status === "trialing");
 
     // MRR calculation

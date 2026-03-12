@@ -31,6 +31,7 @@ export default function OnboardingPage() {
     const router = useRouter();
     const { signOut } = useClerk();
     const plan = searchParams.get("plan") ?? "";
+    const interval = searchParams.get("interval") ?? "monthly";
     const ref = searchParams.get("ref") ?? "";
 
     // Step 1
@@ -172,6 +173,7 @@ export default function OnboardingPage() {
                     selectedTools: toolsArray,
                     scorecardDimensions: dimensions,
                     plan: plan || undefined,
+                    interval: interval || undefined,
                     refCode: ref || undefined,
                 });
 

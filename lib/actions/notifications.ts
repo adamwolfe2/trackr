@@ -124,6 +124,7 @@ export async function getNotifications(): Promise<Notification[]> {
     // 4. Referral signups
     const referral = await db.query.referrals.findFirst({
         where: eq(referrals.referrerWorkspaceId, member.workspaceId),
+        columns: { id: true, signups: true, createdAt: true },
     });
 
     const referralNotifications: Notification[] = [];
@@ -143,6 +144,7 @@ export async function getNotifications(): Promise<Notification[]> {
     // 5. Subscription status changes
     const subscription = await db.query.subscriptions.findFirst({
         where: eq(subscriptions.workspaceId, member.workspaceId),
+        columns: { id: true, status: true, currentPeriodEnd: true, creditBalance: true, updatedAt: true },
     });
 
     const subscriptionNotifications: Notification[] = [];

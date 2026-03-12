@@ -150,6 +150,24 @@ export async function generateSuggestions(workspaceId: string): Promise<number> 
     let created = 0;
     const seen = new Set<string>();
 
+    // Pre-compute pain point text for O(1) matching instead of O(n*m)
+    const ppTexts = activePainPoints.map(pp => ({
+        id: pp.id,
+        text: `${pp.title} ${pp.description || ""}`.toLowerCase(),
+    }));
+
+    // Collect all new suggestions to batch-insert
+    const toInsert: {
+        workspaceId: string;
+        toolName: string;
+        websiteUrl: string | null;
+        reason: string;
+        sourceFeedItemId: string;
+        matchedPainPointId: string | null;
+        confidence: string;
+        status: string;
+    }[] = [];
+
     for (const { tool, feedItemId } of allExtracted) {
         const lowerName = tool.name.toLowerCase();
         if (existingNames.has(lowerName) || suggestedNames.has(lowerName) || seen.has(lowerName)) continue;
@@ -157,11 +175,11 @@ export async function generateSuggestions(workspaceId: string): Promise<number> 
 
         let matchedPainPointId: string | null = null;
         let confidenceBoost = 0;
-        for (const pp of activePainPoints) {
-            const ppText = `${pp.title} ${pp.description || ""}`.toLowerCase();
-            const toolText = `${tool.name} ${tool.description}`.toLowerCase();
-            const toolWords = toolText.split(/\s+/).filter(w => w.length > 3);
-            const matches = toolWords.filter(w => ppText.includes(w));
+        const toolText = `${tool.name} ${tool.description}`.toLowerCase();
+        const toolWords = toolText.split(/\s+/).filter(w => w.length > 3);
+
+        for (const pp of ppTexts) {
+            const matches = toolWords.filter(w => pp.text.includes(w));
             if (matches.length >= 2) {
                 matchedPainPointId = pp.id;
                 confidenceBoost = 0.15;
@@ -171,20 +189,35 @@ export async function generateSuggestions(workspaceId: string): Promise<number> 
 
         const finalConfidence = Math.min(1, tool.confidence + confidenceBoost);
 
+        toInsert.push({
+            workspaceId,
+            toolName: tool.name,
+            websiteUrl: tool.url || null,
+            reason: tool.description || `Discovered in your intelligence feed`,
+            sourceFeedItemId: feedItemId,
+            matchedPainPointId,
+            confidence: String(finalConfidence),
+            status: "new",
+        });
+    }
+
+    // Batch insert all suggestions at once (instead of N individual INSERT queries)
+    if (toInsert.length > 0) {
         try {
-            await db.insert(toolSuggestions).values({
-                workspaceId,
-                toolName: tool.name,
-                websiteUrl: tool.url || null,
-                reason: tool.description || `Discovered in your intelligence feed`,
-                sourceFeedItemId: feedItemId,
-                matchedPainPointId,
-                confidence: String(finalConfidence),
-                status: "new",
-            });
-            created++;
-        } catch {
-            // Duplicate or constraint violation — skip
+            const inserted = await db.insert(toolSuggestions)
+                .values(toInsert)
+                .onConflictDoNothing()
+                .returning({ id: toolSuggestions.id });
+            created = inserted.length;
+        } catch (err) {
+            console.error(`[suggestions-pipeline] Batch insert failed, falling back to individual:`, err);
+            // Fallback: insert individually so partial success is preserved
+            for (const row of toInsert) {
+                try {
+                    await db.insert(toolSuggestions).values(row).onConflictDoNothing();
+                    created++;
+                } catch { /* skip */ }
+            }
         }
     }
 

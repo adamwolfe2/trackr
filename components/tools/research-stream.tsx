@@ -47,7 +47,9 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
     useEffect(() => {
         const fetchLogs = async () => {
             try {
-                const res = await fetch(`/api/tools/${toolId}/logs`);
+                const res = await fetch(`/api/tools/${toolId}/logs`, {
+                    signal: AbortSignal.timeout(10000),
+                });
                 if (!res.ok) {
                     consecutiveFailsRef.current += 1;
                     if (consecutiveFailsRef.current >= 2) setNetworkError(true);

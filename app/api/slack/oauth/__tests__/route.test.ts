@@ -80,7 +80,7 @@ describe("GET /api/slack/oauth", () => {
         const location = res.headers.get("location");
         const url = new URL(location!);
         const state = url.searchParams.get("state");
-        // State format is: workspaceId.signature
-        expect(state).toMatch(/^ws_abc\.[a-f0-9]{32}$/);
+        // State format is: workspaceId.timestamp.signature
+        expect(state).toMatch(/^ws_abc\.\d+\.[a-f0-9]{64}$/);
     });
 });

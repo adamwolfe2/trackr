@@ -118,6 +118,7 @@ const OnboardingSchema = z.object({
         weight: z.number().min(0).max(100),
     })).max(20),
     plan: z.string().max(50).optional(),
+    interval: z.string().max(20).optional(),
     refCode: z.string().max(20).optional(),
 });
 
@@ -135,6 +136,7 @@ export async function completeOnboarding(input: {
     selectedTools: Array<{ name: string; url?: string }>;
     scorecardDimensions: Array<{ key: string; label: string; weight: number }>;
     plan?: string;
+    interval?: string;
     refCode?: string;
 }): Promise<{ success: true; redirectTo: string }> {
     const user = await currentUser();
@@ -144,7 +146,7 @@ export async function completeOnboarding(input: {
     if (!parsed.success) {
         throw new Error(`Invalid onboarding data: ${parsed.error.issues[0]?.message ?? "validation failed"}`);
     }
-    const { companyName, companyContext, selectedTools, scorecardDimensions, plan, refCode } = parsed.data;
+    const { companyName, companyContext, selectedTools, scorecardDimensions, plan, interval, refCode } = parsed.data;
 
     // Validate scorecard weights sum to 100%
     if (scorecardDimensions.length > 0) {
@@ -240,10 +242,12 @@ export async function completeOnboarding(input: {
 
     // Return redirect URL — client handles navigation via router.push()
     // Free users → /submit so they immediately research their first tool (Aha moment <2 min)
-    // Paid plan → /settings/billing to activate subscription
-    const redirectTo = (plan && ["team", "startup", "enterprise"].includes(plan))
-        ? "/settings/billing"
-        : "/submit";
+    // Paid plan → /settings/billing with plan+interval so the page auto-triggers checkout
+    let redirectTo = "/submit";
+    if (plan && ["team", "startup", "enterprise"].includes(plan)) {
+        const billingInterval = interval && ["monthly", "annual"].includes(interval) ? interval : "monthly";
+        redirectTo = `/settings/billing?plan=${plan}&interval=${billingInterval}`;
+    }
 
     return { success: true, redirectTo };
 }

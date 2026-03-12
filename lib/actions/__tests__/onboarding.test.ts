@@ -138,17 +138,17 @@ describe("completeOnboarding", () => {
 
     it("redirects to /settings/billing for plan='team'", async () => {
         const result = await completeOnboarding({ ...VALID_ONBOARDING_INPUT, plan: "team" });
-        expect(result.redirectTo).toBe("/settings/billing");
+        expect(result.redirectTo).toBe("/settings/billing?plan=team&interval=monthly");
     });
 
     it("redirects to /settings/billing for plan='startup'", async () => {
         const result = await completeOnboarding({ ...VALID_ONBOARDING_INPUT, plan: "startup" });
-        expect(result.redirectTo).toBe("/settings/billing");
+        expect(result.redirectTo).toBe("/settings/billing?plan=startup&interval=monthly");
     });
 
     it("redirects to /settings/billing for plan='enterprise'", async () => {
         const result = await completeOnboarding({ ...VALID_ONBOARDING_INPUT, plan: "enterprise" });
-        expect(result.redirectTo).toBe("/settings/billing");
+        expect(result.redirectTo).toBe("/settings/billing?plan=enterprise&interval=monthly");
     });
 
     it("redirects to /submit for plan='free'", async () => {

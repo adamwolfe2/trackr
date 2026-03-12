@@ -53,6 +53,7 @@ export class FirecrawlService {
     /**
      * Scrape a single URL to get markdown, metadata, etc.
      * Results are cached in Redis for 24h to avoid redundant API calls.
+     * Retries once on transient failures (timeout, 5xx, network error).
      */
     async scrapeUrl(url: string): Promise<ScrapeResult> {
         if (!this.apiKey) {
@@ -63,43 +64,61 @@ export class FirecrawlService {
         const cacheKey = buildCacheKey("firecrawl:scrape", urlHash(url));
 
         return cachedFetch<ScrapeResult>(cacheKey, CACHE_TTL, async () => {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 30_000);
-
-            try {
-                const response = await fetch(`${this.baseUrl}/scrape`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${this.apiKey}`
-                    },
-                    body: JSON.stringify({
-                        url,
-                        formats: ["markdown", "html"],
-                        onlyMainContent: true
-                    }),
-                    signal: controller.signal,
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(`Firecrawl API error: ${response.status} ${JSON.stringify(errorData)}`);
-                }
-
-                const data = await response.json();
-                return { success: true, data: data.data } as ScrapeResult;
-            } catch (error: unknown) {
-                const message = error instanceof Error ? error.message : "Unknown error";
-                if (message.includes("aborted") || message.includes("abort")) {
-                    console.error(`Firecrawl scrape timed out after 30s for: ${url}`);
-                    return { success: false, error: "Firecrawl scrape timed out" } as ScrapeResult;
-                }
-                console.error("Firecrawl scrape failed:", error);
-                return { success: false, error: message } as ScrapeResult;
-            } finally {
-                clearTimeout(timeout);
+            const result = await this._scrapeOnce(url);
+            // Retry once on transient failures
+            if (!result.success && this._isRetryable(result.error)) {
+                await new Promise((r) => setTimeout(r, 2000));
+                return this._scrapeOnce(url);
             }
+            return result;
         });
+    }
+
+    private _isRetryable(error?: string): boolean {
+        if (!error) return false;
+        return error.includes("timed out") ||
+            error.includes("500") || error.includes("502") ||
+            error.includes("503") || error.includes("504") ||
+            error.includes("ECONNRESET") || error.includes("fetch failed");
+    }
+
+    private async _scrapeOnce(url: string): Promise<ScrapeResult> {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30_000);
+
+        try {
+            const response = await fetch(`${this.baseUrl}/scrape`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${this.apiKey}`
+                },
+                body: JSON.stringify({
+                    url,
+                    formats: ["markdown"],
+                    onlyMainContent: true
+                }),
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`Firecrawl API error: ${response.status} ${JSON.stringify(errorData)}`);
+            }
+
+            const data = await response.json();
+            return { success: true, data: data.data } as ScrapeResult;
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Unknown error";
+            if (message.includes("aborted") || message.includes("abort")) {
+                console.error(`Firecrawl scrape timed out after 30s for: ${url}`);
+                return { success: false, error: "Firecrawl scrape timed out" } as ScrapeResult;
+            }
+            console.error("Firecrawl scrape failed:", error);
+            return { success: false, error: message } as ScrapeResult;
+        } finally {
+            clearTimeout(timeout);
+        }
     }
 
     /**

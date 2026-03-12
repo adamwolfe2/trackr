@@ -57,12 +57,17 @@ Rules:
                 max_tokens: 200,
             });
 
-            const parsed = JSON.parse(completion.choices[0].message.content || "{}");
+            let parsed: Record<string, unknown>;
+            try {
+                parsed = JSON.parse(completion.choices[0].message.content || "{}");
+            } catch {
+                parsed = {};
+            }
             return {
-                estimatedMonthlyCostPerSeat: parsed.estimatedMonthlyCostPerSeat ?? 0,
-                totalMonthlyCost: parsed.totalMonthlyCost ?? 0,
-                confidence: parsed.confidence ?? "low",
-                source: parsed.source ?? "",
+                estimatedMonthlyCostPerSeat: typeof parsed.estimatedMonthlyCostPerSeat === "number" ? parsed.estimatedMonthlyCostPerSeat : 0,
+                totalMonthlyCost: typeof parsed.totalMonthlyCost === "number" ? parsed.totalMonthlyCost : 0,
+                confidence: typeof parsed.confidence === "string" ? parsed.confidence : "low",
+                source: typeof parsed.source === "string" ? parsed.source : "",
             };
         });
 

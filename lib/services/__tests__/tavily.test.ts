@@ -4,6 +4,12 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const mockFetch = vi.fn();
 vi.stubGlobal("fetch", mockFetch);
 
+// Mock research-cache to skip Redis and call fetcher directly (no caching in tests)
+vi.mock("@/lib/services/research-cache", () => ({
+    cachedFetch: vi.fn(async (_key: string, _ttl: number, fetcher: () => Promise<unknown>) => fetcher()),
+    buildCacheKey: vi.fn((...parts: string[]) => parts.join(":")),
+}));
+
 import { TavilyService } from "../tavily";
 
 const MOCK_RESPONSE = {
@@ -91,15 +97,19 @@ describe("TavilyService", () => {
                 status: 429,
                 text: () => Promise.resolve("Rate Limited"),
             });
+            // Tavily retries 3x — this test verifies it eventually returns empty results
             const result = await service.search("query");
             expect(result).toEqual({ answer: "", results: [] });
-        });
+            // Should have attempted 3 times (initial + 2 retries)
+            expect(mockFetch).toHaveBeenCalledTimes(3);
+        }, 45_000);
 
         it("returns empty results when fetch throws", async () => {
             mockFetch.mockRejectedValue(new Error("Network error"));
             const result = await service.search("query");
             expect(result).toEqual({ answer: "", results: [] });
-        });
+            expect(mockFetch).toHaveBeenCalledTimes(3);
+        }, 45_000);
 
         it("handles missing answer/results fields gracefully", async () => {
             mockFetch.mockResolvedValue({
@@ -115,9 +125,6 @@ describe("TavilyService", () => {
 
     describe("caching behavior", () => {
         it("produces deterministic cache keys for the same query + options", async () => {
-            // cachedFetch is called via research-cache which falls through to fetcher in test
-            // We verify the search method is stable by calling twice and checking fetch is called each time
-            // (no Redis in test = always cache miss = always calls fetcher)
             mockFetchSuccess();
             const r1 = await service.search("same query", { maxResults: 5 });
             const r2 = await service.search("same query", { maxResults: 5 });

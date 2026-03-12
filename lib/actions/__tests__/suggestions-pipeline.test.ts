@@ -48,7 +48,8 @@ import { generateObject } from "ai";
 import { extractToolsFromFeedItems, generateSuggestions } from "../suggestions-pipeline";
 
 function setupDbChains() {
-    const onConflict = vi.fn().mockResolvedValue({});
+    const returning = vi.fn().mockResolvedValue([{ id: "sug_1" }]);
+    const onConflict = vi.fn().mockReturnValue({ returning });
     const insertValues = vi.fn().mockReturnValue({ onConflictDoNothing: onConflict });
     (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values: insertValues });
 
@@ -285,8 +286,10 @@ describe("generateSuggestions", () => {
         await generateSuggestions("ws_1");
         const insertValues = (db.insert as ReturnType<typeof vi.fn>).mock.results[0].value.values as ReturnType<typeof vi.fn>;
         const insertedData = insertValues.mock.calls[0][0];
+        // Batch insert passes an array
+        const firstRow = Array.isArray(insertedData) ? insertedData[0] : insertedData;
         // confidence = min(1, 0.7 + 0.15) = 0.85
-        expect(parseFloat(insertedData.confidence)).toBeCloseTo(0.85, 2);
-        expect(insertedData.matchedPainPointId).toBe("pp_1");
+        expect(parseFloat(firstRow.confidence)).toBeCloseTo(0.85, 2);
+        expect(firstRow.matchedPainPointId).toBe("pp_1");
     });
 });

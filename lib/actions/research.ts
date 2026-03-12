@@ -127,6 +127,9 @@ type ResearchLog = { message: string; timestamp: string };
 
 const MAX_RESEARCH_LOGS = 50;
 
+/** Hard ceiling for the entire performDeepResearch operation (5 minutes). */
+const RESEARCH_HARD_TIMEOUT_MS = 5 * 60 * 1000;
+
 async function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
     return Promise.race([
         promise,
@@ -318,6 +321,15 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
         researchLogs: [] as unknown as ResearchLog[],
     }).where(eq(tools.id, toolId));
 
+    // Hard deadline — if research exceeds 5 minutes, the timeout will trigger
+    // the catch block which creates a fallback report and marks the job failed.
+    const researchDeadline = Date.now() + RESEARCH_HARD_TIMEOUT_MS;
+    function checkDeadline() {
+        if (Date.now() > researchDeadline) {
+            throw new Error("Research exceeded 5 minute hard timeout");
+        }
+    }
+
     try {
         const rawData: Record<string, string> = {};
         const domain = getDomain(tool.websiteUrl);
@@ -400,6 +412,8 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
             });
         });
 
+        checkDeadline();
+
         // Extract logo from Firecrawl metadata (favicon preferred, OG image fallback)
         const logoUrl: string | null =
             scrapeResults[0].data?.metadata?.favicon ||
@@ -477,7 +491,7 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
             const reviewTrustSearch = await withTimeout(
                 tavily.search(
                     `${tool.name} software reviews user feedback rating pros cons experience problems issues`,
-                    { includeDomains: [...REVIEW_DOMAINS, ...TRUST_DOMAINS, "reddit.com"], maxResults: 18, includeAnswer: true }
+                    { includeDomains: [...REVIEW_DOMAINS, ...TRUST_DOMAINS, "reddit.com"], maxResults: 12, includeAnswer: false }
                 ),
                 30000, tavilyFallback
             );
@@ -512,7 +526,7 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
             const competitorMarketSearch = await withTimeout(
                 tavily.search(
                     `${tool.name} competitors alternatives comparison vs company funding employees headquarters founded`,
-                    { maxResults: 8, includeAnswer: true }
+                    { maxResults: 6, includeAnswer: true }
                 ),
                 30000, tavilyFallback
             );
@@ -525,12 +539,9 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
             ].filter(Boolean).join("\n\n");
 
             // Step 5.5: Perplexity deep analysis (full mode only)
-            // Use sonar-reasoning-pro for enterprise/startup, sonar for others
-            const perplexityModel = (limits.slug === "enterprise" || limits.slug === "startup")
-                ? "sonar-reasoning-pro" : "sonar";
-            const perplexityCost = perplexityModel === "sonar-reasoning-pro"
-                ? COST_MAP.perplexity["sonar-reasoning-pro"]
-                : COST_MAP.perplexity["sonar"];
+            // Use sonar for all tiers — sonar-reasoning-pro is 5x cost with marginal quality gain
+            const perplexityModel = "sonar" as const;
+            const perplexityCost = COST_MAP.perplexity["sonar"];
 
             if (!process.env.PERPLEXITY_API_KEY) {
                 console.warn("[research] PERPLEXITY_API_KEY not set — competitive analysis step skipped.");
@@ -561,6 +572,8 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
                 }
             }
         }
+
+        checkDeadline();
 
         // ── Synthesis step (shared between quick and full) ──────────────
         const allSearchResults = [...reviewResults, ...trustResults, ...uniqueRedditResults];
@@ -733,34 +746,35 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
             }
         } catch (primaryErr) {
             const primaryMsg = primaryErr instanceof Error ? primaryErr.message : String(primaryErr);
-            await logProgress(toolId, `Synthesis attempt 1 failed: ${primaryMsg.slice(0, 120)} — retrying with fallback model...`);
+            await logProgress(toolId, `Synthesis attempt 1 failed: ${primaryMsg.slice(0, 120)} — retrying...`);
             // Brief pause before retry — prevents hitting the same rate-limit window twice
-            await new Promise((r) => setTimeout(r, 1500));
+            await new Promise((r) => setTimeout(r, 2000));
             try {
-                const fallbackStart = Date.now();
-                // gpt-4o is more capable at complex schema compliance than gpt-4o-mini
+                const retryStart = Date.now();
+                // Retry with same model (gpt-4o-mini) — avoids 4-5x cost escalation to gpt-4o.
+                // Most failures are transient rate limits or timeouts, not model capability.
                 if (hasRecipe) {
                     const { object, usage: u } = await generateObject({
-                        model: openai("gpt-4o"),
+                        model: openai("gpt-4o-mini"),
                         schema: ReportSchemaWithFit,
                         prompt: synthesisPrompt,
                     });
                     fitData = object.workspaceFit;
                     reportData = object;
-                    logOpenAISynthesis("gpt-4o", u, fallbackStart);
+                    logOpenAISynthesis("gpt-4o-mini", u, retryStart);
                 } else {
                     const { object, usage: u } = await generateObject({
-                        model: openai("gpt-4o"),
+                        model: openai("gpt-4o-mini"),
                         schema: ReportSchema,
                         prompt: synthesisPrompt,
                     });
                     reportData = object;
-                    logOpenAISynthesis("gpt-4o", u, fallbackStart);
+                    logOpenAISynthesis("gpt-4o-mini", u, retryStart);
                 }
-                await logProgress(toolId, `Synthesis: Fallback (gpt-4o) succeeded.`);
-            } catch (fallbackErr) {
-                const fallbackMsg = fallbackErr instanceof Error ? fallbackErr.message : String(fallbackErr);
-                await logProgress(toolId, `Synthesis: Both attempts failed (${fallbackMsg.slice(0, 80)}). Storing data-only report.`);
+                await logProgress(toolId, `Synthesis: Retry succeeded.`);
+            } catch (retryErr) {
+                const retryMsg = retryErr instanceof Error ? retryErr.message : String(retryErr);
+                await logProgress(toolId, `Synthesis: Both attempts failed (${retryMsg.slice(0, 80)}). Storing data-only report.`);
                 reportData = buildFallbackReport(tool.name);
             }
         }

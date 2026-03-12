@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
                 .from(softwareSpend)
                 .where(and(eq(softwareSpend.workspaceId, wsId), eq(softwareSpend.status, "active")))
                 .orderBy(desc(softwareSpend.monthlyCost))
-                .limit(30),
+                .limit(15),
             db.query.painPoints.findMany({
                 where: and(eq(painPoints.workspaceId, wsId), eq(painPoints.active, true)),
             }),
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
         const activeSpend = spendEntries
             .filter(e => e.status === "active")
             .sort((a, b) => (parseFloat(b.monthlyCost ?? "0") || 0) - (parseFloat(a.monthlyCost ?? "0") || 0));
-        const spendLines = activeSpend.slice(0, 15).map(e => {
+        const spendLines = activeSpend.map(e => {
             const cost = parseFloat(e.monthlyCost ?? "0") || 0;
             const seats = e.seatCount ?? 0;
             const cls = insights.enrichedTools.find(t => t.id === e.id);

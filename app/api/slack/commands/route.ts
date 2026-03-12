@@ -30,54 +30,62 @@ function verifySlackSignature(body: string, timestamp: string, signature: string
 }
 
 export async function POST(req: Request) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (!appUrl) {
-        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
-    }
-
-    const body = await req.text();
-    const timestamp = req.headers.get("x-slack-request-timestamp") || "";
-    const signature = req.headers.get("x-slack-signature") || "";
-
-    if (!verifySlackSignature(body, timestamp, signature)) {
-        return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-    }
-
-    const params = new URLSearchParams(body);
-    const command = params.get("command");
-    const text = (params.get("text") || "").trim();
-    const channelId = params.get("channel_id") || "";
-
-    // Rate limit: 10 commands per 5 minutes per Slack channel
-    // Slack signature is already verified above — this prevents abuse from legit-but-spammy users
-    if (channelId) {
-        const rl = await rateLimit(`slack-cmd:${channelId}`, { limit: 10, windowSeconds: 300 });
-        if (!rl.success) {
-            return NextResponse.json({
-                response_type: "ephemeral",
-                text: "Too many requests. Please wait a few minutes before running another command.",
-            }, { headers: getRateLimitHeaders(rl) });
+    try {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+        if (!appUrl) {
+            return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
         }
-    }
 
-    if (command === "/trackr") {
-        const subcommand = text.split(" ")[0]?.toLowerCase();
-        const arg = text.slice(subcommand.length).trim();
+        const body = await req.text();
+        const timestamp = req.headers.get("x-slack-request-timestamp") || "";
+        const signature = req.headers.get("x-slack-signature") || "";
 
-        const slackUserId = params.get("user_id") || "";
-
-        switch (subcommand) {
-            case "research":
-                return handleResearch(arg, channelId, slackUserId);
-            case "status":
-                return handleStatus(appUrl, channelId);
-            case "help":
-            default:
-                return handleHelp();
+        if (!verifySlackSignature(body, timestamp, signature)) {
+            return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
         }
-    }
 
-    return NextResponse.json({ text: "Unknown command" });
+        const params = new URLSearchParams(body);
+        const command = params.get("command");
+        const text = (params.get("text") || "").trim();
+        const channelId = params.get("channel_id") || "";
+
+        // Rate limit: 10 commands per 5 minutes per Slack channel
+        // Slack signature is already verified above — this prevents abuse from legit-but-spammy users
+        if (channelId) {
+            const rl = await rateLimit(`slack-cmd:${channelId}`, { limit: 10, windowSeconds: 300 });
+            if (!rl.success) {
+                return NextResponse.json({
+                    response_type: "ephemeral",
+                    text: "Too many requests. Please wait a few minutes before running another command.",
+                }, { headers: getRateLimitHeaders(rl) });
+            }
+        }
+
+        if (command === "/trackr") {
+            const subcommand = text.split(" ")[0]?.toLowerCase();
+            const arg = text.slice(subcommand.length).trim();
+
+            const slackUserId = params.get("user_id") || "";
+
+            switch (subcommand) {
+                case "research":
+                    return handleResearch(arg, channelId, slackUserId);
+                case "status":
+                    return handleStatus(appUrl, channelId);
+                case "help":
+                default:
+                    return handleHelp();
+            }
+        }
+
+        return NextResponse.json({ text: "Unknown command" });
+    } catch (err) {
+        console.error("[api/slack/commands] Unhandled error:", err);
+        return NextResponse.json({
+            response_type: "ephemeral",
+            text: "Something went wrong. Please try again.",
+        }, { status: 200 }); // Slack expects 200 even on errors
+    }
 }
 
 async function handleResearch(urlArg: string, channelId: string, slackUserId: string) {
@@ -218,6 +226,7 @@ async function handleStatus(appUrl: string, channelId: string) {
     const allTools = await db.query.tools.findMany({
         where: eq(tools.workspaceId, workspace.id),
         columns: { id: true, status: true },
+        limit: 500,
     });
 
     const active = allTools.filter(t => t.status === "active").length;

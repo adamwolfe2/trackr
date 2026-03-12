@@ -53,9 +53,13 @@ export function VoteButtons({ slug, initialUp = 0, initialDown = 0 }: VoteButton
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ slug, type: type === "up" ? "down" : "up", prevType: type }),
+                        signal: AbortSignal.timeout(10000),
                     });
                     // re-fetch to sync
-                    const r = await fetch(`/api/votes?slug=${encodeURIComponent(slug)}`);
+                    const r = await fetch(`/api/votes?slug=${encodeURIComponent(slug)}`, {
+                        signal: AbortSignal.timeout(10000),
+                    });
+                    if (!r.ok) throw new Error(`HTTP ${r.status}`);
                     const d = await r.json();
                     setUp(d.up);
                     setDown(d.down);
@@ -87,7 +91,9 @@ export function VoteButtons({ slug, initialUp = 0, initialDown = 0 }: VoteButton
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ slug, type, prevType: prevVote ?? undefined }),
+                    signal: AbortSignal.timeout(10000),
                 });
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
                 const d = await r.json();
                 setUp(d.up);
                 setDown(d.down);

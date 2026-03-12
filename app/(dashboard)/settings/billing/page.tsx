@@ -14,7 +14,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import { eq, and, gte, inArray, count } from "drizzle-orm";
 import { subDays } from "date-fns";
 import { getPlanLimits, PLANS, CREDIT_PACK_PRICES } from "@/lib/config/subscriptions";
-import type { Plan } from "@/lib/config/subscriptions";
+import type { Plan, PlanSlug, BillingInterval } from "@/lib/config/subscriptions";
+import { createCheckoutSession } from "@/lib/actions/stripe";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
 import { BillingPlanCards } from "@/components/billing/billing-plan-cards";
 import { CreditPackSelector } from "@/components/billing/credit-pack-selector";
@@ -54,13 +55,25 @@ export default async function BillingPage({
     const success = params.success === "true";
     const canceled = params.canceled === "true";
 
-    // Usage stats
-    const toolCountResult = await db
-        .select({ count: count() })
-        .from(tools)
-        .where(eq(tools.workspaceId, workspaceId));
-    const toolCount = toolCountResult[0]?.count ?? 0;
+    // Auto-trigger checkout when redirected from marketing → sign-up → onboarding with a plan intent.
+    // Only do this if the user has no active subscription yet (don't double-charge existing customers).
+    const autoCheckoutPlan = params.plan as PlanSlug | undefined;
+    const autoCheckoutInterval = params.interval as BillingInterval | undefined;
+    const hasActiveSub = subscription && (subscription.status === "active" || subscription.status === "trialing");
+    if (
+        !success && !canceled && !hasActiveSub &&
+        autoCheckoutPlan && ["team", "startup", "enterprise"].includes(autoCheckoutPlan) &&
+        autoCheckoutInterval && ["monthly", "annual"].includes(autoCheckoutInterval)
+    ) {
+        try {
+            const { url } = await createCheckoutSession(workspaceId, autoCheckoutPlan as Exclude<PlanSlug, "free">, autoCheckoutInterval);
+            redirect(url);
+        } catch {
+            // If checkout creation fails (e.g. price ID not configured), fall through to the billing page normally
+        }
+    }
 
+    // Usage stats — run all 3 counts in parallel
     const periodStart = subscription?.currentPeriodEnd
         ? subDays(new Date(subscription.currentPeriodEnd), 30)
         : subDays(new Date(), 30);
@@ -70,21 +83,15 @@ export default async function BillingPage({
         .from(tools)
         .where(eq(tools.workspaceId, workspaceId));
 
-    const researchCountResult = await db
-        .select({ count: count() })
-        .from(researchJobs)
-        .where(
-            and(
-                inArray(researchJobs.toolId, workspaceToolIds),
-                gte(researchJobs.triggeredAt, periodStart)
-            )
-        );
+    const [toolCountResult, researchCountResult, memberCountResult] = await Promise.all([
+        db.select({ count: count() }).from(tools).where(eq(tools.workspaceId, workspaceId)),
+        db.select({ count: count() }).from(researchJobs).where(
+            and(inArray(researchJobs.toolId, workspaceToolIds), gte(researchJobs.triggeredAt, periodStart))
+        ),
+        db.select({ count: count() }).from(workspaceMembers).where(eq(workspaceMembers.workspaceId, workspaceId)),
+    ]);
+    const toolCount = toolCountResult[0]?.count ?? 0;
     const researchCount = researchCountResult[0]?.count ?? 0;
-
-    const memberCountResult = await db
-        .select({ count: count() })
-        .from(workspaceMembers)
-        .where(eq(workspaceMembers.workspaceId, workspaceId));
     const memberCount = memberCountResult[0]?.count ?? 0;
 
     const planCards: BillingPlanCard[] = [

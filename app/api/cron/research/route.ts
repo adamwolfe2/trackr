@@ -39,10 +39,11 @@ export async function GET(req: Request) {
         const now = new Date();
 
         // ── Stuck-job recovery ───────────────────────────────────────────────
-        // Any researchJob still running/queued for > 15 minutes is considered
+        // Any researchJob still running/queued for > 10 minutes is considered
         // lost (process crash, timeout, etc.). Reset it to "failed" and mark
         // the associated tool as "failed" so users can retry.
-        const stuckCutoff = new Date(now.getTime() - 15 * 60 * 1000);
+        // NOTE: Threshold is 10 min, matching recover-stuck-jobs cron.
+        const stuckCutoff = new Date(now.getTime() - 10 * 60 * 1000);
         const stuckJobs = await db.query.researchJobs.findMany({
             where: and(
                 ne(researchJobs.status, "complete"),
@@ -60,7 +61,7 @@ export async function GET(req: Request) {
                 db.update(researchJobs).set({
                     status: "failed",
                     completedAt: now,
-                    errorMessage: "Timed out — process did not complete within 15 minutes.",
+                    errorMessage: "Timed out — process did not complete within 10 minutes.",
                 }).where(inArray(researchJobs.id, stuckJobIds)),
             ]);
         }

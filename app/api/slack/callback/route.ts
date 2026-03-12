@@ -6,23 +6,55 @@ import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
+/** Max age for OAuth state tokens (10 minutes) */
+const STATE_MAX_AGE_SEC = 600;
+
 /**
  * Verify and extract workspace ID from the signed state parameter.
- * Returns the workspace ID if valid, null otherwise.
+ * Format: workspaceId.timestamp.signature
+ * Returns the workspace ID if valid and not expired, null otherwise.
  */
 function verifyState(state: string): string | null {
     const secret = process.env.SLACK_CLIENT_SECRET;
     if (!secret) return null;
 
     const parts = state.split(".");
-    if (parts.length !== 2) return null;
+    // Support both old format (workspaceId.signature) and new (workspaceId.timestamp.signature)
+    if (parts.length !== 3 && parts.length !== 2) return null;
 
+    if (parts.length === 3) {
+        const [workspaceId, timestampStr, signature] = parts;
+        if (!workspaceId || !timestampStr || !signature) return null;
+
+        const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (!UUID_RE.test(workspaceId)) return null;
+
+        // Verify timestamp is within window
+        const timestamp = parseInt(timestampStr, 10);
+        if (isNaN(timestamp)) return null;
+        const age = Math.floor(Date.now() / 1000) - timestamp;
+        if (age < 0 || age > STATE_MAX_AGE_SEC) return null;
+
+        const payload = `${workspaceId}.${timestampStr}`;
+        const expectedSignature = createHmac("sha256", secret)
+            .update(payload)
+            .digest("hex");
+
+        try {
+            const sigBuf = Buffer.from(signature, "utf8");
+            const expectedBuf = Buffer.from(expectedSignature, "utf8");
+            if (sigBuf.length !== expectedBuf.length || !timingSafeEqual(sigBuf, expectedBuf)) return null;
+        } catch {
+            return null;
+        }
+
+        return workspaceId;
+    }
+
+    // Legacy 2-part format (workspaceId.signature) — backwards compat
     const [workspaceId, signature] = parts;
-
-    // Reject empty workspaceId or signature — prevents "." bypass
     if (!workspaceId || !signature) return null;
 
-    // Validate workspaceId is a UUID to prevent unexpected values reaching the DB
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!UUID_RE.test(workspaceId)) return null;
 
@@ -31,7 +63,6 @@ function verifyState(state: string): string | null {
         .digest("hex")
         .slice(0, 32);
 
-    // Timing-safe comparison to prevent signature brute-forcing
     try {
         const sigBuf = Buffer.from(signature, "utf8");
         const expectedBuf = Buffer.from(expectedSignature, "utf8");

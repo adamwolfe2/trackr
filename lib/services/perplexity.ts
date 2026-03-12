@@ -7,6 +7,9 @@ async function sleep(ms: number) {
     return new Promise((r) => setTimeout(r, ms));
 }
 
+/** Internal timeout for individual Perplexity API calls */
+const PERPLEXITY_CALL_TIMEOUT_MS = 45_000;
+
 async function withRetry<T>(
     fn: () => Promise<T>,
     maxAttempts = 3,
@@ -15,11 +18,20 @@ async function withRetry<T>(
     let lastError: unknown;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
         try {
-            return await fn();
+            return await Promise.race([
+                fn(),
+                new Promise<never>((_, reject) =>
+                    setTimeout(() => reject(new Error("Perplexity call timed out")), PERPLEXITY_CALL_TIMEOUT_MS)
+                ),
+            ]);
         } catch (err) {
             lastError = err;
-            // Don't retry if it's a rate-limit (429) — back off longer
-            const isRateLimit = err instanceof Error && err.message.includes("429");
+            // Detect rate limiting by status code or message
+            const isRateLimit = err instanceof Error && (
+                err.message.includes("429") ||
+                err.message.includes("rate limit") ||
+                (err as { status?: number }).status === 429
+            );
             const delay = isRateLimit
                 ? Math.pow(2, attempt) * 5000 // 5s, 10s, 20s for rate limits
                 : Math.pow(2, attempt) * baseDelayMs; // 1s, 2s, 4s for other errors

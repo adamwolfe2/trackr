@@ -10,7 +10,10 @@ export function StripeConnectButton({ architectId }: { architectId: string }) {
     async function handleClick() {
         setLoading(true);
         try {
-            const res = await fetch("/api/architect/stripe-connect");
+            const res = await fetch("/api/architect/stripe-connect", {
+                signal: AbortSignal.timeout(15000),
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json() as { url?: string; error?: string };
             if (data.url) {
                 router.push(data.url);

@@ -50,7 +50,10 @@ export function SlackSection({
         setLoading(true);
         setFetchError(false);
         try {
-            const r = await fetch("/api/slack/channels");
+            const r = await fetch("/api/slack/channels", {
+                signal: AbortSignal.timeout(15000),
+            });
+            if (!r.ok) throw new Error(`HTTP ${r.status}`);
             const data = await r.json();
             if (data.error) {
                 setFetchError(true);
