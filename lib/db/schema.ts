@@ -62,6 +62,7 @@ export const tools = pgTable('tools', {
     index('tools_workspace_id_idx').on(table.workspaceId),
     index('tools_status_idx').on(table.status),
     index('tools_submitted_at_idx').on(table.submittedAt),
+    index('tools_last_researched_at_idx').on(table.lastResearchedAt),
 ]);
 
 // Reports

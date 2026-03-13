@@ -83,7 +83,11 @@ export async function POST(req: NextRequest) {
 
     // Send confirmation + admin notification in background
     after(async () => {
-        await sendArchitectApplicationReceived(data.email, data.firstName);
+        try {
+            await sendArchitectApplicationReceived(data.email, data.firstName);
+        } catch (err) {
+            console.error("[architect/apply] Failed to send application received email:", err);
+        }
     });
 
     after(async () => {

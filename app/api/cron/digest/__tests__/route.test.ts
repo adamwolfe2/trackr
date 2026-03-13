@@ -97,6 +97,7 @@ vi.mock("drizzle-orm", async (importOriginal) => {
         lte: vi.fn((...args) => args),
         desc: vi.fn((...args) => args),
         sql: vi.fn((...args) => args),
+        inArray: vi.fn((...args) => args),
     };
 });
 
@@ -173,8 +174,8 @@ describe("GET /api/cron/digest", () => {
     it("sends a digest email when owner has recent tools researched", async () => {
         (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([MOCK_OWNER]);
         (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-            { name: "Linear", overallScore: "9.1", lastResearchedAt: new Date() },
-            { name: "Notion", overallScore: null, lastResearchedAt: new Date() },
+            { name: "Linear", overallScore: "9.1", lastResearchedAt: new Date(), workspaceId: "ws_1" },
+            { name: "Notion", overallScore: null, lastResearchedAt: new Date(), workspaceId: "ws_1" },
         ]);
         (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
@@ -191,7 +192,7 @@ describe("GET /api/cron/digest", () => {
     it("sends a renewal alert when upcoming renewals exist", async () => {
         (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([MOCK_OWNER]);
         (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-            { toolName: "Salesforce", renewalDate: new Date(), monthlyCost: "500" },
+            { toolName: "Salesforce", renewalDate: new Date(), monthlyCost: "500", workspaceId: "ws_1", status: "active" },
         ]);
 
         const res = await GET(makeRequest(VALID_AUTH));
@@ -208,7 +209,7 @@ describe("GET /api/cron/digest", () => {
         };
         (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([slackOwner]);
         (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-            { toolName: "HubSpot", renewalDate: new Date(), monthlyCost: "200" },
+            { toolName: "HubSpot", renewalDate: new Date(), monthlyCost: "200", workspaceId: "ws_1", status: "active" },
         ]);
 
         const res = await GET(makeRequest(VALID_AUTH));
@@ -228,7 +229,7 @@ describe("GET /api/cron/digest", () => {
         };
         (db.query.workspaceMembers.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([noSlackOwner]);
         (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
-            { toolName: "Zoom", renewalDate: new Date(), monthlyCost: "50" },
+            { toolName: "Zoom", renewalDate: new Date(), monthlyCost: "50", workspaceId: "ws_1", status: "active" },
         ]);
 
         const res = await GET(makeRequest(VALID_AUTH));

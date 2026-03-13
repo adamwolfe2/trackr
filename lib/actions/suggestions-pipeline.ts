@@ -3,7 +3,7 @@
 
 import { db } from "@/lib/db";
 import { feedItems, toolSuggestions, softwareSpend, tools, painPoints } from "@/lib/db/schema";
-import { eq, and, gte, desc, isNotNull, sql } from "drizzle-orm";
+import { eq, and, gte, desc, isNotNull, sql, inArray } from "drizzle-orm";
 import { openai } from "@ai-sdk/openai";
 import { generateObject } from "ai";
 import { z } from "zod";
@@ -70,25 +70,37 @@ Return results grouped by articleIndex (1-based). Include an entry for every art
         }
 
         let totalExtracted = 0;
+        const processedIds: string[] = [];
+        const toolfulUpdates: { id: string; tools: unknown[] }[] = [];
         for (let i = 0; i < items.length; i++) {
             const item = items[i];
             const itemTools = articleToolsMap.get(i + 1) ?? [];
             totalExtracted += itemTools.length;
+            if (itemTools.length > 0) {
+                toolfulUpdates.push({ id: item.id, tools: itemTools });
+            } else {
+                processedIds.push(item.id);
+            }
+        }
 
+        // Batch update: items with no tools extracted
+        if (processedIds.length > 0) {
             await db.update(feedItems).set({
-                extractedTools: itemTools.length > 0
-                    ? itemTools
-                    : [{ name: "__processed", url: "", description: "", confidence: 0 }],
-            }).where(eq(feedItems.id, item.id));
+                extractedTools: [{ name: "__processed", url: "", description: "", confidence: 0 }],
+            }).where(inArray(feedItems.id, processedIds));
+        }
+        // Items with tools still need individual updates (different payloads)
+        for (const { id, tools: itemTools } of toolfulUpdates) {
+            await db.update(feedItems).set({ extractedTools: itemTools }).where(eq(feedItems.id, id));
         }
 
         return totalExtracted;
     } catch (extractErr) {
         console.error(`[suggestions-pipeline] extractToolsFromFeedItems failed for workspace ${workspaceId}:`, extractErr);
-        for (const item of items) {
+        if (items.length > 0) {
             await db.update(feedItems).set({
                 extractedTools: [{ name: "__error", url: "", description: "", confidence: 0 }],
-            }).where(eq(feedItems.id, item.id));
+            }).where(inArray(feedItems.id, items.map(i => i.id)));
         }
         return 0;
     }

@@ -31,6 +31,7 @@ vi.mock("drizzle-orm", async (importOriginal) => {
         gte: vi.fn((...args: unknown[]) => args),
         desc: vi.fn((x: unknown) => x),
         isNotNull: vi.fn((x: unknown) => x),
+        inArray: vi.fn((...args: unknown[]) => args),
         sql: actual.sql,
     };
 });
@@ -154,12 +155,10 @@ describe("extractToolsFromFeedItems", () => {
         (generateObject as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("AI error"));
         const result = await extractToolsFromFeedItems("ws_1");
         expect(result).toBe(0);
-        expect(db.update).toHaveBeenCalledTimes(2);
-        // Each update should set extractedTools to the __error placeholder
-        const allSetArgs = (db.update as ReturnType<typeof vi.fn>).mock.results.map(
-            (r) => (r.value.set as ReturnType<typeof vi.fn>).mock.calls[0][0]
-        );
-        expect(allSetArgs.every((args) => args.extractedTools[0].name === "__error")).toBe(true);
+        // Batch update: single call for all items
+        expect(db.update).toHaveBeenCalledTimes(1);
+        const setArgs = (db.update as ReturnType<typeof vi.fn>).mock.results[0].value.set as ReturnType<typeof vi.fn>;
+        expect(setArgs.mock.calls[0][0].extractedTools[0].name).toBe("__error");
     });
 });
 

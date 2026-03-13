@@ -92,6 +92,11 @@ export async function POST(req: NextRequest) {
         // Sanitize before persisting — strip email addresses and truncate
         const safeError = fullError
             .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[EMAIL]")
+            .replace(/sk_(live|test)_[A-Za-z0-9]{10,}/g, "[STRIPE_KEY]")
+            .replace(/whsec_[A-Za-z0-9]{10,}/g, "[WEBHOOK_SECRET]")
+            .replace(/cus_[A-Za-z0-9]{10,}/g, "[CUSTOMER_ID]")
+            .replace(/sub_[A-Za-z0-9]{10,}/g, "[SUBSCRIPTION_ID]")
+            .replace(/pi_[A-Za-z0-9]{10,}/g, "[PAYMENT_INTENT]")
             .slice(0, 500);
         // Update the already-inserted record with the sanitized error
         await db.update(webhookEvents)

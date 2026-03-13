@@ -76,6 +76,20 @@ export async function GET(req: Request) {
         if (architect.stripeOnboardingComplete && architect.stripeConnectAccountId) {
             // Transfer now via Stripe
             try {
+                // Idempotency: atomically claim commissions to prevent double-payout on concurrent runs
+                const claimed = await db.update(architectCommissions)
+                    .set({ status: "processing" })
+                    .where(and(
+                        inArray(architectCommissions.id, commissionIds),
+                        eq(architectCommissions.status, "pending"),
+                    ))
+                    .returning({ id: architectCommissions.id });
+
+                if (claimed.length === 0) {
+                    // Already claimed by another run
+                    continue;
+                }
+
                 const transfer = await stripe.transfers.create({
                     amount: total,
                     currency: "usd",
@@ -120,7 +134,14 @@ export async function GET(req: Request) {
 
                 transferred++;
             } catch (err) {
-                errors.push(`Transfer failed for architect ${architectId}: ${err instanceof Error ? err.message : String(err)}`);
+                // Revert claimed commissions back to pending on failure
+                await db.update(architectCommissions)
+                    .set({ status: "pending" })
+                    .where(inArray(architectCommissions.id, commissionIds))
+                    .catch(() => {});
+                const rawMsg = err instanceof Error ? err.message : String(err);
+                const safeMsg = rawMsg.replace(/acct_[A-Za-z0-9]{10,}/g, "[CONNECT_ACCT]").replace(/sk_(live|test)_[A-Za-z0-9]{10,}/g, "[STRIPE_KEY]").slice(0, 200);
+                errors.push(`Transfer failed for architect ${architectId.slice(0, 8)}…: ${safeMsg}`);
             }
         } else {
             // No Stripe Connect — create a pending payout batch for manual review
@@ -136,7 +157,8 @@ export async function GET(req: Request) {
 
                 batched++;
             } catch (err) {
-                errors.push(`Batch failed for architect ${architectId}: ${err instanceof Error ? err.message : String(err)}`);
+                const rawMsg = err instanceof Error ? err.message : String(err);
+                errors.push(`Batch failed for architect ${architectId.slice(0, 8)}…: ${rawMsg.slice(0, 200)}`);
             }
         }
     }

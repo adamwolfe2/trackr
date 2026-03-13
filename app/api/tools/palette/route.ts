@@ -25,5 +25,5 @@ export async function GET() {
         limit: 30,
     });
 
-    return NextResponse.json({ tools: workspaceTools });
+    return NextResponse.json({ tools: workspaceTools }, { headers: { "Cache-Control": "private, s-maxage=30, stale-while-revalidate=120" } });
 }

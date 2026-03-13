@@ -117,7 +117,11 @@ export async function POST(req: NextRequest) {
 
     // Process scorecard in background — survives request timeout
     after(async () => {
-        await processAuditSubmission(submission.id);
+        try {
+            await processAuditSubmission(submission.id);
+        } catch (err) {
+            console.error(`[audit/submit] Background processing failed for submission ${submission.id}:`, err);
+        }
     });
 
     // Track audit submission (email = distinct_id for anonymous leads)

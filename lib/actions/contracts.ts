@@ -50,6 +50,13 @@ export async function addContract(
 
     const fileUrl = data.fileUrl?.trim();
     if (!fileUrl) throw new Error("File URL is required");
+    try {
+        const parsed = new URL(fileUrl);
+        if (parsed.protocol !== "https:") throw new Error("Only HTTPS file URLs are allowed");
+    } catch (e) {
+        if (e instanceof Error && e.message.includes("HTTPS")) throw e;
+        throw new Error("Invalid file URL");
+    }
 
     if (data.softwareSpendId && !UUID_RE.test(data.softwareSpendId)) {
         throw new Error("Invalid software spend ID");

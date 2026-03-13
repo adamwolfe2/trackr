@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { tools, workspaceMembers, workspaces, softwareSpend, researchJobs } from "@/lib/db/schema";
-import { desc, eq, gte, and, lte, sql } from "drizzle-orm";
+import { desc, eq, gte, and, lte, sql, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { Resend } from "resend";
@@ -62,6 +62,50 @@ export async function GET(req: Request) {
         const clerk = await clerkClient();
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
 
+        // Batch-fetch data for all workspaces upfront to avoid N+1 queries
+        const allWorkspaceIds = owners.map(o => o.workspaceId);
+        const [allRecentTools, allUpcomingRenewals, allSpendEntries] = await Promise.all([
+            db.query.tools.findMany({
+                where: and(
+                    inArray(tools.workspaceId, allWorkspaceIds),
+                    gte(tools.lastResearchedAt, sevenDaysAgo),
+                ),
+                orderBy: [desc(tools.lastResearchedAt)],
+            }),
+            db.query.softwareSpend.findMany({
+                where: and(
+                    inArray(softwareSpend.workspaceId, allWorkspaceIds),
+                    eq(softwareSpend.status, "active"),
+                    gte(softwareSpend.renewalDate, now),
+                    lte(softwareSpend.renewalDate, thirtyDaysFromNow),
+                ),
+            }),
+            db.query.softwareSpend.findMany({
+                where: inArray(softwareSpend.workspaceId, allWorkspaceIds),
+                limit: 10000,
+            }),
+        ]);
+
+        // Build lookup maps
+        const toolsByWorkspace = new Map<string, typeof allRecentTools>();
+        for (const t of allRecentTools) {
+            const list = toolsByWorkspace.get(t.workspaceId) ?? [];
+            list.push(t);
+            toolsByWorkspace.set(t.workspaceId, list);
+        }
+        const renewalsByWorkspace = new Map<string, typeof allUpcomingRenewals>();
+        for (const r of allUpcomingRenewals) {
+            const list = renewalsByWorkspace.get(r.workspaceId) ?? [];
+            list.push(r);
+            renewalsByWorkspace.set(r.workspaceId, list);
+        }
+        const spendByWorkspace = new Map<string, typeof allSpendEntries>();
+        for (const s of allSpendEntries) {
+            const list = spendByWorkspace.get(s.workspaceId) ?? [];
+            list.push(s);
+            spendByWorkspace.set(s.workspaceId, list);
+        }
+
         for (const owner of owners) {
             try {
                 const clerkUser = await clerk.users.getUser(owner.userId);
@@ -69,14 +113,7 @@ export async function GET(req: Request) {
                 if (!email) continue;
 
                 // --- Weekly Research Digest ---
-                const recentTools = await db.query.tools.findMany({
-                    where: and(
-                        eq(tools.workspaceId, owner.workspaceId),
-                        gte(tools.lastResearchedAt, sevenDaysAgo),
-                    ),
-                    orderBy: [desc(tools.lastResearchedAt)],
-                    limit: 5,
-                });
+                const recentTools = (toolsByWorkspace.get(owner.workspaceId) ?? []).slice(0, 5);
 
                 if (recentTools.length > 0) {
                     const toolRows = recentTools.map((t) =>
@@ -120,14 +157,7 @@ export async function GET(req: Request) {
                 }
 
                 // --- Renewal Alerts ---
-                const upcomingRenewals = await db.query.softwareSpend.findMany({
-                    where: and(
-                        eq(softwareSpend.workspaceId, owner.workspaceId),
-                        eq(softwareSpend.status, "active"),
-                        gte(softwareSpend.renewalDate, now),
-                        lte(softwareSpend.renewalDate, thirtyDaysFromNow),
-                    ),
-                });
+                const upcomingRenewals = renewalsByWorkspace.get(owner.workspaceId) ?? [];
 
                 if (upcomingRenewals.length > 0) {
                     const renewalData = upcomingRenewals.map(r => ({
@@ -194,10 +224,7 @@ export async function GET(req: Request) {
                 }
 
                 // --- Weekly Stack Health Digest ---
-                const allSpend = await db.query.softwareSpend.findMany({
-                    where: eq(softwareSpend.workspaceId, owner.workspaceId),
-                    limit: 1000, // Safety cap — prevents OOM for workspaces with massive spend lists
-                });
+                const allSpend = (spendByWorkspace.get(owner.workspaceId) ?? []).slice(0, 1000);
 
                 if (allSpend.length > 0) {
                     const insights = computeStackInsights(allSpend);

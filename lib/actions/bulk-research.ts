@@ -150,7 +150,6 @@ export async function bulkSubmitAndResearch(parsedTools: ParsedTool[]): Promise<
                 results.push({ name: pt.name, url: pt.url, toolId: existing.id, status: "duplicate" });
                 continue;
             }
-            void normalizedUrl; // suppress unused warning
 
             // Generate embedding (best-effort)
             const embedding = await generateEmbedding(`${pt.name}: ${pt.url}`).catch(() => null);

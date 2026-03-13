@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({
             up: row?.upVotes ?? 0,
             down: row?.downVotes ?? 0,
-        });
+        }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
     }
 
     // Return all votes as a map (capped at 500 for safety)
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     for (const row of rows) {
         map[row.toolSlug] = { up: row.upVotes, down: row.downVotes };
     }
-    return NextResponse.json({ votes: map });
+    return NextResponse.json({ votes: map }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
 }
 
 // POST /api/votes — cast or change a vote (no auth required)

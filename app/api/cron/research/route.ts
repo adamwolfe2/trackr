@@ -108,7 +108,11 @@ export async function GET(req: Request) {
         // Kick off research in background (cron returns quickly)
         for (const tool of dueTools) {
             after(async () => {
-                await performDeepResearch(tool.id).catch(() => null);
+                try {
+                    await performDeepResearch(tool.id);
+                } catch (err) {
+                    console.error(`[cron/research] Background research failed for tool ${tool.id}:`, err);
+                }
             });
         }
 
