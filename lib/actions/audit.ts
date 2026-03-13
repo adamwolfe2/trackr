@@ -10,8 +10,9 @@
 
 import { db } from "@/lib/db";
 import { auditSubmissions, workspaces, softwareSpend, architects, architectReferrals } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { firecrawl } from "@/lib/services/firecrawl";
+import { tavily } from "@/lib/services/tavily";
 import { sendAuditScorecardEmail, sendProspectTeaserEmail, sendArchitectNewLead } from "@/lib/email/resend";
 import { generateObject } from "ai";
 import { openai } from "@ai-sdk/openai";
@@ -71,6 +72,28 @@ const AuditScorecardSchema = z.object({
         estimatedCostPerUser: z.string().nullable(),
         impact: z.enum(["High", "Medium", "Low"]),
     })).min(2).max(5),
+    workflowGaps: z.array(z.object({
+        workflowName: z.string(), // e.g. "Lead Generation → Qualification → Close"
+        stages: z.array(z.object({
+            name: z.string(),
+            tool: z.string().nullable(), // tool handling this stage, null = gap
+            status: z.enum(["covered", "partial", "gap"]),
+        })),
+        bottleneck: z.string(), // where the chain breaks
+        fixDescription: z.string(),
+    })).min(2).max(5),
+    industryBenchmark: z.object({
+        peerAvgScore: z.number().int().min(0).max(100),
+        peerLabel: z.string(), // e.g. "B2B SaaS companies with 25-50 employees"
+        percentile: z.number().int().min(0).max(100), // where this company lands
+        insight: z.string(), // 1-2 sentences on what this means
+    }),
+    roiProjection: z.object({
+        currentAnnualWaste: z.number(), // estimated $ wasted annually
+        projectedSavings: z.number(), // $ savings after implementing recommendations
+        paybackMonths: z.number().int().min(1).max(36),
+        assumptions: z.array(z.string()).min(2).max(5), // the math behind the numbers
+    }),
 });
 
 export type AuditScorecard = z.infer<typeof AuditScorecardSchema>;
@@ -168,6 +191,41 @@ Tools to actively pitch on this call. Must directly address their stated pain po
 - impact: High/Medium/Low based on fit with their top pain points
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+WORKFLOW GAP ANALYSIS (2–5 workflows)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Map their tools into the business workflows that matter most for their industry and bottleneck. For each workflow:
+- workflowName: A clear chain like "Lead Capture → Enrichment → Outreach → Close" or "Content Idea → Draft → Edit → Publish → Measure"
+- stages: 3–6 stages per workflow. For each stage, identify the tool handling it (or null if nothing covers it). Status: "covered" if a tool fully handles this, "partial" if a tool exists but doesn't do AI-native work here, "gap" if no tool addresses this stage at all.
+- bottleneck: Which stage is the weakest link, and why (reference their stated frustrations or bottleneck)
+- fixDescription: What specific tool or AI capability would plug this gap — reference tools from recommendedTools where possible
+
+CRITICAL: Base workflows on their ACTUAL bottleneck and industry. A SaaS company gets "Lead → Qualify → Demo → Close → Onboard". An agency gets "Brief → Research → Create → Review → Deliver → Report". A D2C brand gets "Acquire → Convert → Fulfill → Support → Retain".
+
+Use the per-tool intelligence provided to know what each tool actually does and where it falls short.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+INDUSTRY BENCHMARK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Position this company relative to their peers:
+- peerAvgScore: The average AI-Native Score for companies in their industry/size bracket. If benchmark data is provided, use it. If not, estimate based on your knowledge of AI adoption rates (be realistic — most SMBs in 2025 score 25–45).
+- peerLabel: e.g. "B2B SaaS companies with 25-50 employees" — specific to THEIR context
+- percentile: Where they land. If their score is 35 and average is 40, they're around 40th percentile.
+- insight: 1-2 sentences. What does their position mean strategically? Reference competitive pressure in their industry.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ROI PROJECTION — SHOW YOUR MATH
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Build a concrete ROI case using their actual numbers:
+- currentAnnualWaste: Total estimated annual cost of inaction. Sum up pain point costs + redundant tool spend + manual process labor. Express in whole dollars (e.g. 85000, not "$85K").
+- projectedSavings: What they'd save annually by implementing the top 3 recommendations. Be conservative — 40-60% of waste captured is realistic. Whole dollars.
+- paybackMonths: Months until investment breaks even. Factor in implementation cost (typically 1-3 months of subscription fees + 20-40 hours of setup per major tool).
+- assumptions: 2-5 bullet points showing your work. Use their employee count, revenue band, and monthly spend. Example:
+  - "Employee count: 50 × avg 4 hrs/week manual work × $75/hr blended rate = $780K/year in automatable labor"
+  - "Redundant tools identified: 3 overlapping project management tools at ~$15/user/month = $27K/year consolidation opportunity"
+  - "Conservative 50% capture rate applied to total $807K waste = $403K projected savings"
+  - "Implementation: ~$45K (3 months setup + training) → 1.3 month payback"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 BRANDING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Extract logoUrl and primaryColor from scraped website if present. If not found, set primaryColor to "#F3F3EF".
@@ -181,14 +239,28 @@ Every field should feel like it was written by someone who spent 20 minutes rese
 
 type SubmissionRow = typeof auditSubmissions.$inferSelect;
 
-function buildPrompt(sub: SubmissionRow, enrichment: string): string {
+function buildPrompt(
+    sub: SubmissionRow,
+    enrichment: { websiteContext: string; toolIntel: string; companyIntel: string },
+    benchmark: { avgScore: number; count: number } | null,
+): string {
     const toolList = (sub.currentTools ?? []) as string[];
     const tools = toolList.length > 0
         ? toolList.map((t, i) => `${i + 1}. ${t}`).join("\n")
         : "None specified";
     const teams = (sub.teamsNeedingAI ?? []).join(", ") || "Not specified";
 
-    return `Generate an AI readiness scorecard for the following company.
+    let benchmarkSection = "";
+    if (benchmark) {
+        benchmarkSection = `\nINDUSTRY BENCHMARK DATA (from ${benchmark.count} completed audits):
+- Average AI-Native Score for "${sub.industry}" companies: ${benchmark.avgScore}/100
+- Use this to calculate the percentile and write a meaningful industryBenchmark.insight.`;
+    } else {
+        benchmarkSection = `\nINDUSTRY BENCHMARK DATA:
+No prior audits for this industry yet. Estimate peerAvgScore based on your knowledge of AI adoption in ${sub.industry || "this sector"} for companies of size ${sub.companySize || "this size"}. Set percentile based on your estimate.`;
+    }
+
+    return `Generate a DEEP AI readiness scorecard for the following company. You have been provided with extensive research — website content, per-tool intelligence, and company background. Use ALL of it.
 
 FORM SUBMISSION DATA:
 - Company: ${sub.companyName}
@@ -217,9 +289,10 @@ ${sub.toolFrustrations || "Not provided"}
 
 MANUAL PROCESSES TO AUTOMATE:
 ${sub.manualProcesses || "Not provided"}
-
-${enrichment ? `SCRAPED WEBSITE CONTEXT (from ${sub.companyWebsite}):
-${enrichment}` : "WEBSITE CONTEXT: Website not scraped (URL not provided or scrape failed). Base scorecard on form data only."}`;
+${benchmarkSection}
+${enrichment.websiteContext ? `\n━━━ SCRAPED WEBSITE CONTEXT (multi-page, from ${sub.companyWebsite}) ━━━\n${enrichment.websiteContext}` : "\nWEBSITE CONTEXT: No website data available."}
+${enrichment.toolIntel ? `\n━━━ PER-TOOL INTELLIGENCE (live research on each tool in their stack) ━━━\n${enrichment.toolIntel}` : ""}
+${enrichment.companyIntel ? `\n━━━ COMPANY & INDUSTRY RESEARCH ━━━\n${enrichment.companyIntel}` : ""}`;
 }
 
 // ── Scorecard config builder ──────────────────────────────────────────────────
@@ -255,6 +328,114 @@ function slugify(name: string): string {
         .slice(0, 40);
 }
 
+// ── Deep enrichment pipeline ─────────────────────────────────────────────────
+
+async function deepEnrich(
+    companyWebsite: string | null,
+    companyName: string,
+    currentTools: string[],
+    industry: string | null,
+): Promise<{ websiteContext: string; toolIntel: string; companyIntel: string }> {
+    const url = companyWebsite
+        ? (companyWebsite.startsWith("http") ? companyWebsite : `https://${companyWebsite}`)
+        : null;
+
+    // Phase 1: Multi-page website scrape + company research (parallel)
+    const [homeScrape, sitemapResult, companySearch, industrySearch] = await Promise.all([
+        url ? firecrawl.scrapeUrl(url) : Promise.resolve({ success: false } as const),
+        url ? firecrawl.mapSite(url, { limit: 20 }) : Promise.resolve({ success: false, data: [] } as const),
+        tavily.search(`"${companyName}" company overview AI tools technology stack`, {
+            searchDepth: "advanced",
+            maxResults: 5,
+            includeAnswer: true,
+        }),
+        industry ? tavily.search(`${industry} companies AI adoption benchmark 2025 2026`, {
+            searchDepth: "basic",
+            maxResults: 3,
+            includeAnswer: true,
+        }) : Promise.resolve({ answer: "", results: [] }),
+    ]);
+
+    // Scrape key subpages (about, pricing, team, blog — up to 4)
+    const subpageContent: string[] = [];
+    if (sitemapResult.success && sitemapResult.data) {
+        const priorityPaths = ["/about", "/team", "/pricing", "/blog", "/product", "/solutions", "/services", "/features"];
+        const subpages = sitemapResult.data
+            .filter(link => priorityPaths.some(p => link.toLowerCase().includes(p)))
+            .slice(0, 4);
+
+        const subScrapes = await Promise.all(
+            subpages.map(link => firecrawl.scrapeUrl(link).catch(() => ({ success: false }) as const))
+        );
+        for (const s of subScrapes) {
+            if (s.success && s.data?.markdown) {
+                subpageContent.push(s.data.markdown.slice(0, 3_000));
+            }
+        }
+    }
+
+    // Combine website context
+    const homeContent = homeScrape.success && homeScrape.data?.markdown
+        ? homeScrape.data.markdown.slice(0, 6_000)
+        : "";
+    const websiteContext = [homeContent, ...subpageContent].filter(Boolean).join("\n\n---\n\n").slice(0, 16_000);
+
+    // Phase 2: Per-tool intelligence (parallel, batched in groups of 5)
+    const toolIntelParts: string[] = [];
+    const TOOL_BATCH_SIZE = 5;
+    for (let i = 0; i < currentTools.length; i += TOOL_BATCH_SIZE) {
+        const batch = currentTools.slice(i, i + TOOL_BATCH_SIZE);
+        const results = await Promise.all(
+            batch.map(tool =>
+                tavily.search(`"${tool}" pricing features AI capabilities 2025`, {
+                    searchDepth: "basic",
+                    maxResults: 2,
+                    includeAnswer: true,
+                }).catch(() => ({ answer: "", results: [] }))
+            )
+        );
+        for (let j = 0; j < batch.length; j++) {
+            const r = results[j];
+            if (r.answer || r.results.length > 0) {
+                const snippets = r.results.slice(0, 2).map(x => x.content.slice(0, 300)).join(" | ");
+                toolIntelParts.push(`${batch[j]}: ${r.answer?.slice(0, 400) || snippets}`);
+            }
+        }
+    }
+    const toolIntel = toolIntelParts.join("\n\n");
+
+    // Combine company intelligence
+    const companyIntel = [
+        companySearch.answer ? `COMPANY RESEARCH: ${companySearch.answer.slice(0, 1500)}` : "",
+        ...companySearch.results.slice(0, 3).map(r => `SOURCE (${r.title}): ${r.content.slice(0, 500)}`),
+        industrySearch.answer ? `INDUSTRY BENCHMARK CONTEXT: ${industrySearch.answer.slice(0, 1000)}` : "",
+        ...industrySearch.results.slice(0, 2).map(r => `INDUSTRY SOURCE: ${r.content.slice(0, 400)}`),
+    ].filter(Boolean).join("\n\n");
+
+    return { websiteContext, toolIntel, companyIntel };
+}
+
+async function getIndustryBenchmark(industry: string | null, companySize: string | null): Promise<{ avgScore: number; count: number } | null> {
+    if (!industry) return null;
+    try {
+        const result = await db
+            .select({
+                avgScore: sql<number>`ROUND(AVG((${auditSubmissions.scorecard}->>'aiNativeScore'->'score')::int))`,
+                count: sql<number>`COUNT(*)`,
+            })
+            .from(auditSubmissions)
+            .where(and(
+                eq(auditSubmissions.status, "complete"),
+                eq(auditSubmissions.industry, industry),
+            ));
+        const row = result[0];
+        if (row && Number(row.count) >= 3) {
+            return { avgScore: Number(row.avgScore) || 50, count: Number(row.count) };
+        }
+    } catch { /* non-critical */ }
+    return null;
+}
+
 // ── Main pipeline ─────────────────────────────────────────────────────────────
 
 export async function processAuditSubmission(id: string): Promise<void> {
@@ -268,24 +449,23 @@ export async function processAuditSubmission(id: string): Promise<void> {
         .where(eq(auditSubmissions.id, id));
 
     try {
-        // 1. Firecrawl enrichment
-        let enrichmentContext = "";
-        if (submission.companyWebsite) {
-            const url = submission.companyWebsite.startsWith("http")
-                ? submission.companyWebsite
-                : `https://${submission.companyWebsite}`;
-            const result = await firecrawl.scrapeUrl(url);
-            if (result.success && result.data?.markdown) {
-                enrichmentContext = result.data.markdown.slice(0, 8_000);
-            }
-        }
+        // 1. Deep multi-source enrichment (website + Tavily + per-tool research)
+        const enrichment = await deepEnrich(
+            submission.companyWebsite,
+            submission.companyName,
+            (submission.currentTools ?? []) as string[],
+            submission.industry,
+        );
 
-        // 2. GPT-4o scorecard generation
+        // 2. Industry benchmark from existing audits
+        const benchmark = await getIndustryBenchmark(submission.industry, submission.companySize);
+
+        // 3. GPT-4o deep scorecard generation
         const { object: scorecard } = await generateObject({
             model: openai("gpt-4o"),
             schema: AuditScorecardSchema,
             system: SYSTEM_PROMPT,
-            prompt: buildPrompt(submission, enrichmentContext),
+            prompt: buildPrompt(submission, enrichment, benchmark),
         });
 
         // 3. Generate share token
@@ -297,7 +477,7 @@ export async function processAuditSubmission(id: string): Promise<void> {
         const [workspace] = await db.insert(workspaces).values({
             name: submission.companyName,
             slug,
-            companyContext: enrichmentContext.slice(0, 2000) || null,
+            companyContext: enrichment.websiteContext.slice(0, 2000) || null,
             scorecardConfig: buildScorecardConfig(submission.biggestBottleneck),
             onboardingCompleted: false,
         }).returning();

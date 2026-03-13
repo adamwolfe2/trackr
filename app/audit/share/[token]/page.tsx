@@ -13,6 +13,27 @@ export const dynamic = "force-dynamic";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+type WorkflowGap = {
+    workflowName: string;
+    stages: Array<{ name: string; tool: string | null; status: "covered" | "partial" | "gap" }>;
+    bottleneck: string;
+    fixDescription: string;
+};
+
+type IndustryBenchmark = {
+    peerAvgScore: number;
+    peerLabel: string;
+    percentile: number;
+    insight: string;
+};
+
+type RoiProjection = {
+    currentAnnualWaste: number;
+    projectedSavings: number;
+    paybackMonths: number;
+    assumptions: string[];
+};
+
 type ExtendedScorecard = AuditScorecard & {
     executiveSummary?: string | null;
     painPoints: Array<{ area: string; description: string; annualCostEstimate?: string | null }>;
@@ -21,6 +42,9 @@ type ExtendedScorecard = AuditScorecard & {
         description: string; estimatedROI?: string | null;
     }>;
     recommendedTools?: RecommendedTool[];
+    workflowGaps?: WorkflowGap[];
+    industryBenchmark?: IndustryBenchmark;
+    roiProjection?: RoiProjection;
 };
 
 type RecommendedTool = { name: string; websiteDomain: string | null; category: string; reason: string; impact: "High" | "Medium" | "Low" };
@@ -680,6 +704,130 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                         )}
                     </div>
                 </div>
+
+                {/* ── Workflow Gap Analysis ──────────────────────────────────────── */}
+                {scorecard.workflowGaps && scorecard.workflowGaps.length > 0 && (
+                    <div className="border border-black bg-white">
+                        <div className="px-6 py-4 border-b border-black">
+                            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                                <span className="w-1 h-3 bg-amber-500 inline-block" />
+                                Workflow Gap Analysis
+                            </p>
+                            <p className="font-mono text-[9px] text-neutral-400 mt-0.5">End-to-end workflow coverage across {scorecard.workflowGaps.length} critical processes</p>
+                        </div>
+                        <div className="divide-y divide-neutral-100">
+                            {scorecard.workflowGaps.map((wf, i) => (
+                                <div key={i} className="p-5 lg:p-6">
+                                    <div className="flex items-start justify-between gap-4 mb-4">
+                                        <div>
+                                            <p className="font-mono text-sm font-bold">{wf.workflowName}</p>
+                                            <p className="font-mono text-[10px] text-red-600 mt-1">Bottleneck: {wf.bottleneck}</p>
+                                        </div>
+                                        <span className="font-mono text-[9px] border border-neutral-200 bg-neutral-50 px-2.5 py-1 text-neutral-500 flex-shrink-0">
+                                            {wf.stages.filter(s => s.status === "gap").length} gap{wf.stages.filter(s => s.status === "gap").length !== 1 ? "s" : ""}
+                                        </span>
+                                    </div>
+                                    {/* Stage pipeline */}
+                                    <div className="flex items-stretch gap-0 overflow-x-auto mb-4">
+                                        {wf.stages.map((stage, si) => (
+                                            <div key={si} className="flex items-stretch">
+                                                <div className={`px-3 py-2.5 border text-center min-w-[100px] ${
+                                                    stage.status === "covered" ? "border-green-300 bg-green-50" :
+                                                    stage.status === "partial" ? "border-amber-300 bg-amber-50" :
+                                                    "border-red-300 bg-red-50"
+                                                }`}>
+                                                    <p className="font-mono text-[10px] font-bold leading-tight">{stage.name}</p>
+                                                    <p className={`font-mono text-[8px] mt-1 ${
+                                                        stage.status === "covered" ? "text-green-600" :
+                                                        stage.status === "partial" ? "text-amber-600" :
+                                                        "text-red-600"
+                                                    }`}>
+                                                        {stage.tool ?? "No tool"}
+                                                    </p>
+                                                    <span className={`inline-block font-mono text-[7px] uppercase tracking-wider mt-1 px-1.5 py-0.5 border ${
+                                                        stage.status === "covered" ? "border-green-300 text-green-700" :
+                                                        stage.status === "partial" ? "border-amber-300 text-amber-700" :
+                                                        "border-red-300 text-red-700"
+                                                    }`}>{stage.status}</span>
+                                                </div>
+                                                {si < wf.stages.length - 1 && (
+                                                    <div className="flex items-center px-1">
+                                                        <span className="font-mono text-neutral-300 text-xs">→</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <p className="font-mono text-xs text-neutral-600 leading-relaxed">{wf.fixDescription}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Industry Benchmark (Deep) ────────────────────────────────────── */}
+                {scorecard.industryBenchmark && (
+                    <div className="border border-black bg-white p-6 lg:p-8">
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 mb-6 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-blue-600 inline-block" />
+                            Deep Industry Benchmark
+                        </p>
+                        <div className="grid grid-cols-3 gap-4 mb-6">
+                            {[
+                                { label: "Your Score", value: score, cls: scoreColor(score) },
+                                { label: scorecard.industryBenchmark.peerLabel, value: scorecard.industryBenchmark.peerAvgScore, cls: "text-neutral-500" },
+                                { label: "Your Percentile", value: `${scorecard.industryBenchmark.percentile}%`, cls: scorecard.industryBenchmark.percentile >= 50 ? "text-green-700" : "text-amber-600" },
+                            ].map(({ label, value, cls }) => (
+                                <div key={label} className="border border-neutral-200 bg-[#F3F3EF] p-5 text-center">
+                                    <div className={`font-mono text-4xl font-black mb-2 ${cls}`}>{value}</div>
+                                    <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 leading-tight">{label}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <p className="font-mono text-sm text-neutral-700 leading-relaxed">{scorecard.industryBenchmark.insight}</p>
+                    </div>
+                )}
+
+                {/* ── ROI Projection ────────────────────────────────────────────────── */}
+                {scorecard.roiProjection && (
+                    <div className="border-2 border-green-700 bg-white p-6 lg:p-8">
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-green-700 mb-6 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-green-700 inline-block" />
+                            ROI Projection — Implementation Impact
+                        </p>
+                        <div className="grid grid-cols-3 gap-4 mb-6">
+                            <div className="border border-red-200 bg-red-50 p-5 text-center">
+                                <div className="font-mono text-3xl font-black text-red-600 mb-1">
+                                    ${Math.round(scorecard.roiProjection.currentAnnualWaste / 1000)}K
+                                </div>
+                                <div className="font-mono text-[9px] uppercase tracking-widest text-red-400">Annual Waste</div>
+                            </div>
+                            <div className="border border-green-200 bg-green-50 p-5 text-center">
+                                <div className="font-mono text-3xl font-black text-green-700 mb-1">
+                                    ${Math.round(scorecard.roiProjection.projectedSavings / 1000)}K
+                                </div>
+                                <div className="font-mono text-[9px] uppercase tracking-widest text-green-500">Projected Savings</div>
+                            </div>
+                            <div className="border border-blue-200 bg-blue-50 p-5 text-center">
+                                <div className="font-mono text-3xl font-black text-blue-700 mb-1">
+                                    {scorecard.roiProjection.paybackMonths}mo
+                                </div>
+                                <div className="font-mono text-[9px] uppercase tracking-widest text-blue-400">Payback Period</div>
+                            </div>
+                        </div>
+                        <div>
+                            <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-3">Assumptions</p>
+                            <div className="space-y-2">
+                                {scorecard.roiProjection.assumptions.map((a, i) => (
+                                    <div key={i} className="flex gap-3 bg-[#F3F3EF] border border-neutral-200 p-3">
+                                        <span className="font-mono text-[9px] text-neutral-400 shrink-0 pt-0.5">{String(i + 1).padStart(2, "0")}</span>
+                                        <p className="font-mono text-xs text-neutral-600 leading-relaxed">{a}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* ── AI Maturity Matrix ──────────────────────────────────────────── */}
                 {mergedTools.length > 0 && (

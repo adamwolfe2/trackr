@@ -527,6 +527,111 @@ export default async function LeadDetailPage({
                 </div>
             )}
 
+            {/* ── Workflow Gap Analysis ──────────────────────────────────────── */}
+            {scorecard && (scorecard as AuditScorecard & { workflowGaps?: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }> }).workflowGaps && (scorecard as AuditScorecard & { workflowGaps?: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }> }).workflowGaps!.length > 0 && (
+                <div className="border border-black">
+                    <div className="border-b border-black px-5 py-3">
+                        <h2 className="font-mono text-xs uppercase tracking-widest">Workflow Gap Analysis</h2>
+                    </div>
+                    <div className="divide-y divide-neutral-100">
+                        {((scorecard as AuditScorecard & { workflowGaps: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }> }).workflowGaps).map((wf, i) => (
+                            <div key={i} className="p-5">
+                                <div className="flex items-start justify-between gap-3 mb-3">
+                                    <p className="font-mono text-xs font-bold">{wf.workflowName}</p>
+                                    <span className="font-mono text-[9px] text-red-600">{wf.stages.filter(s => s.status === "gap").length} gaps</span>
+                                </div>
+                                <div className="flex flex-wrap gap-1 mb-3">
+                                    {wf.stages.map((stage, si) => (
+                                        <span key={si} className={`font-mono text-[9px] px-2 py-1 border ${
+                                            stage.status === "covered" ? "border-green-200 bg-green-50 text-green-700" :
+                                            stage.status === "partial" ? "border-yellow-200 bg-yellow-50 text-yellow-700" :
+                                            "border-red-200 bg-red-50 text-red-700"
+                                        }`}>
+                                            {stage.name}: {stage.tool ?? "GAP"}
+                                        </span>
+                                    ))}
+                                </div>
+                                <p className="font-mono text-[10px] text-red-600 mb-1">Bottleneck: {wf.bottleneck}</p>
+                                <p className="font-mono text-[10px] text-neutral-500">{wf.fixDescription}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* ── Industry Benchmark ──────────────────────────────────────────── */}
+            {scorecard && (scorecard as AuditScorecard & { industryBenchmark?: { peerAvgScore: number; peerLabel: string; percentile: number; insight: string } }).industryBenchmark && (
+                <div className="border border-black">
+                    <div className="border-b border-black px-5 py-3">
+                        <h2 className="font-mono text-xs uppercase tracking-widest">Deep Industry Benchmark</h2>
+                    </div>
+                    <div className="p-5">
+                        {(() => {
+                            const bm = (scorecard as AuditScorecard & { industryBenchmark: { peerAvgScore: number; peerLabel: string; percentile: number; insight: string } }).industryBenchmark;
+                            return (
+                                <>
+                                    <div className="grid grid-cols-3 gap-3 mb-4">
+                                        <div className="border border-neutral-200 p-3 text-center">
+                                            <span className="font-mono text-2xl font-black">{score}</span>
+                                            <p className="font-mono text-[9px] text-neutral-400 uppercase">Your Score</p>
+                                        </div>
+                                        <div className="border border-neutral-200 p-3 text-center">
+                                            <span className="font-mono text-2xl font-black text-neutral-500">{bm.peerAvgScore}</span>
+                                            <p className="font-mono text-[9px] text-neutral-400 uppercase">Peer Avg</p>
+                                        </div>
+                                        <div className="border border-neutral-200 p-3 text-center">
+                                            <span className="font-mono text-2xl font-black text-blue-700">{bm.percentile}%</span>
+                                            <p className="font-mono text-[9px] text-neutral-400 uppercase">Percentile</p>
+                                        </div>
+                                    </div>
+                                    <p className="font-mono text-[10px] text-neutral-400 mb-1">{bm.peerLabel}</p>
+                                    <p className="font-mono text-xs text-neutral-600 leading-relaxed">{bm.insight}</p>
+                                </>
+                            );
+                        })()}
+                    </div>
+                </div>
+            )}
+
+            {/* ── ROI Projection ──────────────────────────────────────────────── */}
+            {scorecard && (scorecard as AuditScorecard & { roiProjection?: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] } }).roiProjection && (
+                <div className="border-2 border-green-700">
+                    <div className="border-b border-green-700 px-5 py-3">
+                        <h2 className="font-mono text-xs uppercase tracking-widest text-green-700">ROI Projection</h2>
+                    </div>
+                    <div className="p-5">
+                        {(() => {
+                            const roi = (scorecard as AuditScorecard & { roiProjection: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] } }).roiProjection;
+                            return (
+                                <>
+                                    <div className="grid grid-cols-3 gap-3 mb-4">
+                                        <div className="border border-red-200 bg-red-50 p-3 text-center">
+                                            <span className="font-mono text-xl font-black text-red-600">${Math.round(roi.currentAnnualWaste / 1000)}K</span>
+                                            <p className="font-mono text-[9px] text-red-400 uppercase">Annual Waste</p>
+                                        </div>
+                                        <div className="border border-green-200 bg-green-50 p-3 text-center">
+                                            <span className="font-mono text-xl font-black text-green-700">${Math.round(roi.projectedSavings / 1000)}K</span>
+                                            <p className="font-mono text-[9px] text-green-500 uppercase">Savings</p>
+                                        </div>
+                                        <div className="border border-blue-200 bg-blue-50 p-3 text-center">
+                                            <span className="font-mono text-xl font-black text-blue-700">{roi.paybackMonths}mo</span>
+                                            <p className="font-mono text-[9px] text-blue-400 uppercase">Payback</p>
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        {roi.assumptions.map((a, i) => (
+                                            <p key={i} className="font-mono text-[10px] text-neutral-500">
+                                                {i + 1}. {a}
+                                            </p>
+                                        ))}
+                                    </div>
+                                </>
+                            );
+                        })()}
+                    </div>
+                </div>
+            )}
+
             {/* ── Future Target ──────────────────────────────────────────────── */}
             {scorecard && (
                 <div className="border-2 border-black bg-black text-white p-6 flex items-center gap-5">

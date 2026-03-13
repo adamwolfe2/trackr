@@ -600,6 +600,73 @@ export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl,
             <div style="font-size: 13px; opacity: 0.85; line-height: 1.4;">${escapeHtml(scorecard.futureAINativeTarget.summary)}</div>
         </div>
 
+        <!-- Workflow Gap Analysis -->
+        ${(scorecard as AuditScorecard & { workflowGaps?: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }> }).workflowGaps?.length ? `
+        <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 17px; margin: 0 0 12px; border-bottom: 2px solid #000; padding-bottom: 8px;">Workflow Gap Analysis</h2>
+        <div style="margin-bottom: 24px;">
+            ${((scorecard as AuditScorecard & { workflowGaps: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }> }).workflowGaps).map(wf => `
+                <div style="margin-bottom: 16px; padding: 14px; border: 1px solid #000; background: #fff;">
+                    <div style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">${escapeHtml(wf.workflowName)}</div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px;">
+                        ${wf.stages.map(s => `<span style="font-size: 10px; padding: 3px 8px; border: 1px solid ${s.status === "covered" ? "#86efac" : s.status === "partial" ? "#fde68a" : "#fca5a5"}; background: ${s.status === "covered" ? "#f0fdf4" : s.status === "partial" ? "#fffbeb" : "#fef2f2"};">${escapeHtml(s.name)}: ${s.tool ? escapeHtml(s.tool) : "GAP"}</span>`).join("")}
+                    </div>
+                    <div style="font-size: 11px; color: #dc2626; margin-bottom: 4px;">Bottleneck: ${escapeHtml(wf.bottleneck)}</div>
+                    <div style="font-size: 12px; color: #555;">${escapeHtml(wf.fixDescription)}</div>
+                </div>
+            `).join("")}
+        </div>
+        ` : ""}
+
+        <!-- Industry Benchmark -->
+        ${(scorecard as AuditScorecard & { industryBenchmark?: { peerAvgScore: number; peerLabel: string; percentile: number; insight: string } }).industryBenchmark ? (() => {
+            const bm = (scorecard as AuditScorecard & { industryBenchmark: { peerAvgScore: number; peerLabel: string; percentile: number; insight: string } }).industryBenchmark;
+            return `
+        <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 17px; margin: 0 0 12px; border-bottom: 2px solid #000; padding-bottom: 8px;">Deep Industry Benchmark</h2>
+        <div style="margin-bottom: 24px; padding: 16px; border: 1px solid #000; background: #fff;">
+            <div style="display: flex; gap: 16px; margin-bottom: 12px;">
+                <div style="text-align: center; flex: 1; padding: 12px; border: 1px solid #e5e5e0;">
+                    <div style="font-size: 28px; font-weight: 900; color: ${scoreColor};">${score}</div>
+                    <div style="font-size: 9px; text-transform: uppercase; color: #999;">Your Score</div>
+                </div>
+                <div style="text-align: center; flex: 1; padding: 12px; border: 1px solid #e5e5e0;">
+                    <div style="font-size: 28px; font-weight: 900; color: #666;">${bm.peerAvgScore}</div>
+                    <div style="font-size: 9px; text-transform: uppercase; color: #999;">Peer Avg</div>
+                </div>
+                <div style="text-align: center; flex: 1; padding: 12px; border: 1px solid #e5e5e0;">
+                    <div style="font-size: 28px; font-weight: 900; color: #2563eb;">${bm.percentile}%</div>
+                    <div style="font-size: 9px; text-transform: uppercase; color: #999;">Percentile</div>
+                </div>
+            </div>
+            <div style="font-size: 10px; color: #999; margin-bottom: 6px;">${escapeHtml(bm.peerLabel)}</div>
+            <div style="font-size: 13px; color: #333; line-height: 1.5;">${escapeHtml(bm.insight)}</div>
+        </div>`;
+        })() : ""}
+
+        <!-- ROI Projection -->
+        ${(scorecard as AuditScorecard & { roiProjection?: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] } }).roiProjection ? (() => {
+            const roi = (scorecard as AuditScorecard & { roiProjection: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] } }).roiProjection;
+            return `
+        <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 17px; margin: 0 0 12px; border-bottom: 2px solid #16a34a; padding-bottom: 8px; color: #16a34a;">ROI Projection</h2>
+        <div style="margin-bottom: 24px; padding: 16px; border: 2px solid #16a34a; background: #fff;">
+            <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+                <div style="text-align: center; flex: 1; padding: 12px; border: 1px solid #fca5a5; background: #fef2f2;">
+                    <div style="font-size: 22px; font-weight: 900; color: #dc2626;">$${Math.round(roi.currentAnnualWaste / 1000)}K</div>
+                    <div style="font-size: 9px; text-transform: uppercase; color: #ef4444;">Annual Waste</div>
+                </div>
+                <div style="text-align: center; flex: 1; padding: 12px; border: 1px solid #86efac; background: #f0fdf4;">
+                    <div style="font-size: 22px; font-weight: 900; color: #16a34a;">$${Math.round(roi.projectedSavings / 1000)}K</div>
+                    <div style="font-size: 9px; text-transform: uppercase; color: #22c55e;">Savings</div>
+                </div>
+                <div style="text-align: center; flex: 1; padding: 12px; border: 1px solid #93c5fd; background: #eff6ff;">
+                    <div style="font-size: 22px; font-weight: 900; color: #2563eb;">${roi.paybackMonths}mo</div>
+                    <div style="font-size: 9px; text-transform: uppercase; color: #60a5fa;">Payback</div>
+                </div>
+            </div>
+            <div style="font-size: 10px; color: #999; text-transform: uppercase; margin-bottom: 6px;">Assumptions</div>
+            ${roi.assumptions.map((a, i) => `<div style="font-size: 12px; color: #555; line-height: 1.5; margin-bottom: 4px;">${i + 1}. ${escapeHtml(a)}</div>`).join("")}
+        </div>`;
+        })() : ""}
+
         <!-- Call Prep: Talking Points -->
         ${talkingPointsHtml ? `
         <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 17px; margin: 0 0 12px; border-bottom: 2px solid #000; padding-bottom: 8px;">Call Prep: Talking Points</h2>
