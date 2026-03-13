@@ -14,12 +14,13 @@ const {
     mockComputeStackInsights,
     mockSelectChain,
 } = vi.hoisted(() => {
+    const makeGroupBy = () => ({ groupBy: vi.fn().mockResolvedValue([]) });
     const selectChain = {
         from: vi.fn().mockReturnValue({
             innerJoin: vi.fn().mockReturnValue({
-                where: vi.fn().mockResolvedValue([{ count: 0 }]),
+                where: vi.fn().mockReturnValue(makeGroupBy()),
             }),
-            where: vi.fn().mockResolvedValue([{ count: 0 }]),
+            where: vi.fn().mockReturnValue(makeGroupBy()),
         }),
     };
     return {

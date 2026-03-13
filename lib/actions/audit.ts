@@ -8,6 +8,7 @@
  * 4. Persist scorecard in DB
  */
 
+import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db";
 import { auditSubmissions, workspaces, softwareSpend, architects, architectReferrals } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
@@ -557,6 +558,7 @@ export async function processAuditSubmission(id: string): Promise<void> {
             .where(eq(auditSubmissions.id, id));
 
     } catch (err) {
+        Sentry.captureException(err);
         console.error("[audit] Pipeline failed for submission", id, err);
         await db.update(auditSubmissions)
             .set({

@@ -6,6 +6,7 @@
  * pipeline in the background via after().
  */
 
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { after } from "next/server";
 import { db } from "@/lib/db";
@@ -120,6 +121,7 @@ export async function POST(req: NextRequest) {
         try {
             await processAuditSubmission(submission.id);
         } catch (err) {
+            Sentry.captureException(err);
             console.error(`[audit/submit] Background processing failed for submission ${submission.id}:`, err);
         }
     });

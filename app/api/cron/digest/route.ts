@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db";
 import { tools, workspaceMembers, workspaces, softwareSpend, researchJobs } from "@/lib/db/schema";
 import { desc, eq, gte, and, lte, sql, inArray } from "drizzle-orm";
@@ -106,6 +107,41 @@ export async function GET(req: Request) {
             spendByWorkspace.set(s.workspaceId, list);
         }
 
+        // Batch-fetch activity counts for streak calculation (avoids N+1 inside the loop)
+        const [completedJobCounts, spendChangeCounts] = await Promise.all([
+            db.select({
+                workspaceId: tools.workspaceId,
+                count: sql<number>`count(*)`,
+            })
+                .from(researchJobs)
+                .innerJoin(tools, eq(researchJobs.toolId, tools.id))
+                .where(and(
+                    inArray(tools.workspaceId, allWorkspaceIds),
+                    eq(researchJobs.status, "complete"),
+                    gte(researchJobs.completedAt, sevenDaysAgo),
+                ))
+                .groupBy(tools.workspaceId),
+            db.select({
+                workspaceId: softwareSpend.workspaceId,
+                count: sql<number>`count(*)`,
+            })
+                .from(softwareSpend)
+                .where(and(
+                    inArray(softwareSpend.workspaceId, allWorkspaceIds),
+                    gte(softwareSpend.createdAt, sevenDaysAgo),
+                ))
+                .groupBy(softwareSpend.workspaceId),
+        ]);
+
+        const completedJobsByWorkspace = new Map<string, number>();
+        for (const row of completedJobCounts) {
+            completedJobsByWorkspace.set(row.workspaceId, Number(row.count));
+        }
+        const spendChangesByWorkspace = new Map<string, number>();
+        for (const row of spendChangeCounts) {
+            spendChangesByWorkspace.set(row.workspaceId, Number(row.count));
+        }
+
         for (const owner of owners) {
             try {
                 const clerkUser = await clerk.users.getUser(owner.userId);
@@ -186,27 +222,10 @@ export async function GET(req: Request) {
                 }
 
                 // --- Streak Update ---
-                // Check if workspace had any research completions or spend changes this week
+                // Use pre-fetched activity counts (batch-queried above)
                 const wsData = owner.workspace;
-                const [completedJobsThisWeek, spendChangesThisWeek] = await Promise.all([
-                    db.select({ count: sql<number>`count(*)` })
-                        .from(researchJobs)
-                        .innerJoin(tools, eq(researchJobs.toolId, tools.id))
-                        .where(and(
-                            eq(tools.workspaceId, owner.workspaceId),
-                            eq(researchJobs.status, "complete"),
-                            gte(researchJobs.completedAt, sevenDaysAgo),
-                        )),
-                    db.select({ count: sql<number>`count(*)` })
-                        .from(softwareSpend)
-                        .where(and(
-                            eq(softwareSpend.workspaceId, owner.workspaceId),
-                            gte(softwareSpend.createdAt, sevenDaysAgo),
-                        )),
-                ]);
-
-                const hadActivity = (Number(completedJobsThisWeek[0]?.count) || 0) > 0
-                    || (Number(spendChangesThisWeek[0]?.count) || 0) > 0;
+                const hadActivity = (completedJobsByWorkspace.get(owner.workspaceId) ?? 0) > 0
+                    || (spendChangesByWorkspace.get(owner.workspaceId) ?? 0) > 0;
 
                 const currentStreak = (wsData as { currentStreak?: number }).currentStreak ?? 0;
                 const longestStreak = (wsData as { longestStreak?: number }).longestStreak ?? 0;
@@ -260,13 +279,15 @@ export async function GET(req: Request) {
                     });
                     stackDigestsSent++;
                 }
-            } catch {
+            } catch (err) {
+                Sentry.captureException(err);
                 // Skip users we can't email
             }
         }
 
         return NextResponse.json({ success: true, digestsSent, renewalsSent, stackDigestsSent });
     } catch (err) {
+        Sentry.captureException(err);
         console.error("[api/cron/digest]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { after } from "next/server";
@@ -82,6 +83,7 @@ export async function POST(req: NextRequest) {
         try {
             await performDeepResearch(toolId, depth ? { depth } : undefined);
         } catch (err) {
+            Sentry.captureException(err);
             console.error("[api/research/start] background research failed:", err);
         }
     });

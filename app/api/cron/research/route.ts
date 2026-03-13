@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db";
 import { tools, researchJobs } from "@/lib/db/schema";
 import { eq, and, lte, ne, isNotNull, lt, inArray } from "drizzle-orm";
@@ -111,6 +112,7 @@ export async function GET(req: Request) {
                 try {
                     await performDeepResearch(tool.id);
                 } catch (err) {
+                    Sentry.captureException(err);
                     console.error(`[cron/research] Background research failed for tool ${tool.id}:`, err);
                 }
             });
@@ -122,7 +124,8 @@ export async function GET(req: Request) {
             recovered: stuckJobs.length,
             toolIds: dueTools.map(t => t.id),
         });
-    } catch {
+    } catch (err) {
+        Sentry.captureException(err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

@@ -70,6 +70,7 @@ export async function sendWelcomeEmail(to: string, firstName: string) {
             </ol>
             ${emailButton(`${appUrl}/tools`, "Open Trackr →")}
         `),
+        text: `Welcome, ${firstName}.\n\nTrackr is ready. Here's how to get the most out of it in the next 10 minutes:\n\n1. Go to /submit and paste any tool URL\n2. Watch agents research it in real time\n3. Review the scored report at /tools\n4. Add your team's monthly spend at /stack\n\nOpen Trackr: ${appUrl}/tools\n\n—\nTrackr — AI-powered software intelligence`,
     }));
 }
 
@@ -86,6 +87,7 @@ export async function sendInviteEmail(
     const acceptUrl = inviteId
         ? `${appUrl}/invite/accept/${inviteId}`
         : `${appUrl}/sign-up`;
+    const invitedByPlain = inviterName ? ` by ${inviterName}` : "";
     await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
@@ -103,6 +105,7 @@ export async function sendInviteEmail(
             </p>
             ${emailButton(acceptUrl, "Accept Invitation →")}
         `),
+        text: `Workspace Invitation\n\nJoin ${workspaceName}\n\nYou've been invited${invitedByPlain} to collaborate on ${workspaceName}'s software research workspace.\n\nTrackr helps teams evaluate SaaS tools with AI-powered research, scoring, and spend tracking.\n\nAccept Invitation: ${acceptUrl}\n\n—\nTrackr — AI-powered software intelligence`,
     }));
 }
 
@@ -127,6 +130,15 @@ export async function sendResearchCompleteEmail(
         }
     }
 
+    let scoreDeltaText = "";
+    if (previousScore != null) {
+        const delta = score - previousScore;
+        if (Math.abs(delta) >= 0.1) {
+            const sign = delta > 0 ? "+" : "";
+            scoreDeltaText = ` (${sign}${delta.toFixed(1)} vs last)`;
+        }
+    }
+
     await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
@@ -140,6 +152,7 @@ export async function sendResearchCompleteEmail(
             </p>
             ${emailButton(`${appUrl}/tools/${toolId}`, "View Report →")}
         `),
+        text: `Research Complete\n\n${toolName} — ${score.toFixed(1)}/10${scoreDeltaText}\n\nYour research report is ready. Open it to see the full scorecard, pros/cons, competitor analysis, and pricing breakdown.\n\nView Report: ${appUrl}/tools/${toolId}\n\n—\nTrackr — AI-powered software intelligence`,
     }));
 }
 
@@ -163,6 +176,7 @@ export async function sendResearchFailedEmail(
             <p style="font-size: 12px; color: #C0392B; background: #fff; padding: 8px 12px; margin: 0 0 24px; border: 1px solid #C0392B;">${escapeHtml(errorMessage)}</p>
             ${emailButton(`${appUrl}/tools/${toolId}`, "Retry Research →")}
         `),
+        text: `Research Failed\n\n${toolName}\n\nSomething went wrong during research:\n${errorMessage}\n\nRetry Research: ${appUrl}/tools/${toolId}\n\n—\nTrackr — AI-powered software intelligence`,
     }));
 }
 
@@ -177,6 +191,9 @@ export async function sendTrialEndingEmail(
     const urgency = daysLeft <= 3
         ? `<p style="font-size: 13px; color: #C0392B; font-weight: bold; margin: 0 0 16px;">Your trial expires ${daysLeft === 0 ? "today" : `in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`}.</p>`
         : `<p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">Your ${escapeHtml(planName)} trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.</p>`;
+    const urgencyText = daysLeft <= 3
+        ? `Your trial expires ${daysLeft === 0 ? "today" : `in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`}.`
+        : `Your ${planName} trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.`;
     await sendWithRetry(() => resend.emails.send({
         from: FROM,
         to,
@@ -192,6 +209,7 @@ export async function sendTrialEndingEmail(
             </p>
             ${emailButton(`${appUrl}/settings/billing`, "Add Payment Method →")}
         `),
+        text: `Trial Ending Soon\n\nDon't lose access.\n\n${urgencyText}\n\nAdd a payment method to keep your ${planName} features — research credits, team members, integrations, and all your saved data.\n\nAdd Payment Method: ${appUrl}/settings/billing\n\n—\nTrackr — AI-powered software intelligence`,
     }));
 }
 
@@ -213,7 +231,7 @@ export async function scheduleDripSequence(to: string, firstName: string) {
     const d7 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const d14 = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
 
-    const drips: Array<{ type: 'd1' | 'd3' | 'd7' | 'd14'; subject: string; scheduledAt: string; html: string }> = [
+    const drips: Array<{ type: 'd1' | 'd3' | 'd7' | 'd14'; subject: string; scheduledAt: string; html: string; text: string }> = [
         {
             type: 'd1',
             scheduledAt: d1,
@@ -234,6 +252,7 @@ export async function scheduleDripSequence(to: string, firstName: string) {
                 </ul>
                 ${emailButton(`${appUrl}/submit`, "Research a Tool Now →")}
             `),
+            text: `${firstName}, ready to research your first tool?\n\nIt takes under 2 minutes. Paste any SaaS tool URL and Trackr's research agents will:\n\n- Scrape the official site for features and pricing\n- Pull reviews from G2, Capterra, TrustRadius, and Reddit\n- Analyze competitors and market position\n- Score the tool across 7 dimensions\n\nResearch a Tool Now: ${appUrl}/submit\n\n—\nTrackr — AI-powered software intelligence`,
         },
         {
             type: 'd3',
@@ -252,6 +271,7 @@ export async function scheduleDripSequence(to: string, firstName: string) {
                 </p>
                 ${emailButton(`${appUrl}/submit`, "Research a Tool →")}
             `),
+            text: `The typical team evaluates 10-15 tools per quarter.\n\nThat's 40-60 hours of research time. Trackr reduces it to under 2 minutes per tool.\n\nYour free plan includes 3 research reports per month. For unlimited tools + 25 reports/month, the Team plan is $50/month — or buy extra credits for $1.50 each.\n\nResearch a Tool: ${appUrl}/submit\n\n—\nTrackr — AI-powered software intelligence`,
         },
         {
             type: 'd7',
@@ -278,6 +298,7 @@ export async function scheduleDripSequence(to: string, firstName: string) {
                 </p>
                 ${emailButton(`${appUrl}/pricing`, "Upgrade to Team →")}
             `),
+            text: `A week in — how's it going?\n\nTeams on the Team plan can:\n\n- Run 25 research reports per month\n- Invite up to 5 teammates to share a workspace\n- Get Slack notifications when research completes\n- Export reports to PDF for stakeholder reviews\n- Track monthly SaaS spend across all tools\n- Schedule auto-research (weekly, bi-weekly, monthly)\n\nThe Team plan is $50/month — less than the cost of one hour of manual research time.\n\nUpgrade to Team: ${appUrl}/pricing\n\n—\nTrackr — AI-powered software intelligence`,
         },
         {
             type: 'd14',
@@ -307,6 +328,7 @@ export async function scheduleDripSequence(to: string, firstName: string) {
                 </p>
                 ${emailButton(`${appUrl}/settings/billing`, "Upgrade to Team — $50/mo →")}
             `),
+            text: `Two weeks in, ${firstName}.\n\nIf you've used Trackr this month, you know the core loop — submit a URL, get a scored report in under 2 minutes.\n\nThe free plan covers 3 reports/month. Here's what Team unlocks for $50/month:\n\n- 25 research reports/month\n- Auto-research scheduling (weekly, bi-weekly, monthly)\n- Slack notifications\n- 3-way comparison\n- CSV export\n- 5 workspace members\n\n$50/month is less than 30 minutes of manual research time.\n\nUpgrade to Team: ${appUrl}/settings/billing\n\n—\nTrackr — AI-powered software intelligence`,
         },
     ];
 
@@ -318,6 +340,7 @@ export async function scheduleDripSequence(to: string, firstName: string) {
             subject: drip.subject,
             scheduledAt: drip.scheduledAt,
             html: drip.html,
+            text: drip.text,
         }).then((result) => {
             if ('data' in result && result.data?.id) {
                 return db.insert(dripEmails).values({
@@ -402,6 +425,11 @@ export async function sendRenewalAlertEmail(
             </table>
             ${emailButton(`${appUrl}/stack`, "Review Stack →")}
         `),
+        text: `Renewal Alert — Upcoming Renewals\n\nThe following tools in your stack have renewals in the next 30 days:\n\n${tools.map(t => {
+            const date = new Date(t.renewalDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+            const cost = t.monthlyCost && parseFloat(t.monthlyCost) > 0 ? `$${parseFloat(t.monthlyCost).toLocaleString("en-US", { minimumFractionDigits: 2 })}/mo` : "N/A";
+            return `- ${t.name}: ${date} (${cost})`;
+        }).join("\n")}\n\nReview Stack: ${appUrl}/stack\n\n—\nTrackr — AI-powered software intelligence`,
     }));
 }
 
@@ -480,7 +508,35 @@ export async function sendStackHealthDigest(to: string, data: StackHealthDigestD
             ${renewalSection}
             ${emailButton(`${appUrl}/stack`, "View Full Stack →")}
         `),
+        text: buildStackHealthDigestText(data, spendDeltaStr, appUrl),
     }));
+}
+
+function buildStackHealthDigestText(data: StackHealthDigestData, spendDeltaStr: string, appUrl: string): string {
+    const lines: string[] = [
+        `Weekly Stack Health — ${data.workspaceName}`,
+        "",
+    ];
+    if (data.currentStreak > 1) lines.push(`Week ${data.currentStreak} streak — keep it going.`, "");
+    lines.push(
+        `Monthly Spend: $${Math.round(data.totalMonthlySpend)} (${spendDeltaStr} vs last week)`,
+        `AI Nativeness: ${data.aiScore}/100`,
+        "",
+    );
+    if (data.recommendation) {
+        lines.push(`AI Recommendation: ${data.recommendation}`, "");
+    }
+    if (data.renewals.length > 0) {
+        lines.push("Upcoming Renewals:");
+        for (const r of data.renewals.slice(0, 5)) {
+            const date = new Date(r.renewalDate).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+            const cost = r.monthlyCost && parseFloat(r.monthlyCost) > 0 ? ` ($${parseFloat(r.monthlyCost).toLocaleString("en-US", { minimumFractionDigits: 0 })}/mo)` : "";
+            lines.push(`- ${r.name}: ${date}${cost}`);
+        }
+        lines.push("");
+    }
+    lines.push(`View Full Stack: ${appUrl}/stack`, "", "—", "Trackr — AI-powered software intelligence");
+    return lines.join("\n");
 }
 
 // ── Audit Scorecard Email ─────────────────────────────────────────────────────
@@ -689,6 +745,8 @@ export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl,
         ${adminUrl ? emailButton(adminUrl, "Manage This Lead →") : emailButton("https://trytrackr.com", "Open Trackr →")}
     `);
 
+    const auditText = buildAuditScorecardText(submission, scorecard, shareUrl, adminUrl);
+
     const resend = getResend();
     await sendWithRetry(() =>
         resend.emails.send({
@@ -697,8 +755,80 @@ export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl,
             ...(cc.length > 0 ? { cc } : {}),
             subject: `AI Audit Scorecard – ${scorecard.companyName} (Score: ${score}/100)`,
             html,
+            text: auditText,
         })
     );
+}
+
+function buildAuditScorecardText(
+    submission: AuditEmailPayload["submission"],
+    scorecard: AuditScorecard,
+    shareUrl?: string,
+    adminUrl?: string,
+): string {
+    const score = scorecard.aiNativeScore.score;
+    const lines: string[] = [
+        `AI Readiness Audit — Trackr`,
+        "",
+        scorecard.companyName,
+        `${submission.contactName || ""}${submission.role ? ` / ${submission.role}` : ""}${submission.companyWebsite ? ` / ${submission.companyWebsite}` : ""}`,
+        "",
+        `AI-NATIVE SCORE: ${score}/100`,
+        scorecard.aiNativeScore.summary,
+        "",
+        "PAIN POINTS:",
+    ];
+    for (const p of scorecard.painPoints) {
+        lines.push(`- [${p.area}] ${p.description}`);
+    }
+    lines.push("", "CURRENT STACK:");
+    for (const t of scorecard.currentStack) {
+        lines.push(`- ${t.name} (${t.aiRole}): ${t.usageNotes}`);
+    }
+    lines.push("", "RECOMMENDATIONS:");
+    scorecard.recommendations.forEach((r, i) => {
+        lines.push(`${i + 1}. ${r.title} [Impact: ${r.impact}]`, `   ${r.description}`);
+    });
+    lines.push("", `TARGET AI-NATIVE SCORE: ${scorecard.futureAINativeTarget.targetScore}/100`, scorecard.futureAINativeTarget.summary);
+
+    const sc = scorecard as AuditScorecard & { workflowGaps?: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }> };
+    if (sc.workflowGaps?.length) {
+        lines.push("", "WORKFLOW GAP ANALYSIS:");
+        for (const wf of sc.workflowGaps) {
+            lines.push(`- ${wf.workflowName}: Bottleneck — ${wf.bottleneck}`, `  Fix: ${wf.fixDescription}`);
+        }
+    }
+
+    const bm = (scorecard as AuditScorecard & { industryBenchmark?: { peerAvgScore: number; peerLabel: string; percentile: number; insight: string } }).industryBenchmark;
+    if (bm) {
+        lines.push("", "INDUSTRY BENCHMARK:", `Your Score: ${score} | Peer Avg: ${bm.peerAvgScore} | Percentile: ${bm.percentile}%`, bm.insight);
+    }
+
+    const roi = (scorecard as AuditScorecard & { roiProjection?: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] } }).roiProjection;
+    if (roi) {
+        lines.push("", "ROI PROJECTION:", `Annual Waste: $${Math.round(roi.currentAnnualWaste / 1000)}K | Projected Savings: $${Math.round(roi.projectedSavings / 1000)}K | Payback: ${roi.paybackMonths}mo`);
+        roi.assumptions.forEach((a, i) => lines.push(`  ${i + 1}. ${a}`));
+    }
+
+    if ((scorecard.talkingPoints ?? []).length > 0) {
+        lines.push("", "CALL PREP — TALKING POINTS:");
+        for (const tp of scorecard.talkingPoints ?? []) {
+            lines.push(`- ${tp.topic}: ${tp.observation}`, `  Ask: "${tp.question}"`, `  Opportunity: ${tp.opportunity}`);
+        }
+    }
+
+    lines.push("", "On the call, walk through this scorecard, prioritize the highest-impact changes, and map out implementation with Trackr.");
+
+    if (shareUrl) {
+        lines.push("", `Scorecard Share Link (for screen share, do not send to prospect): ${shareUrl}`);
+    }
+    if (adminUrl) {
+        lines.push("", `Manage This Lead: ${adminUrl}`);
+    } else {
+        lines.push("", `Open Trackr: https://trytrackr.com`);
+    }
+    lines.push("", "—", "Trackr — AI-powered software intelligence");
+    return lines.join("\n");
 }
 
 // ── Prospect Teaser Email ─────────────────────────────────────────────────────
@@ -789,6 +919,9 @@ export async function sendProspectTeaserEmail({ submission, score }: ProspectTea
         <p style="font-size: 13px; color: #777; margin: 20px 0 0; line-height: 1.5;">See you there,<br><strong>Adam</strong><br>Trackr</p>
     `);
 
+    const firstNamePlain = submission.contactName?.split(" ")[0] || "there";
+    const companyNamePlain = submission.companyName;
+
     const resend = getResend();
     await sendWithRetry(() =>
         resend.emails.send({
@@ -796,6 +929,7 @@ export async function sendProspectTeaserEmail({ submission, score }: ProspectTea
             to: submission.contactEmail,
             subject,
             html,
+            text: `Hi ${firstNamePlain},\n\n${hook}\n\nYour full AI readiness report for ${companyNamePlain} is ready and will be reviewed together on your call.\n\n${angle}\n\nOn the call, you'll get:\n- Your custom AI readiness scorecard walkthrough\n- A pre-built workspace with your tools already loaded\n- A 90-day prioritized roadmap specific to your stack\n\nAdd to Calendar: ${calLink}\n\nSee you there,\nAdam\nTrackr\n\n—\nTrackr — AI-powered software intelligence`,
         })
     );
 }
@@ -824,6 +958,7 @@ export async function sendArchitectApplicationReceived(to: string, firstName: st
                     — The Trackr Team
                 </p>
             `),
+            text: `Application received.\n\nHi ${firstName},\n\nThank you for applying to the Trackr AI Architect Program. We review applications within 48 hours and will follow up with next steps.\n\n— The Trackr Team`,
         })
     );
 }
@@ -848,6 +983,7 @@ export async function sendArchitectApplicationNotification(applicationId: string
                 </div>
                 ${emailButton(reviewUrl, "Review Application")}
             `),
+            text: `New architect application\n\nName: ${name}\nRole: ${role}\n\nReview Application: ${reviewUrl}\n\n— Trackr`,
         })
     );
 }
@@ -888,6 +1024,7 @@ export async function sendArchitectApproved(to: string, firstName: string, arcCo
                     — The Trackr Team
                 </p>
             `),
+            text: `Welcome to the program, ${firstName}.\n\nYour application has been approved. Here's what's next:\n\nYour Referral Code: ${arcCode}\n\nNext steps:\n1. Sign in to your architect dashboard\n2. Complete Stripe Connect setup (to receive payouts)\n3. Share your referral link: trytrackr.com/audit?arc=${arcCode}\n4. When someone you refer becomes a client, earn 20% recurring — forever\n\nYour referral link sends prospects directly to our AI Readiness Audit. Our team handles all calls and onboarding — you earn commission when they close.\n\nOpen Your Dashboard: ${onboardingUrl}\n\n— The Trackr Team`,
         })
     );
 }
@@ -917,6 +1054,7 @@ export async function sendArchitectRejected(to: string, firstName: string) {
                     — The Trackr Team
                 </p>
             `),
+            text: `Application update\n\nHi ${firstName},\n\nThank you for your interest in the Trackr AI Architect Program. After reviewing your application, we're unable to approve it at this time.\n\nWe encourage you to reapply in the future as the program evolves and your experience grows. If you have questions, reply to this email.\n\n— The Trackr Team`,
         })
     );
 }
@@ -954,6 +1092,7 @@ export async function sendArchitectNewLead(to: string, firstName: string, compan
                     — The Trackr Team
                 </p>
             `),
+            text: `You have a new lead.\n\nHi ${firstName},\n\nSomeone you referred just completed the AI Readiness Audit. Our team will follow up to qualify them.\n\nCompany: ${companyName}\nContact: ${contactEmail}\n\nIf they become a client, you'll earn 20% of their monthly subscription — recurring, forever.\n\nView Your Dashboard: ${appUrl}/architect/dashboard\n\n— The Trackr Team`,
         })
     );
 }
@@ -992,6 +1131,7 @@ export async function sendCommissionEarned(to: string, firstName: string, client
                     — The Trackr Team
                 </p>
             `),
+            text: `Commission paid.\n\nHi ${firstName},\n\nThis commission: $${(commissionAmount / 100).toFixed(2)}\nLifetime earnings: $${(totalEarnings / 100).toFixed(2)}\n\nThe funds have been transferred to your Stripe Connect account.\n\nView Commissions: ${appUrl}/architect/commissions\n\n— The Trackr Team`,
         })
     );
 }

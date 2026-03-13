@@ -324,10 +324,20 @@ function dimColor(score: number) {
 export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
     const { token } = await params;
     const sub = await db.query.auditSubmissions.findFirst({
-        where: eq(auditSubmissions.shareToken, token), columns: { companyName: true },
+        where: eq(auditSubmissions.shareToken, token), columns: { companyName: true, scorecard: true },
     });
+    if (!sub) return { title: "AI Readiness Assessment", robots: { index: false } };
+    const sc = sub.scorecard as { aiNativeScore?: { score?: number } } | null;
+    const score = sc?.aiNativeScore?.score;
+    const ogUrl = `/api/og?type=audit&name=${encodeURIComponent(sub.companyName)}${score != null ? `&score=${score}` : ""}`;
     return {
-        title: sub ? `AI Readiness Assessment — ${sub.companyName}` : "AI Readiness Assessment",
+        title: `AI Readiness Assessment — ${sub.companyName}`,
+        description: `AI Readiness Assessment for ${sub.companyName}${score != null ? `. Score: ${score}/100.` : ""}`,
+        openGraph: {
+            title: `${sub.companyName} — AI Readiness Assessment`,
+            images: [{ url: ogUrl, width: 1200, height: 630, alt: `${sub.companyName} AI Audit` }],
+        },
+        twitter: { card: "summary_large_image", images: [ogUrl] },
         robots: { index: false },
     };
 }

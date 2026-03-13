@@ -7,6 +7,7 @@
  *  - If not → batch into architectPayouts for manual review, leave commissions pending
  */
 
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
@@ -134,6 +135,7 @@ export async function GET(req: Request) {
 
                 transferred++;
             } catch (err) {
+                Sentry.captureException(err);
                 // Revert claimed commissions back to pending on failure
                 await db.update(architectCommissions)
                     .set({ status: "pending" })
@@ -157,6 +159,7 @@ export async function GET(req: Request) {
 
                 batched++;
             } catch (err) {
+                Sentry.captureException(err);
                 const rawMsg = err instanceof Error ? err.message : String(err);
                 errors.push(`Batch failed for architect ${architectId.slice(0, 8)}…: ${rawMsg.slice(0, 200)}`);
             }

@@ -62,6 +62,9 @@ const isPublicRoute = createRouteMatcher([
     "/audit(.*)",
     "/legal(.*)",
     "/api/architect/apply",
+    "/api/og",
+    "/api/health",
+    "/api/votes",
 ]);
 
 function getIp(req: NextRequest): string {

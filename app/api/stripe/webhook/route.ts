@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/services/stripe";
 import { db } from "@/lib/db";
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
             }
         }
     } catch (err) {
+        Sentry.captureException(err);
         const fullError = err instanceof Error ? err.message : String(err);
         // Log full detail to console/Sentry for debugging
         console.error(`Stripe webhook error [${event.type}]:`, fullError);

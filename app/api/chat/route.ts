@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db";
 import { tools, workspaceMembers, reports, softwareSpend, painPoints } from "@/lib/db/schema";
 import { and, cosineDistance, desc, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
@@ -246,6 +247,7 @@ ${toolContext ? `## Researched Tool Reports\n${toolContext}\n` : ""}
 
         return result.toUIMessageStreamResponse();
     } catch (err) {
+        Sentry.captureException(err);
         console.error("[api/chat]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }

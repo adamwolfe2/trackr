@@ -46,9 +46,9 @@ export async function generateMetadata({
                 description: desc,
                 type: "article",
                 url: `https://trytrackr.com/research/${slug}`,
-                images: [{ url: "/og.png", width: 1456, height: 816, alt: `${curated.name} Scorecard` }],
+                images: [{ url: `/api/og?name=${encodeURIComponent(curated.name)}&score=${curated.overallScore.toFixed(1)}&category=${encodeURIComponent(curated.category)}`, width: 1200, height: 630, alt: `${curated.name} Scorecard` }],
             },
-            twitter: { card: "summary_large_image", title: `${curated.name} — Scorecard`, description: desc, images: ["/og.png"] },
+            twitter: { card: "summary_large_image", title: `${curated.name} — Scorecard`, description: desc, images: [`/api/og?name=${encodeURIComponent(curated.name)}&score=${curated.overallScore.toFixed(1)}&category=${encodeURIComponent(curated.category)}`] },
             alternates: { canonical: `https://trytrackr.com/research/${slug}` },
         };
     }
@@ -60,11 +60,6 @@ export async function generateMetadata({
     });
     if (!tool) return { title: "Not Found — Trackr" };
 
-    const domain = tool.websiteUrl
-        ? (() => { try { return new URL(tool.websiteUrl).hostname.replace("www.", ""); } catch { return ""; } })()
-        : "";
-    void domain;
-
     const desc = `AI-powered research report for ${tool.name}. Scores, pros, cons, pricing, and competitive analysis.`;
     return {
         title: `${tool.name} Research Report — Trackr`,
@@ -74,13 +69,13 @@ export async function generateMetadata({
             description: desc,
             type: "article",
             url: `https://trytrackr.com/research/${slug}`,
-            images: [{ url: "/og.png", width: 1456, height: 816, alt: `${tool.name} Research Report` }],
+            images: [{ url: `/api/og?name=${encodeURIComponent(tool.name)}`, width: 1200, height: 630, alt: `${tool.name} Research Report` }],
         },
         twitter: {
             card: "summary_large_image",
             title: `${tool.name} — Research Report`,
             description: desc,
-            images: ["/og.png"],
+            images: [`/api/og?name=${encodeURIComponent(tool.name)}`],
         },
         alternates: { canonical: `https://trytrackr.com/research/${slug}` },
     };
