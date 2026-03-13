@@ -171,7 +171,11 @@ export const ads = pgTable('ads', {
     startDate: timestamp('start_date'),
     endDate: timestamp('end_date'),
     createdAt: timestamp('created_at').defaultNow().notNull(),
-});
+}, (table) => [
+    index('ads_tool_id_idx').on(table.toolId),
+    index('ads_workspace_id_idx').on(table.workspaceId),
+    index('ads_status_idx').on(table.status),
+]);
 
 // Relations
 export const researchJobsRelations = relations(researchJobs, ({ one }) => ({

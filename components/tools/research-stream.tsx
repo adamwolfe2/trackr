@@ -92,9 +92,9 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
             }
         };
 
-        // Poll every 2.5s
+        // Poll every 5s (reduced from 2.5s to lower DB load)
         fetchLogs();
-        intervalRef.current = setInterval(fetchLogs, 2500);
+        intervalRef.current = setInterval(fetchLogs, 5000);
 
         // Elapsed timer
         timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);

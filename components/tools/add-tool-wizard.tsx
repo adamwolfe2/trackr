@@ -57,6 +57,7 @@ export function AddToolWizard({ creditBalance = 99, workspaceId }: AddToolWizard
                 if (err && typeof err === "object" && "digest" in err &&
                     typeof (err as { digest: unknown }).digest === "string" &&
                     (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")) {
+                    toast.success("Research started");
                     throw err;
                 }
                 const msg = err instanceof Error ? err.message : "";

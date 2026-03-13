@@ -370,7 +370,7 @@ export default function OnboardingPage() {
                             <button
                                 onClick={() => { setStep(2); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                                 disabled={isPending}
-                                className={`text-xs font-mono text-neutral-400 hover:text-neutral-600 underline ${isPending ? "opacity-50 pointer-events-none" : ""}`}
+                                className={`font-mono text-xs uppercase tracking-widest border border-neutral-300 text-neutral-500 px-4 py-2 hover:border-black hover:text-black transition-colors ${isPending ? "opacity-50 pointer-events-none" : ""}`}
                             >
                                 Skip for now
                             </button>
@@ -660,7 +660,7 @@ export default function OnboardingPage() {
                                     {isPending ? (
                                         <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
                                     ) : totalWeight !== 100 ? (
-                                        <>Weights must equal 100%</>
+                                        <>Adjust weights to 100% ({totalWeight}% now)</>
                                     ) : (
                                         <><Check className="w-4 h-4" /> Launch Workspace</>
                                     )}

@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { auditSubmissions } from "@/lib/db/schema";
-import { desc } from "drizzle-orm";
+import { desc, eq, or } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createHash, timingSafeEqual } from "crypto";
@@ -113,16 +113,23 @@ export default async function AdminLeadsPage({
 
     const { status: statusFilter } = await searchParams;
 
+    // Build WHERE clause at DB level instead of filtering in JS
+    const statusWhere = statusFilter === "processing"
+        ? or(eq(auditSubmissions.status, "processing"), eq(auditSubmissions.status, "pending"))
+        : statusFilter
+            ? eq(auditSubmissions.status, statusFilter)
+            : undefined;
+
     const allSubmissions = await db.select().from(auditSubmissions)
+        .where(statusWhere)
         .orderBy(desc(auditSubmissions.createdAt))
         .limit(200);
 
-    const submissions = statusFilter
-        ? allSubmissions.filter(s => {
-            if (statusFilter === "processing") return s.status === "processing" || s.status === "pending";
-            return s.status === statusFilter;
-        })
+    // For summary counts, fetch all statuses (only when showing all)
+    const allForCounts = statusFilter
+        ? await db.select().from(auditSubmissions).orderBy(desc(auditSubmissions.createdAt)).limit(200)
         : allSubmissions;
+    const submissions = allSubmissions;
 
     return (
         <div className="space-y-8">
@@ -145,10 +152,10 @@ export default async function AdminLeadsPage({
             {/* Summary bar */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px border border-black bg-black">
                 {[
-                    { label: "Total Leads", value: allSubmissions.length },
-                    { label: "Complete", value: allSubmissions.filter(s => s.status === "complete").length },
-                    { label: "Processing", value: allSubmissions.filter(s => s.status === "processing" || s.status === "pending").length },
-                    { label: "Failed", value: allSubmissions.filter(s => s.status === "failed").length },
+                    { label: "Total Leads", value: allForCounts.length },
+                    { label: "Complete", value: allForCounts.filter(s => s.status === "complete").length },
+                    { label: "Processing", value: allForCounts.filter(s => s.status === "processing" || s.status === "pending").length },
+                    { label: "Failed", value: allForCounts.filter(s => s.status === "failed").length },
                 ].map(({ label, value }) => (
                     <div key={label} className="bg-[#F3F3EF] p-5">
                         <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">{label}</p>

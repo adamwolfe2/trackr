@@ -188,7 +188,7 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                         <h1 className="font-serif text-3xl font-normal flex items-center gap-3 flex-wrap">
                             {tool.logoUrl && (
                                 // eslint-disable-next-line @next/next/no-img-element
-                                <img src={tool.logoUrl} alt={tool.name} className="w-8 h-8 object-contain flex-shrink-0" />
+                                <img src={tool.logoUrl} alt={tool.name} className="w-8 h-8 object-contain flex-shrink-0" loading="lazy" />
                             )}
                             {tool.name}
                         </h1>

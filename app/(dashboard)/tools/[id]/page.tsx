@@ -98,6 +98,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
     const allReports = await db.query.reports.findMany({
         where: eq(reports.toolId, id),
         orderBy: [desc(reports.createdAt)],
+        limit: 20, // Cap report history — only latest 20 needed for timeline/trends
     });
 
     const toolNotes = await db.query.notes.findMany({
@@ -296,7 +297,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                     <h1 className="font-serif text-3xl font-normal flex items-center gap-3 flex-wrap">
                         {(tool.logoUrl || toolHostname) && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${toolHostname}&sz=64`} alt={tool.name} className="w-8 h-8 object-contain flex-shrink-0" />
+                            <img src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${toolHostname}&sz=64`} alt={tool.name} className="w-8 h-8 object-contain flex-shrink-0" loading="lazy" />
                         )}
                         {tool.name}
                         <span className={`font-mono text-xs border px-2 py-0.5 uppercase tracking-widest ${statusColors[tool.status] ?? "border-neutral-300 text-neutral-500"}`}>
@@ -357,6 +358,12 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                                 </div>
                                 <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Fit</div>
                             </div>
+                        )}
+                        {!canSeeFit && report && (
+                            <Link href="/settings/billing" className="text-right group">
+                                <div className="font-mono text-3xl font-bold text-neutral-200">--</div>
+                                <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-300 group-hover:text-neutral-500 transition-colors">Fit (Upgrade)</div>
+                            </Link>
                         )}
                         <div className="text-right">
                             <div className="font-mono text-3xl font-bold">

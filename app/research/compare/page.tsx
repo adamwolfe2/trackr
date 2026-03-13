@@ -204,7 +204,7 @@ function ComparisonGrid({
                     <div className="flex items-center gap-2 mb-1">
                         {(left.tool.logoUrl || leftDomain) && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={left.tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${leftDomain}&sz=32`} alt={left.tool.name} className="w-5 h-5 object-contain" width={20} height={20} />
+                            <img src={left.tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${leftDomain}&sz=32`} alt={left.tool.name} className="w-5 h-5 object-contain" width={20} height={20} loading="lazy" />
                         )}
                         <Link href={`/research/${left.tool.publicSlug}`} className="font-serif text-lg text-white hover:underline">{left.tool.name}</Link>
                     </div>
@@ -218,7 +218,7 @@ function ComparisonGrid({
                     <div className="flex items-center gap-2 mb-1">
                         {(right.tool.logoUrl || rightDomain) && (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={right.tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${rightDomain}&sz=32`} alt={right.tool.name} className="w-5 h-5 object-contain" width={20} height={20} />
+                            <img src={right.tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${rightDomain}&sz=32`} alt={right.tool.name} className="w-5 h-5 object-contain" width={20} height={20} loading="lazy" />
                         )}
                         <Link href={`/research/${right.tool.publicSlug}`} className="font-serif text-lg text-white hover:underline">{right.tool.name}</Link>
                     </div>

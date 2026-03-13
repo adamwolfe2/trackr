@@ -11,7 +11,7 @@ export function QueueAutoRefresh({ runningCount }: { runningCount: number }) {
 
         const interval = setInterval(() => {
             router.refresh();
-        }, 3000);
+        }, 8000);
 
         return () => clearInterval(interval);
     }, [runningCount, router]);

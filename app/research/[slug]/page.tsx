@@ -366,7 +366,7 @@ export default async function PublicResearchPage({
                                         {competitors.map((c) => (
                                             <span key={c} className="flex items-center gap-1.5 font-mono text-xs border border-neutral-300 px-2 py-1 text-neutral-600">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={`https://www.google.com/s2/favicons?domain=${c}&sz=16`} alt={c} className="w-3 h-3" />
+                                                <img src={`https://www.google.com/s2/favicons?domain=${c}&sz=16`} alt={c} className="w-3 h-3" loading="lazy" />
                                                 {c}
                                             </span>
                                         ))}
@@ -691,7 +691,7 @@ function CuratedToolPage({ tool }: { tool: CuratedTool }) {
                                         {tool.integrations.map((domain) => (
                                             <span key={domain} className="flex items-center gap-1.5 font-mono text-[10px] border border-neutral-200 px-2 py-1 text-neutral-600">
                                                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} className="w-3 h-3" />
+                                                <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} className="w-3 h-3" loading="lazy" />
                                                 {domain.replace("www.", "")}
                                             </span>
                                         ))}
@@ -713,13 +713,13 @@ function CuratedToolPage({ tool }: { tool: CuratedTool }) {
                                                     className="flex items-center gap-1.5 font-mono text-xs border border-neutral-300 px-2 py-1 text-neutral-600 hover:border-black hover:text-black transition-colors"
                                                 >
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} className="w-3 h-3" />
+                                                    <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} className="w-3 h-3" loading="lazy" />
                                                     {related.name}
                                                 </Link>
                                             ) : (
                                                 <span key={domain} className="flex items-center gap-1.5 font-mono text-xs border border-neutral-300 px-2 py-1 text-neutral-600">
                                                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} className="w-3 h-3" />
+                                                    <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} className="w-3 h-3" loading="lazy" />
                                                     {domain}
                                                 </span>
                                             );

@@ -48,9 +48,9 @@ export const architects = pgTable('architects', {
 // Architect Referrals — each client referred by an architect
 export const architectReferrals = pgTable('architect_referrals', {
     id: uuid('id').defaultRandom().primaryKey(),
-    architectId: uuid('architect_id').references(() => architects.id).notNull(),
-    workspaceId: uuid('workspace_id').references(() => workspaces.id),
-    auditSubmissionId: uuid('audit_submission_id').references(() => auditSubmissions.id),
+    architectId: uuid('architect_id').references(() => architects.id, { onDelete: 'cascade' }).notNull(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }),
+    auditSubmissionId: uuid('audit_submission_id').references(() => auditSubmissions.id, { onDelete: 'set null' }),
     status: text('status').default('lead').notNull(), // lead | active | churned
     attributedAt: timestamp('attributed_at').defaultNow().notNull(),
 }, (table) => [
@@ -64,8 +64,8 @@ export const architectReferrals = pgTable('architect_referrals', {
 // Architect Commissions — one row per commission event
 export const architectCommissions = pgTable('architect_commissions', {
     id: uuid('id').defaultRandom().primaryKey(),
-    architectId: uuid('architect_id').references(() => architects.id).notNull(),
-    referralId: uuid('referral_id').references(() => architectReferrals.id).notNull(),
+    architectId: uuid('architect_id').references(() => architects.id, { onDelete: 'cascade' }).notNull(),
+    referralId: uuid('referral_id').references(() => architectReferrals.id, { onDelete: 'cascade' }).notNull(),
     stripeInvoiceId: text('stripe_invoice_id').notNull(),
     invoiceAmount: integer('invoice_amount').notNull(), // cents
     commissionRate: integer('commission_rate').default(20).notNull(), // percentage
@@ -84,7 +84,7 @@ export const architectCommissions = pgTable('architect_commissions', {
 // Architect Payouts — monthly payout batches
 export const architectPayouts = pgTable('architect_payouts', {
     id: uuid('id').defaultRandom().primaryKey(),
-    architectId: uuid('architect_id').references(() => architects.id).notNull(),
+    architectId: uuid('architect_id').references(() => architects.id, { onDelete: 'cascade' }).notNull(),
     amount: integer('amount').notNull(), // cents
     stripePayoutId: text('stripe_payout_id'),
     status: text('status').default('pending').notNull(), // pending | processing | paid | failed

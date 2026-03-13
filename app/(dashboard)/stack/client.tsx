@@ -1002,6 +1002,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                     startTransition(async () => {
                                                         try {
                                                             await updateSoftwareSpendStatus(entry.id, newStatus);
+                                                            toast.success("Saved");
                                                             router.refresh();
                                                         } catch (err) {
                                                             toast.error(err instanceof Error ? err.message : "Failed to update status");
@@ -1052,6 +1053,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                                                                 startTransition(async () => {
                                                                     try {
                                                                         await deleteSoftwareSpend(id);
+                                                                        toast.success("Deleted");
                                                                         router.refresh();
                                                                     } catch (err) {
                                                                         toast.error(err instanceof Error ? err.message : "Failed to delete");

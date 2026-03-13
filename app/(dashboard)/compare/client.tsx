@@ -309,7 +309,7 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
                                     {(() => {
                                         const domain = tool.websiteUrl ? (() => { try { return new URL(tool.websiteUrl).hostname; } catch { return null; } })() : null;
                                         const src = tool.logoUrl ?? (domain ? `https://www.google.com/s2/favicons?domain=${domain}&sz=32` : null);
-                                        return src ? <img src={src} alt={tool.name} className="w-5 h-5 object-contain flex-shrink-0" /> : null;
+                                        return src ? <img src={src} alt={tool.name} className="w-5 h-5 object-contain flex-shrink-0" loading="lazy" /> : null;
                                     })()}
                                     {tool.websiteUrl && (
                                         <a

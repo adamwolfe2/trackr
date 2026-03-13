@@ -45,7 +45,6 @@ export async function GET(req: Request) {
         const owners = await db.query.workspaceMembers.findMany({
             where: eq(workspaceMembers.role, 'owner'),
             with: { workspace: true },
-            limit: 500, // Safety cap — prevents OOM on large deployments
         });
 
         const sevenDaysAgo = new Date();

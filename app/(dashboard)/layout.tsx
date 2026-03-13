@@ -12,6 +12,7 @@ import { eq, and, gte, ne, count, inArray } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
 import type { Metadata } from "next"
 import { getPlanLimits } from "@/lib/config/subscriptions"
+import { unstable_cache } from "next/cache"
 
 // Dashboard routes are authenticated — prevent search engines from indexing them
 export const metadata: Metadata = {
@@ -53,30 +54,56 @@ export default async function DashboardLayout({
         redirect("/onboarding");
     }
 
-    const subscription = await db.query.subscriptions.findFirst({
-        where: eq(subscriptions.workspaceId, workspace.id),
-    });
-    const plan = getPlanLimits(subscription);
+    // Cache subscription + research count lookups (revalidates every 60s or on mutation)
+    const getLayoutData = unstable_cache(
+        async (workspaceId: string) => {
+            const sub = await db.query.subscriptions.findFirst({
+                where: eq(subscriptions.workspaceId, workspaceId),
+            });
+            const plan = getPlanLimits(sub);
+            let jobsThisMonth = 0;
+            if (plan.limits.research !== Infinity) {
+                const startOfMonth = new Date();
+                startOfMonth.setDate(1);
+                startOfMonth.setHours(0, 0, 0, 0);
+                const workspaceToolSubq = db.select({ id: tools.id }).from(tools).where(eq(tools.workspaceId, workspaceId));
+                const [row] = await db.select({ value: count() }).from(researchJobs).where(
+                    and(
+                        inArray(researchJobs.toolId, workspaceToolSubq),
+                        gte(researchJobs.triggeredAt, startOfMonth),
+                        ne(researchJobs.status, "failed"),
+                    )
+                );
+                jobsThisMonth = Number(row?.value ?? 0);
+            }
+            return {
+                subscription: sub ? {
+                    creditBalance: sub.creditBalance,
+                    currentPeriodEnd: sub.currentPeriodEnd?.toISOString() ?? null,
+                    status: sub.status,
+                    planId: sub.planId,
+                    workspaceId: sub.workspaceId,
+                    stripeCustomerId: sub.stripeCustomerId,
+                    stripeSubscriptionId: sub.stripeSubscriptionId,
+                    autoTopUpEnabled: sub.autoTopUpEnabled,
+                    autoTopUpPack: sub.autoTopUpPack,
+                } : null,
+                jobsThisMonth,
+            };
+        },
+        [`layout-data`],
+        { revalidate: 60, tags: [`layout-${workspace.id}`] },
+    );
+
+    const { subscription: cachedSub, jobsThisMonth } = await getLayoutData(workspace.id);
+    const subscription = cachedSub ? { ...cachedSub, currentPeriodEnd: cachedSub.currentPeriodEnd ? new Date(cachedSub.currentPeriodEnd) : null } : null;
+    const plan = getPlanLimits(subscription as Parameters<typeof getPlanLimits>[0]);
     const creditBalance = subscription?.creditBalance ?? 0;
     const trialEnd = subscription?.currentPeriodEnd ?? null;
     const subStatus = subscription?.status;
 
-    // Compute actual runs remaining this month (plan allowance + extra credits)
-    // Only do the DB count if the plan has a finite monthly research limit
     let runsRemaining: number | null = null;
     if (plan.limits.research !== Infinity) {
-        const startOfMonth = new Date();
-        startOfMonth.setDate(1);
-        startOfMonth.setHours(0, 0, 0, 0);
-        const workspaceToolSubq = db.select({ id: tools.id }).from(tools).where(eq(tools.workspaceId, workspace.id));
-        const [row] = await db.select({ value: count() }).from(researchJobs).where(
-            and(
-                inArray(researchJobs.toolId, workspaceToolSubq),
-                gte(researchJobs.triggeredAt, startOfMonth),
-                ne(researchJobs.status, "failed"),
-            )
-        );
-        const jobsThisMonth = Number(row?.value ?? 0);
         runsRemaining = Math.max(0, plan.limits.research - jobsThisMonth) + creditBalance;
     }
 
