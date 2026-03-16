@@ -164,12 +164,12 @@ function getToolDomain(name: string, hint?: string | null): string {
     return `${key.replace(/\s+/g, "").replace(/[^a-z0-9.]/g, "")}.com`;
 }
 
-/** Use Google Favicon for small icons (reliable, always square), Brandfetch for larger */
+/** Use Google Favicon for small icons (reliable, always square), Clearbit for larger logos */
 function faviconUrl(domain: string): string {
     return `https://www.google.com/s2/favicons?sz=64&domain=${domain}`;
 }
-function brandfetchUrl(domain: string): string {
-    return `https://cdn.brandfetch.io/${domain}/logo`;
+function clearbitLogoUrl(domain: string): string {
+    return `https://logo.clearbit.com/${domain}`;
 }
 
 function inferAIRole(name: string, existing: string | null): "AI-native" | "AI-assisted" | "Non-AI core infra" {
@@ -418,7 +418,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                 {companyDomain && (
                                     <div className="w-14 h-14 flex-shrink-0 overflow-hidden flex items-center justify-center">
                                         <LogoImage
-                                            src={brandfetchUrl(companyDomain)}
+                                            src={clearbitLogoUrl(companyDomain)}
                                             fallbackSrc={faviconUrl(companyDomain)}
                                             alt={submission.companyName}
                                             fallbackChar={submission.companyName}
@@ -690,7 +690,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                                 <div className="flex items-start gap-3">
                                                     <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 overflow-hidden mt-0.5 border border-neutral-100">
                                                         <LogoImage
-                                                            src={brandfetchUrl(domain)}
+                                                            src={clearbitLogoUrl(domain)}
                                                             fallbackSrc={faviconUrl(domain)}
                                                             alt={t.name} fallbackChar={t.name}
                                                             className="w-6 h-6 object-contain"
