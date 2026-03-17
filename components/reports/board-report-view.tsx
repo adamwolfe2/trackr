@@ -361,12 +361,12 @@ export function BoardReportView({ report, isPublic }: BoardReportViewProps) {
                         Tool Portfolio
                     </h2>
                 </div>
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
                     <div>
                         <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">
                             Total
                         </span>
-                        <span className="font-mono text-2xl font-bold">
+                        <span className="font-mono text-xl sm:text-2xl font-bold">
                             {data.totalTools}
                         </span>
                     </div>
@@ -374,7 +374,7 @@ export function BoardReportView({ report, isPublic }: BoardReportViewProps) {
                         <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">
                             New This Period
                         </span>
-                        <span className="font-mono text-2xl font-bold">
+                        <span className="font-mono text-xl sm:text-2xl font-bold">
                             {data.newToolsThisPeriod}
                         </span>
                     </div>
@@ -382,7 +382,7 @@ export function BoardReportView({ report, isPublic }: BoardReportViewProps) {
                         <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block">
                             Research Rate
                         </span>
-                        <span className="font-mono text-2xl font-bold">
+                        <span className="font-mono text-xl sm:text-2xl font-bold">
                             {data.researchSuccessRate}%
                         </span>
                     </div>
@@ -456,25 +456,25 @@ export function BoardReportView({ report, isPublic }: BoardReportViewProps) {
                 <span className="font-mono text-xs text-neutral-500 block mb-6">
                     {data.aiNativenessLabel}
                 </span>
-                <div className="grid grid-cols-3 gap-4">
-                    <div className="border border-black p-3 text-center">
-                        <span className="font-mono text-2xl font-bold block">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                    <div className="border border-black p-2 sm:p-3 text-center">
+                        <span className="font-mono text-xl sm:text-2xl font-bold block">
                             {data.aiNativeCount}
                         </span>
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+                        <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-neutral-500">
                             AI-Native
                         </span>
                     </div>
-                    <div className="border border-black p-3 text-center">
-                        <span className="font-mono text-2xl font-bold block">
+                    <div className="border border-black p-2 sm:p-3 text-center">
+                        <span className="font-mono text-xl sm:text-2xl font-bold block">
                             {data.aiEnabledCount}
                         </span>
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">
+                        <span className="font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-neutral-500">
                             AI-Enabled
                         </span>
                     </div>
-                    <div className="border border-black p-3 text-center">
-                        <span className="font-mono text-2xl font-bold block">
+                    <div className="border border-black p-2 sm:p-3 text-center">
+                        <span className="font-mono text-xl sm:text-2xl font-bold block">
                             {data.traditionalCount}
                         </span>
                         <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-500">

@@ -128,7 +128,7 @@ export default async function DashboardLayout({
                     <TrialExpiryBanner trialEnd={trialEnd} status={subStatus} planName={plan.name} />
                     <CreditUsageBanner workspaceId={workspace.id} />
                 </div>
-                <main className="w-full h-full overflow-y-auto bg-[#F3F3EF]">
+                <main className="w-full h-full overflow-y-auto overflow-x-hidden bg-[#F3F3EF]">
                     <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
                         {children}
                     </div>

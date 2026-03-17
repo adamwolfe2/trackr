@@ -144,8 +144,9 @@ export function CalendarClient({
                 {/* Day headers */}
                 <div className="grid grid-cols-7 border-b border-neutral-200">
                     {DAY_HEADERS.map((d) => (
-                        <div key={d} className="py-2 text-center font-mono text-[10px] uppercase tracking-widest text-neutral-400">
-                            {d}
+                        <div key={d} className="py-1.5 sm:py-2 text-center font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-neutral-400">
+                            <span className="sm:hidden">{d.charAt(0)}</span>
+                            <span className="hidden sm:inline">{d}</span>
                         </div>
                     ))}
                 </div>
@@ -163,7 +164,7 @@ export function CalendarClient({
                                 onClick={() => day && setSelectedDay(day === selectedDay ? null : day)}
                                 disabled={!day}
                                 className={`
-                                    relative h-20 border-b border-r border-neutral-100 p-1.5 text-left
+                                    relative h-12 sm:h-20 border-b border-r border-neutral-100 p-1 sm:p-1.5 text-left
                                     ${!day ? "bg-neutral-50" : "hover:bg-neutral-50"}
                                     ${isSelected ? "bg-neutral-100 ring-1 ring-black ring-inset" : ""}
                                     transition-colors

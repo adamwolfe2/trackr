@@ -211,6 +211,7 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
     const [activeId, setActiveId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [newlyActiveIds, setNewlyActiveIds] = useState<Set<string>>(new Set());
+    const [mobileTab, setMobileTab] = useState<string>("backlog");
 
     // Keep a ref so the polling interval always sees the latest tool list without re-mounting
     const toolsRef = useRef(tools);
@@ -409,9 +410,31 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                     </div>
                 )}
 
-                {/* Kanban Columns — horizontal scroll on mobile, grid on lg */}
-                <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:pb-0 snap-x snap-mandatory">
+                {/* Mobile tab selector — visible only on small screens */}
+                <div className="flex sm:hidden border border-black">
                     {COLUMNS.map((col) => {
+                        const colTools = filteredTools.filter(t => (col.statuses as readonly string[]).includes(t.status));
+                        return (
+                            <button
+                                key={col.id}
+                                onClick={() => setMobileTab(col.id)}
+                                className={`flex-1 py-2 font-mono text-[10px] uppercase tracking-widest transition-colors ${
+                                    mobileTab === col.id
+                                        ? "bg-black text-white"
+                                        : "bg-white text-neutral-500 hover:bg-neutral-100"
+                                }`}
+                            >
+                                {col.label}
+                                <span className="ml-1 text-[9px]">{colTools.length}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Mobile: single column full-width, Desktop: 4-column grid */}
+                {/* Mobile view — one tab at a time */}
+                <div className="sm:hidden">
+                    {COLUMNS.filter(col => col.id === mobileTab).map((col) => {
                         const colTools = filteredTools.filter(t => (col.statuses as readonly string[]).includes(t.status));
                         const backlogAction = col.id === "backlog" && colTools.length > 0 ? (
                             <button
@@ -423,7 +446,7 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                             </button>
                         ) : undefined;
                         return (
-                            <div key={col.id} className="flex-shrink-0 w-[240px] sm:w-[280px] lg:w-auto min-w-0 flex flex-col snap-start">
+                            <div key={col.id} className="w-full">
                                 <DroppableColumn col={col} toolCount={colTools.length} headerAction={backlogAction}>
                                     {colTools.map((tool) => (
                                         <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} isNew={newlyActiveIds.has(tool.id)} />
@@ -436,8 +459,6 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                                                     Paste any tool URL. Research agents analyze it in under 2 minutes.
                                                 </p>
                                             </div>
-
-                                            {/* Sample report preview */}
                                             <div className="border border-black bg-white p-4 space-y-3">
                                                 <div className="flex items-center justify-between">
                                                     <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Sample Report</span>
@@ -463,7 +484,76 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                                                     ))}
                                                 </div>
                                             </div>
+                                            <Link href="/submit" className="inline-block border border-black px-5 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
+                                                Submit Tool →
+                                            </Link>
+                                        </div>
+                                    ) : colTools.length === 0 ? (
+                                        <div className="border border-dashed border-neutral-300 p-4 text-center text-[10px] font-mono text-neutral-400">
+                                            {col.id === "researching" ? "No tools being analyzed right now" :
+                                             col.id === "active" ? "No completed reports yet" :
+                                             col.id === "archived" ? "No archived tools" :
+                                             "Empty"}
+                                        </div>
+                                    ) : null}
+                                </DroppableColumn>
+                            </div>
+                        );
+                    })}
+                </div>
 
+                {/* Desktop view — 4-column grid */}
+                <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {COLUMNS.map((col) => {
+                        const colTools = filteredTools.filter(t => (col.statuses as readonly string[]).includes(t.status));
+                        const backlogAction = col.id === "backlog" && colTools.length > 0 ? (
+                            <button
+                                onClick={handleResearchAll}
+                                disabled={researchingAll}
+                                className="text-[9px] font-mono uppercase tracking-widest border border-black px-1.5 py-0.5 hover:bg-black hover:text-white transition-colors disabled:opacity-40"
+                            >
+                                {researchingAll ? <Loader2 className="w-2.5 h-2.5 animate-spin inline" /> : "Research All"}
+                            </button>
+                        ) : undefined;
+                        return (
+                            <div key={col.id} className="min-w-0 flex flex-col">
+                                <DroppableColumn col={col} toolCount={colTools.length} headerAction={backlogAction}>
+                                    {colTools.map((tool) => (
+                                        <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} isNew={newlyActiveIds.has(tool.id)} />
+                                    ))}
+                                    {colTools.length === 0 && col.id === "backlog" && isEmpty ? (
+                                        <div className="border border-dashed border-neutral-300 p-5 space-y-4">
+                                            <div>
+                                                <p className="font-serif text-xl">Submit your first tool.</p>
+                                                <p className="font-mono text-xs text-neutral-500 mt-1 leading-relaxed">
+                                                    Paste any tool URL. Research agents analyze it in under 2 minutes.
+                                                </p>
+                                            </div>
+                                            <div className="border border-black bg-white p-4 space-y-3">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Sample Report</span>
+                                                    <span className="bg-black text-white font-mono text-xs px-2 py-0.5">8.4 / 10</span>
+                                                </div>
+                                                <div className="font-sans text-sm font-semibold">Notion</div>
+                                                <div className="space-y-2">
+                                                    {[
+                                                        { label: "Value", score: 81 },
+                                                        { label: "Support", score: 74 },
+                                                        { label: "Integration", score: 88 },
+                                                        { label: "Security", score: 80 },
+                                                    ].map(({ label, score }) => (
+                                                        <div key={label} className="space-y-0.5">
+                                                            <div className="flex items-center justify-between">
+                                                                <span className="font-mono text-[10px] text-neutral-500">{label}</span>
+                                                                <span className="font-mono text-[10px] text-neutral-500">{(score / 10).toFixed(1)}</span>
+                                                            </div>
+                                                            <div className="bg-neutral-200 h-1.5 w-full">
+                                                                <div className="bg-black h-1.5" style={{ width: `${score}%` }} />
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
                                             <Link href="/submit" className="inline-block border border-black px-5 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
                                                 Submit Tool →
                                             </Link>

@@ -100,13 +100,13 @@ export default async function ToolsPage() {
                     <h1 className="font-serif text-2xl sm:text-3xl font-normal">AI Tools Portfolio</h1>
                     <p className="font-mono text-sm text-neutral-500 mt-1">Your team&apos;s AI tool intelligence at a glance.</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                     <BulkResearchButton />
                     {toolsList.length > 0 && (
                         <a
                             href="/api/export/tools"
                             download="trackr-stack.csv"
-                            className="flex items-center gap-2 border border-black px-4 py-2 font-mono text-sm bg-white hover:bg-neutral-100 whitespace-nowrap"
+                            className="hidden sm:flex items-center gap-2 border border-black px-4 py-2 font-mono text-sm bg-white hover:bg-neutral-100 whitespace-nowrap"
                         >
                             Export CSV
                         </a>

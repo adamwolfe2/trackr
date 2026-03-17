@@ -59,6 +59,7 @@ export function ProcurementClient({
     const [selectedRequest, setSelectedRequest] =
         useState<ProcurementRequestData | null>(null);
     const [isPending, startTransition] = useTransition();
+    const [mobileTab, setMobileTab] = useState<KanbanStatus>("pending");
 
     // Group requests by status
     const grouped = useMemo(() => {
@@ -79,11 +80,11 @@ export function ProcurementClient({
     }, [requests]);
 
     return (
-        <div className="max-w-full mx-auto px-6 py-8">
+        <div className="max-w-full mx-auto">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
                 <div>
-                    <h1 className="font-serif text-3xl font-normal">Procurement</h1>
+                    <h1 className="font-serif text-2xl sm:text-3xl font-normal">Procurement</h1>
                     <p className="font-mono text-xs text-neutral-500 mt-1">
                         Request, research, and approve new tools
                     </p>
@@ -97,8 +98,52 @@ export function ProcurementClient({
                 </button>
             </div>
 
-            {/* Kanban Board */}
-            <div className="flex gap-4 overflow-x-auto pb-4">
+            {/* Mobile tab selector */}
+            <div className="flex sm:hidden border border-black mb-4">
+                {COLUMNS.map((col) => (
+                    <button
+                        key={col.key}
+                        onClick={() => setMobileTab(col.key)}
+                        className={`flex-1 py-2 font-mono text-[9px] uppercase tracking-widest transition-colors ${
+                            mobileTab === col.key
+                                ? "bg-black text-white"
+                                : "bg-white text-neutral-500 hover:bg-neutral-100"
+                        }`}
+                    >
+                        {col.label}
+                        <span className="ml-1">{grouped[col.key].length}</span>
+                    </button>
+                ))}
+            </div>
+
+            {/* Mobile: single column */}
+            <div className="sm:hidden">
+                {COLUMNS.filter(col => col.key === mobileTab).map((col) => {
+                    const items = grouped[col.key];
+                    return (
+                        <div key={col.key}>
+                            <div className="flex items-center justify-between mb-3 border border-black bg-white px-3 py-2">
+                                <span className="font-mono text-xs uppercase tracking-widest">{col.label}</span>
+                                <span className="font-mono text-[10px] font-bold border border-black w-5 h-5 flex items-center justify-center">{items.length}</span>
+                            </div>
+                            <div className="space-y-2">
+                                {items.length === 0 ? (
+                                    <div className="border border-dashed border-neutral-300 p-4 text-center">
+                                        <span className="font-mono text-[10px] text-neutral-400">No requests</span>
+                                    </div>
+                                ) : (
+                                    items.map((req) => (
+                                        <RequestCard key={req.id} request={req} onClick={() => setSelectedRequest(req)} />
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            {/* Desktop: horizontal kanban */}
+            <div className="hidden sm:flex gap-4 overflow-x-auto pb-4">
                 {COLUMNS.map((col) => {
                     const items = grouped[col.key];
                     return (
@@ -106,7 +151,6 @@ export function ProcurementClient({
                             key={col.key}
                             className="flex-shrink-0 w-[260px] min-h-[400px]"
                         >
-                            {/* Column Header */}
                             <div className="flex items-center justify-between mb-3 border border-black bg-white px-3 py-2">
                                 <span className="font-mono text-xs uppercase tracking-widest">
                                     {col.label}
@@ -115,8 +159,6 @@ export function ProcurementClient({
                                     {items.length}
                                 </span>
                             </div>
-
-                            {/* Cards */}
                             <div className="space-y-2">
                                 {items.length === 0 ? (
                                     <div className="border border-dashed border-neutral-300 p-4 text-center">
