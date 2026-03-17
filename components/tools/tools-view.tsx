@@ -26,7 +26,7 @@ interface Stats {
 }
 
 export function ToolsView({ tools, stats, isEmpty, canSchedule = false, scoreDeltaMap = {} }: { tools: Tool[]; stats: Stats; isEmpty: boolean; canSchedule?: boolean; scoreDeltaMap?: Record<string, number> }) {
-    const [view, setView] = useState<"kanban" | "grid">("kanban");
+    const [view, setView] = useState<"kanban" | "grid">("grid");
 
     return (
         <div className="space-y-4">
