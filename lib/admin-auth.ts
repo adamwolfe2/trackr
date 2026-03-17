@@ -12,6 +12,7 @@ import { currentUser } from "@clerk/nextjs/server";
 
 /** Comma-separated list of admin emails (env var). */
 const ADMIN_EMAILS = (process.env.ADMIN_EMAILS ?? "")
+    .replace(/\\n/g, "")
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
