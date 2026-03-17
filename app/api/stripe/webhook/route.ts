@@ -492,8 +492,8 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     const piId = typeof piRef === "string" ? piRef : piRef.id;
 
     // Find the invoice associated with this payment intent
-    const invoices = await stripe.invoices.list({ payment_intent: piId, limit: 1 });
-    const invoiceId = invoices.data[0]?.id;
+    const pi = await stripe.paymentIntents.retrieve(piId) as { invoice?: string | { id: string } | null };
+    const invoiceId = typeof pi.invoice === "string" ? pi.invoice : pi.invoice?.id;
     if (!invoiceId) return;
 
     // Find commissions tied to this invoice
