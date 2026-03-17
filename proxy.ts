@@ -58,6 +58,7 @@ const isPublicRoute = createRouteMatcher([
     "/apple-icon.png",
     "/advertise",
     "/advertise/(.*)",
+    "/admin(.*)",
     "/apply(.*)",
     "/audit(.*)",
     "/legal(.*)",
