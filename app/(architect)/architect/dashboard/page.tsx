@@ -4,7 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { architects, architectReferrals, architectCommissions, workspaces } from "@/lib/db/schema";
-import { eq, desc, sum, count, and } from "drizzle-orm";
+import { eq, desc, sum, and } from "drizzle-orm";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { CopyLinkButton } from "@/components/referrals/copy-link-button";

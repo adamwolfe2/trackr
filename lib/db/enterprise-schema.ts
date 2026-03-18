@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, timestamp, boolean, jsonb, integer, numeric, index, uniqueIndex } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
-import { workspaces, workspaceMembers, tools, softwareSpend } from './schema';
+import { workspaces, tools, softwareSpend } from './schema';
 
 // ─── Stack Health Scores ───────────────────────────────────────────────────────
 // Workspace-level health score snapshots (Feature 2)

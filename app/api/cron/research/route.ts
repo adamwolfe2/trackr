@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db";
 import { tools, researchJobs } from "@/lib/db/schema";
-import { eq, and, lte, ne, isNotNull, lt, inArray } from "drizzle-orm";
+import { and, lte, ne, isNotNull, lt, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { after } from "next/server";
 import { performDeepResearch } from "@/lib/actions/research";

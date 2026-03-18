@@ -8,7 +8,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { auditSubmissions } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 export const metadata: Metadata = {
     title: "AI Readiness Audit — Trackr",

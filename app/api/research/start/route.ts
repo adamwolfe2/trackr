@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { after } from "next/server";
 import { db } from "@/lib/db";
-import { tools, subscriptions } from "@/lib/db/schema";
+import { tools } from "@/lib/db/schema";
 import { eq, and, ne } from "drizzle-orm";
 import { getWorkspaceId } from "@/lib/db/queries";
 import { performDeepResearch } from "@/lib/actions/research";

@@ -4,7 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { workspaceMembers, workspaces, tools, reports, softwareSpend, painPoints } from "@/lib/db/schema";
-import { eq, desc, inArray, isNotNull, and } from "drizzle-orm";
+import { eq, desc, inArray, and } from "drizzle-orm";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
 import type { Metadata } from "next";
 import { PrintButton } from "./print-button";

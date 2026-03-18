@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { workspaces, tools, reports } from "@/lib/db/schema";
-import { SHOWCASE_TOOLS, type ShowcaseTool } from "@/data/showcase-seed";
+import { SHOWCASE_TOOLS } from "@/data/showcase-seed";
 import { eq } from "drizzle-orm";
 import { timingSafeEqual } from "crypto";
 

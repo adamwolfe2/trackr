@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { riskAssessments, tools, workspaceMembers } from "@/lib/db/schema";
-import { eq, and, desc, inArray, sql } from "drizzle-orm";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 
 async function requireWorkspace() {

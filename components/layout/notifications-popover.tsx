@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Bell, CheckCircle2, XCircle, CalendarClock, Sparkles, Gift, CreditCard, CheckCheck, AlertCircle } from "lucide-react";
-import { getNotifications, markNotificationsRead, type Notification, type NotificationType } from "@/lib/actions/notifications";
+import { getNotifications, markNotificationsRead, type Notification } from "@/lib/actions/notifications";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 

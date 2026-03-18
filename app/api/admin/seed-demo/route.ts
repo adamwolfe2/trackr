@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { workspaces, workspaceMembers, tools, reports, researchJobs } from "@/lib/db/schema";
 import { DEMO_TOOLS } from "@/data/demo-workspace-seed";
-import { eq } from "drizzle-orm";
+
 import { timingSafeEqual } from "crypto";
 
 function checkAuth(req: NextRequest): boolean {
