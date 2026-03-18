@@ -8,6 +8,7 @@ import { previewTool } from "@/lib/actions/preview";
 import { submitTool } from "@/lib/actions/tools";
 import { UpgradeModal } from "@/components/common/upgrade-modal";
 import { toast } from "sonner";
+import { getUserFriendlyError } from "@/lib/utils/error-messages";
 
 function SubmitButton({ pending }: { pending: boolean }) {
     return (
@@ -41,10 +42,22 @@ export function AddToolWizard({ creditBalance = 0, workspaceId }: AddToolWizardP
     const [description, setDescription] = useState("");
     const [previewFailed, setPreviewFailed] = useState(false);
     const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
+
+        // Validate tool name
+        const name = (formData.get("name") as string)?.trim();
+        const newErrors: Record<string, string> = {};
+        if (!name) newErrors.name = "Tool name is required";
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+        setErrors({});
+
         startSubmit(async () => {
             try {
                 const result = await submitTool(formData);
@@ -64,7 +77,7 @@ export function AddToolWizard({ creditBalance = 0, workspaceId }: AddToolWizardP
                 const msg = err instanceof Error ? err.message : "";
                 // Next.js obfuscates real server errors in production with a generic message
                 const isGenericNextError = msg.includes("Server Components render") || msg.includes("omitted in production");
-                toast.error(isGenericNextError ? "Something went wrong submitting your tool. Please try again." : (msg || "Failed to submit tool. Please try again."));
+                toast.error(isGenericNextError ? "Something went wrong submitting your tool. Please try again." : (getUserFriendlyError(err) || "Failed to submit tool. Please try again."));
             }
         });
     };
@@ -219,8 +232,10 @@ export function AddToolWizard({ creditBalance = 0, workspaceId }: AddToolWizardP
                                     required
                                     minLength={1}
                                     maxLength={200}
-                                    className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none"
+                                    onChange={() => errors.name && setErrors((prev) => { const { name: _, ...rest } = prev; return rest; })}
+                                    className={`w-full border px-4 py-3 font-mono text-sm bg-white focus:outline-none ${errors.name ? "border-red-500" : "border-black"}`}
                                 />
+                                {errors.name && <p className="text-red-500 font-mono text-xs mt-1">{errors.name}</p>}
                             </div>
 
                             {/* Description */}

@@ -15,6 +15,7 @@ export default function ApplyRolePage() {
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
     if (!role) {
         return (
@@ -46,12 +47,36 @@ export default function ApplyRolePage() {
         );
     }
 
+    function clearFieldError(field: string) {
+        if (fieldErrors[field]) {
+            setFieldErrors((prev) => { const { [field]: _, ...rest } = prev; return rest; });
+        }
+    }
+
     async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         setError(null);
-        setSubmitting(true);
 
         const form = new FormData(e.currentTarget);
+        const firstName = (form.get("firstName") as string)?.trim();
+        const lastName = (form.get("lastName") as string)?.trim();
+        const email = (form.get("email") as string)?.trim();
+
+        const newErrors: Record<string, string> = {};
+        if (!firstName) newErrors.firstName = "First name is required";
+        if (!lastName) newErrors.lastName = "Last name is required";
+        if (!email) {
+            newErrors.email = "Email is required";
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            newErrors.email = "Please enter a valid email address";
+        }
+        if (Object.keys(newErrors).length > 0) {
+            setFieldErrors(newErrors);
+            return;
+        }
+        setFieldErrors({});
+        setSubmitting(true);
+
         const payload = {
             firstName: form.get("firstName") as string,
             lastName: form.get("lastName") as string,
@@ -111,8 +136,10 @@ export default function ApplyRolePage() {
                                 name="firstName"
                                 type="text"
                                 required
-                                className="w-full border border-black px-3 py-2 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black"
+                                onChange={() => clearFieldError("firstName")}
+                                className={`w-full border px-3 py-2 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.firstName ? "border-red-500" : "border-black"}`}
                             />
+                            {fieldErrors.firstName && <p className="text-red-500 font-mono text-xs mt-1">{fieldErrors.firstName}</p>}
                         </div>
                         <div>
                             <label htmlFor="lastName" className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
@@ -123,8 +150,10 @@ export default function ApplyRolePage() {
                                 name="lastName"
                                 type="text"
                                 required
-                                className="w-full border border-black px-3 py-2 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black"
+                                onChange={() => clearFieldError("lastName")}
+                                className={`w-full border px-3 py-2 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.lastName ? "border-red-500" : "border-black"}`}
                             />
+                            {fieldErrors.lastName && <p className="text-red-500 font-mono text-xs mt-1">{fieldErrors.lastName}</p>}
                         </div>
                     </div>
 
@@ -137,8 +166,10 @@ export default function ApplyRolePage() {
                             name="email"
                             type="email"
                             required
-                            className="w-full border border-black px-3 py-2 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black"
+                            onChange={() => clearFieldError("email")}
+                            className={`w-full border px-3 py-2 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black ${fieldErrors.email ? "border-red-500" : "border-black"}`}
                         />
+                        {fieldErrors.email && <p className="text-red-500 font-mono text-xs mt-1">{fieldErrors.email}</p>}
                     </div>
 
                     <div className="grid sm:grid-cols-2 gap-6">

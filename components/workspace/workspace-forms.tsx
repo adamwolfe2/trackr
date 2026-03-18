@@ -85,9 +85,17 @@ export function CancelInvitationButton({ invitationId }: { invitationId: string 
 }
 
 export function UpdateWorkspaceNameForm({ defaultName, disabled }: { defaultName: string; disabled: boolean }) {
+    const [nameError, setNameError] = useState<string | null>(null);
+
     return (
         <form
             action={async (fd: FormData) => {
+                const name = (fd.get("name") as string)?.trim();
+                if (!name) {
+                    setNameError("Workspace name is required");
+                    return;
+                }
+                setNameError(null);
                 try {
                     await updateWorkspaceName(fd);
                     toast.success("Workspace name updated");
@@ -106,8 +114,10 @@ export function UpdateWorkspaceNameForm({ defaultName, disabled }: { defaultName
                     disabled={disabled}
                     required
                     maxLength={200}
-                    className="w-full border border-black px-4 py-2 font-mono text-sm bg-white focus:outline-none disabled:opacity-40"
+                    onChange={() => nameError && setNameError(null)}
+                    className={`w-full border px-4 py-2 font-mono text-sm bg-white focus:outline-none disabled:opacity-40 ${nameError ? "border-red-500" : "border-black"}`}
                 />
+                {nameError && <p className="text-red-500 font-mono text-xs mt-1">{nameError}</p>}
             </div>
             {!disabled && (
                 <SubmitButton className="border border-black px-5 py-2 font-mono text-xs uppercase tracking-widest bg-white hover:bg-black hover:text-white">
