@@ -464,8 +464,8 @@ export async function sendStackHealthDigest(to: string, data: StackHealthDigestD
         </tr>`;
     }).join("");
 
-    const streakLine = data.currentStreak > 1
-        ? `<p style="font-size:12px;color:#555;margin:0 0 16px;">Week ${data.currentStreak} streak — keep it going.</p>`
+    const streakLine = data.currentStreak >= 3
+        ? `<p style="font-size:12px;color:#555;margin:0 0 16px;">You're on a ${data.currentStreak}-week research streak. Keep it going!</p>`
         : "";
 
     const recommendationBlock = data.recommendation
@@ -517,7 +517,7 @@ function buildStackHealthDigestText(data: StackHealthDigestData, spendDeltaStr: 
         `Weekly Stack Health — ${data.workspaceName}`,
         "",
     ];
-    if (data.currentStreak > 1) lines.push(`Week ${data.currentStreak} streak — keep it going.`, "");
+    if (data.currentStreak >= 3) lines.push(`You're on a ${data.currentStreak}-week research streak. Keep it going!`, "");
     lines.push(
         `Monthly Spend: $${Math.round(data.totalMonthlySpend)} (${spendDeltaStr} vs last week)`,
         `AI Nativeness: ${data.aiScore}/100`,
