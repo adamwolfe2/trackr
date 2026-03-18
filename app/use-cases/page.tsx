@@ -51,8 +51,8 @@ const USE_CASES = [
         headline: "SaaS Stack Audit",
         description: "Surface duplicate tools, underutilized subscriptions, and redundant spend across your entire stack. Build the case for consolidation with data.",
         whoFor: "Finance Teams",
-        link: "/for/finance-teams",
-        linkLabel: "See Trackr for Finance Teams",
+        link: "/for/procurement",
+        linkLabel: "See Trackr for Procurement",
     },
     {
         number: "04",
@@ -69,8 +69,8 @@ const USE_CASES = [
         headline: "Post-Merger Technology Integration",
         description: "Two companies, two overlapping stacks. Evaluate where tooling duplicates and where there are genuine gaps — before you make any consolidation decisions.",
         whoFor: "IT Managers",
-        link: "/for/it-managers",
-        linkLabel: "See Trackr for IT Managers",
+        link: "/for/ops-teams",
+        linkLabel: "See Trackr for Ops Teams",
     },
     {
         number: "06",
@@ -96,8 +96,8 @@ const USE_CASES = [
         headline: "Annual Budget Planning",
         description: "Build your SaaS budget with real data. See verified pricing tiers, feature gaps, and renewal forecasts before you finalize the number you present to the board.",
         whoFor: "Finance Teams",
-        link: "/for/finance-teams",
-        linkLabel: "See Trackr for Finance Teams",
+        link: "/for/procurement",
+        linkLabel: "See Trackr for Procurement",
     },
 ];
 
@@ -128,12 +128,12 @@ const jsonLd = {
             itemListElement: [
                 { "@type": "ListItem", position: 1, name: "Vendor Evaluation Before Renewal", url: "https://trytrackr.com/for/revops" },
                 { "@type": "ListItem", position: 2, name: "New AI Tool Discovery", url: "https://trytrackr.com/for/chiefs-of-staff" },
-                { "@type": "ListItem", position: 3, name: "SaaS Stack Audit", url: "https://trytrackr.com/for/finance-teams" },
+                { "@type": "ListItem", position: 3, name: "SaaS Stack Audit", url: "https://trytrackr.com/for/procurement" },
                 { "@type": "ListItem", position: 4, name: "Competitive Intelligence for Sales", url: "https://trytrackr.com/for/revops" },
-                { "@type": "ListItem", position: 5, name: "Post-Merger Technology Integration", url: "https://trytrackr.com/for/it-managers" },
+                { "@type": "ListItem", position: 5, name: "Post-Merger Technology Integration", url: "https://trytrackr.com/for/ops-teams" },
                 { "@type": "ListItem", position: 6, name: "AI Implementation Roadmap", url: "https://trytrackr.com/for/founders" },
                 { "@type": "ListItem", position: 7, name: "Tool Research Without Demos", url: "https://trytrackr.com/research" },
-                { "@type": "ListItem", position: 8, name: "Annual Budget Planning", url: "https://trytrackr.com/for/finance-teams" },
+                { "@type": "ListItem", position: 8, name: "Annual Budget Planning", url: "https://trytrackr.com/for/procurement" },
             ],
         },
         {

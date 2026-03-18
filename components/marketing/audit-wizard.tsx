@@ -438,13 +438,10 @@ function CalEmbed() {
     useEffect(() => {
         if (typeof window === "undefined") return;
         // Prevent double-init across React re-renders
-        // @ts-expect-error — Cal.com custom window property
         if (window.__calTrackrInitialized) return;
-        // @ts-expect-error — Cal.com custom window property
         window.__calTrackrInitialized = true;
 
         // Set up Cal queue if not already present
-        // @ts-expect-error — Cal.com embed API
         if (!window.Cal) {
             /* eslint-disable */
             (function (C: any, A: string, L: string) {
@@ -475,8 +472,7 @@ function CalEmbed() {
             /* eslint-enable */
         }
 
-        // @ts-expect-error — Cal.com embed API
-        const Cal = window.Cal;
+        const Cal = window.Cal!;
         Cal("init", "trackr", { origin: "https://app.cal.com" });
         Cal.ns.trackr("inline", {
             elementOrSelector: "#my-cal-inline-trackr",

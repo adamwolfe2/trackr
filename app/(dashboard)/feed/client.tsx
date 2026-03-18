@@ -408,7 +408,7 @@ function ChannelSettingsPanel({
                     >
                         <PlusCircle className="h-3 w-3" /> Add Channel
                     </button>
-                    <button onClick={onClose} className="text-neutral-400 hover:text-black">
+                    <button onClick={onClose} className="text-neutral-400 hover:text-black" aria-label="Close">
                         <X className="h-4 w-4" />
                     </button>
                 </div>

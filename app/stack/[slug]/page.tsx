@@ -64,7 +64,7 @@ export default async function PublicStackPage({ params }: Props) {
                         Powered by
                     </p>
                     <Link
-                        href="https://trytrackr.com"
+                        href="/"
                         className="font-serif text-xl hover:underline"
                     >
                         Trackr
