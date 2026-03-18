@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { AlertTriangle } from "lucide-react";
 import { AddToolWizard } from "@/components/tools/add-tool-wizard";
 import { db } from "@/lib/db";
 import { subscriptions, workspaceMembers } from "@/lib/db/schema";
@@ -35,6 +37,17 @@ export default async function SubmitPage() {
 
     return (
         <div className="max-w-2xl mx-auto animate-fade-in-up py-10">
+            {creditBalance > 0 && creditBalance <= 2 && (
+                <div className="border border-amber-600 bg-amber-50 px-4 py-3 font-mono text-xs mb-6 flex items-start gap-3">
+                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-600" />
+                    <p className="text-amber-800 leading-relaxed">
+                        You have {creditBalance} research credit{creditBalance === 1 ? "" : "s"} remaining this month.{" "}
+                        <Link href="/settings/billing" className="underline font-semibold hover:text-amber-950">
+                            Manage billing →
+                        </Link>
+                    </p>
+                </div>
+            )}
             <AddToolWizard creditBalance={creditBalance} workspaceId={workspaceId} />
         </div>
     );

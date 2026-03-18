@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PlusCircle, Download } from "lucide-react";
+import { PlusCircle, Download, AlertTriangle } from "lucide-react";
 import { BulkResearchButton } from "@/components/research/bulk-research-modal";
 import { db } from "@/lib/db";
 import { tools, reports, workspaceMembers, softwareSpend, subscriptions } from "@/lib/db/schema";
@@ -93,8 +93,23 @@ export default async function ToolsPage() {
         }
     }
 
+    const toolLimit = plan.limits.tools;
+    const toolCount = toolsList.length;
+    const showToolLimitWarning = typeof toolLimit === "number" && isFinite(toolLimit) && toolLimit > 0 && toolCount >= Math.floor(toolLimit * 0.8);
+
     return (
         <div className="space-y-6">
+            {showToolLimitWarning && (
+                <div className="border border-amber-600 bg-amber-50 px-4 py-3 font-mono text-xs flex items-start gap-3">
+                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-600" />
+                    <p className="text-amber-800 leading-relaxed">
+                        You&apos;re using {toolCount}/{toolLimit} tool slots.{" "}
+                        <Link href="/settings/billing" className="underline font-semibold hover:text-amber-950">
+                            Upgrade for more →
+                        </Link>
+                    </p>
+                </div>
+            )}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                     <h1 className="font-serif text-2xl sm:text-3xl font-normal">AI Tools Portfolio</h1>

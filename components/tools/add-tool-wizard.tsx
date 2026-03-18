@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useSearchParams } from "next/navigation";
-import { Loader2, ArrowRight, Globe, Sparkles, AlertCircle } from "lucide-react";
+import Link from "next/link";
+import { Loader2, ArrowRight, Globe, Sparkles, AlertCircle, AlertTriangle } from "lucide-react";
 import { previewTool } from "@/lib/actions/preview";
 import { submitTool } from "@/lib/actions/tools";
 import { UpgradeModal } from "@/components/common/upgrade-modal";
@@ -98,6 +99,41 @@ export function AddToolWizard({ creditBalance = 0, workspaceId }: AddToolWizardP
             }
         });
     };
+
+    if (creditBalance === 0) {
+        return (
+            <div className="max-w-2xl mx-auto">
+                <div className="mb-8">
+                    <h1 className="font-serif text-3xl font-normal">Add a New Tool</h1>
+                </div>
+                <div className="border border-black bg-[#F3F3EF] px-6 py-8 space-y-4">
+                    <div className="flex items-start gap-3">
+                        <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0 text-neutral-700" />
+                        <div>
+                            <p className="font-mono text-sm font-semibold text-black">No research credits remaining</p>
+                            <p className="font-mono text-xs text-neutral-600 mt-2 leading-relaxed">
+                                You&apos;ve used all your research credits this month. Upgrade your plan or purchase a credit pack to continue adding tools.
+                            </p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3 pt-2">
+                        <Link
+                            href="/settings/billing"
+                            className="border border-black px-6 py-3 font-mono text-sm bg-black text-white hover:bg-neutral-800"
+                        >
+                            Manage Billing
+                        </Link>
+                        <Link
+                            href="/tools"
+                            className="border border-black px-6 py-3 font-mono text-sm bg-white hover:bg-neutral-100"
+                        >
+                            Back to Tools
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-2xl mx-auto">
