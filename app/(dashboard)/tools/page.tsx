@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Download } from "lucide-react";
 import { BulkResearchButton } from "@/components/research/bulk-research-modal";
 import { db } from "@/lib/db";
 import { tools, reports, workspaceMembers, softwareSpend, subscriptions } from "@/lib/db/schema";
@@ -108,6 +108,7 @@ export default async function ToolsPage() {
                             download="trackr-stack.csv"
                             className="hidden sm:flex items-center gap-2 border border-black px-4 py-2 font-mono text-sm bg-white hover:bg-neutral-100 whitespace-nowrap"
                         >
+                            <Download className="h-4 w-4" />
                             Export CSV
                         </a>
                     )}

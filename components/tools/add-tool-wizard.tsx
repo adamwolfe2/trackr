@@ -30,7 +30,7 @@ interface AddToolWizardProps {
     workspaceId?: string;
 }
 
-export function AddToolWizard({ creditBalance = 99, workspaceId }: AddToolWizardProps) {
+export function AddToolWizard({ creditBalance = 0, workspaceId }: AddToolWizardProps) {
     const searchParams = useSearchParams();
     const [step, setStep] = useState<1 | 2>(1);
     const [url, setUrl] = useState(searchParams.get("url") ?? "");

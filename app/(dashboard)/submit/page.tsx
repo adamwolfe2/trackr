@@ -31,7 +31,7 @@ export default async function SubmitPage() {
         })
         : null;
 
-    const creditBalance = subscription?.creditBalance ?? 99;
+    const creditBalance = subscription?.creditBalance ?? 0;
 
     return (
         <div className="max-w-2xl mx-auto animate-fade-in-up py-10">
