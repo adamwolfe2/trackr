@@ -292,6 +292,9 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
             )}
 
             {/* Tool Selectors */}
+            <p className="font-mono text-xs text-neutral-500 mb-4">
+                Select 2–3 tools to compare side-by-side. Research must be completed first.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[0, 1, 2].map((index) => {
                     const tool = selectedTools[index];

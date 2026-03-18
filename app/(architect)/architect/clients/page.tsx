@@ -4,7 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { architects, architectReferrals, architectCommissions, workspaces, auditSubmissions } from "@/lib/db/schema";
-import { eq, sum, and } from "drizzle-orm";
+import { eq, sum, and, inArray } from "drizzle-orm";
 
 export default async function ArchitectClientsPage() {
     const user = await currentUser();
@@ -30,17 +30,24 @@ export default async function ArchitectClientsPage() {
         .leftJoin(auditSubmissions, eq(architectReferrals.auditSubmissionId, auditSubmissions.id))
         .where(eq(architectReferrals.architectId, architect.id));
 
-    // Get commission totals per referral
+    // Get commission totals per referral (single batched query)
     const commissionsByReferral = new Map<string, number>();
-    for (const ref of referrals) {
-        const [result] = await db
-            .select({ total: sum(architectCommissions.commissionAmount) })
+    const referralIds = referrals.map((r) => r.id);
+    if (referralIds.length > 0) {
+        const commissionRows = await db
+            .select({
+                referralId: architectCommissions.referralId,
+                total: sum(architectCommissions.commissionAmount),
+            })
             .from(architectCommissions)
             .where(and(
-                eq(architectCommissions.referralId, ref.id),
+                inArray(architectCommissions.referralId, referralIds),
                 eq(architectCommissions.status, "paid"),
-            ));
-        commissionsByReferral.set(ref.id, Number(result?.total ?? 0));
+            ))
+            .groupBy(architectCommissions.referralId);
+        for (const row of commissionRows) {
+            commissionsByReferral.set(row.referralId, Number(row.total ?? 0));
+        }
     }
 
     return (

@@ -316,7 +316,7 @@ export default function OnboardingPage() {
                             <div>
                                 <label className="text-xs font-mono uppercase tracking-wide text-neutral-500 block mb-1">
                                     Company Context
-                                    {contextWasAiGenerated && companyContext && <span className="text-black ml-2">✓ AI Generated</span>}
+                                    {contextWasAiGenerated && companyContext && <span className="text-black ml-2 inline-flex items-center gap-1"><Check className="w-3 h-3" /> AI Generated</span>}
                                 </label>
                                 <textarea
                                     placeholder="Describe your company, industry, and what you're looking for in tools. This context is used by research agents to tailor every report."

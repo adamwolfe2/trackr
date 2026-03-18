@@ -18,7 +18,7 @@ export function MobileNav() {
     return (
         <>
             <button
-                className="md:hidden p-2 border border-black/10 hover:bg-neutral-100 transition-colors"
+                className="md:hidden p-2 border border-black hover:bg-neutral-100 transition-colors"
                 onClick={() => setOpen(true)}
                 aria-label="Open menu"
             >

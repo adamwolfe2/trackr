@@ -17,6 +17,7 @@ import { getPlanLimits, PLANS, CREDIT_PACK_PRICES } from "@/lib/config/subscript
 import type { Plan, PlanSlug, BillingInterval } from "@/lib/config/subscriptions";
 import { createCheckoutSession } from "@/lib/actions/stripe";
 import { ManageSubscriptionButton } from "@/components/billing/manage-subscription-button";
+import { Check, X } from "lucide-react";
 import { BillingPlanCards } from "@/components/billing/billing-plan-cards";
 import { CreditPackSelector } from "@/components/billing/credit-pack-selector";
 import { AutoTopUpToggle } from "@/components/billing/auto-top-up-toggle";
@@ -201,15 +202,25 @@ export default async function BillingPage({
             )}
 
             {success && (
-                <div className="border border-black bg-white p-4 font-mono text-sm space-y-1">
-                    <p className="font-semibold">Payment received — thank you!</p>
-                    <p className="text-neutral-500">Your plan will activate within a few seconds. Refresh if your plan details haven't updated yet.</p>
+                <div className="border border-black bg-white p-4 font-mono text-sm flex items-start gap-3">
+                    <div className="w-6 h-6 border border-black flex items-center justify-center shrink-0">
+                        <Check className="w-4 h-4" />
+                    </div>
+                    <div className="space-y-1">
+                        <p className="font-semibold">Payment received — thank you!</p>
+                        <p className="text-neutral-500">Your plan will activate within a few seconds. Refresh if your plan details haven&apos;t updated yet.</p>
+                    </div>
                 </div>
             )}
 
             {canceled && (
-                <div className="border border-neutral-400 bg-white p-4 font-mono text-sm text-neutral-600">
-                    Checkout was canceled. No charges were made.
+                <div className="border border-neutral-400 bg-white p-4 font-mono text-sm text-neutral-600 flex items-start gap-3">
+                    <div className="w-6 h-6 border border-neutral-400 flex items-center justify-center shrink-0">
+                        <X className="w-4 h-4" />
+                    </div>
+                    <div>
+                        Checkout was canceled. No charges were made — you can try again below.
+                    </div>
                 </div>
             )}
 

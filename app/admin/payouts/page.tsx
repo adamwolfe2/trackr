@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { architectPayouts, architects, architectCommissions } from "@/lib/db/schema";
 import { desc, eq, count, sum, sql } from "drizzle-orm";
+import { markPayoutPaid, retryPayout } from "@/lib/actions/payouts";
 
 export const metadata: Metadata = {
     title: "Admin Payouts — Trackr",
@@ -166,6 +167,7 @@ export default async function AdminPayoutsPage() {
                                     <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Period</th>
                                     <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Status</th>
                                     <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Created</th>
+                                    <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -187,6 +189,13 @@ export default async function AdminPayoutsPage() {
                                         </td>
                                         <td className="p-3 font-mono text-xs text-neutral-500">
                                             {new Date(row.payout.createdAt).toLocaleDateString()}
+                                        </td>
+                                        <td className="p-3">
+                                            <form action={markPayoutPaid.bind(null, row.payout.id)}>
+                                                <button type="submit" className="border border-black px-2 py-1 font-mono text-xs hover:bg-neutral-100">
+                                                    Mark Paid
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 ))}
@@ -211,12 +220,13 @@ export default async function AdminPayoutsPage() {
                                 <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Status</th>
                                 <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Stripe Transfer</th>
                                 <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Date</th>
+                                <th className="text-left font-mono text-[10px] uppercase tracking-widest text-neutral-500 p-3">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {recentPayouts.length === 0 && (
                                 <tr>
-                                    <td colSpan={6} className="p-8 text-center font-mono text-sm text-neutral-400">
+                                    <td colSpan={7} className="p-8 text-center font-mono text-sm text-neutral-400">
                                         No payouts processed yet.
                                     </td>
                                 </tr>
@@ -238,6 +248,15 @@ export default async function AdminPayoutsPage() {
                                     </td>
                                     <td className="p-3 font-mono text-xs text-neutral-500">
                                         {new Date(row.payout.createdAt).toLocaleDateString()}
+                                    </td>
+                                    <td className="p-3">
+                                        {row.payout.status === "failed" && (
+                                            <form action={retryPayout.bind(null, row.payout.id)}>
+                                                <button type="submit" className="border border-black px-2 py-1 font-mono text-xs hover:bg-neutral-100">
+                                                    Retry
+                                                </button>
+                                            </form>
+                                        )}
                                     </td>
                                 </tr>
                             ))}

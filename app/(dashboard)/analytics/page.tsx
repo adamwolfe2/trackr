@@ -14,6 +14,7 @@ import { redirect } from "next/navigation";
 import { getWorkspaceId } from "@/lib/db/queries";
 import AnalyticsClient from "./client";
 import { checkFeatureAccess } from "@/lib/middleware/require-subscription";
+import { PlanGate } from "@/components/billing/plan-gate";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
 
 export default async function AnalyticsPage() {
@@ -27,13 +28,11 @@ export default async function AnalyticsPage() {
     const plan = await checkFeatureAccess(workspaceId, "analytics");
     if (!plan) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-                <h2 className="font-serif text-2xl">Analytics requires a Startup plan or higher</h2>
-                <p className="text-neutral-500 font-mono text-sm">Upgrade your plan to access detailed analytics and insights.</p>
-                <a href="/settings/billing" className="border border-black bg-black text-white px-6 py-2 font-mono text-sm hover:bg-white hover:text-black transition-colors">
-                    Upgrade Plan
-                </a>
-            </div>
+            <PlanGate
+                featureName="Analytics"
+                description="Access detailed analytics, research activity charts, and workspace insights."
+                requiredPlan="Startup"
+            />
         );
     }
 

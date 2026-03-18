@@ -213,10 +213,27 @@ export default function AskTrackrPage() {
                             <div className="w-6 h-6 bg-black flex items-center justify-center shrink-0 mt-0.5">
                                 <TrackrIcon className="w-3.5 h-3.5" />
                             </div>
-                            <div className="border border-red-500 px-4 py-3 bg-white font-mono text-xs text-red-600">
-                                {error?.message?.includes("429") || error?.message?.includes("rate")
-                                    ? "Too many requests — please wait a moment and try again."
-                                    : "Something went wrong. Please try again."}
+                            <div className="border border-black bg-red-50 px-4 py-3 font-mono text-xs text-red-800 space-y-2">
+                                <p>
+                                    {error?.message?.includes("429") || error?.message?.includes("rate")
+                                        ? "Too many requests — please wait a moment and try again."
+                                        : "Something went wrong. Please try again."}
+                                </p>
+                                <button
+                                    onClick={() => {
+                                        const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
+                                        if (lastUserMsg) {
+                                            const text = lastUserMsg.parts
+                                                .filter((p): p is TextUIPart => p.type === "text")
+                                                .map(p => p.text)
+                                                .join("");
+                                            if (text) sendMessage({ text });
+                                        }
+                                    }}
+                                    className="border border-black bg-white text-black px-3 py-1 font-mono text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition-colors"
+                                >
+                                    Retry
+                                </button>
                             </div>
                         </div>
                     )}

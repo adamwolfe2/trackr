@@ -151,6 +151,16 @@ export function CalendarClient({
                     ))}
                 </div>
 
+                {/* Event type legend */}
+                <div className="border-b border-neutral-200 px-3 py-2 flex items-center gap-4 flex-wrap">
+                    {Object.entries(EVENT_TYPE_STYLES).map(([type, style]) => (
+                        <div key={type} className="inline-flex items-center gap-1.5">
+                            <div className={`w-2 h-2 rounded-full ${EVENT_DOT_COLORS[type] ?? "bg-neutral-400"}`} />
+                            <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">{style.label}</span>
+                        </div>
+                    ))}
+                </div>
+
                 {/* Day grid */}
                 <div className="grid grid-cols-7">
                     {cells.map((day, i) => {

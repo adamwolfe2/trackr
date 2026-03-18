@@ -208,11 +208,11 @@ export default function ApplyRolePage() {
                             />
                             <span className="font-mono text-xs text-neutral-600 leading-relaxed">
                                 I agree to the{" "}
-                                <Link href="/legal/architect-terms" className="underline hover:text-black" target="_blank">
+                                <Link href="/legal/architect-terms" className="underline hover:text-black" target="_blank" rel="noopener noreferrer">
                                     Architect Terms of Service
                                 </Link>{" "}
                                 and{" "}
-                                <Link href="/legal/privacy-policy" className="underline hover:text-black" target="_blank">
+                                <Link href="/legal/privacy-policy" className="underline hover:text-black" target="_blank" rel="noopener noreferrer">
                                     Privacy Policy
                                 </Link>
                                 .

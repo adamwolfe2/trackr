@@ -104,7 +104,7 @@ export default async function QueuePage() {
                                         )}
                                     </div>
                                     {job.errorMessage && (
-                                        <div className="font-mono text-xs text-red-500 mt-0.5 max-w-md truncate">{job.errorMessage}</div>
+                                        <div className="font-mono text-xs text-red-500 mt-0.5 max-w-md truncate" title={job.errorMessage ?? undefined}>{job.errorMessage}</div>
                                     )}
                                 </div>
                             </div>

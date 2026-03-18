@@ -207,17 +207,36 @@ export default async function HealthPage() {
             </div>
 
             {/* Recommendations */}
-            <div className={`border border-black bg-white relative ${isLimited ? "overflow-hidden" : ""}`}>
-                <div className="border-b border-black px-5 py-3 flex items-center justify-between">
-                    <h2 className="font-mono text-xs uppercase tracking-widest">Recommendations</h2>
-                    {isLimited && (
+            {isLimited ? (
+                <div className="border border-black bg-white">
+                    <div className="border-b border-black px-5 py-3 flex items-center justify-between">
+                        <h2 className="font-mono text-xs uppercase tracking-widest">Recommendations</h2>
                         <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest flex items-center gap-1">
                             <Lock className="h-3 w-3" />
                             Startup Plan
                         </span>
-                    )}
+                    </div>
+                    <div className="px-5 py-10 flex flex-col items-center text-center">
+                        <div className="w-10 h-10 border border-black flex items-center justify-center mb-3">
+                            <Lock className="w-5 h-5 text-black" strokeWidth={1.5} />
+                        </div>
+                        <p className="font-mono text-sm mb-1">Actionable recommendations are available on the Startup plan</p>
+                        <p className="font-mono text-[10px] text-neutral-400 mb-4 max-w-sm">
+                            Get personalized suggestions to improve tool quality, reduce spend, close coverage gaps, and lower risk exposure.
+                        </p>
+                        <Link
+                            href="/settings/billing"
+                            className="inline-block border border-black bg-black text-white px-5 py-2 font-mono text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
+                        >
+                            Upgrade to Startup Plan
+                        </Link>
+                    </div>
                 </div>
-                <div className={isLimited ? "blur-sm pointer-events-none select-none" : ""}>
+            ) : (
+                <div className="border border-black bg-white">
+                    <div className="border-b border-black px-5 py-3">
+                        <h2 className="font-mono text-xs uppercase tracking-widest">Recommendations</h2>
+                    </div>
                     <div className="divide-y divide-neutral-100">
                         {recommendations.map((rec, i) => (
                             <div key={i} className="flex items-start gap-3 px-5 py-4">
@@ -227,23 +246,7 @@ export default async function HealthPage() {
                         ))}
                     </div>
                 </div>
-                {isLimited && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/60 mt-10">
-                        <div className="text-center">
-                            <div className="w-10 h-10 border border-black flex items-center justify-center mx-auto mb-3">
-                                <Lock className="w-5 h-5 text-black" strokeWidth={1.5} />
-                            </div>
-                            <p className="font-mono text-sm mb-3">Upgrade to unlock recommendations</p>
-                            <Link
-                                href="/settings/billing"
-                                className="inline-block border border-black bg-black text-white px-5 py-2 font-mono text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors"
-                            >
-                                View Plans
-                            </Link>
-                        </div>
-                    </div>
-                )}
-            </div>
+            )}
 
             {/* Trend History */}
             {history.length > 1 && !isLimited && (
