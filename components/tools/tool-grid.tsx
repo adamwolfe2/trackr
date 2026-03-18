@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star, Loader2, Clock } from "lucide-react";
 
 interface GridTool {
     id: string;
@@ -76,8 +76,22 @@ export function ToolGrid({ tools, scoreDeltaMap = {} }: { tools: GridTool[]; sco
                         {tool.name}
                     </span>
 
-                    {/* Score badge — only if scored */}
-                    {tool.overallScore && (
+                    {/* Status indicator for in-progress tools */}
+                    {tool.status === "researching" ? (
+                        <span className="flex items-center gap-1 font-mono text-[9px] text-neutral-500">
+                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                            Researching
+                        </span>
+                    ) : tool.status === "queued" ? (
+                        <span className="flex items-center gap-1 font-mono text-[9px] text-neutral-400">
+                            <Clock className="w-2.5 h-2.5" />
+                            Queued
+                        </span>
+                    ) : tool.status === "failed" ? (
+                        <span className="font-mono text-[9px] text-red-400">
+                            Failed
+                        </span>
+                    ) : tool.overallScore ? (
                         <div className="flex items-center gap-1">
                             <span className="flex items-center gap-0.5 font-mono text-[9px] text-neutral-500">
                                 <Star className="w-2 h-2 fill-neutral-400 text-neutral-400" />
@@ -89,7 +103,7 @@ export function ToolGrid({ tools, scoreDeltaMap = {} }: { tools: GridTool[]; sco
                                 </span>
                             )}
                         </div>
-                    )}
+                    ) : null}
                 </Link>
             ))}
         </div>
