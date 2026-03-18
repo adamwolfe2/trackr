@@ -19,6 +19,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { updateToolStatus, deleteTool, triggerResearch, triggerResearchBatch } from "@/lib/actions/tools";
 import { toast } from "sonner";
+import { getUserFriendlyError } from "@/lib/utils/error-messages";
 
 interface KanbanTool {
     id: string;
@@ -141,8 +142,8 @@ function DraggableCard({ tool, onDelete, isNew }: { tool: KanbanTool; onDelete: 
         onDelete(tool.id); // optimistic
         try {
             await deleteTool(tool.id);
-        } catch {
-            toast.error("Failed to delete tool");
+        } catch (err) {
+            toast.error(getUserFriendlyError(err));
         }
     };
 
@@ -297,9 +298,9 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
             try {
                 await triggerResearch(toolId);
                 toast.success("Research started");
-            } catch {
+            } catch (err) {
                 setTools(prevTools);
-                toast.error("Failed to start research");
+                toast.error(getUserFriendlyError(err));
             }
             return;
         }
@@ -315,9 +316,9 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
             await updateToolStatus(toolId, newStatus);
             const colLabel = COLUMNS.find(c => c.id === columnId)?.label;
             toast.success(`Moved to ${colLabel}`);
-        } catch {
+        } catch (err) {
             setTools(prevTools);
-            toast.error("Failed to move tool");
+            toast.error(getUserFriendlyError(err));
         }
     };
 
@@ -338,9 +339,9 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
         try {
             const result = await triggerResearchBatch(ids);
             toast.success(`Research started for ${result.started} tool${result.started !== 1 ? "s" : ""}`);
-        } catch {
+        } catch (err) {
             setTools(prevTools);
-            toast.error("Failed to start batch research");
+            toast.error(getUserFriendlyError(err));
         } finally {
             setResearchingAll(false);
         }

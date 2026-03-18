@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2, Sparkles, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getUserFriendlyError } from "@/lib/utils/error-messages";
 
 interface ResearchButtonProps {
     toolId: string;
@@ -36,8 +37,7 @@ export function ResearchButton({ toolId, isResearching, hasReport, isFailed }: R
             // Refresh the page data to show "researching" status
             router.refresh();
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : "Research failed";
-            toast.error(message, { id: toastId });
+            toast.error(getUserFriendlyError(error), { id: toastId });
         } finally {
             setIsLoading(false);
         }

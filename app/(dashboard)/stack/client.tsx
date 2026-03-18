@@ -5,6 +5,7 @@ import { addSoftwareSpend, deleteSoftwareSpend, updateSoftwareSpendStatus, updat
 import { PlusCircle, Trash2, ExternalLink, DollarSign, Users, Pencil, Check, X, AlertTriangle, Sparkles, Clipboard, ChevronDown, CalendarClock, Download, Loader2, Square, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getUserFriendlyError } from "@/lib/utils/error-messages";
 import type { StackInsights } from "@/lib/utils/stack-insights";
 import { parseStackJson, type ParsedStackItem } from "@/lib/utils/parse-stack";
 
@@ -212,8 +213,8 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
             setEditContractLength(entry.contractLength?.toString() ?? "");
             const confLabel = data.confidence === "high" ? "High" : data.confidence === "medium" ? "Medium" : "Low";
             toast.success(`Estimated $${data.totalMonthlyCost}/mo (${confLabel} confidence)${data.source ? ` — ${data.source}` : ""}`);
-        } catch {
-            toast.error("Could not estimate cost for this tool");
+        } catch (err) {
+            toast.error(getUserFriendlyError(err));
         } finally {
             setEstimatingId(null);
         }

@@ -9,6 +9,7 @@ import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS, get
 import { classifyTool } from "@/lib/config/ai-tools";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { toast } from "sonner";
+import { getUserFriendlyError } from "@/lib/utils/error-messages";
 
 const DEBOUNCE_DELAY_MS = 200;
 
@@ -148,8 +149,9 @@ export default function OnboardingPage() {
                 setContextWasAiGenerated(true);
                 toast.success("Company context generated.");
             }
-        } catch {
-            toast.error("Something went wrong generating context. Please describe your company manually.");
+        } catch (err) {
+            const friendly = getUserFriendlyError(err);
+            toast.error(`${friendly} Please describe your company manually.`);
         } finally {
             setIsGenerating(false);
         }

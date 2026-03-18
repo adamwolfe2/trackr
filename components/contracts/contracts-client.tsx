@@ -21,6 +21,7 @@ import {
     ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
+import { getUserFriendlyError } from "@/lib/utils/error-messages";
 import { formatDistanceToNow } from "date-fns";
 import { useRouter } from "next/navigation";
 
@@ -148,8 +149,8 @@ export function ContractsClient({
                 await deleteContract(id, workspaceId);
                 toast.success("Contract deleted");
                 router.refresh();
-            } catch {
-                toast.error("Failed to delete contract");
+            } catch (err) {
+                toast.error(getUserFriendlyError(err));
             }
         });
     };
