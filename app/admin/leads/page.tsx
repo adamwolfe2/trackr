@@ -195,14 +195,14 @@ export default async function AdminLeadsPage({
 
             {/* Leads table */}
             <div className="border border-black overflow-x-auto">
-                <table className="w-full min-w-[900px]">
+                <table className="w-full min-w-[600px]">
                     <thead>
                         <tr className="border-b border-black">
                             <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Company</th>
                             <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Contact</th>
-                            <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Revenue</th>
-                            <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Spend/mo</th>
-                            <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Tools</th>
+                            <th className="hidden sm:table-cell text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Revenue</th>
+                            <th className="hidden sm:table-cell text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Spend/mo</th>
+                            <th className="hidden sm:table-cell text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Tools</th>
                             <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Status</th>
                             <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Score</th>
                             <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Submitted</th>
@@ -228,9 +228,9 @@ export default async function AdminLeadsPage({
                                         <p className="font-mono text-[10px] text-neutral-400">{sub.contactEmail}</p>
                                         {sub.role && <p className="font-mono text-[10px] text-neutral-400">{sub.role}</p>}
                                     </td>
-                                    <td className="px-4 py-3 font-mono text-xs text-neutral-600">{sub.revenue || "—"}</td>
-                                    <td className="px-4 py-3 font-mono text-xs text-neutral-600">{sub.monthlySpend || "—"}</td>
-                                    <td className="px-4 py-3 font-mono text-xs text-neutral-600">
+                                    <td className="hidden sm:table-cell px-4 py-3 font-mono text-xs text-neutral-600">{sub.revenue || "—"}</td>
+                                    <td className="hidden sm:table-cell px-4 py-3 font-mono text-xs text-neutral-600">{sub.monthlySpend || "—"}</td>
+                                    <td className="hidden sm:table-cell px-4 py-3 font-mono text-xs text-neutral-600">
                                         {sub.currentTools?.length ?? 0}
                                     </td>
                                     <td className="px-4 py-3">

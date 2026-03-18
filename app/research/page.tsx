@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { tools, reports, communityVotes } from "@/lib/db/schema";
 import { eq, desc, and, isNotNull, arrayContains, sql } from "drizzle-orm";
 import Link from "next/link";
+import Image from "next/image";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import type { Metadata } from "next";
@@ -213,11 +214,13 @@ export default async function ResearchLibraryPage({
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="flex items-center gap-3 min-w-0">
                                                 {(t.logoUrl || domain) && (
-                                                    // eslint-disable-next-line @next/next/no-img-element
-                                                    <img
+                                                    <Image
                                                         src={t.logoUrl ?? `https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
                                                         alt={t.name}
+                                                        width={32}
+                                                        height={32}
                                                         className="w-8 h-8 object-contain flex-shrink-0"
+                                                        unoptimized
                                                     />
                                                 )}
                                                 <div className="min-w-0">

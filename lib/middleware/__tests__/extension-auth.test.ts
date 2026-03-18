@@ -25,7 +25,7 @@ function makeRequest(authHeader?: string) {
     } as unknown as Request;
 }
 
-const TEST_API_KEY = "valid_api_key_123_abcdefghij_padding";
+const TEST_API_KEY = "trk_a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4";
 const MOCK_WORKSPACE = { id: "ws_1", name: "Acme Corp", apiKey: hashTestKey(TEST_API_KEY) };
 
 describe("getWorkspaceFromApiKey", () => {
@@ -58,7 +58,7 @@ describe("getWorkspaceFromApiKey", () => {
 
     it("returns null when no workspace matches the hashed key", async () => {
         (db.query.workspaces.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-        const result = await getWorkspaceFromApiKey(makeRequest("Bearer some_key_that_is_long_enough_for_validation"));
+        const result = await getWorkspaceFromApiKey(makeRequest("Bearer trk_00000000000000000000000000000000"));
         expect(result).toBeNull();
     });
 });

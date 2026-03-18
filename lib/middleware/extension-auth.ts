@@ -18,8 +18,8 @@ export async function getWorkspaceFromApiKey(req: Request) {
     if (!apiKey) return null;
 
     // Reject obviously invalid keys before hitting the DB
-    // Expected format: 64-char hex string (SHA-256 of the original key, or the raw key itself)
-    if (apiKey.length < 32 || apiKey.length > 128 || !/^[a-zA-Z0-9_\-]+$/.test(apiKey)) {
+    // Keys are generated as: trk_ + 32 hex chars (UUID without dashes) = 36 chars total
+    if (!/^trk_[a-f0-9]{32}$/.test(apiKey)) {
         return null;
     }
 

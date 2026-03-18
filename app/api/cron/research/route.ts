@@ -3,9 +3,9 @@ import { db } from "@/lib/db";
 import { tools, researchJobs } from "@/lib/db/schema";
 import { eq, and, lte, ne, isNotNull, lt, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
 import { after } from "next/server";
 import { performDeepResearch } from "@/lib/actions/research";
+import { verifyCronRequest } from "@/lib/middleware/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -22,19 +22,8 @@ const MAX_PER_RUN = 5;
  * Schedule: daily at midnight UTC via Vercel Cron.
  */
 export async function GET(req: Request) {
-    const cronSecret = process.env.CRON_SECRET;
-    if (!cronSecret) {
-        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
-    }
-
-    const authHeader = req.headers.get("Authorization") || "";
-    const expected = `Bearer ${cronSecret}`;
-    if (
-        authHeader.length !== expected.length ||
-        !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
-    ) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = verifyCronRequest(req);
+    if (authError) return authError;
 
     try {
         const now = new Date();

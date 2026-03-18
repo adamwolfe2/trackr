@@ -5,22 +5,14 @@ import { NextResponse } from "next/server";
 import { ingestAllChannels } from "@/lib/actions/feed-pipeline";
 import { enrichFeedItems } from "@/lib/actions/feed-enrichment";
 import { extractToolsFromFeedItems, generateSuggestions } from "@/lib/actions/suggestions-pipeline";
-import { timingSafeEqual } from "crypto";
+import { verifyCronRequest } from "@/lib/middleware/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300; // 5 min max for processing all workspaces
 
 export async function GET(req: Request) {
-    const cronSecret = process.env.CRON_SECRET;
-    if (!cronSecret) {
-        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
-    }
-
-    const authHeader = req.headers.get('Authorization') || '';
-    const expected = `Bearer ${cronSecret}`;
-    if (authHeader.length !== expected.length || !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = verifyCronRequest(req);
+    if (authError) return authError;
 
     try {
         // Find all workspaces that have at least one feed channel

@@ -8,7 +8,7 @@ export default function CompareLoading() {
                 <ArrowRightLeft className="h-6 w-6" />
                 Compare Tools
             </h1>
-            <div className="min-w-[800px] grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-4 pt-16">
                     {["Overall Score", "Pricing", "Summary", "Pros", "Cons", "Features"].map(label => (
                         <Skeleton key={label} className="h-10 w-full" />

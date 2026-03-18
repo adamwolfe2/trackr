@@ -329,7 +329,7 @@ export default function AnalyticsClient({
                 </div>
                 {heatmapData.length > 0 ? (
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[700px]">
+                        <table className="w-full min-w-[500px]">
                             <thead>
                                 <tr className="border-b border-black/20">
                                     <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-400 w-40">Tool</th>
@@ -343,7 +343,7 @@ export default function AnalyticsClient({
                                     <tr key={row.toolName} className="border-b border-black/10 last:border-b-0">
                                         <td className="px-4 py-2">
                                             <span
-                                                className="font-mono text-xs truncate block max-w-[150px]"
+                                                className="font-mono text-xs truncate block max-w-[80px] sm:max-w-[150px]"
                                                 title={row.toolName}
                                             >
                                                 {row.toolName.length > 16 ? row.toolName.slice(0, 16) + "…" : row.toolName}

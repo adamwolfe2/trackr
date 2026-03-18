@@ -2,9 +2,9 @@ import { db } from "@/lib/db";
 import { researchJobs, tools, reports } from "@/lib/db/schema";
 import { eq, and, lte, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
 import { after } from "next/server";
 import { performDeepResearch } from "@/lib/actions/research";
+import { verifyCronRequest } from "@/lib/middleware/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -21,19 +21,8 @@ const STUCK_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
  * Schedule: every 5 minutes via Vercel Cron or Upstash.
  */
 export async function GET(req: Request) {
-    const cronSecret = process.env.CRON_SECRET;
-    if (!cronSecret) {
-        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
-    }
-
-    const authHeader = req.headers.get("Authorization") || "";
-    const expected = `Bearer ${cronSecret}`;
-    if (
-        authHeader.length !== expected.length ||
-        !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
-    ) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = verifyCronRequest(req);
+    if (authError) return authError;
 
     try {
         const now = new Date();

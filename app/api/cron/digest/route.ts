@@ -7,8 +7,8 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { Resend } from "resend";
 import { sendRenewalAlertEmail, sendStackHealthDigest } from "@/lib/email/resend";
 import { postMessage, renewalAlertBlocks } from "@/lib/services/slack";
-import { timingSafeEqual } from "crypto";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
+import { verifyCronRequest } from "@/lib/middleware/cron-auth";
 
 export const dynamic = 'force-dynamic';
 
@@ -26,16 +26,8 @@ function escapeHtml(str: string): string {
 }
 
 export async function GET(req: Request) {
-    const cronSecret = process.env.CRON_SECRET;
-    if (!cronSecret) {
-        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
-    }
-
-    const authHeader = req.headers.get('Authorization') || '';
-    const expected = `Bearer ${cronSecret}`;
-    if (authHeader.length !== expected.length || !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authError = verifyCronRequest(req);
+    if (authError) return authError;
 
     if (!process.env.RESEND_API_KEY) {
         return NextResponse.json({ error: 'Resend not configured' }, { status: 500 });

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
     Search,
     ExternalLink,
@@ -186,21 +187,13 @@ export function CuratedLibrary({ tools, templates, primaryCategories, hotToolSlu
                                 className="group bg-white hover:bg-[#F3F3EF] transition-colors p-4 flex flex-col gap-2"
                             >
                                 <div className="flex items-center gap-2">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
+                                    <Image
                                         src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
                                         alt={tool.name}
                                         className="w-5 h-5 object-contain flex-shrink-0"
                                         width={20}
                                         height={20}
-                                        onError={(e) => {
-                                            const img = e.target as HTMLImageElement;
-                                            if (!img.src.includes("google.com")) {
-                                                img.src = `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`;
-                                            } else {
-                                                img.style.display = "none";
-                                            }
-                                        }}
+                                        unoptimized
                                     />
                                     <span className="font-serif text-sm group-hover:underline underline-offset-2 truncate">{tool.name}</span>
                                 </div>
@@ -453,21 +446,13 @@ function ToolCard({ tool, votes }: { tool: CuratedTool; votes?: { up: number; do
                 <div className="flex items-start justify-between gap-3">
                     {/* Tool favicon + category pill */}
                     <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                             src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
                             alt={tool.name}
                             className="w-5 h-5 object-contain flex-shrink-0"
                             width={20}
                             height={20}
-                            onError={(e) => {
-                                const img = e.target as HTMLImageElement;
-                                if (!img.src.includes("google.com")) {
-                                    img.src = `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`;
-                                } else {
-                                    img.style.display = "none";
-                                }
-                            }}
+                            unoptimized
                         />
                     </div>
                     {/* Category pill */}
@@ -572,11 +557,13 @@ function TemplateCard({ template, allTools }: { template: Template; allTools: Cu
                         <span className="font-mono text-[9px] text-neutral-400">Uses:</span>
                         {recommendedToolObjects.map((t) => (
                             <div key={t.id} title={t.name}>
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
+                                <Image
                                     src={`https://www.google.com/s2/favicons?domain=${t.domain}&sz=16`}
                                     alt={t.name}
+                                    width={16}
+                                    height={16}
                                     className="w-4 h-4 object-contain"
+                                    unoptimized
                                 />
                             </div>
                         ))}

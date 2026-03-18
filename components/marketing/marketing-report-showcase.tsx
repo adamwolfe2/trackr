@@ -3,6 +3,7 @@
 import { useRef, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, ExternalLink, Search } from "lucide-react";
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
@@ -216,22 +217,13 @@ function ToolCard({ tool }: { tool: Tool }) {
                 {/* Name + score */}
                 <div className="flex items-start justify-between gap-3 mb-2.5">
                     <div className="flex items-center gap-2 min-w-0">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                             src={tool.logoUrl ?? `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`}
                             alt=""
                             width={18}
                             height={18}
                             className="flex-shrink-0"
-                            onError={(e) => {
-                                const img = e.target as HTMLImageElement;
-                                // Try Google favicon fallback before hiding
-                                if (!img.src.includes("google.com")) {
-                                    img.src = `https://www.google.com/s2/favicons?domain=${tool.domain}&sz=32`;
-                                } else {
-                                    img.style.display = "none";
-                                }
-                            }}
+                            unoptimized
                         />
                         <div className="min-w-0">
                             <div className="font-serif text-base font-medium leading-tight">{tool.name}</div>

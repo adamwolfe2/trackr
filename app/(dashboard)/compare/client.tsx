@@ -332,7 +332,7 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
             {/* Comparison Table */}
             {selectedCount >= 1 && (
                 <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-                    <div className={`min-w-[700px] border border-black`}>
+                    <div className={`border border-black`}>
                         {/* Overall Score Row */}
                         <div className={`grid ${gridCols} border-b border-black`}>
                             <div className={`p-4 ${labelBorder}`}>

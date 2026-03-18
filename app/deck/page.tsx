@@ -672,7 +672,7 @@ function S1() {
                         style={{ fontSize: "clamp(32px,3.8vw,54px)" }}>
                         Your competitors adopted<br />5 new AI tools while your<br />team was still evaluating one.
                     </h1>
-                    <p className="font-mono text-sm text-black/55 leading-relaxed max-w-[440px]">
+                    <p className="font-mono text-sm text-black/55 leading-relaxed max-w-full sm:max-w-[440px]">
                         Most ops teams spend 14+ hours a week manually researching tools that are already outdated by the time they decide. Trackr eliminates that entirely.
                     </p>
                 </div>

@@ -9,7 +9,6 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "crypto";
 import { db } from "@/lib/db";
 import {
     architects,
@@ -19,24 +18,14 @@ import {
 import { eq, and, inArray, sql } from "drizzle-orm";
 import { stripe } from "@/lib/services/stripe";
 import { sendCommissionEarned } from "@/lib/email/resend";
+import { verifyCronRequest } from "@/lib/middleware/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET(req: Request) {
-    const cronSecret = process.env.CRON_SECRET;
-    if (!cronSecret) {
-        return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
-    }
-
-    const authHeader = req.headers.get("Authorization") || "";
-    const expected = `Bearer ${cronSecret}`;
-    if (
-        authHeader.length !== expected.length ||
-        !timingSafeEqual(Buffer.from(authHeader), Buffer.from(expected))
-    ) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const authError = verifyCronRequest(req);
+    if (authError) return authError;
 
     const now = new Date();
     const periodStart = new Date(now.getFullYear(), now.getMonth() - 1, 1); // first of last month
