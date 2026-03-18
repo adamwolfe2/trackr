@@ -98,6 +98,17 @@ describe("charge.refunded — commission clawback", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         process.env.STRIPE_WEBHOOK_SECRET = "whsec_test";
+        // Re-initialize insert mock chain (clearAllMocks removes implementations)
+        vi.mocked(db.insert).mockReturnValue({
+            values: vi.fn().mockReturnValue({
+                onConflictDoNothing: vi.fn().mockReturnValue({
+                    returning: vi.fn().mockResolvedValue([{ id: "evt_1" }]),
+                }),
+            }),
+        } as never);
+        mockUpdate.mockReturnValue({
+            set: vi.fn().mockReturnValue({ where: vi.fn().mockResolvedValue(undefined) }),
+        });
         // Default: paymentIntents.retrieve returns an invoice
         mockPaymentIntentWithInvoice();
     });
