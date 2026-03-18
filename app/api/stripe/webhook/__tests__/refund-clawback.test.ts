@@ -6,11 +6,16 @@ const { mockUpdate } = vi.hoisted(() => ({
     }),
 }));
 
+vi.mock("@sentry/nextjs", () => ({
+    captureException: vi.fn(),
+}));
+
 vi.mock("@/lib/services/stripe", () => ({
     stripe: {
         webhooks: { constructEvent: vi.fn() },
         subscriptions: { retrieve: vi.fn() },
         invoices: { list: vi.fn() },
+        paymentIntents: { retrieve: vi.fn() },
         transfers: { createReversal: vi.fn() },
     },
 }));
@@ -82,16 +87,24 @@ function makeChargeRefundedEvent(overrides: Record<string, unknown> = {}) {
     };
 }
 
+/** Sets up mocks so the charge.refunded handler can resolve the invoice from paymentIntents */
+function mockPaymentIntentWithInvoice(invoiceId: string = "inv_1") {
+    vi.mocked(stripe.paymentIntents.retrieve).mockResolvedValue({
+        invoice: invoiceId,
+    } as never);
+}
+
 describe("charge.refunded — commission clawback", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         process.env.STRIPE_WEBHOOK_SECRET = "whsec_test";
+        // Default: paymentIntents.retrieve returns an invoice
+        mockPaymentIntentWithInvoice();
     });
 
     it("skips clawback when no commission exists for the invoice", async () => {
         const event = makeChargeRefundedEvent();
         vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event as never);
-        vi.mocked(stripe.invoices.list).mockResolvedValue({ data: [{ id: "inv_1" }] } as never);
         vi.mocked(db.query.architectCommissions.findFirst).mockResolvedValue(undefined);
 
         const res = await POST(makeRequest("body"));
@@ -102,7 +115,6 @@ describe("charge.refunded — commission clawback", () => {
     it("skips clawback outside 60-day window", async () => {
         const event = makeChargeRefundedEvent();
         vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event as never);
-        vi.mocked(stripe.invoices.list).mockResolvedValue({ data: [{ id: "inv_1" }] } as never);
         vi.mocked(db.query.architectCommissions.findFirst).mockResolvedValue({
             id: "comm_1",
             architectId: "arch_1",
@@ -119,7 +131,6 @@ describe("charge.refunded — commission clawback", () => {
     it("full refund marks commission as failed and decrements earnings", async () => {
         const event = makeChargeRefundedEvent({ amount: 10000, amount_refunded: 10000 });
         vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event as never);
-        vi.mocked(stripe.invoices.list).mockResolvedValue({ data: [{ id: "inv_1" }] } as never);
         vi.mocked(stripe.transfers.createReversal).mockResolvedValue({} as never);
         vi.mocked(db.query.architectCommissions.findFirst).mockResolvedValue({
             id: "comm_1",
@@ -138,7 +149,6 @@ describe("charge.refunded — commission clawback", () => {
     it("partial refund reduces commission proportionally", async () => {
         const event = makeChargeRefundedEvent({ amount: 10000, amount_refunded: 5000 });
         vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event as never);
-        vi.mocked(stripe.invoices.list).mockResolvedValue({ data: [{ id: "inv_1" }] } as never);
         vi.mocked(stripe.transfers.createReversal).mockResolvedValue({} as never);
         vi.mocked(db.query.architectCommissions.findFirst).mockResolvedValue({
             id: "comm_1",
@@ -157,7 +167,6 @@ describe("charge.refunded — commission clawback", () => {
     it("transfer reversal failure marks commission as failed", async () => {
         const event = makeChargeRefundedEvent();
         vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event as never);
-        vi.mocked(stripe.invoices.list).mockResolvedValue({ data: [{ id: "inv_1" }] } as never);
         vi.mocked(stripe.transfers.createReversal).mockRejectedValue(new Error("Stripe error"));
         vi.mocked(db.query.architectCommissions.findFirst).mockResolvedValue({
             id: "comm_1",
@@ -171,5 +180,62 @@ describe("charge.refunded — commission clawback", () => {
         const res = await POST(makeRequest("body"));
         expect(res.status).toBe(200);
         expect(mockUpdate).toHaveBeenCalled();
+    });
+
+    it("claws back commission at exactly 60-day boundary", async () => {
+        const event = makeChargeRefundedEvent({ amount: 10000, amount_refunded: 10000 });
+        vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event as never);
+        vi.mocked(stripe.transfers.createReversal).mockResolvedValue({} as never);
+        vi.mocked(db.query.architectCommissions.findFirst).mockResolvedValue({
+            id: "comm_1",
+            architectId: "arch_1",
+            commissionAmount: 2000,
+            status: "paid",
+            stripeTransferId: "tr_1",
+            createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), // exactly 60 days ago
+        } as never);
+
+        const res = await POST(makeRequest("body"));
+        expect(res.status).toBe(200);
+        // At exactly 60 days, daysSinceCommission === 60, which is NOT > 60, so clawback should proceed
+        expect(mockUpdate).toHaveBeenCalled();
+    });
+
+    it("skips clawback at 61-day boundary", async () => {
+        const event = makeChargeRefundedEvent({ amount: 10000, amount_refunded: 10000 });
+        vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event as never);
+        vi.mocked(db.query.architectCommissions.findFirst).mockResolvedValue({
+            id: "comm_1",
+            architectId: "arch_1",
+            commissionAmount: 2000,
+            status: "paid",
+            stripeTransferId: "tr_1",
+            createdAt: new Date(Date.now() - 61 * 24 * 60 * 60 * 1000), // 61 days ago
+        } as never);
+
+        const res = await POST(makeRequest("body"));
+        expect(res.status).toBe(200);
+        // 61 days > 60, so clawback should be skipped
+    });
+
+    it("skips clawback when paymentIntent has no invoice", async () => {
+        const event = makeChargeRefundedEvent();
+        vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event as never);
+        vi.mocked(stripe.paymentIntents.retrieve).mockResolvedValue({
+            invoice: null,
+        } as never);
+
+        const res = await POST(makeRequest("body"));
+        expect(res.status).toBe(200);
+        expect(mockUpdate).not.toHaveBeenCalled();
+    });
+
+    it("skips clawback when charge has no payment_intent", async () => {
+        const event = makeChargeRefundedEvent({ payment_intent: null });
+        vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event as never);
+
+        const res = await POST(makeRequest("body"));
+        expect(res.status).toBe(200);
+        expect(mockUpdate).not.toHaveBeenCalled();
     });
 });

@@ -17,6 +17,9 @@ vi.mock("@/lib/db", () => ({
         insert: vi.fn(),
         delete: vi.fn(),
         update: vi.fn(),
+        query: {
+            workspaceMembers: { findFirst: vi.fn() },
+        },
     },
 }));
 
@@ -50,6 +53,7 @@ describe("addPainPoint", () => {
         setupDbChains();
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "member_1", workspaceId: "ws_1" });
     });
 
     it("throws Unauthorized when not logged in", async () => {
@@ -58,7 +62,7 @@ describe("addPainPoint", () => {
     });
 
     it("throws when no workspace found", async () => {
-        (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         await expect(addPainPoint(new FormData())).rejects.toThrow("No workspace found");
     });
 
@@ -143,6 +147,7 @@ describe("batchAddPainPoints", () => {
         setupDbChains();
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         (getWorkspaceId as ReturnType<typeof vi.fn>).mockResolvedValue("ws_1");
+        (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "member_1", workspaceId: "ws_1" });
     });
 
     it("throws Unauthorized when not logged in", async () => {

@@ -422,7 +422,7 @@ export default async function AdminAnalyticsPage({
                                                 Error
                                             </span>
                                         ) : (
-                                            <span className="font-mono text-[10px] uppercase tracking-widest text-green-600 border border-green-200 px-1.5 py-0.5">
+                                            <span className="font-mono text-[10px] uppercase tracking-widest text-black border border-neutral-200 px-1.5 py-0.5">
                                                 OK
                                             </span>
                                         )}

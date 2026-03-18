@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import { getWorkspaceId } from "@/lib/db/queries";
+import { workspaceMembers } from "@/lib/db/schema";
 
 const addPainPointSchema = z.object({
     title: z.string().min(1, "Title is required").max(200, "Title too long (max 200 characters)"),
@@ -14,12 +15,21 @@ const addPainPointSchema = z.object({
     category: z.string().max(100, "Category too long").optional(),
 });
 
+async function getMemberIdAndWorkspace(userId: string) {
+    const member = await db.query.workspaceMembers.findFirst({
+        where: eq(workspaceMembers.userId, userId),
+        columns: { id: true, workspaceId: true },
+    });
+    return member;
+}
+
 export async function addPainPoint(formData: FormData) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
-    const workspaceId = await getWorkspaceId(user.id);
-    if (!workspaceId) throw new Error("No workspace found");
+    const member = await getMemberIdAndWorkspace(user.id);
+    if (!member) throw new Error("No workspace found");
+    const workspaceId = member.workspaceId;
 
     const rawData = {
         title: formData.get("title") as string,
@@ -35,6 +45,7 @@ export async function addPainPoint(formData: FormData) {
         title: validated.data.title,
         description: validated.data.description,
         category: validated.data.category || "General",
+        createdBy: member.id,
     });
 
     revalidatePath("/pain-points");
@@ -60,8 +71,9 @@ export async function batchAddPainPoints(items: Array<{ title: string; category?
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");
 
-    const workspaceId = await getWorkspaceId(user.id);
-    if (!workspaceId) throw new Error("No workspace found");
+    const member = await getMemberIdAndWorkspace(user.id);
+    if (!member) throw new Error("No workspace found");
+    const workspaceId = member.workspaceId;
 
     if (items.length > 100) throw new Error("Batch size limit exceeded (max 100)");
     const totalChars = items.reduce((sum, i) => sum + (i.title?.length ?? 0) + (i.description?.length ?? 0), 0);
@@ -75,6 +87,7 @@ export async function batchAddPainPoints(items: Array<{ title: string; category?
             title: i.title.trim(),
             description: i.description?.trim() || undefined,
             category: i.category?.trim() || "General",
+            createdBy: member.id,
         }))
     );
 

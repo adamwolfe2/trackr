@@ -136,14 +136,13 @@ export async function GET(req: Request) {
                 transferred++;
             } catch (err) {
                 Sentry.captureException(err);
+                console.error(`[architect-payouts] Transfer failed for architect ${architectId}:`, err);
                 // Revert claimed commissions back to pending on failure
                 await db.update(architectCommissions)
                     .set({ status: "pending" })
                     .where(inArray(architectCommissions.id, commissionIds))
                     .catch(() => {});
-                const rawMsg = err instanceof Error ? err.message : String(err);
-                const safeMsg = rawMsg.replace(/acct_[A-Za-z0-9]{10,}/g, "[CONNECT_ACCT]").replace(/sk_(live|test)_[A-Za-z0-9]{10,}/g, "[STRIPE_KEY]").slice(0, 200);
-                errors.push(`Transfer failed for architect ${architectId.slice(0, 8)}…: ${safeMsg}`);
+                errors.push(`Transfer failed for architect ${architectId.slice(0, 8)}…`);
             }
         } else {
             // No Stripe Connect — create a pending payout batch for manual review
@@ -160,8 +159,8 @@ export async function GET(req: Request) {
                 batched++;
             } catch (err) {
                 Sentry.captureException(err);
-                const rawMsg = err instanceof Error ? err.message : String(err);
-                errors.push(`Batch failed for architect ${architectId.slice(0, 8)}…: ${rawMsg.slice(0, 200)}`);
+                console.error(`[architect-payouts] Batch failed for architect ${architectId}:`, err);
+                errors.push(`Batch failed for architect ${architectId.slice(0, 8)}…`);
             }
         }
     }

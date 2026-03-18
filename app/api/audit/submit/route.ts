@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
         .insert(auditSubmissions)
         .values({
             contactEmail: data.contactEmail,
-            contactName: data.contactName ?? null,
+            contactName: data.contactName ?? "unknown",
             callOwnerEmail: data.callOwnerEmail ?? null,
             companyName: data.companyName,
             companyWebsite: data.companyWebsite ?? null,

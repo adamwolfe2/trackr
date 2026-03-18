@@ -37,13 +37,13 @@ type RecommendedTool = {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function scoreColor(score: number): string {
-    if (score >= 61) return "text-green-700";
+    if (score >= 61) return "text-black";
     if (score >= 41) return "text-yellow-700";
     return "text-red-700";
 }
 
 function scoreBarColor(score: number): string {
-    if (score >= 61) return "bg-green-600";
+    if (score >= 61) return "bg-black";
     if (score >= 41) return "bg-yellow-500";
     return "bg-red-500";
 }
@@ -59,7 +59,7 @@ function impactBadge(level: string) {
 
 function aiRoleBadge(role: string) {
     const colors: Record<string, string> = {
-        "AI-native": "bg-green-50 text-green-700 border-green-200",
+        "AI-native": "bg-neutral-50 text-black border-neutral-200",
         "AI-assisted": "bg-blue-50 text-blue-700 border-blue-200",
         "Non-AI core infra": "bg-neutral-50 text-neutral-600 border-neutral-200",
     };
@@ -240,7 +240,7 @@ export default async function LeadDetailPage({
                             <h1 className="font-serif text-3xl font-normal">{submission.companyName}</h1>
                             <div className="flex items-center gap-2 flex-shrink-0">
                                 <span className={`font-mono text-[10px] uppercase tracking-widest border px-2 py-1 ${
-                                    submission.status === "complete" ? "border-green-200 text-green-700" :
+                                    submission.status === "complete" ? "border-neutral-200 text-black" :
                                     submission.status === "processing" ? "border-yellow-200 text-yellow-700" :
                                     submission.status === "failed" ? "border-red-200 text-red-700" :
                                     "border-neutral-200 text-neutral-500"
@@ -471,7 +471,7 @@ export default async function LeadDetailPage({
                                         <span className="font-mono text-xs text-black font-semibold">&ldquo;{tp.question}&rdquo;</span>
                                     </div>
                                     <div>
-                                        <span className="font-mono text-[10px] uppercase tracking-widest text-green-600 mr-2">Opportunity:</span>
+                                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-700 mr-2">Opportunity:</span>
                                         <span className="font-mono text-xs text-neutral-700">{tp.opportunity}</span>
                                     </div>
                                 </div>
@@ -543,7 +543,7 @@ export default async function LeadDetailPage({
                                 <div className="flex flex-wrap gap-1 mb-3">
                                     {wf.stages.map((stage, si) => (
                                         <span key={si} className={`font-mono text-[9px] px-2 py-1 border ${
-                                            stage.status === "covered" ? "border-green-200 bg-green-50 text-green-700" :
+                                            stage.status === "covered" ? "border-neutral-200 bg-neutral-50 text-black" :
                                             stage.status === "partial" ? "border-yellow-200 bg-yellow-50 text-yellow-700" :
                                             "border-red-200 bg-red-50 text-red-700"
                                         }`}>
@@ -595,9 +595,9 @@ export default async function LeadDetailPage({
 
             {/* ── ROI Projection ──────────────────────────────────────────────── */}
             {scorecard && (scorecard as AuditScorecard & { roiProjection?: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] } }).roiProjection && (
-                <div className="border-2 border-green-700">
-                    <div className="border-b border-green-700 px-5 py-3">
-                        <h2 className="font-mono text-xs uppercase tracking-widest text-green-700">ROI Projection</h2>
+                <div className="border-2 border-black">
+                    <div className="border-b border-black px-5 py-3">
+                        <h2 className="font-mono text-xs uppercase tracking-widest text-black">ROI Projection</h2>
                     </div>
                     <div className="p-5">
                         {(() => {
@@ -609,9 +609,9 @@ export default async function LeadDetailPage({
                                             <span className="font-mono text-xl font-black text-red-600">${Math.round(roi.currentAnnualWaste / 1000)}K</span>
                                             <p className="font-mono text-[9px] text-red-400 uppercase">Annual Waste</p>
                                         </div>
-                                        <div className="border border-green-200 bg-green-50 p-3 text-center">
-                                            <span className="font-mono text-xl font-black text-green-700">${Math.round(roi.projectedSavings / 1000)}K</span>
-                                            <p className="font-mono text-[9px] text-green-500 uppercase">Savings</p>
+                                        <div className="border border-neutral-200 bg-neutral-50 p-3 text-center">
+                                            <span className="font-mono text-xl font-black text-black">${Math.round(roi.projectedSavings / 1000)}K</span>
+                                            <p className="font-mono text-[9px] text-neutral-500 uppercase">Savings</p>
                                         </div>
                                         <div className="border border-blue-200 bg-blue-50 p-3 text-center">
                                             <span className="font-mono text-xl font-black text-blue-700">{roi.paybackMonths}mo</span>

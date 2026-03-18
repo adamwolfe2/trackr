@@ -52,7 +52,7 @@ async function loginAction(formData: FormData) {
 
 function statusColor(status: string): string {
     switch (status) {
-        case "approved": return "text-green-700 border-green-200";
+        case "approved": return "text-black border-neutral-200";
         case "rejected": return "text-red-700 border-red-200";
         case "pending": return "text-yellow-700 border-yellow-200";
         default: return "text-neutral-500 border-neutral-200";

@@ -313,7 +313,7 @@ export function BoardReportView({ report, isPublic }: BoardReportViewProps) {
                                 data.spendMoMChange > 0
                                     ? "text-red-600"
                                     : data.spendMoMChange < 0
-                                    ? "text-green-700"
+                                    ? "text-black"
                                     : ""
                             }`}
                         >

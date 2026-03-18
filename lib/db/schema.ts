@@ -111,7 +111,7 @@ export const painPoints = pgTable('pain_points', {
     description: text('description'),
     category: text('category'),
     active: boolean('active').default(true).notNull(),
-    createdBy: uuid('created_by'),
+    createdBy: uuid('created_by').notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
     index('pain_points_workspace_id_idx').on(table.workspaceId),
@@ -123,7 +123,7 @@ export const researchJobs = pgTable('research_jobs', {
     toolId: uuid('tool_id').references(() => tools.id).notNull(),
     status: text('status').default('queued').notNull(), // queued | running | complete | failed
     n8nExecutionId: text('n8n_execution_id'),
-    triggeredBy: text('triggered_by'), // Clerk User ID
+    triggeredBy: text('triggered_by').notNull(), // Clerk User ID
     triggeredAt: timestamp('triggered_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
     errorMessage: text('error_message'),
@@ -446,7 +446,7 @@ export const auditSubmissions = pgTable('audit_submissions', {
     id: uuid('id').defaultRandom().primaryKey(),
     // Contact
     contactEmail: text('contact_email').notNull(),
-    contactName: text('contact_name'),
+    contactName: text('contact_name').notNull(),
     callOwnerEmail: text('call_owner_email'), // Trackr team member receiving the scorecard
     // Company info
     companyName: text('company_name').notNull(),

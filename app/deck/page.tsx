@@ -195,13 +195,13 @@ function AnimatedScore({ score, run }: { score: number; run: boolean }) {
 }
 
 function scoreBarColor(score: number): string {
-    if (score >= 80) return "#22c55e";
+    if (score >= 80) return "#171717";
     if (score >= 60) return "#f59e0b";
     return "#ef4444";
 }
 
 function scoreDotClass(score: number): string {
-    if (score >= 80) return "bg-green-500";
+    if (score >= 80) return "bg-black";
     if (score >= 60) return "bg-amber-500";
     return "bg-red-500";
 }
@@ -339,8 +339,8 @@ function ResearchAgentDemo({ autoPlay = true, widgetHeight = 480 }: { autoPlay?:
                                         )}
                                         {streamVisible[si] >= 4 && (
                                             <div className="flex items-center gap-1 pl-2.5 pt-0.5">
-                                                <CheckCircle2 className="w-2.5 h-2.5 text-green-600" />
-                                                <span className="font-mono text-[9px] text-green-600 font-medium">Done</span>
+                                                <CheckCircle2 className="w-2.5 h-2.5 text-black" />
+                                                <span className="font-mono text-[9px] text-black font-medium">Done</span>
                                             </div>
                                         )}
                                     </div>
@@ -497,7 +497,7 @@ function SpendTrackerDemo() {
                 <div className="grid grid-cols-2 gap-3">
                     <div className="border border-black bg-white p-4">
                         <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/40 mb-1">AI Tools</div>
-                        <div className="font-serif text-2xl font-normal text-green-700">${totalAi.toLocaleString()}</div>
+                        <div className="font-serif text-2xl font-normal text-black">${totalAi.toLocaleString()}</div>
                     </div>
                     <div className="border border-black bg-white p-4">
                         <div className="font-mono text-[9px] uppercase tracking-[0.15em] text-black/40 mb-1">Legacy</div>
@@ -562,7 +562,7 @@ function SpendTrackerDemo() {
                                 <div>
                                     <span className={`font-mono text-[8px] uppercase tracking-widest px-1.5 py-0.5 border ${
                                         tool.type === "AI"
-                                            ? "bg-green-50 border-green-200 text-green-700"
+                                            ? "bg-neutral-50 border-neutral-200 text-black"
                                             : "bg-amber-50 border-amber-200 text-amber-700"
                                     }`}>
                                         {tool.type}
@@ -631,8 +631,8 @@ function ProcessAnimation() {
                             )}
                             {isDone && (
                                 <div className="mt-2.5 flex items-center gap-1">
-                                    <CheckCircle2 className="w-3 h-3 text-green-600" />
-                                    <span className="font-mono text-[8px] text-green-600 font-medium">Done</span>
+                                    <CheckCircle2 className="w-3 h-3 text-black" />
+                                    <span className="font-mono text-[8px] text-black font-medium">Done</span>
                                 </div>
                             )}
                             {isActive && (

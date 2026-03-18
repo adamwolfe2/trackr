@@ -137,7 +137,7 @@ export default async function ArchitectDashboardPage() {
                                     </p>
                                 </div>
                                 <span className={`font-mono text-[10px] uppercase tracking-widest border px-1.5 py-0.5 ${
-                                    ref.status === "active" ? "text-green-700 border-green-200" :
+                                    ref.status === "active" ? "text-black border-neutral-200" :
                                     ref.status === "churned" ? "text-red-700 border-red-200" :
                                     "text-yellow-700 border-yellow-200"
                                 }`}>
@@ -167,7 +167,7 @@ export default async function ArchitectDashboardPage() {
                                     </p>
                                 </div>
                                 <span className={`font-mono text-[10px] uppercase tracking-widest border px-1.5 py-0.5 ${
-                                    comm.status === "paid" ? "text-green-700 border-green-200" :
+                                    comm.status === "paid" ? "text-black border-neutral-200" :
                                     comm.status === "failed" ? "text-red-700 border-red-200" :
                                     "text-yellow-700 border-yellow-200"
                                 }`}>

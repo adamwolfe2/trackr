@@ -36,7 +36,7 @@ const SIGNAL_COLORS: Record<string, string> = {
     YC: "bg-orange-500 text-white",
     Agents: "bg-purple-600 text-white",
     RAG: "bg-blue-600 text-white",
-    OpenSource: "bg-green-700 text-white",
+    OpenSource: "bg-black text-white",
     Viral: "border border-black text-black",
     Funded: "border border-neutral-400 text-neutral-500",
     "Fast-growing": "border border-neutral-400 text-neutral-500",

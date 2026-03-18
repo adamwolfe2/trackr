@@ -9,7 +9,7 @@ export default function QueueLoading() {
             </div>
             <div className="grid gap-4">
                 {[1, 2, 3, 4].map(i => (
-                    <div key={i} className="border rounded-lg p-4 flex items-center justify-between">
+                    <div key={i} className="border p-4 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <Skeleton className="h-5 w-5 rounded-full" />
                             <div className="space-y-2">

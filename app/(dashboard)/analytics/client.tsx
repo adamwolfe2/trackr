@@ -76,7 +76,7 @@ function scoreCellClass(score: number | undefined): string {
     if (score === undefined) return "bg-neutral-50 text-neutral-300";
     if (score < 4) return "bg-red-50 text-red-700 border border-red-100";
     if (score <= 6.5) return "bg-yellow-50 text-yellow-700 border border-yellow-100";
-    return "bg-green-50 text-green-700 border border-green-100";
+    return "bg-neutral-50 text-black border border-neutral-200";
 }
 
 function formatDollar(amount: number): string {

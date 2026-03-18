@@ -57,7 +57,7 @@ export default async function ArchitectSettingsPage({
                         <div>
                             <p className="font-mono text-[10px] text-neutral-400 uppercase">Status</p>
                             <span className={`font-mono text-[10px] uppercase tracking-widest border px-1.5 py-0.5 ${
-                                architect.status === "active" ? "text-green-700 border-green-200" : "text-neutral-500 border-neutral-200"
+                                architect.status === "active" ? "text-black border-neutral-200" : "text-neutral-500 border-neutral-200"
                             }`}>
                                 {architect.status}
                             </span>
@@ -85,7 +85,7 @@ export default async function ArchitectSettingsPage({
                 )}
                 {architect.stripeOnboardingComplete ? (
                     <div>
-                        <p className="font-mono text-sm text-green-700 mb-3">Connected and active</p>
+                        <p className="font-mono text-sm text-black mb-3">Connected and active</p>
                         <Link
                             href="https://connect.stripe.com/express_login"
                             target="_blank"

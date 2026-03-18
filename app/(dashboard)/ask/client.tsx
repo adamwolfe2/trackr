@@ -15,8 +15,7 @@ function TrackrIcon({ className }: { className?: string }) {
     );
 }
 import ReactMarkdown from "react-markdown";
-
-const STORAGE_KEY = "trackr-chat-messages";
+import { CHAT_STORAGE_KEY as STORAGE_KEY } from "@/lib/constants/app";
 
 function loadStoredMessages(): UIMessage[] {
     if (typeof window === "undefined") return [];

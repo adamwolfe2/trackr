@@ -65,7 +65,7 @@ function relativeTime(date: Date): string {
 
 function statusColor(status: string): string {
     switch (status) {
-        case "complete": return "text-green-700 border-green-200";
+        case "complete": return "text-black border-neutral-200";
         case "processing": return "text-yellow-700 border-yellow-200";
         case "failed": return "text-red-700 border-red-200";
         default: return "text-neutral-500 border-neutral-200";
@@ -74,7 +74,7 @@ function statusColor(status: string): string {
 
 function scoreColor(score: number | null): string {
     if (score === null) return "text-neutral-400";
-    if (score >= 61) return "text-green-700";
+    if (score >= 61) return "text-black";
     if (score >= 41) return "text-yellow-700";
     return "text-red-700";
 }

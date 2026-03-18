@@ -275,7 +275,7 @@ export function LiteracyClient({
     const statusBadge = (status: string) => {
         const styles: Record<string, string> = {
             draft: "bg-neutral-100 text-neutral-500 border-neutral-300",
-            active: "bg-green-50 text-green-700 border-green-300",
+            active: "bg-neutral-100 text-black border-neutral-300",
             closed: "bg-black text-white border-black",
         };
         return (

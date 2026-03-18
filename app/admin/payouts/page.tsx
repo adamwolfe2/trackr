@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 function statusColor(status: string): string {
     switch (status) {
-        case "paid": return "text-green-700 border-green-200";
+        case "paid": return "text-black border-neutral-200";
         case "failed": return "text-red-700 border-red-200";
         case "pending": return "text-yellow-700 border-yellow-200";
         case "processing": return "text-blue-700 border-blue-200";
@@ -132,7 +132,7 @@ export default async function AdminPayoutsPage() {
                                         <td className="p-3">
                                             <span className={`font-mono text-[10px] uppercase tracking-widest border px-1.5 py-0.5 ${
                                                 row.stripeConnectComplete
-                                                    ? "text-green-700 border-green-200"
+                                                    ? "text-black border-neutral-200"
                                                     : "text-red-700 border-red-200"
                                             }`}>
                                                 {row.stripeConnectComplete ? "Connected" : "Not Connected"}

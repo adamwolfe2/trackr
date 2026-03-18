@@ -17,6 +17,12 @@ export async function getWorkspaceFromApiKey(req: Request) {
     const apiKey = auth.slice(7);
     if (!apiKey) return null;
 
+    // Reject obviously invalid keys before hitting the DB
+    // Expected format: 64-char hex string (SHA-256 of the original key, or the raw key itself)
+    if (apiKey.length < 32 || apiKey.length > 128 || !/^[a-zA-Z0-9_\-]+$/.test(apiKey)) {
+        return null;
+    }
+
     const hashedKey = hashApiKey(apiKey);
     const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.apiKey, hashedKey),

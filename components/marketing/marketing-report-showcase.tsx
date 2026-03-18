@@ -3,7 +3,7 @@
 import { useRef, useEffect } from "react";
 import { motion, useInView } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink, Search } from "lucide-react";
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
 type Tier = "mainstream" | "underground";
@@ -204,8 +204,8 @@ function ToolCard({ tool }: { tool: Tool }) {
             <div className="px-4 pt-3.5 pb-3 border-b border-black/8">
                 {/* Tier badge */}
                 {tool.tier === "underground" ? (
-                    <span className="font-mono text-[9px] bg-black text-white px-2 py-0.5 uppercase tracking-widest inline-block mb-2">
-                        🔍 Insider Tool
+                    <span className="font-mono text-[9px] bg-black text-white px-2 py-0.5 uppercase tracking-widest inline-flex items-center gap-1 mb-2">
+                        <Search className="w-2.5 h-2.5" /> Insider Tool
                     </span>
                 ) : (
                     <span className="font-mono text-[9px] border border-neutral-300 text-neutral-400 px-2 py-0.5 uppercase tracking-widest inline-block mb-2">
@@ -488,8 +488,8 @@ export function MarketingReportShowcase() {
             {/* Badge legend */}
             <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2">
                 <div className="flex items-center gap-2">
-                    <span className="font-mono text-[9px] bg-black text-white px-2 py-0.5 uppercase tracking-widest">
-                        🔍 Insider Tool
+                    <span className="font-mono text-[9px] bg-black text-white px-2 py-0.5 uppercase tracking-widest inline-flex items-center gap-1">
+                        <Search className="w-2.5 h-2.5" /> Insider Tool
                     </span>
                     <span className="font-mono text-[10px] text-neutral-500">
                         Underground picks — tools insiders rely on before mass market

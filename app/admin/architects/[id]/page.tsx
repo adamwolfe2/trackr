@@ -27,7 +27,7 @@ function getRoleTitle(slug: string): string {
 function statusColor(status: string): string {
     switch (status) {
         case "approved":
-        case "active": return "text-green-700 border-green-200";
+        case "active": return "text-black border-neutral-200";
         case "rejected":
         case "terminated": return "text-red-700 border-red-200";
         case "pending": return "text-yellow-700 border-yellow-200";
@@ -352,7 +352,7 @@ export default async function ArchitectDetailPage({
                     )}
 
                     {application.status === "approved" && (
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-green-700">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-black">
                             Application approved
                         </span>
                     )}

@@ -79,7 +79,7 @@ export default async function ArchitectClientsPage() {
                                 </td>
                                 <td className="p-3">
                                     <span className={`font-mono text-[10px] uppercase tracking-widest border px-1.5 py-0.5 ${
-                                        ref.status === "active" ? "text-green-700 border-green-200" :
+                                        ref.status === "active" ? "text-black border-neutral-200" :
                                         ref.status === "churned" ? "text-red-700 border-red-200" :
                                         "text-yellow-700 border-yellow-200"
                                     }`}>

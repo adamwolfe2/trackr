@@ -165,6 +165,7 @@ function getDomain(url: string): string {
 
 export interface ResearchOptions {
     depth?: ResearchDepth;
+    triggeredBy?: string;
 }
 
 export async function performDeepResearch(toolId: string, options?: ResearchOptions) {
@@ -306,6 +307,7 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
     const [researchJob] = await db.insert(researchJobs).values({
         toolId,
         status: "running",
+        triggeredBy: options?.triggeredBy ?? "system",
         triggeredAt: new Date(),
     }).returning();
 

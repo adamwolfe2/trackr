@@ -298,8 +298,8 @@ function getInactionRisks(score: number, spend: string | null, adoption: string 
 // ── Badge helpers ─────────────────────────────────────────────────────────────
 
 function aiRoleBadge(role: string | null) {
-    if (role === "AI-native") return "bg-green-100 text-green-700 border-green-300";
-    if (role === "AI-assisted") return "bg-blue-50 text-blue-700 border-blue-300";
+    if (role === "AI-native") return "bg-neutral-100 text-black border-neutral-300";
+    if (role === "AI-assisted") return "bg-neutral-50 text-neutral-700 border-neutral-200";
     return "bg-neutral-100 text-neutral-500 border-neutral-300";
 }
 function impactBadge(level: string) {
@@ -310,11 +310,11 @@ function impactBadge(level: string) {
 function scoreColor(score: number) {
     if (score <= 40) return "text-red-600";
     if (score <= 65) return "text-amber-600";
-    if (score <= 85) return "text-blue-700";
-    return "text-green-700";
+    if (score <= 85) return "text-neutral-700";
+    return "text-black";
 }
 function dimColor(score: number) {
-    if (score >= 68) return "#059669";
+    if (score >= 68) return "#171717";
     if (score >= 42) return "#D97706";
     return "#DC2626";
 }
@@ -460,7 +460,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                     </span>
                                 </div>
                                 <div className="h-2 bg-neutral-200 mb-2">
-                                    <div className="h-full" style={{ width: `${score}%`, background: score <= 40 ? "#DC2626" : score <= 65 ? "#D97706" : score <= 85 ? "#2563EB" : "#059669" }} />
+                                    <div className="h-full" style={{ width: `${score}%`, background: score <= 40 ? "#DC2626" : score <= 65 ? "#D97706" : score <= 85 ? "#525252" : "#171717" }} />
                                 </div>
                                 <p className="font-mono text-xs text-neutral-600 leading-relaxed">{scorecard.aiNativeScore.summary}</p>
                             </div>
@@ -490,7 +490,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                 {[
                                     { label: "Your Score", value: score, cls: scoreColor(score) },
                                     { label: benchmarks.label + " Avg", value: benchmarks.avg, cls: "text-neutral-500" },
-                                    { label: "AI Leader Tier", value: benchmarks.leader, cls: "text-green-700" },
+                                    { label: "AI Leader Tier", value: benchmarks.leader, cls: "text-black" },
                                 ].map(({ label, value, cls }) => (
                                     <div key={label} className="border border-black bg-white p-3 text-center">
                                         <div className={`font-mono text-2xl font-black ${cls}`}>{value}</div>
@@ -504,7 +504,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                     {score > benchmarks.avg ? `${score - benchmarks.avg} pts above` : `${benchmarks.avg - score} pts below`}
                                 </span>
                                 {" "}industry avg ·{" "}
-                                <span className="text-blue-700">{benchmarks.leader - score} pts</span> to AI-Leader tier
+                                <span className="text-neutral-700">{benchmarks.leader - score} pts</span> to AI-Leader tier
                             </p>
                         </div>
                     </div>
@@ -574,7 +574,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                         {scorecard.recommendations.length > 0 && (
                             <div>
                                 <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 mb-4 flex items-center gap-2">
-                                    <span className="w-1 h-3 bg-blue-600 inline-block" />
+                                    <span className="w-1 h-3 bg-black inline-block" />
                                     90-Day Strategic Roadmap
                                 </p>
                                 <div className="space-y-3">
@@ -592,8 +592,8 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                             </div>
                                             <p className="font-mono text-xs text-neutral-600 leading-relaxed">{r.description}</p>
                                             {r.estimatedROI && (
-                                                <p className="mt-3 font-mono text-[10px] text-green-700 flex items-center gap-2">
-                                                    <span className="w-5 h-px bg-green-400 flex-shrink-0" />
+                                                <p className="mt-3 font-mono text-[10px] text-black flex items-center gap-2">
+                                                    <span className="w-5 h-px bg-neutral-400 flex-shrink-0" />
                                                     Est. ROI: {r.estimatedROI}
                                                 </p>
                                             )}
@@ -665,7 +665,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                             <div className="border border-black bg-white">
                                 <div className="px-4 py-3 border-b border-black flex items-center justify-between">
                                     <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-500">Capability Gaps</span>
-                                    <span className="font-mono text-[9px] text-blue-700">To adopt</span>
+                                    <span className="font-mono text-[9px] text-neutral-700">To adopt</span>
                                 </div>
                                 <div className="px-4 py-3 border-b border-neutral-100 flex flex-wrap gap-1">
                                     {recommendedTools.map((t, i) => {
@@ -742,20 +742,20 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                         {wf.stages.map((stage, si) => (
                                             <div key={si} className="flex items-stretch">
                                                 <div className={`px-3 py-2.5 border text-center min-w-[100px] ${
-                                                    stage.status === "covered" ? "border-green-300 bg-green-50" :
+                                                    stage.status === "covered" ? "border-neutral-300 bg-neutral-50" :
                                                     stage.status === "partial" ? "border-amber-300 bg-amber-50" :
                                                     "border-red-300 bg-red-50"
                                                 }`}>
                                                     <p className="font-mono text-[10px] font-bold leading-tight">{stage.name}</p>
                                                     <p className={`font-mono text-[8px] mt-1 ${
-                                                        stage.status === "covered" ? "text-green-600" :
+                                                        stage.status === "covered" ? "text-black" :
                                                         stage.status === "partial" ? "text-amber-600" :
                                                         "text-red-600"
                                                     }`}>
                                                         {stage.tool ?? "No tool"}
                                                     </p>
                                                     <span className={`inline-block font-mono text-[7px] uppercase tracking-wider mt-1 px-1.5 py-0.5 border ${
-                                                        stage.status === "covered" ? "border-green-300 text-green-700" :
+                                                        stage.status === "covered" ? "border-neutral-300 text-black" :
                                                         stage.status === "partial" ? "border-amber-300 text-amber-700" :
                                                         "border-red-300 text-red-700"
                                                     }`}>{stage.status}</span>
@@ -779,14 +779,14 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                 {scorecard.industryBenchmark && (
                     <div className="border border-black bg-white p-6 lg:p-8">
                         <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 mb-6 flex items-center gap-2">
-                            <span className="w-1 h-3 bg-blue-600 inline-block" />
+                            <span className="w-1 h-3 bg-black inline-block" />
                             Deep Industry Benchmark
                         </p>
                         <div className="grid grid-cols-3 gap-4 mb-6">
                             {[
                                 { label: "Your Score", value: score, cls: scoreColor(score) },
                                 { label: scorecard.industryBenchmark.peerLabel, value: scorecard.industryBenchmark.peerAvgScore, cls: "text-neutral-500" },
-                                { label: "Your Percentile", value: `${scorecard.industryBenchmark.percentile}%`, cls: scorecard.industryBenchmark.percentile >= 50 ? "text-green-700" : "text-amber-600" },
+                                { label: "Your Percentile", value: `${scorecard.industryBenchmark.percentile}%`, cls: scorecard.industryBenchmark.percentile >= 50 ? "text-black" : "text-amber-600" },
                             ].map(({ label, value, cls }) => (
                                 <div key={label} className="border border-neutral-200 bg-[#F3F3EF] p-5 text-center">
                                     <div className={`font-mono text-4xl font-black mb-2 ${cls}`}>{value}</div>
@@ -800,9 +800,9 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
 
                 {/* ── ROI Projection ────────────────────────────────────────────────── */}
                 {scorecard.roiProjection && (
-                    <div className="border-2 border-green-700 bg-white p-6 lg:p-8">
-                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-green-700 mb-6 flex items-center gap-2">
-                            <span className="w-1 h-3 bg-green-700 inline-block" />
+                    <div className="border-2 border-black bg-white p-6 lg:p-8">
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-black mb-6 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-black inline-block" />
                             ROI Projection — Implementation Impact
                         </p>
                         <div className="grid grid-cols-3 gap-4 mb-6">
@@ -812,17 +812,17 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                 </div>
                                 <div className="font-mono text-[9px] uppercase tracking-widest text-red-400">Annual Waste</div>
                             </div>
-                            <div className="border border-green-200 bg-green-50 p-5 text-center">
-                                <div className="font-mono text-3xl font-black text-green-700 mb-1">
+                            <div className="border border-neutral-200 bg-neutral-50 p-5 text-center">
+                                <div className="font-mono text-3xl font-black text-black mb-1">
                                     ${Math.round(scorecard.roiProjection.projectedSavings / 1000)}K
                                 </div>
-                                <div className="font-mono text-[9px] uppercase tracking-widest text-green-500">Projected Savings</div>
+                                <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-500">Projected Savings</div>
                             </div>
-                            <div className="border border-blue-200 bg-blue-50 p-5 text-center">
-                                <div className="font-mono text-3xl font-black text-blue-700 mb-1">
+                            <div className="border border-neutral-200 bg-neutral-50 p-5 text-center">
+                                <div className="font-mono text-3xl font-black text-neutral-700 mb-1">
                                     {scorecard.roiProjection.paybackMonths}mo
                                 </div>
-                                <div className="font-mono text-[9px] uppercase tracking-widest text-blue-400">Payback Period</div>
+                                <div className="font-mono text-[9px] uppercase tracking-widest text-neutral-400">Payback Period</div>
                             </div>
                         </div>
                         <div>
@@ -850,26 +850,26 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                 </div>
                                 {/* Stack summary pills */}
                                 <div className="flex gap-2 flex-wrap justify-end">
-                                    <span className="font-mono text-[9px] border border-green-300 bg-green-50 text-green-700 px-2.5 py-1">{nativeCount} AI-Native</span>
-                                    <span className="font-mono text-[9px] border border-blue-300 bg-blue-50 text-blue-700 px-2.5 py-1">{assistedCount} AI-Assisted</span>
+                                    <span className="font-mono text-[9px] border border-black bg-neutral-100 text-black px-2.5 py-1">{nativeCount} AI-Native</span>
+                                    <span className="font-mono text-[9px] border border-neutral-300 bg-neutral-50 text-neutral-700 px-2.5 py-1">{assistedCount} AI-Assisted</span>
                                     <span className="font-mono text-[9px] border border-neutral-300 bg-neutral-100 text-neutral-600 px-2.5 py-1">{coreCount} Core Infra</span>
                                 </div>
                             </div>
 
                             {/* Proportion bar */}
                             <div className="mt-4 h-2 flex gap-px overflow-hidden">
-                                {nativeCount > 0 && <div className="bg-green-500 h-full" style={{ width: `${(nativeCount / totalCount) * 100}%` }} />}
-                                {assistedCount > 0 && <div className="bg-blue-400 h-full" style={{ width: `${(assistedCount / totalCount) * 100}%` }} />}
+                                {nativeCount > 0 && <div className="bg-black h-full" style={{ width: `${(nativeCount / totalCount) * 100}%` }} />}
+                                {assistedCount > 0 && <div className="bg-neutral-400 h-full" style={{ width: `${(assistedCount / totalCount) * 100}%` }} />}
                                 {coreCount > 0 && <div className="bg-neutral-300 h-full" style={{ width: `${(coreCount / totalCount) * 100}%` }} />}
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2">
                             {[
-                                { tools: quickWins, title: "⚡ Quick Wins", sub: "High Criticality · Low AI Use", desc: "Highest-ROI upgrade targets", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", chip: "border-amber-200 bg-white" },
-                                { tools: champions, title: "★ AI Champions", sub: "High Criticality · High AI Use", desc: "Best-in-class — maximize these", bg: "bg-green-50", border: "border-green-200", text: "text-green-700", chip: "border-green-200 bg-white" },
+                                { tools: quickWins, title: "Quick Wins", sub: "High Criticality · Low AI Use", desc: "Highest-ROI upgrade targets", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", chip: "border-amber-200 bg-white" },
+                                { tools: champions, title: "AI Champions", sub: "High Criticality · High AI Use", desc: "Best-in-class — maximize these", bg: "bg-neutral-50", border: "border-neutral-200", text: "text-black", chip: "border-neutral-200 bg-white" },
                                 { tools: evaluate, title: "○ Evaluate", sub: "Low Criticality · Low AI Use", desc: "Assess ROI, consider consolidation", bg: "bg-[#F3F3EF]", border: "border-neutral-200", text: "text-neutral-500", chip: "border-neutral-200 bg-white" },
-                                { tools: explorers, title: "→ Explorers", sub: "Low Criticality · High AI Use", desc: "AI-capable, lower business priority", bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", chip: "border-blue-200 bg-white" },
+                                { tools: explorers, title: "Explorers", sub: "Low Criticality · High AI Use", desc: "AI-capable, lower business priority", bg: "bg-neutral-50", border: "border-neutral-200", text: "text-neutral-700", chip: "border-neutral-200 bg-white" },
                             ].map(({ tools, title, sub, desc, bg, border, text, chip }, qi) => (
                                 <div key={qi} className={`${bg} p-5 ${qi === 0 ? "border-r border-b" : qi === 1 ? "border-b" : qi === 2 ? "border-r" : ""} border-neutral-200 min-h-[200px]`}>
                                     <p className={`font-mono text-[10px] font-bold uppercase tracking-wider ${text} mb-0.5`}>{title}</p>
@@ -920,8 +920,8 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                         {[
                             { label: "Your Score", value: score, cls: scoreColor(score) },
                             { label: "Industry Average", value: benchmarks.avg, cls: "text-neutral-500" },
-                            { label: "AI Leader Tier", value: benchmarks.leader, cls: "text-green-700" },
-                            { label: "Your Potential", value: scorecard.futureAINativeTarget.targetScore, cls: "text-blue-700" },
+                            { label: "AI Leader Tier", value: benchmarks.leader, cls: "text-black" },
+                            { label: "Your Potential", value: scorecard.futureAINativeTarget.targetScore, cls: "text-neutral-700" },
                         ].map(({ label, value, cls }) => (
                             <div key={label} className="border border-neutral-200 bg-[#F3F3EF] p-5 text-center">
                                 <div className={`font-mono text-5xl font-black mb-2 ${cls}`}>{value}</div>
@@ -965,19 +965,19 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                 <div className="border border-black bg-white p-6 lg:p-10">
                     <div className="flex flex-col sm:flex-row items-start gap-8">
                         <div className="text-center flex-shrink-0 sm:border-r sm:border-neutral-200 sm:pr-8 pb-4 sm:pb-0">
-                            <div className="font-mono text-7xl font-black text-blue-700 leading-none">
+                            <div className="font-mono text-7xl font-black text-black leading-none">
                                 {scorecard.futureAINativeTarget.targetScore}
                             </div>
                             <div className="font-mono text-xs text-neutral-400 mt-1">/100 potential</div>
-                            <div className="font-mono text-[9px] text-blue-700 mt-2 uppercase tracking-widest">
+                            <div className="font-mono text-[9px] text-black mt-2 uppercase tracking-widest">
                                 +{scorecard.futureAINativeTarget.targetScore - score} pt gap
                             </div>
                         </div>
                         <div>
                             <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-neutral-400 mb-2">AI Performance Ceiling — Unlocked With Advisory</p>
                             <p className="font-mono text-sm text-neutral-700 leading-relaxed mb-4">{scorecard.futureAINativeTarget.summary}</p>
-                            <p className="font-mono text-xs text-blue-700 flex items-center gap-2">
-                                <span className="w-5 h-px bg-blue-300 flex-shrink-0" />
+                            <p className="font-mono text-xs text-neutral-700 flex items-center gap-2">
+                                <span className="w-5 h-px bg-neutral-400 flex-shrink-0" />
                                 Companies at {scorecard.futureAINativeTarget.targetScore}+ generate an avg 23% more revenue per employee
                             </p>
                         </div>
