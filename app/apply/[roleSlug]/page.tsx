@@ -103,10 +103,11 @@ export default function ApplyRolePage() {
                 <form onSubmit={handleSubmit} className="border border-black bg-white p-8 space-y-6">
                     <div className="grid sm:grid-cols-2 gap-6">
                         <div>
-                            <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
+                            <label htmlFor="firstName" className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
                                 First name *
                             </label>
                             <input
+                                id="firstName"
                                 name="firstName"
                                 type="text"
                                 required
@@ -114,10 +115,11 @@ export default function ApplyRolePage() {
                             />
                         </div>
                         <div>
-                            <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
+                            <label htmlFor="lastName" className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
                                 Last name *
                             </label>
                             <input
+                                id="lastName"
                                 name="lastName"
                                 type="text"
                                 required
@@ -127,10 +129,11 @@ export default function ApplyRolePage() {
                     </div>
 
                     <div>
-                        <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
+                        <label htmlFor="email" className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
                             Email *
                         </label>
                         <input
+                            id="email"
                             name="email"
                             type="email"
                             required
@@ -140,20 +143,22 @@ export default function ApplyRolePage() {
 
                     <div className="grid sm:grid-cols-2 gap-6">
                         <div>
-                            <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
+                            <label htmlFor="phone" className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
                                 Phone
                             </label>
                             <input
+                                id="phone"
                                 name="phone"
                                 type="tel"
                                 className="w-full border border-black px-3 py-2 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black"
                             />
                         </div>
                         <div>
-                            <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
+                            <label htmlFor="linkedinUrl" className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
                                 LinkedIn URL
                             </label>
                             <input
+                                id="linkedinUrl"
                                 name="linkedinUrl"
                                 type="url"
                                 placeholder="https://linkedin.com/in/..."
@@ -163,10 +168,11 @@ export default function ApplyRolePage() {
                     </div>
 
                     <div>
-                        <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
+                        <label htmlFor="experience" className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
                             Why are you a good fit? *
                         </label>
                         <textarea
+                            id="experience"
                             name="experience"
                             required
                             rows={4}
@@ -176,10 +182,11 @@ export default function ApplyRolePage() {
                     </div>
 
                     <div>
-                        <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
+                        <label htmlFor="portfolioUrl" className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
                             Portfolio or website URL
                         </label>
                         <input
+                            id="portfolioUrl"
                             name="portfolioUrl"
                             type="url"
                             placeholder="https://..."
@@ -188,10 +195,11 @@ export default function ApplyRolePage() {
                     </div>
 
                     <div>
-                        <label className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
+                        <label htmlFor="referralSource" className="block font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">
                             How did you hear about Trackr?
                         </label>
                         <input
+                            id="referralSource"
                             name="referralSource"
                             type="text"
                             className="w-full border border-black px-3 py-2 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black"

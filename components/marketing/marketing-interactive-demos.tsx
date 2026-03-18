@@ -226,7 +226,7 @@ function StackIntelligenceDemo({ active }: { active: boolean }) {
                     duration={1000}
                   />
                 ) : (
-                  <span className="text-neutral-200">--</span>
+                  <span className="text-neutral-400">--</span>
                 )}
               </div>
               <span className="font-mono text-[9px] text-neutral-400 uppercase tracking-wider">

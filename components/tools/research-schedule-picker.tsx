@@ -106,7 +106,7 @@ export function ResearchSchedulePicker({
 
                 {open && (
                     <>
-                        <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+                        <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} role="presentation" aria-hidden="true" />
                         <div className="absolute left-0 right-0 top-full z-20 border border-black bg-white border-t-0">
                             {(Object.keys(INTERVAL_LABELS) as ResearchInterval[]).map((val) => (
                                 <button

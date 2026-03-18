@@ -43,14 +43,15 @@ export function GenerateReportDialog({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-            <div className="w-full max-w-md border border-black bg-white p-4 sm:p-6 mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="w-full max-w-md border border-black bg-white p-4 sm:p-6 mx-4 max-h-[85vh] overflow-y-auto" role="dialog" aria-modal="true" aria-labelledby="report-dialog-title">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="font-serif text-xl font-normal">Generate Board Report</h2>
+                    <h2 id="report-dialog-title" className="font-serif text-xl font-normal">Generate Board Report</h2>
                     <button
                         onClick={onClose}
                         className="w-8 h-8 flex items-center justify-center border border-black hover:bg-neutral-100 transition-colors"
                         disabled={isPending}
+                        aria-label="Close dialog"
                     >
                         <X className="w-4 h-4" />
                     </button>

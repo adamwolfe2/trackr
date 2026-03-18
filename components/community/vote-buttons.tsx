@@ -116,7 +116,7 @@ export function VoteButtons({ slug, initialUp = 0, initialDown = 0 }: VoteButton
                         ? "border-black bg-black text-white"
                         : "border-neutral-300 text-neutral-500 hover:border-black hover:text-black"
                 }`}
-                title="Helpful"
+                aria-label="Vote helpful"
             >
                 <ThumbsUp className="w-3 h-3" />
                 <span>{up}</span>
@@ -130,7 +130,7 @@ export function VoteButtons({ slug, initialUp = 0, initialDown = 0 }: VoteButton
                         ? "border-black bg-black text-white"
                         : "border-neutral-300 text-neutral-500 hover:border-black hover:text-black"
                 }`}
-                title="Not helpful"
+                aria-label="Vote not helpful"
             >
                 <ThumbsDown className="w-3 h-3" />
                 <span>{down}</span>

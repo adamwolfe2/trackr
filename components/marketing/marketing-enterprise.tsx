@@ -136,7 +136,7 @@ export function MarketingEnterprise() {
                             transition={{ duration: 0.4, delay: i * 0.1, ease: "easeOut" }}
                             className={`p-6 ${i < AUDIT_STEPS.length - 1 ? "border-b md:border-b-0 md:border-r border-black" : ""}`}
                         >
-                            <div className="font-mono text-4xl font-bold text-neutral-100 mb-4 leading-none">{step.number}</div>
+                            <div className="font-mono text-4xl font-bold text-neutral-300 mb-4 leading-none">{step.number}</div>
                             <h3 className="font-serif text-base font-normal mb-3 leading-snug">{step.title}</h3>
                             <p className="font-mono text-[11px] text-neutral-500 leading-relaxed">{step.body}</p>
                         </motion.div>

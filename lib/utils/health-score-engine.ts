@@ -76,7 +76,7 @@ export function computeToolQuality(tools: ToolInput[]): number {
     );
     if (activeScored.length === 0) return 50; // Neutral score for new workspaces with no active tools
     const sum = activeScored.reduce(
-        (s, t) => s + (parseFloat(t.overallScore!) || 0),
+        (s, t) => s + (parseFloat(t.overallScore ?? "0") || 0),
         0
     );
     const avg = sum / activeScored.length; // 0-10

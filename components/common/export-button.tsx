@@ -93,7 +93,7 @@ export function ExportButton({ toolName, report }: ExportButtonProps) {
 
             {open && (
                 <>
-                    <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+                    <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} role="presentation" aria-hidden="true" />
                     <div className="absolute right-0 top-full mt-1 border border-black bg-white z-20 min-w-[140px]">
                         <button
                             onClick={handleExportCSV}
