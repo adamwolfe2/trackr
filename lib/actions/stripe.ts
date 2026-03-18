@@ -8,6 +8,7 @@ import { workspaceMembers, subscriptions } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import type { PlanSlug, BillingInterval } from "@/lib/config/subscriptions";
 import { captureEvent } from "@/lib/analytics/posthog-server";
+import { rateLimit } from "@/lib/middleware/rate-limit";
 
 type PaidPlanSlug = Exclude<PlanSlug, "free">;
 
@@ -30,6 +31,9 @@ export async function createCheckoutSession(
     if (!user) {
         throw new Error("Unauthorized");
     }
+
+    const rl = await rateLimit(`checkout:${user.id}`, { limit: 3, windowSeconds: 60 });
+    if (!rl.success) throw new Error("Too many requests. Please wait before trying again.");
 
     const member = await db.query.workspaceMembers.findFirst({
         where: and(eq(workspaceMembers.userId, user.id), eq(workspaceMembers.workspaceId, workspaceId)),

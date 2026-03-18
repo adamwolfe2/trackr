@@ -269,8 +269,9 @@ export function getPlanLimits(subscription?: { status: string; planId?: string |
             if (getEnvPriceIds('team').includes(subscription.planId)) return PLANS.TEAM;
         }
 
-        // Active subscription but planId doesn't match known IDs — default to TEAM
-        return PLANS.TEAM;
+        // Active subscription but planId doesn't match known IDs — safe default to FREE
+        console.error(`[billing] Unknown planId "${subscription.planId}" — defaulting to FREE`);
+        return PLANS.FREE;
     }
     return PLANS.FREE;
 }
