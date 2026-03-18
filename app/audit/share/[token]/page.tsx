@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { auditSubmissions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ArrowRight } from "lucide-react";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { LogoImage } from "@/components/common/logo-image";
 import { ScoreArc } from "@/components/audit/score-arc";
@@ -1002,10 +1002,16 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                 build your 90-day AI roadmap, and show you exactly what strategic AI advisory
                                 looks like for a company at your stage.
                             </p>
-                            <a href="https://trytrackr.com"
-                                className="inline-block bg-white text-black font-mono text-xs uppercase tracking-[0.2em] px-6 py-3 hover:bg-neutral-100 transition-colors">
-                                Schedule Now →
-                            </a>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <a href="https://trytrackr.com/audit"
+                                    className="inline-flex items-center gap-2 bg-white text-black font-mono text-xs uppercase tracking-[0.2em] px-6 py-3 hover:bg-neutral-100 transition-colors">
+                                    Schedule Now <ArrowRight className="w-3 h-3" />
+                                </a>
+                                <a href="/sign-up"
+                                    className="inline-flex items-center gap-2 border border-white text-white font-mono text-xs uppercase tracking-[0.2em] px-6 py-3 hover:bg-white/10 transition-colors">
+                                    Start Tracking Free <ArrowRight className="w-3 h-3" />
+                                </a>
+                            </div>
                         </div>
                         <div className="space-y-3 font-mono text-xs text-neutral-500 pt-2">
                             <div className="pb-3 border-b border-neutral-800">
@@ -1016,6 +1022,20 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                             <p><span className="text-neutral-400">Report date:</span> {reportDate} · We recommend re-scoring quarterly as the AI landscape evolves.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {/* ── Sticky Bottom Bar ────────────────────────────────────────── */}
+            <div className="sticky bottom-0 z-50 border-t border-black bg-black/95 backdrop-blur-sm lg:hidden">
+                <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+                    <div className="font-mono text-white">
+                        <span className="text-lg font-bold">{score}</span>
+                        <span className="text-xs text-neutral-400">/100</span>
+                    </div>
+                    <a href="/sign-up"
+                        className="inline-flex items-center gap-2 bg-white text-black font-mono text-[10px] uppercase tracking-[0.2em] px-4 py-2 hover:bg-neutral-100 transition-colors whitespace-nowrap">
+                        Track Your AI Stack Free <ArrowRight className="w-3 h-3" />
+                    </a>
                 </div>
             </div>
 
