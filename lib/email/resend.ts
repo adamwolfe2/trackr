@@ -570,7 +570,7 @@ export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl,
     const contactName = escapeHtml(submission.contactName || "there");
     const role = escapeHtml(submission.role || "");
 
-    const scoreColor = score >= 61 ? "#16a34a" : score >= 41 ? "#d97706" : "#dc2626";
+    const scoreColor = score >= 61 ? "#171717" : score >= 41 ? "#d97706" : "#dc2626";
 
     const painPointsHtml = scorecard.painPoints
         .map(p => `
@@ -606,7 +606,7 @@ export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl,
                 <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: #999; margin-bottom: 6px;">${i + 1}. ${escapeHtml(tp.topic)}</div>
                 <div style="font-size: 12px; color: #555; margin-bottom: 6px;"><strong>Found:</strong> ${escapeHtml(tp.observation)}</div>
                 <div style="font-size: 12px; color: #000; margin-bottom: 6px;"><strong>Ask:</strong> "${escapeHtml(tp.question)}"</div>
-                <div style="font-size: 12px; color: #16a34a;"><strong>Opportunity:</strong> ${escapeHtml(tp.opportunity)}</div>
+                <div style="font-size: 12px; color: #171717;"><strong>Opportunity:</strong> ${escapeHtml(tp.opportunity)}</div>
             </div>`)
         .join("");
 
@@ -664,7 +664,7 @@ export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl,
                 <div style="margin-bottom: 16px; padding: 14px; border: 1px solid #000; background: #fff;">
                     <div style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">${escapeHtml(wf.workflowName)}</div>
                     <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px;">
-                        ${wf.stages.map(s => `<span style="font-size: 10px; padding: 3px 8px; border: 1px solid ${s.status === "covered" ? "#86efac" : s.status === "partial" ? "#fde68a" : "#fca5a5"}; background: ${s.status === "covered" ? "#f0fdf4" : s.status === "partial" ? "#fffbeb" : "#fef2f2"};">${escapeHtml(s.name)}: ${s.tool ? escapeHtml(s.tool) : "GAP"}</span>`).join("")}
+                        ${wf.stages.map(s => `<span style="font-size: 10px; padding: 3px 8px; border: 1px solid ${s.status === "covered" ? "#d4d4d4" : s.status === "partial" ? "#fde68a" : "#fca5a5"}; background: ${s.status === "covered" ? "#f5f5f5" : s.status === "partial" ? "#fffbeb" : "#fef2f2"};">${escapeHtml(s.name)}: ${s.tool ? escapeHtml(s.tool) : "GAP"}</span>`).join("")}
                     </div>
                     <div style="font-size: 11px; color: #dc2626; margin-bottom: 4px;">Bottleneck: ${escapeHtml(wf.bottleneck)}</div>
                     <div style="font-size: 12px; color: #555;">${escapeHtml(wf.fixDescription)}</div>
@@ -702,16 +702,16 @@ export async function sendAuditScorecardEmail({ submission, scorecard, shareUrl,
         ${(scorecard as AuditScorecard & { roiProjection?: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] } }).roiProjection ? (() => {
             const roi = (scorecard as AuditScorecard & { roiProjection: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] } }).roiProjection;
             return `
-        <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 17px; margin: 0 0 12px; border-bottom: 2px solid #16a34a; padding-bottom: 8px; color: #16a34a;">ROI Projection</h2>
-        <div style="margin-bottom: 24px; padding: 16px; border: 2px solid #16a34a; background: #fff;">
+        <h2 style="font-family: Georgia, serif; font-weight: normal; font-size: 17px; margin: 0 0 12px; border-bottom: 2px solid #000; padding-bottom: 8px; color: #000;">ROI Projection</h2>
+        <div style="margin-bottom: 24px; padding: 16px; border: 2px solid #000; background: #fff;">
             <div style="display: flex; gap: 12px; margin-bottom: 14px;">
                 <div style="text-align: center; flex: 1; padding: 12px; border: 1px solid #fca5a5; background: #fef2f2;">
                     <div style="font-size: 22px; font-weight: 900; color: #dc2626;">$${Math.round(roi.currentAnnualWaste / 1000)}K</div>
                     <div style="font-size: 9px; text-transform: uppercase; color: #ef4444;">Annual Waste</div>
                 </div>
-                <div style="text-align: center; flex: 1; padding: 12px; border: 1px solid #86efac; background: #f0fdf4;">
-                    <div style="font-size: 22px; font-weight: 900; color: #16a34a;">$${Math.round(roi.projectedSavings / 1000)}K</div>
-                    <div style="font-size: 9px; text-transform: uppercase; color: #22c55e;">Savings</div>
+                <div style="text-align: center; flex: 1; padding: 12px; border: 1px solid #d4d4d4; background: #f5f5f5;">
+                    <div style="font-size: 22px; font-weight: 900; color: #171717;">$${Math.round(roi.projectedSavings / 1000)}K</div>
+                    <div style="font-size: 9px; text-transform: uppercase; color: #525252;">Savings</div>
                 </div>
                 <div style="text-align: center; flex: 1; padding: 12px; border: 1px solid #93c5fd; background: #eff6ff;">
                     <div style="font-size: 22px; font-weight: 900; color: #2563eb;">${roi.paybackMonths}mo</div>

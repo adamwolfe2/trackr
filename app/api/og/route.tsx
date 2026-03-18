@@ -4,14 +4,14 @@ import { NextRequest } from "next/server";
 export const runtime = "nodejs";
 
 function scoreColor(score: number): string {
-    if (score >= 8) return "#059669";
+    if (score >= 8) return "#171717";
     if (score >= 6) return "#2563EB";
     if (score >= 4) return "#D97706";
     return "#DC2626";
 }
 
 function scoreBg(score: number): string {
-    if (score >= 8) return "#ECFDF5";
+    if (score >= 8) return "#F3F3EF";
     if (score >= 6) return "#EFF6FF";
     if (score >= 4) return "#FFFBEB";
     return "#FEF2F2";
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     if (type === "audit") {
         const auditScore = score ?? 0;
         const company = name;
-        const auditColor = auditScore >= 61 ? "#059669" : auditScore >= 41 ? "#D97706" : "#DC2626";
+        const auditColor = auditScore >= 61 ? "#171717" : auditScore >= 41 ? "#D97706" : "#DC2626";
 
         return new ImageResponse(
             (

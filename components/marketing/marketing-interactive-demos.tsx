@@ -10,6 +10,7 @@ import {
   TrendingUp,
   Zap,
   Cpu,
+  Check,
 } from "lucide-react";
 
 /* ─── Shared: window chrome wrapper ──────────────────────────────────── */
@@ -823,9 +824,7 @@ function ResearchAgentDemo({ active }: { active: boolean }) {
                       }`}
                     >
                       {done && (
-                        <span className="text-white text-[8px] leading-none">
-                          ✓
-                        </span>
+                        <Check className="w-2 h-2 text-white" />
                       )}
                       {running && (
                         <motion.div

@@ -522,7 +522,7 @@ function SpendTrackerDemo() {
                                 <div className="w-1.5 h-1.5 bg-black flex-shrink-0" />
                                 <span className="font-mono text-xs text-black/60 flex-1">{dept.label}</span>
                                 <span className={`font-mono text-xs font-medium ${isOps ? "text-amber-600" : ""}`}>${deptTotal.toLocaleString()}</span>
-                                {isOps && <span className="font-mono text-[9px] text-amber-600">⚠ underinvested</span>}
+                                {isOps && <span className="font-mono text-[9px] text-amber-600">underinvested</span>}
                             </div>
                         );
                     })}
@@ -993,22 +993,22 @@ function S7() {
 function S8() {
     const DIFFS = [
         {
-            glyph: "◈",
+            glyph: "01",
             title: "Pre-market tool intelligence",
             body: "We track 500+ emerging tools every month before they hit Product Hunt. You get recommendations before your competitors hear about them.",
         },
         {
-            glyph: "⚙",
+            glyph: "02",
             title: "Built by operators, not researchers",
             body: "Our team has implemented AI workflows inside real organizations. We know what breaks in deployment and what gets abandoned after week one.",
         },
         {
-            glyph: "◎",
+            glyph: "03",
             title: "Custom to your org's reality",
             body: "Your stack is different from every other company. We audit your tools, map your workflows, and build a prioritized action plan from scratch — not from a template.",
         },
         {
-            glyph: "✓",
+            glyph: "04",
             title: "AI adoption that actually sticks",
             body: "The goal isn't more AI in your stack. It's replacing processes your team avoids with tools they actually use — and training them to use those tools well.",
         },

@@ -27,7 +27,7 @@ export function ScoreArc({ score, size = 200 }: ScoreArcProps) {
     const color =
         score <= 40 ? "#EF4444" :
         score <= 65 ? "#D97706" :
-        score <= 85 ? "#2563EB" : "#059669";
+        score <= 85 ? "#2563EB" : "#171717";
 
     const statusLabel =
         score <= 40 ? "CRITICAL GAP" :
