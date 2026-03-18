@@ -202,16 +202,17 @@ export function CompetitorsClient({
 
             {/* Competitor List */}
             {initialData.length === 0 ? (
-                <div className="border border-dashed border-black/30 py-16 text-center">
-                    <p className="font-serif text-lg text-neutral-600 mb-1">No competitors tracked yet</p>
-                    <p className="font-mono text-xs text-neutral-400 mb-4">
-                        Track your first competitor&apos;s tool stack.
+                <div className="border border-black bg-white p-12 text-center">
+                    <Eye className="w-8 h-8 mx-auto mb-4 text-neutral-300" />
+                    <h3 className="font-serif text-lg mb-2">No competitors tracked yet</h3>
+                    <p className="font-mono text-xs text-neutral-500 mb-6 max-w-sm mx-auto">
+                        Add competitors to discover their tool stacks, tech choices, and gain intelligence on how they build and operate.
                     </p>
                     <button
                         onClick={() => setShowForm(true)}
-                        className="border border-black px-6 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800"
+                        className="inline-flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800"
                     >
-                        Track Your First Competitor
+                        <PlusCircle className="w-3.5 h-3.5" /> Track Your First Competitor
                     </button>
                 </div>
             ) : (

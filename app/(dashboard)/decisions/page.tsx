@@ -11,6 +11,8 @@ import { db } from "@/lib/db";
 import { tools } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { DecisionLogClient } from "@/components/decisions/decision-log-client";
+import { ScrollText, PlusCircle } from "lucide-react";
+import Link from "next/link";
 
 export const metadata: Metadata = {
     title: "Decision Log — Trackr",
@@ -55,12 +57,25 @@ export default async function DecisionsPage() {
                 </span>
             </div>
 
-            <DecisionLogClient
-                workspaceId={workspaceId}
-                initialEntries={logResult.entries}
-                initialTotal={logResult.total}
-                availableTools={availableTools}
-            />
+            {logResult.total === 0 ? (
+                <div className="border border-black bg-white p-12 text-center">
+                    <ScrollText className="w-8 h-8 mx-auto mb-4 text-neutral-300" />
+                    <h3 className="font-serif text-lg mb-2">No decisions logged yet</h3>
+                    <p className="font-mono text-xs text-neutral-500 mb-6 max-w-sm mx-auto">
+                        Decisions are automatically recorded when you add, research, archive, or approve tools. Start building your audit trail by adding a tool.
+                    </p>
+                    <Link href="/tools" className="inline-flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
+                        <PlusCircle className="w-3.5 h-3.5" /> Add Your First Tool
+                    </Link>
+                </div>
+            ) : (
+                <DecisionLogClient
+                    workspaceId={workspaceId}
+                    initialEntries={logResult.entries}
+                    initialTotal={logResult.total}
+                    availableTools={availableTools}
+                />
+            )}
         </div>
     );
 }

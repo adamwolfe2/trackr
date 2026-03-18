@@ -1,5 +1,8 @@
 "use client";
 
+import { BarChart3, PlusCircle } from "lucide-react";
+import Link from "next/link";
+
 interface WeeklyActivity {
     week: string;
     count: number;
@@ -127,6 +130,29 @@ export default function AnalyticsClient({
 
     const maxSpend = Math.max(...spendByCategory.map(c => c.total), 1);
     const hasSpend = totalMonthlySpend > 0;
+
+    if (totalTools === 0) {
+        return (
+            <div className="space-y-8">
+                <div>
+                    <h1 className="text-2xl font-serif font-normal">Analytics</h1>
+                    <p className="font-mono text-sm text-neutral-500 mt-1">
+                        Overview of your workspace research activity.
+                    </p>
+                </div>
+                <div className="border border-black bg-white p-12 text-center">
+                    <BarChart3 className="w-8 h-8 mx-auto mb-4 text-neutral-300" />
+                    <h3 className="font-serif text-lg mb-2">No analytics data yet</h3>
+                    <p className="font-mono text-xs text-neutral-500 mb-6 max-w-sm mx-auto">
+                        Add tools to your workspace and run research to see activity charts, score heatmaps, and spend breakdowns here.
+                    </p>
+                    <Link href="/tools" className="inline-flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
+                        <PlusCircle className="w-3.5 h-3.5" /> Add Your First Tool
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8">

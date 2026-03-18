@@ -8,6 +8,7 @@ import {
     AlertTriangle,
     Shield,
     Activity,
+    PlusCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
@@ -165,14 +166,15 @@ export function RiskClient({
 
             {/* Empty State */}
             {tools.length === 0 ? (
-                <div className="border border-dashed border-black/30 py-16 text-center">
-                    <div className="w-10 h-10 border border-black flex items-center justify-center mx-auto mb-4">
-                        <Shield className="w-5 h-5" />
-                    </div>
-                    <p className="font-serif text-lg text-neutral-600 mb-1">No risk assessments yet</p>
-                    <p className="font-mono text-xs text-neutral-400 mb-4">
-                        Research tools to generate risk profiles.
+                <div className="border border-black bg-white p-12 text-center">
+                    <Shield className="w-8 h-8 mx-auto mb-4 text-neutral-300" />
+                    <h3 className="font-serif text-lg mb-2">No risk assessments yet</h3>
+                    <p className="font-mono text-xs text-neutral-500 mb-6 max-w-sm mx-auto">
+                        Risk profiles are generated automatically when you research tools. Add and research tools to see security posture, compliance, and vendor stability scores.
                     </p>
+                    <a href="/tools" className="inline-flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
+                        <PlusCircle className="w-3.5 h-3.5" /> Add Tools to Monitor
+                    </a>
                 </div>
             ) : (
                 <>
