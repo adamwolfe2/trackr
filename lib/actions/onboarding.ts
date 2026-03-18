@@ -2,8 +2,9 @@
 
 import { after } from "next/server";
 import { db } from "@/lib/db";
-import { workspaces, softwareSpend } from "@/lib/db/schema";
+import { workspaces, softwareSpend, tools } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { performDeepResearch } from "@/lib/actions/research";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { firecrawl } from "@/lib/services/firecrawl";
@@ -222,9 +223,59 @@ export async function completeOnboarding(input: {
         }
     }
 
+    // 3. Auto-research first 3 selected tools — creates entries in `tools` table
+    //    and kicks off performDeepResearch via after() to stay within free plan credits.
+    const MAX_AUTO_RESEARCH = 3;
+    const toolsToResearch = selectedTools
+        .filter((t) => t.name.trim().length > 0)
+        .slice(0, MAX_AUTO_RESEARCH);
+
+    const insertedToolIds: string[] = [];
+    if (toolsToResearch.length > 0) {
+        // Check which tools already exist in the tools table for this workspace
+        const existingTools = await db.query.tools.findMany({
+            where: eq(tools.workspaceId, workspaceId),
+            columns: { name: true },
+        });
+        const existingToolNames = new Set(existingTools.map((t) => t.name.toLowerCase()));
+
+        const newTools = toolsToResearch.filter(
+            (t) => !existingToolNames.has(t.name.trim().toLowerCase())
+        );
+
+        for (const t of newTools) {
+            const toolName = t.name.trim();
+            const websiteUrl = t.url
+                ? (t.url.startsWith("http") ? t.url : `https://${t.url}`)
+                : `https://www.google.com/search?q=${encodeURIComponent(toolName + " software")}`;
+
+            const [inserted] = await db.insert(tools).values({
+                workspaceId,
+                name: toolName,
+                websiteUrl,
+                status: "queued",
+                submittedBy: user.id,
+            }).returning({ id: tools.id });
+
+            if (inserted) insertedToolIds.push(inserted.id);
+        }
+    }
+
     revalidatePath("/tools");
     revalidatePath("/workspace");
     revalidatePath("/stack");
+    revalidatePath("/queue");
+
+    // Kick off research for auto-created tools — non-blocking via after()
+    for (const toolId of insertedToolIds) {
+        after(async () => {
+            try {
+                await performDeepResearch(toolId, { triggeredBy: user.id });
+            } catch (err) {
+                console.error(`[onboarding] auto-research failed for tool ${toolId}:`, err);
+            }
+        });
+    }
 
     // Fire PostHog event after response — non-blocking
     const captureUserId = user.id;
@@ -233,6 +284,7 @@ export async function completeOnboarding(input: {
         await captureEvent(captureUserId, "onboarding_completed", {
             company_name: companyName,
             tool_count: selectedTools.length,
+            auto_research_count: insertedToolIds.length,
             plan: plan ?? "free",
             has_ref_code: !!refCode,
             workspace_id: captureWorkspaceId,
@@ -241,9 +293,9 @@ export async function completeOnboarding(input: {
     });
 
     // Return redirect URL — client handles navigation via router.push()
-    // Free users → /submit so they immediately research their first tool (Aha moment <2 min)
+    // Free users → /queue so they see their auto-research in progress (Aha moment <2 min)
     // Paid plan → /settings/billing with plan+interval so the page auto-triggers checkout
-    let redirectTo = "/submit";
+    let redirectTo = insertedToolIds.length > 0 ? "/queue" : "/submit";
     if (plan && ["team", "startup", "enterprise"].includes(plan)) {
         const billingInterval = interval && ["monthly", "annual"].includes(interval) ? interval : "monthly";
         redirectTo = `/settings/billing?plan=${plan}&interval=${billingInterval}`;

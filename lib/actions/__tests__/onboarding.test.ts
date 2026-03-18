@@ -12,10 +12,15 @@ vi.mock("@/lib/db", () => ({
     db: {
         query: {
             softwareSpend: { findMany: vi.fn() },
+            tools: { findMany: vi.fn() },
         },
         update: vi.fn(),
         insert: vi.fn(),
     },
+}));
+
+vi.mock("@/lib/actions/research", () => ({
+    performDeepResearch: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("drizzle-orm", async (importOriginal) => {
@@ -71,10 +76,16 @@ function setupDbChains() {
     const updateSet = vi.fn().mockReturnValue({ where: updateWhere });
     (db.update as ReturnType<typeof vi.fn>).mockReturnValue({ set: updateSet });
 
-    const insertValues = vi.fn().mockResolvedValue({});
+    // Insert chain supports both .values() (softwareSpend) and .values().returning() (tools)
+    const insertReturning = vi.fn().mockResolvedValue([{ id: "tool_auto_1" }]);
+    const insertValues = vi.fn().mockReturnValue({ then: insertReturning().then?.bind(insertReturning()), returning: insertReturning });
+    // Make insertValues also act as a resolved promise for softwareSpend inserts (no .returning())
+    (insertValues as any).then = (resolve: any) => resolve(undefined);
+    (insertValues as any).catch = () => insertValues;
     (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values: insertValues });
 
     (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 }
 
 const VALID_ONBOARDING_INPUT = {
@@ -126,14 +137,14 @@ describe("completeOnboarding", () => {
     });
 
     it("succeeds when scorecardDimensions is empty (no weight check)", async () => {
-        const input = { ...VALID_ONBOARDING_INPUT, scorecardDimensions: [] };
+        const input = { ...VALID_ONBOARDING_INPUT, scorecardDimensions: [], selectedTools: [] };
         const result = await completeOnboarding(input);
         expect(result.success).toBe(true);
     });
 
-    it("returns success and redirectTo /submit for regular users", async () => {
+    it("returns success and redirectTo /queue when tools are auto-researched", async () => {
         const result = await completeOnboarding(VALID_ONBOARDING_INPUT);
-        expect(result).toEqual({ success: true, redirectTo: "/submit" });
+        expect(result).toEqual({ success: true, redirectTo: "/queue" });
     });
 
     it("redirects to /settings/billing for plan='team'", async () => {
@@ -151,15 +162,18 @@ describe("completeOnboarding", () => {
         expect(result.redirectTo).toBe("/settings/billing?plan=enterprise&interval=monthly");
     });
 
-    it("redirects to /submit for plan='free'", async () => {
+    it("redirects to /queue for plan='free' when tools are auto-researched", async () => {
         const result = await completeOnboarding({ ...VALID_ONBOARDING_INPUT, plan: "free" });
-        expect(result.redirectTo).toBe("/submit");
+        expect(result.redirectTo).toBe("/queue");
     });
 
     it("skips insert for tools already in the stack (deduplication)", async () => {
-        // All selected tools already in DB — no insert expected
+        // All selected tools already in both softwareSpend and tools tables
         (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
             { toolName: "Slack" },
+        ]);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { name: "Slack" },
         ]);
         await completeOnboarding({ ...VALID_ONBOARDING_INPUT, selectedTools: [{ name: "Slack" }] });
         expect(db.insert).not.toHaveBeenCalled();
@@ -171,7 +185,8 @@ describe("completeOnboarding", () => {
             ...VALID_ONBOARDING_INPUT,
             selectedTools: [{ name: "Linear" }, { name: "Slack" }],
         });
-        expect(db.insert).toHaveBeenCalledTimes(1);
+        // Called once for softwareSpend insert, then once per tool for auto-research (2 tools)
+        expect(db.insert).toHaveBeenCalledTimes(3);
     });
 
     it("does not call db.insert when selectedTools is empty", async () => {
@@ -183,13 +198,16 @@ describe("completeOnboarding", () => {
         (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
             { toolName: "Slack" },
         ]);
+        (db.query.tools.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+            { name: "Slack" },
+        ]);
         // "  Slack  " should be treated as duplicate of "Slack" after trimming
         await completeOnboarding({
             ...VALID_ONBOARDING_INPUT,
             selectedTools: [{ name: "  Slack  " }, { name: "  Linear  " }],
         });
-        // Only "Linear" (trimmed) should be inserted; "Slack" is a duplicate
-        expect(db.insert).toHaveBeenCalledTimes(1);
+        // softwareSpend insert (1 tool: Linear) + tools insert (1 tool: Linear)
+        expect(db.insert).toHaveBeenCalledTimes(2);
         const insertedValues = (
             (db.insert as ReturnType<typeof vi.fn>).mock.results[0].value.values as ReturnType<typeof vi.fn>
         ).mock.calls[0][0];
@@ -202,7 +220,7 @@ describe("completeOnboarding", () => {
             ...VALID_ONBOARDING_INPUT,
             selectedTools: [{ name: "Linear" }, { name: "   " }],
         });
-        // Only "Linear" should be inserted; "   " is empty after trim
+        // First insert call is softwareSpend — "Linear" only (whitespace filtered)
         const insertedValues = (
             (db.insert as ReturnType<typeof vi.fn>).mock.results[0].value.values as ReturnType<typeof vi.fn>
         ).mock.calls[0][0];
