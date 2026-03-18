@@ -38,9 +38,9 @@ describe("getPlanLimits", () => {
     expect(plan.slug).toBe("free");
   });
 
-  it("defaults to TEAM for active subscription with unknown planId", () => {
+  it("defaults to FREE for active subscription with unknown planId", () => {
     const plan = getPlanLimits({ status: "active", planId: "price_unknown123" });
-    expect(plan.slug).toBe("team");
+    expect(plan.slug).toBe("free");
   });
 });
 

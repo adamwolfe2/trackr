@@ -17,7 +17,7 @@ const TEAM_SUB = {
     id: "sub_1",
     workspaceId: "ws_1",
     status: "active",
-    planId: "price_team",
+    planId: "team",
     creditBalance: 0,
 };
 

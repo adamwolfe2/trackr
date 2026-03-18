@@ -22,6 +22,10 @@ vi.mock("next/server", () => ({
     after: vi.fn((fn: () => void) => fn()),
 }));
 
+vi.mock("@/lib/middleware/rate-limit", () => ({
+    rateLimit: vi.fn().mockResolvedValue({ success: true }),
+}));
+
 const { mockCheckoutCreate, mockPortalCreate } = vi.hoisted(() => ({
     mockCheckoutCreate: vi.fn(),
     mockPortalCreate: vi.fn(),
@@ -37,6 +41,7 @@ vi.mock("@/lib/services/stripe", () => ({
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { rateLimit } from "@/lib/middleware/rate-limit";
 import { createCheckoutSession, createCustomerPortalSession } from "../stripe";
 
 const MOCK_USER = {
@@ -52,6 +57,7 @@ describe("createCheckoutSession", () => {
 
     beforeEach(() => {
         vi.resetAllMocks();
+        (rateLimit as ReturnType<typeof vi.fn>).mockResolvedValue({ success: true });
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_OWNER_MEMBER);
         (db.query.subscriptions.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
