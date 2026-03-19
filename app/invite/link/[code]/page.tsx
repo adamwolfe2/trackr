@@ -70,7 +70,7 @@ export default async function InviteLinkPage({
         return (
             <InvitePage>
                 <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-2">
-                    You've been invited
+                    You&apos;ve been invited
                 </p>
                 <h1 className="font-serif text-2xl font-normal mb-2">
                     Join {workspace.name}

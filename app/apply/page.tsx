@@ -60,7 +60,7 @@ export default function ApplyPage() {
                         </p>
                         <p className="font-mono text-[11px] text-neutral-400 leading-relaxed max-w-2xl">
                             Our architects have led AI implementations across Fortune 500 companies, Series A-D startups,
-                            and category-defining platforms. They don't just advise — they build. That's the difference.
+                            and category-defining platforms. They don&apos;t just advise — they build. That&apos;s the difference.
                         </p>
                     </div>
                 </section>

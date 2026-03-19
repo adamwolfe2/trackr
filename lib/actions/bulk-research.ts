@@ -138,9 +138,6 @@ export async function bulkSubmitAndResearch(parsedTools: ParsedTool[]): Promise<
         }
 
         try {
-            // Normalize URL for duplicate detection
-            const normalizedUrl = pt.url.replace(/\/+$/, "").toLowerCase();
-
             // Check for existing tool in this workspace with same URL
             const existing = await db.query.tools.findFirst({
                 where: eq(tools.websiteUrl, pt.url),

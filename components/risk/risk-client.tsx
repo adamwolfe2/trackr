@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { RiskBadge } from "./risk-badge";
 import {
     ChevronDown,
@@ -172,9 +173,9 @@ export function RiskClient({
                     <p className="font-mono text-xs text-neutral-500 mb-6 max-w-sm mx-auto">
                         Risk profiles are generated automatically when you research tools. Add and research tools to see security posture, compliance, and vendor stability scores.
                     </p>
-                    <a href="/tools" className="inline-flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
+                    <Link href="/tools" className="inline-flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
                         <PlusCircle className="w-3.5 h-3.5" /> Add Tools to Monitor
-                    </a>
+                    </Link>
                 </div>
             ) : (
                 <>

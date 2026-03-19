@@ -98,16 +98,6 @@ const STREAM_STEPS = [
     ["Comparing 6 competitors...", "Detecting integrations...", "Scoring 7 dimensions...", "Writing verdict..."],
 ];
 
-const PROCESS_STEPS = [
-    { n: "1", tool: "FIRECRAWL", title: "Map Site",          desc: "Crawl the tool's website, identify key pages: pricing, features, changelog." },
-    { n: "2", tool: "FIRECRAWL", title: "Scrape Pages",      desc: "Scrape pages in parallel, converting HTML to clean markdown." },
-    { n: "3", tool: "TAVILY",    title: "Review Sites",       desc: "Query G2, Capterra, TrustRadius, and Product Hunt for verified sentiment." },
-    { n: "4", tool: "TAVILY",    title: "Community Intel",    desc: "Pull Reddit threads, HackerNews, LinkedIn for unfiltered usage patterns." },
-    { n: "5", tool: "AI",        title: "Synthesize",         desc: "AI consolidates all gathered data into a structured knowledge profile." },
-    { n: "6", tool: "AI",        title: "Score 7 Dimensions", desc: "Features, Pricing, AI Capabilities, Integrations, Ease of Use, Support, Momentum." },
-    { n: "7", tool: "TRACKR",    title: "Deliver",            desc: "Report saved to your workspace. Team notified. Renewal alerts set." },
-];
-
 const SPEND_TOOLS_DETAILED = [
     { domain: "salesforce.com", name: "Salesforce", dept: "Sales",     seats: 45, cost: 2400, type: "Legacy" as const },
     { domain: "hubspot.com",    name: "HubSpot",    dept: "Marketing", seats: 12, cost: 1800, type: "Legacy" as const },
@@ -219,57 +209,59 @@ function ResearchAgentDemo({ autoPlay = true, widgetHeight = 480 }: { autoPlay?:
 
     const clearAll = () => { timers.current.forEach(clearTimeout); timers.current = []; };
 
-    const runCycle = useCallback((idx: number) => {
-        clearAll();
-        const t = DEMO_TOOLS[idx];
-        setPhase("idle");
-        setTypedUrl("");
-        setTick(0);
-        setStreamVisible([0, 0, 0]);
-        setStreamActive([0, 0, 0]);
-
-        const add = (delay: number, fn: () => void) => {
-            const id = setTimeout(fn, delay);
-            timers.current.push(id);
-        };
-
-        add(400, () => setPhase("typing"));
-        const url = t.url;
-        url.split("").forEach((ch, i) => {
-            add(400 + 60 + i * 55, () => setTypedUrl(url.slice(0, i + 1)));
-        });
-
-        const resStart = 400 + 60 + url.length * 55 + 300;
-        add(resStart, () => { setPhase("researching"); });
-
-        [0, 1, 2].forEach(si => {
-            [0, 1, 2, 3].forEach(step => {
-                const delay = resStart + si * 200 + step * 520;
-                add(delay, () => {
-                    setStreamVisible(p => { const n = [...p]; n[si] = step + 1; return n; });
-                    setStreamActive(p => { const n = [...p]; n[si] = step; return n; });
-                });
-            });
-        });
-
-        [1, 2, 3, 4, 5].forEach(ti => {
-            add(resStart + ti * 700, () => setTick(ti));
-        });
-
-        const doneAt = resStart + 5 * 700 + 400;
-        add(doneAt, () => { setPhase("done"); setTick(7); });
-
-        if (autoPlay) {
-            add(doneAt + 4500, () => {
-                const next = (idx + 1) % DEMO_TOOLS.length;
-                setToolIdx(next);
-                runCycle(next);
-            });
-        }
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const runCycleRef = useRef<(idx: number) => void>(() => {});
 
     useEffect(() => {
-        runCycle(0);
+        runCycleRef.current = (idx: number) => {
+            clearAll();
+            const t = DEMO_TOOLS[idx];
+            setPhase("idle");
+            setTypedUrl("");
+            setTick(0);
+            setStreamVisible([0, 0, 0]);
+            setStreamActive([0, 0, 0]);
+
+            const add = (delay: number, fn: () => void) => {
+                const id = setTimeout(fn, delay);
+                timers.current.push(id);
+            };
+
+            add(400, () => setPhase("typing"));
+            const url = t.url;
+            url.split("").forEach((_ch, i) => {
+                add(400 + 60 + i * 55, () => setTypedUrl(url.slice(0, i + 1)));
+            });
+
+            const resStart = 400 + 60 + url.length * 55 + 300;
+            add(resStart, () => { setPhase("researching"); });
+
+            [0, 1, 2].forEach(si => {
+                [0, 1, 2, 3].forEach(step => {
+                    const delay = resStart + si * 200 + step * 520;
+                    add(delay, () => {
+                        setStreamVisible(p => { const n = [...p]; n[si] = step + 1; return n; });
+                        setStreamActive(p => { const n = [...p]; n[si] = step; return n; });
+                    });
+                });
+            });
+
+            [1, 2, 3, 4, 5].forEach(ti => {
+                add(resStart + ti * 700, () => setTick(ti));
+            });
+
+            const doneAt = resStart + 5 * 700 + 400;
+            add(doneAt, () => { setPhase("done"); setTick(7); });
+
+            if (autoPlay) {
+                add(doneAt + 4500, () => {
+                    const next = (idx + 1) % DEMO_TOOLS.length;
+                    setToolIdx(next);
+                    runCycleRef.current(next);
+                });
+            }
+        };
+
+        runCycleRef.current(0);
         return clearAll;
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -582,80 +574,6 @@ function SpendTrackerDemo() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PROCESS ANIMATION
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ProcessAnimation() {
-    const [activeStep, setActiveStep] = useState(-1);
-    const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-    const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
-
-    useEffect(() => {
-        timers.current.forEach(clearTimeout);
-        timers.current = [];
-        setActiveStep(-1);
-        setCompletedSteps([]);
-
-        PROCESS_STEPS.forEach((_, i) => {
-            const activate = setTimeout(() => setActiveStep(i), 300 + i * 900);
-            const complete = setTimeout(() => setCompletedSteps(p => [...p, i]), 300 + i * 900 + 700);
-            timers.current.push(activate, complete);
-        });
-
-        return () => timers.current.forEach(clearTimeout);
-    }, []);
-
-    return (
-        <div className="flex border border-black w-full overflow-hidden">
-            {PROCESS_STEPS.map((step, i) => {
-                const isDone   = completedSteps.includes(i);
-                const isActive = activeStep === i && !isDone;
-                return (
-                    <div key={step.n} className="flex flex-row items-stretch flex-1">
-                        <div
-                            className="flex-1 p-3.5 transition-all duration-400 relative"
-                            style={{ background: isActive ? "rgba(0,0,0,0.03)" : "white" }}>
-                            <div className="font-mono text-[7px] uppercase tracking-[0.15em] text-black/25 mb-1.5">
-                                Step {step.n}
-                            </div>
-                            <div className="font-mono text-[7px] uppercase tracking-[0.12em] text-black/30 mb-1.5">
-                                {step.tool}
-                            </div>
-                            <div className="font-serif text-[13px] font-normal mb-2 text-black">
-                                {step.title}
-                            </div>
-                            {(isDone || isActive) && (
-                                <div className="font-mono text-[8px] leading-relaxed text-black/45">
-                                    {step.desc.slice(0, 52)}{step.desc.length > 52 ? "…" : ""}
-                                </div>
-                            )}
-                            {isDone && (
-                                <div className="mt-2.5 flex items-center gap-1">
-                                    <CheckCircle2 className="w-3 h-3 text-black" />
-                                    <span className="font-mono text-[8px] text-black font-medium">Done</span>
-                                </div>
-                            )}
-                            {isActive && (
-                                <div className="mt-2.5 flex gap-1">
-                                    {[0,1,2].map(d => (
-                                        <span key={d} className="w-1 h-1 bg-black/30 animate-pulse"
-                                            style={{ animationDelay: `${d * 0.2}s` }} />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        {i < PROCESS_STEPS.length - 1 && (
-                            <div className="flex-shrink-0 w-6 border-l border-r border-black/15 flex items-center justify-center bg-[#F3F3EF]">
-                                <span className="font-mono text-[9px] text-black/30">→</span>
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
-        </div>
-    );
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // SLIDE COMPONENTS
 // ─────────────────────────────────────────────────────────────────────────────

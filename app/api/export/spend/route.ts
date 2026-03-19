@@ -6,7 +6,7 @@ import { eq, desc } from "drizzle-orm";
 import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
 import { toCSV } from "@/lib/utils/csv";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
     try {
         const user = await currentUser();
         if (!user) {

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export function StripeConnectButton({ architectId }: { architectId: string }) {
+export function StripeConnectButton({ architectId: _architectId }: { architectId: string }) {
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 

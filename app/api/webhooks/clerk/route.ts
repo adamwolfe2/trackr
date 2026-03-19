@@ -4,7 +4,7 @@ import { WebhookEvent } from '@clerk/nextjs/server'
 import { ensureWorkspace } from '@/lib/db/ensure-workspace'
 import { sendWelcomeEmail, scheduleDripSequence } from '@/lib/email/resend'
 import { db } from '@/lib/db'
-import { pendingInvitations, workspaceMembers, workspaces, subscriptions, webhookEvents, architects } from '@/lib/db/schema'
+import { pendingInvitations, workspaceMembers, subscriptions, webhookEvents, architects } from '@/lib/db/schema'
 import { and, eq, gt } from 'drizzle-orm'
 
 
@@ -146,7 +146,7 @@ async function handleUserUpdated(evt: WebhookEvent) {
     if (evt.type !== 'user.updated') return;
     // We don't store user profile data locally (it lives in Clerk).
     // Ensure workspace exists in case it was somehow missed.
-    const { id, email_addresses, username, first_name } = evt.data;
+    const { id, email_addresses, username } = evt.data;
     const primaryEmail = email_addresses[0]?.email_address;
     const displayName = username || primaryEmail?.split('@')[0] || "User";
     await ensureWorkspace(id, { displayName, email: primaryEmail });

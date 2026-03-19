@@ -1,4 +1,5 @@
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import Link from "next/link";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
     const authed = await isAdminAuthenticated();
@@ -16,25 +17,25 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="min-h-screen bg-[#F3F3EF] p-6 md:p-10">
             <div className="max-w-7xl mx-auto">
                 <nav className="flex flex-wrap items-center gap-1 mb-8 border-b border-black pb-4">
-                    <a href="/admin/leads" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
+                    <Link href="/admin/leads" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
                         Leads
-                    </a>
+                    </Link>
                     <span className="font-mono text-neutral-300 text-xs hidden sm:inline">|</span>
-                    <a href="/admin/analytics" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
+                    <Link href="/admin/analytics" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
                         Analytics
-                    </a>
+                    </Link>
                     <span className="font-mono text-neutral-300 text-xs hidden sm:inline">|</span>
-                    <a href="/admin/api" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
+                    <Link href="/admin/api" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
                         API
-                    </a>
+                    </Link>
                     <span className="font-mono text-neutral-300 text-xs hidden sm:inline">|</span>
-                    <a href="/admin/architects" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
+                    <Link href="/admin/architects" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
                         Architects
-                    </a>
+                    </Link>
                     <span className="font-mono text-neutral-300 text-xs hidden sm:inline">|</span>
-                    <a href="/admin/payouts" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
+                    <Link href="/admin/payouts" className="font-mono text-[10px] uppercase tracking-widest border border-transparent px-3 py-1.5 hover:border-black transition-colors">
                         Payouts
-                    </a>
+                    </Link>
                 </nav>
                 {children}
             </div>

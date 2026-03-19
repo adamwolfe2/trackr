@@ -21,15 +21,6 @@ import { ensureWorkspace } from "../ensure-workspace";
 const MOCK_WORKSPACE = { id: "ws_1", name: "Adam's Workspace", slug: "ws-user_abc" };
 const MOCK_MEMBER = { id: "mem_1", userId: "user_abc12345", workspaceId: "ws_1", workspace: MOCK_WORKSPACE };
 
-function makeInsertChain(returnValue: unknown = undefined) {
-    const onConflictDoNothing = vi.fn().mockReturnValue({
-        returning: vi.fn().mockResolvedValue(returnValue !== undefined ? [returnValue] : []),
-    });
-    const values = vi.fn().mockReturnValue({ onConflictDoNothing });
-    (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values });
-    return { values, onConflictDoNothing };
-}
-
 describe("ensureWorkspace", () => {
     beforeEach(() => {
         vi.resetAllMocks();

@@ -31,7 +31,6 @@ vi.mock("drizzle-orm", async (importOriginal) => {
     return { ...actual, eq: vi.fn((...args) => args) };
 });
 
-import { db } from "@/lib/db";
 import {
     getSlackClient,
     postMessage,

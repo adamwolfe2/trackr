@@ -12,7 +12,6 @@ import {
     CheckCircle,
     XCircle,
     Zap,
-    Clock,
     ArrowRight,
     ChevronDown,
     ChevronLeft,

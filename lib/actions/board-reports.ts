@@ -10,7 +10,7 @@ import {
     stackHealthScores,
     researchJobs,
 } from "@/lib/db/schema";
-import { eq, desc, and, count, sql, gte, inArray } from "drizzle-orm";
+import { eq, desc, and, sql, gte, inArray } from "drizzle-orm";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
 import crypto from "crypto";
 

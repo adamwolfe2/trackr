@@ -159,9 +159,7 @@ describe("enrichFeedItems", () => {
         const items = Array.from({ length: 12 }, (_, i) => makeItem(`item_${i}`, `https://example.com/${i}`));
         (db.query.feedItems.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(items);
         // Return matching results for all items
-        (generateObject as ReturnType<typeof vi.fn>).mockImplementation(({ prompt }: { prompt: string }) => {
-            // Extract item count from prompt (batch size varies)
-            const batchSize = prompt.includes("[10]") ? 10 : 2;
+        (generateObject as ReturnType<typeof vi.fn>).mockImplementation(({ prompt: _prompt }: { prompt: string }) => {
             const batchItems = items.slice(
                 (generateObject as ReturnType<typeof vi.fn>).mock.calls.length === 1 ? 0 : 10,
                 (generateObject as ReturnType<typeof vi.fn>).mock.calls.length === 1 ? 10 : 12,

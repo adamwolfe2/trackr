@@ -4,9 +4,7 @@ import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { workspaces, workspaceMembers, subscriptions, tools, webhookEvents } from "@/lib/db/schema";
 import { sql, desc, gte, eq, and, count } from "drizzle-orm";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createHash, timingSafeEqual } from "crypto";
 import { PLANS, getPlanLimits } from "@/lib/config/subscriptions";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { AdminTrendChartLoader as AdminTrendChart } from "@/components/admin/admin-trend-chart-loader";
@@ -96,7 +94,6 @@ async function getAnalytics(windowDays: number) {
     }
 
     // Workspaces with no subscription → free tier
-    const subsWorkspaceIds = new Set(allSubs.map(s => s.workspaceId));
     const [{ noSubCount }] = await db
         .select({ noSubCount: count() })
         .from(workspaces);

@@ -52,9 +52,6 @@ test.describe("Add Tool Wizard", () => {
         }
 
         // Try to proceed with no URL — button should be disabled
-        const nextButton = page.locator("button").filter({ hasText: /arrow/i }).or(
-            page.locator("button[disabled]")
-        ).first();
         const urlInput = page.getByLabel(/website url/i);
         await expect(urlInput).toBeVisible();
         // The next button should be disabled when URL is empty

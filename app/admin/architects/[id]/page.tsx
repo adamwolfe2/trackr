@@ -11,6 +11,7 @@ import {
 } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
 import { ARCHITECT_ROLES } from "@/lib/config/architect-roles";
 import {
     approveApplication,
@@ -133,9 +134,9 @@ export default async function ArchitectDetailPage({
         <div className="space-y-8 pb-32">
             {/* Back nav */}
             <div className="flex items-center gap-4">
-                <a href="/admin/architects" className="font-mono text-xs uppercase tracking-widest text-neutral-500 hover:text-black transition-colors">
+                <Link href="/admin/architects" className="font-mono text-xs uppercase tracking-widest text-neutral-500 hover:text-black transition-colors">
                     &larr; All Architects
-                </a>
+                </Link>
             </div>
 
             {/* Header */}

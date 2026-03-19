@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { workspaceMembers, workspaces, tools, reports, softwareSpend, painPoints } from "@/lib/db/schema";
 import { eq, desc, inArray, and } from "drizzle-orm";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
+import Link from "next/link";
 import type { Metadata } from "next";
 import { PrintButton } from "./print-button";
 
@@ -40,7 +41,7 @@ export default async function StackReportPage() {
 
     const toolIds = allTools.map(t => t.id);
     // Latest report per tool (for summaries)
-    let latestReportsMap = new Map<string, { summary: string | null; pros: string[] | null; cons: string[] | null }>();
+    const latestReportsMap = new Map<string, { summary: string | null; pros: string[] | null; cons: string[] | null }>();
     if (toolIds.length > 0) {
         const allReportsList = await db
             .select({
@@ -98,12 +99,12 @@ export default async function StackReportPage() {
                         </div>
                     </div>
                     <div className="no-print flex items-center gap-3">
-                        <a
+                        <Link
                             href="/stack"
                             className="border border-black px-4 py-2 font-mono text-xs hover:bg-neutral-100 transition-colors"
                         >
                             ← Back to Stack
-                        </a>
+                        </Link>
                         <PrintButton />
                     </div>
                 </div>

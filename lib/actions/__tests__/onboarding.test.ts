@@ -80,7 +80,9 @@ function setupDbChains() {
     const insertReturning = vi.fn().mockResolvedValue([{ id: "tool_auto_1" }]);
     const insertValues = vi.fn().mockReturnValue({ then: insertReturning().then?.bind(insertReturning()), returning: insertReturning });
     // Make insertValues also act as a resolved promise for softwareSpend inserts (no .returning())
-    (insertValues as any).then = (resolve: any) => resolve(undefined);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (insertValues as any).then = (resolve: (v: undefined) => void) => resolve(undefined);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (insertValues as any).catch = () => insertValues;
     (db.insert as ReturnType<typeof vi.fn>).mockReturnValue({ values: insertValues });
 

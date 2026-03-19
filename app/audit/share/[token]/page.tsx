@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { auditSubmissions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { ExternalLink, ArrowRight } from "lucide-react";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { LogoImage } from "@/components/common/logo-image";
@@ -870,7 +871,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                 { tools: champions, title: "AI Champions", sub: "High Criticality · High AI Use", desc: "Best-in-class — maximize these", bg: "bg-neutral-50", border: "border-neutral-200", text: "text-black", chip: "border-neutral-200 bg-white" },
                                 { tools: evaluate, title: "○ Evaluate", sub: "Low Criticality · Low AI Use", desc: "Assess ROI, consider consolidation", bg: "bg-[#F3F3EF]", border: "border-neutral-200", text: "text-neutral-500", chip: "border-neutral-200 bg-white" },
                                 { tools: explorers, title: "Explorers", sub: "Low Criticality · High AI Use", desc: "AI-capable, lower business priority", bg: "bg-neutral-50", border: "border-neutral-200", text: "text-neutral-700", chip: "border-neutral-200 bg-white" },
-                            ].map(({ tools, title, sub, desc, bg, border, text, chip }, qi) => (
+                            ].map(({ tools, title, sub, desc, bg, text, chip }, qi) => (
                                 <div key={qi} className={`${bg} p-5 ${qi === 0 ? "border-r border-b" : qi === 1 ? "border-b" : qi === 2 ? "border-r" : ""} border-neutral-200 min-h-[200px]`}>
                                     <p className={`font-mono text-[10px] font-bold uppercase tracking-wider ${text} mb-0.5`}>{title}</p>
                                     <p className="font-mono text-[8px] text-neutral-400 mb-3">{sub}</p>
@@ -998,7 +999,7 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                 Book your Strategic AI<br />Advisory Session.
                             </h2>
                             <p className="font-mono text-sm text-neutral-400 mb-6 leading-relaxed">
-                                In 45 minutes, we'll identify the 3 changes in your stack with the fastest ROI,
+                                In 45 minutes, we&apos;ll identify the 3 changes in your stack with the fastest ROI,
                                 build your 90-day AI roadmap, and show you exactly what strategic AI advisory
                                 looks like for a company at your stage.
                             </p>
@@ -1007,10 +1008,10 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                     className="inline-flex items-center gap-2 bg-white text-black font-mono text-xs uppercase tracking-[0.2em] px-6 py-3 hover:bg-neutral-100 transition-colors">
                                     Schedule Now <ArrowRight className="w-3 h-3" />
                                 </a>
-                                <a href="/sign-up"
+                                <Link href="/sign-up"
                                     className="inline-flex items-center gap-2 border border-white text-white font-mono text-xs uppercase tracking-[0.2em] px-6 py-3 hover:bg-white/10 transition-colors">
                                     Start Tracking Free <ArrowRight className="w-3 h-3" />
-                                </a>
+                                </Link>
                             </div>
                         </div>
                         <div className="space-y-3 font-mono text-xs text-neutral-500 pt-2">
@@ -1018,8 +1019,8 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                 <span className="text-white font-medium">Trackr Advisory</span>
                                 <span className="ml-2">· AI Strategy & Implementation</span>
                             </div>
-                            <p>This assessment was prepared using Trackr's proprietary AI Operational Readiness methodology. Confidential — prepared for {submission.contactName ?? submission.companyName} only.</p>
-                            <p><span className="text-neutral-400">Report date:</span> {reportDate} · We recommend re-scoring quarterly as the AI landscape evolves.</p>
+                            <p>This assessment was prepared using Trackr&apos;s proprietary AI Operational Readiness methodology. Confidential — prepared for {submission.contactName ?? submission.companyName} only.</p>
+                            <p><span className="text-neutral-400">Report date:</span> {reportDate} &middot; We recommend re-scoring quarterly as the AI landscape evolves.</p>
                         </div>
                     </div>
                 </div>
@@ -1032,10 +1033,10 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                         <span className="text-lg font-bold">{score}</span>
                         <span className="text-xs text-neutral-400">/100</span>
                     </div>
-                    <a href="/sign-up"
+                    <Link href="/sign-up"
                         className="inline-flex items-center gap-2 bg-white text-black font-mono text-[10px] uppercase tracking-[0.2em] px-4 py-2 hover:bg-neutral-100 transition-colors whitespace-nowrap">
                         Track Your AI Stack Free <ArrowRight className="w-3 h-3" />
-                    </a>
+                    </Link>
                 </div>
             </div>
 

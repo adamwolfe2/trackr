@@ -57,7 +57,7 @@ export async function getRetainerArchitects() {
     return allArchitects;
 }
 
-export async function requestArchitectReview(workspaceId: string, notes?: string) {
+export async function requestArchitectReview(workspaceId: string, _notes?: string) {
     // Auth: verify caller is signed in and belongs to this workspace
     const user = await currentUser();
     if (!user) throw new Error("Not authenticated");

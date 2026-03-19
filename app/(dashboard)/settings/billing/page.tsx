@@ -168,8 +168,10 @@ export default async function BillingPage({
     const hasActiveSubscription = subscription && (subscription.status === "active" || subscription.status === "trialing" || subscription.status === "past_due");
 
     // Trial countdown
+    // eslint-disable-next-line react-hooks/purity -- server component, Date.now() is fine
+    const now = Date.now();
     const trialDaysLeft = subscription?.status === "trialing" && subscription.currentPeriodEnd
-        ? Math.max(0, Math.ceil((new Date(subscription.currentPeriodEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
+        ? Math.max(0, Math.ceil((new Date(subscription.currentPeriodEnd).getTime() - now) / (1000 * 60 * 60 * 24)))
         : null;
 
     return (

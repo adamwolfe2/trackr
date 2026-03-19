@@ -54,11 +54,10 @@ export function ProcurementClient({
     userName,
 }: ProcurementClientProps) {
     const router = useRouter();
-    const [requests, setRequests] = useState(initialRequests);
+    const [requests] = useState(initialRequests);
     const [showNewForm, setShowNewForm] = useState(false);
     const [selectedRequest, setSelectedRequest] =
         useState<ProcurementRequestData | null>(null);
-    const [isPending, startTransition] = useTransition();
     const [mobileTab, setMobileTab] = useState<KanbanStatus>("pending");
 
     // Group requests by status

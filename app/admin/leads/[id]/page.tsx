@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { auditSubmissions, pendingInvitations, workspaces, softwareSpend } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
 import { redirect, notFound } from "next/navigation";
+import Link from "next/link";
 import type { AuditScorecard } from "@/lib/actions/audit";
 import { processAuditSubmission } from "@/lib/actions/audit";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
@@ -205,9 +206,9 @@ export default async function LeadDetailPage({
         <div className="space-y-6 pb-32">
             {/* Back nav */}
             <div className="flex items-center gap-4">
-                <a href="/admin/leads" className="font-mono text-xs uppercase tracking-widest text-neutral-500 hover:text-black">
+                <Link href="/admin/leads" className="font-mono text-xs uppercase tracking-widest text-neutral-500 hover:text-black">
                     ← All Leads
-                </a>
+                </Link>
             </div>
 
             {/* ── Hero Card ─────────────────────────────────────────────────── */}

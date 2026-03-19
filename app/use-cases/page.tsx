@@ -327,7 +327,7 @@ export default function UseCasesPage() {
                                 Ready to audit your stack?
                             </h2>
                             <p className="font-mono text-[11px] text-neutral-600 leading-relaxed mb-6">
-                                Start with a free stack audit. No credit card required. See exactly where you're overpaying, where tools overlap, and which categories you're missing.
+                                Start with a free stack audit. No credit card required. See exactly where you&apos;re overpaying, where tools overlap, and which categories you&apos;re missing.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-3">
                                 <Link

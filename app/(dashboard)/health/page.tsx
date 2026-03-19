@@ -138,9 +138,11 @@ export default async function HealthPage() {
     let latest = await getLatestHealthScore(workspaceId);
 
     // Re-compute if no score exists or last computed >24h ago
+    // eslint-disable-next-line react-hooks/purity -- server component, Date.now() is fine
+    const now = Date.now();
     if (
         !latest ||
-        Date.now() - new Date(latest.computedAt).getTime() > 24 * 60 * 60 * 1000
+        now - new Date(latest.computedAt).getTime() > 24 * 60 * 60 * 1000
     ) {
         const computed = await computeAndSaveHealthScore(workspaceId);
         latest = computed;

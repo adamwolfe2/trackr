@@ -259,7 +259,7 @@ export default async function AlternativesPage({
                             <h3 className="font-mono text-sm font-bold mb-3">Unbiased data sources</h3>
                             <p className="font-mono text-xs text-neutral-600 leading-relaxed">
                                 The best alternatives pull from multiple independent sources — not just vendor
-                                marketing or incentivized reviews. Trackr's AI research synthesizes community
+                                marketing or incentivized reviews. Trackr&apos;s AI research synthesizes community
                                 discussions, pricing pages, changelogs, and competitor positioning.
                             </p>
                         </div>

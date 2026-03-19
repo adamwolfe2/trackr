@@ -263,7 +263,7 @@ export default function OnboardingPage() {
                 </div>
             )}
 
-            {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+            { }
             <div className="flex-1 flex flex-col items-center justify-start py-12 px-6" onKeyDown={handleStepKeyDown}>
 
                 {/* ── STEP 1: Company Context ── */}

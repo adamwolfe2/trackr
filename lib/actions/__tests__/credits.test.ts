@@ -81,6 +81,7 @@ describe("purchaseCredits", () => {
     });
 
     it("throws for invalid credit pack size", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await expect(purchaseCredits(7 as any)).rejects.toThrow("Invalid credit pack size");
     });
 

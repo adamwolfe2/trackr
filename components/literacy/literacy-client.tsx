@@ -169,7 +169,7 @@ export function LiteracyClient({
     stats,
     workspaceId,
     userId,
-    userName,
+    userName: _userName,
 }: LiteracyClientProps) {
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
@@ -266,7 +266,7 @@ export function LiteracyClient({
                         responseCount: data.responseCount,
                     });
                 }
-            } catch (e) {
+            } catch {
                 toast.error("Failed to load results");
             }
         });

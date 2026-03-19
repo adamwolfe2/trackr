@@ -101,7 +101,6 @@ describe("software-spend server actions", () => {
             fd.set("monthlyCost", "-50");
             const result = await addSoftwareSpend(fd);
             expect(result.success).toBe(true);
-            const insertedValues = (db.insert as ReturnType<typeof vi.fn>).mock.calls[0];
             // Just verifying it doesn't throw — cost is sanitized in the action
         });
 

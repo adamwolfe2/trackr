@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { researchJobs, tools, workspaceMembers } from "@/lib/db/schema";
+import { researchJobs, tools } from "@/lib/db/schema";
 import { eq, inArray, desc } from "drizzle-orm";
 import { formatDistanceToNow, format } from "date-fns";
 import Link from "next/link";
@@ -54,11 +54,6 @@ export default async function WorkspaceActivityPage() {
             // Degrade gracefully
         }
     }
-
-    // Resolve current user's member record for "you" label
-    const currentMember = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
-    });
 
     // Group jobs by calendar date
     const grouped: { date: string; jobs: typeof jobs }[] = [];

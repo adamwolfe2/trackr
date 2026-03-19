@@ -1,14 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { ARCHITECT_ROLES } from "@/lib/config/architect-roles";
 
 export default function ApplyRolePage() {
     const params = useParams<{ roleSlug: string }>();
-    const router = useRouter();
     const role = ARCHITECT_ROLES.find((r) => r.slug === params.roleSlug);
 
     const [submitting, setSubmitting] = useState(false);
@@ -37,7 +36,7 @@ export default function ApplyRolePage() {
                     <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-4">Application received</p>
                     <h1 className="font-serif text-4xl font-normal mb-4">Thank you.</h1>
                     <p className="font-mono text-sm text-neutral-600 leading-relaxed mb-8">
-                        We review applications within 48 hours. You'll receive an email with next steps once your application has been reviewed.
+                        We review applications within 48 hours. You&apos;ll receive an email with next steps once your application has been reviewed.
                     </p>
                     <Link href="/" className="font-mono text-xs uppercase tracking-widest border border-black px-4 py-2 hover:bg-black hover:text-white transition-colors">
                         Back to Trackr

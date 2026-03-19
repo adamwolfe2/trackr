@@ -8,7 +8,7 @@ import { checkFeatureAccess } from "@/lib/middleware/require-subscription";
 import { PlanGate } from "@/components/billing/plan-gate";
 import { listProcurementRequests } from "@/lib/actions/procurement";
 import { ProcurementClient } from "@/components/procurement/procurement-client";
-import { ClipboardList, PlusCircle } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 
 export const metadata: Metadata = {
     title: "Procurement -- Trackr",

@@ -81,7 +81,7 @@ function clearBadge() {
 
 // --- Tab URL change detection for badge ---
 
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, _tab) => {
   // Only act on URL changes for the active tab
   if (!changeInfo.url) return;
 

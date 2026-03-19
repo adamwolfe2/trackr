@@ -128,6 +128,37 @@ export function BulkResearchModal({ onClose }: BulkResearchModalProps) {
         setPhase("previewing");
     }, [rawText]);
 
+    // ── Poll ──────────────────────────────────────────────────────────────────
+
+    const pollStatus = useCallback(async (ids: string[]) => {
+        try {
+            const res = await fetch(`/api/research/bulk-status?ids=${ids.join(",")}`);
+            if (!res.ok) return;
+            const data: Array<{
+                id: string; name: string; status: string;
+                overallScore?: string | null; logoUrl?: string | null; websiteUrl?: string;
+            }> = await res.json();
+
+            setLiveTools(prev => prev.map(lt => {
+                const updated = data.find(d => d.id === lt.id);
+                if (!updated) return lt;
+                return {
+                    ...lt,
+                    status: updated.status as LiveStatus["status"],
+                    overallScore: updated.overallScore,
+                    logoUrl: updated.logoUrl ?? lt.logoUrl,
+                };
+            }));
+
+            // Stop polling if all tools are done/failed
+            const allDone = data.every(d => d.status === "active" || d.status === "failed");
+            if (allDone && pollRef.current) {
+                clearInterval(pollRef.current);
+                pollRef.current = null;
+            }
+        } catch { /* ignore poll errors */ }
+    }, []);
+
     // ── Submit ─────────────────────────────────────────────────────────────────
 
     const handleSubmit = useCallback(async () => {
@@ -170,36 +201,7 @@ export function BulkResearchModal({ onClose }: BulkResearchModalProps) {
             setSubmitError("Something went wrong. Please try again.");
             setPhase("previewing");
         }
-    }, [parsed, selected]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const pollStatus = useCallback(async (ids: string[]) => {
-        try {
-            const res = await fetch(`/api/research/bulk-status?ids=${ids.join(",")}`);
-            if (!res.ok) return;
-            const data: Array<{
-                id: string; name: string; status: string;
-                overallScore?: string | null; logoUrl?: string | null; websiteUrl?: string;
-            }> = await res.json();
-
-            setLiveTools(prev => prev.map(lt => {
-                const updated = data.find(d => d.id === lt.id);
-                if (!updated) return lt;
-                return {
-                    ...lt,
-                    status: updated.status as LiveStatus["status"],
-                    overallScore: updated.overallScore,
-                    logoUrl: updated.logoUrl ?? lt.logoUrl,
-                };
-            }));
-
-            // Stop polling if all tools are done/failed
-            const allDone = data.every(d => d.status === "active" || d.status === "failed");
-            if (allDone && pollRef.current) {
-                clearInterval(pollRef.current);
-                pollRef.current = null;
-            }
-        } catch { /* ignore poll errors */ }
-    }, []);
+    }, [parsed, selected, pollStatus]);
 
     // ── Helpers ────────────────────────────────────────────────────────────────
 

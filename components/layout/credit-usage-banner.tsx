@@ -10,45 +10,49 @@ interface CreditUsageBannerProps {
 }
 
 export async function CreditUsageBanner({ workspaceId }: CreditUsageBannerProps) {
+    let cap: { warned: boolean; allowed: boolean; usage: number; budget: number; pctUsed: number } | null = null;
+    let planName = "";
+
     try {
         const subscription = await db.query.subscriptions.findFirst({
             where: eq(subscriptions.workspaceId, workspaceId),
         });
         const plan = getPlanLimits(subscription ?? undefined);
-        const cap = await checkCostCap(workspaceId, plan.slug);
-
-        if (!cap.warned && cap.allowed) return null;
-
-        const pct = Math.min(Math.round(cap.pctUsed), 100);
-
-        if (!cap.allowed) {
-            return (
-                <div className="border-b border-red-600 bg-red-50 px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2.5">
-                    <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" strokeWidth={2} />
-                    <p className="font-mono text-xs text-red-700">
-                        Monthly API budget reached (${cap.usage.toFixed(2)} / ${cap.budget.toFixed(2)}).{" "}
-                        Research is paused until next month.{" "}
-                        <a href="/settings/billing" className="underline underline-offset-2 font-semibold hover:text-red-900">
-                            Upgrade to resume →
-                        </a>
-                    </p>
-                </div>
-            );
-        }
-
-        return (
-            <div className="border-b border-amber-400 bg-amber-50 px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" strokeWidth={2} />
-                <p className="font-mono text-xs text-amber-800">
-                    {pct}% of your monthly API budget used (${cap.usage.toFixed(2)} / ${cap.budget.toFixed(2)} on {plan.name} plan).{" "}
-                    <a href="/settings/billing" className="underline underline-offset-2 font-semibold hover:text-amber-900">
-                        Upgrade for more capacity →
-                    </a>
-                </p>
-            </div>
-        );
+        planName = plan.name;
+        cap = await checkCostCap(workspaceId, plan.slug);
     } catch {
         // Never break the layout for a non-critical banner
         return null;
     }
+
+    if (!cap || (!cap.warned && cap.allowed)) return null;
+
+    const pct = Math.min(Math.round(cap.pctUsed), 100);
+
+    if (!cap.allowed) {
+        return (
+            <div className="border-b border-red-600 bg-red-50 px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2.5">
+                <XCircle className="w-4 h-4 text-red-600 flex-shrink-0" strokeWidth={2} />
+                <p className="font-mono text-xs text-red-700">
+                    Monthly API budget reached (${cap.usage.toFixed(2)} / ${cap.budget.toFixed(2)}).{" "}
+                    Research is paused until next month.{" "}
+                    <a href="/settings/billing" className="underline underline-offset-2 font-semibold hover:text-red-900">
+                        Upgrade to resume →
+                    </a>
+                </p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="border-b border-amber-400 bg-amber-50 px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" strokeWidth={2} />
+            <p className="font-mono text-xs text-amber-800">
+                {pct}% of your monthly API budget used (${cap.usage.toFixed(2)} / ${cap.budget.toFixed(2)} on {planName} plan).{" "}
+                <a href="/settings/billing" className="underline underline-offset-2 font-semibold hover:text-amber-900">
+                    Upgrade for more capacity →
+                </a>
+            </p>
+        </div>
+    );
 }

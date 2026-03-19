@@ -10,7 +10,7 @@ export function InviteTeamNudge({ role }: { role: string }) {
     const [dismissed, setDismissed] = useState(true); // start hidden to avoid flash
 
     useEffect(() => {
-        setDismissed(localStorage.getItem(DISMISSED_KEY) === "true");
+        setDismissed(localStorage.getItem(DISMISSED_KEY) === "true"); // eslint-disable-line react-hooks/set-state-in-effect -- hydration-safe localStorage read
     }, []);
 
     if (role !== "owner" || dismissed) return null;

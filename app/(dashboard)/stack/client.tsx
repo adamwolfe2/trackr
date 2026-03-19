@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { addSoftwareSpend, deleteSoftwareSpend, updateSoftwareSpendStatus, updateSoftwareSpendDetails, batchAddSoftwareSpend, bulkDeleteSoftwareSpend } from "@/lib/actions/software-spend";
 import { PlusCircle, Trash2, ExternalLink, DollarSign, Users, Pencil, Check, X, AlertTriangle, Sparkles, Clipboard, ChevronDown, CalendarClock, Download, Loader2, Square, CheckSquare } from "lucide-react";
 import { toast } from "sonner";
@@ -350,12 +351,12 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                             Export CSV
                         </button>
                     )}
-                    <a
+                    <Link
                         href="/stack/report"
                         className="flex items-center gap-2 border border-black px-4 py-2.5 font-mono text-xs bg-white hover:bg-neutral-100 whitespace-nowrap"
                     >
                         Generate Report
-                    </a>
+                    </Link>
                     <button
                         onClick={() => { setShowForm(prev => !prev); setShowPaste(false); }}
                         className="flex items-center gap-2 border border-black px-4 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 whitespace-nowrap"

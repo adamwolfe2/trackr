@@ -342,7 +342,7 @@ export default function AnalyticsClient({
             {!hasSpend && (
                 <div className="border border-dashed border-black/20 p-4 font-mono text-xs text-neutral-400">
                     Add software spend data to see spend analytics →{" "}
-                    <a href="/stack" className="underline hover:text-black">Go to Stack</a>
+                    <Link href="/stack" className="underline hover:text-black">Go to Stack</Link>
                 </div>
             )}
 

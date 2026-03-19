@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+
 import { submitResponse } from "@/lib/actions/literacy";
 import type { SurveyQuestion } from "@/lib/config/default-surveys";
 import { toast } from "sonner";
@@ -20,7 +20,6 @@ export function SurveyForm({
     respondentId,
     respondentName,
 }: SurveyFormProps) {
-    const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [answers, setAnswers] = useState<Record<string, string | number>>({});

@@ -416,7 +416,7 @@ async function deepEnrich(
     return { websiteContext, toolIntel, companyIntel };
 }
 
-async function getIndustryBenchmark(industry: string | null, companySize: string | null): Promise<{ avgScore: number; count: number } | null> {
+async function getIndustryBenchmark(industry: string | null, _companySize: string | null): Promise<{ avgScore: number; count: number } | null> {
     if (!industry) return null;
     try {
         const result = await db
