@@ -2,14 +2,14 @@
  * CSV generation utilities with proper escaping.
  *
  * - Handles commas, quotes, and newlines inside cell values.
- * - Neutralises formula-injection characters (=, +, -, @, \t) by prefixing a tab.
+ * - Neutralises formula-injection characters (=, +, -, @, \t, \r) by prefixing a tab.
  */
 
 export function escapeCSV(value: string | number | null | undefined): string {
     if (value == null) return '';
     const str = String(value);
     // Neutralise formula injection — prefix with a tab character
-    const safe = /^[=+\-@\t]/.test(str) ? `\t${str}` : str;
+    const safe = /^[=+\-@\t\r]/.test(str) ? `\t${str}` : str;
     // Wrap in double-quotes and escape any embedded double-quotes
     return `"${safe.replace(/"/g, '""')}"`;
 }
