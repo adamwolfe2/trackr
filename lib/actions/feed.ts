@@ -6,6 +6,7 @@ import { eq, and, sql } from "drizzle-orm";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { getWorkspaceId as getWorkspaceIdFromDb } from "@/lib/db/queries";
+import { requireWorkspaceMember } from "@/lib/middleware/require-workspace-member";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -120,6 +121,7 @@ export async function toggleFeedItemSaved(id: string) {
 // ── Default channel seeding ─────────────────────────────────────────────────
 
 export async function seedDefaultChannels(workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     const defaults = [
         { name: "AI Tools & Automation", type: "topic" as const, config: { keywords: ["AI tools", "SaaS automation", "AI productivity"] } },
         { name: "Tech Industry News", type: "topic" as const, config: { keywords: ["artificial intelligence", "software tools", "developer productivity"] } },

@@ -36,10 +36,12 @@ async function loginAction(formData: FormData) {
     const adminPassword = process.env.ADMIN_PASSWORD;
     if (!password || !adminPassword) return;
     const { timingSafeEqual: tse, createHash: ch } = await import("crypto");
-    const a = Buffer.from(password);
-    const b = Buffer.from(adminPassword);
+    const submittedHash = ch("sha256").update(password).digest("hex");
+    const expectedHash = ch("sha256").update(adminPassword).digest("hex");
+    const a = Buffer.from(submittedHash);
+    const b = Buffer.from(expectedHash);
     if (a.length === b.length && tse(a, b)) {
-        const token = ch("sha256").update(adminPassword).digest("hex");
+        const token = expectedHash;
         const { cookies: getCookies } = await import("next/headers");
         (await getCookies()).set("trackr-admin", token, {
             httpOnly: true,

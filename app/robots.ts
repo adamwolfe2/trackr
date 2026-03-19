@@ -26,6 +26,7 @@ export default function robots(): MetadataRoute.Robots {
                     '/stack',
                     '/feed',
                     '/analytics',
+                    '/admin',
                 ],
             },
         ],

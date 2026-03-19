@@ -24,23 +24,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
     }));
 
-    // Shared reports with public tokens
-    let sharedReports: { url: string; lastModified: Date; changeFrequency: 'weekly'; priority: number }[] = [];
-    try {
-        const publicReports = await db.query.reports.findMany({
-            where: isNotNull(reports.shareToken),
-            columns: { shareToken: true, createdAt: true },
-        });
-        sharedReports = publicReports.map((r) => ({
-            url: `${baseUrl}/share/${r.shareToken}`,
-            lastModified: new Date(r.createdAt),
-            changeFrequency: 'weekly' as const,
-            priority: 0.6,
-        }));
-    } catch {
-        // Non-critical — sitemap still works without shared reports
-    }
-
     // Public tool library pages
     let researchPages: { url: string; lastModified: Date; changeFrequency: 'weekly'; priority: number }[] = [];
     try {
@@ -302,7 +285,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             priority: 0.6,
         })),
         ...blogPosts,
-        ...sharedReports,
         ...researchPages,
         ...stackProfilePages,
     ];

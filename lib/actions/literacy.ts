@@ -117,6 +117,9 @@ export async function submitResponse(surveyId: string, data: SubmitResponseInput
         throw new Error("Survey not found or not active");
     }
 
+    // Auth: verify caller is a member of the survey's workspace
+    await requireWorkspaceMember(survey.workspaceId);
+
     // Compute score from rating-type answers (1-10 scale, normalized to 0-100)
     const questions = survey.questions as SurveyQuestion[];
     const ratingQuestions = questions.filter((q) => q.type === "rating");

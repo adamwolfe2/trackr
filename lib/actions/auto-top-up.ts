@@ -3,8 +3,10 @@ import { subscriptions } from "@/lib/db/schema";
 import { eq, sql } from "drizzle-orm";
 import { stripe, assertStripeConfigured } from "@/lib/services/stripe";
 import { getPlanLimits, CREDIT_PACK_PRICES } from "@/lib/config/subscriptions";
+import { requireWorkspaceMember } from "@/lib/middleware/require-workspace-member";
 
 export async function performAutoTopUp(workspaceId: string): Promise<{ success: boolean; creditsAdded?: number }> {
+    await requireWorkspaceMember(workspaceId);
     assertStripeConfigured();
     const subscription = await db.query.subscriptions.findFirst({
         where: eq(subscriptions.workspaceId, workspaceId),

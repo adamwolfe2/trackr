@@ -40,11 +40,12 @@ async function loginAction(formData: FormData) {
     if (!password || !adminPassword) return;
 
     const { timingSafeEqual, createHash } = await import("crypto");
-    const a = Buffer.from(password);
-    const b = Buffer.from(adminPassword);
+    const submittedHash = createHash("sha256").update(password).digest("hex");
+    const expectedHash = createHash("sha256").update(adminPassword).digest("hex");
+    const a = Buffer.from(submittedHash);
+    const b = Buffer.from(expectedHash);
     if (a.length === b.length && timingSafeEqual(a, b)) {
-        // Store a derived token in cookie instead of raw password
-        const token = createHash("sha256").update(adminPassword).digest("hex");
+        const token = expectedHash;
         const { cookies } = await import("next/headers");
         (await cookies()).set("trackr-admin", token, {
             httpOnly: true,

@@ -5,10 +5,13 @@ import { architects, architectReferrals, workspaces, workspaceMembers } from "@/
 import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
+import { requireWorkspaceMember } from "@/lib/middleware/require-workspace-member";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
 
 export type ManagedServiceTier = "none" | "basic" | "premium";
 
 export async function getAssignedArchitect(workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.id, workspaceId),
         columns: { id: true, name: true },
@@ -40,6 +43,8 @@ export async function getAssignedArchitect(workspaceId: string) {
 }
 
 export async function getRetainerArchitects() {
+    const isAdmin = await isAdminAuthenticated();
+    if (!isAdmin) throw new Error("Forbidden");
     // Get all active architects available for retainer assignments
     const allArchitects = await db.query.architects.findMany({
         where: eq(architects.status, "active"),

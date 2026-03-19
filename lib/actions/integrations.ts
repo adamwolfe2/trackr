@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 import { getWorkspaceId } from "@/lib/db/queries";
+import { requireWorkspaceMember } from "@/lib/middleware/require-workspace-member";
 
 export type IntegrationProvider = "ramp" | "brex" | "billcom" | "notion" | "confluence";
 
@@ -22,6 +23,7 @@ export async function getProviderInfo() {
 }
 
 export async function listIntegrations(workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     return db.query.integrations.findMany({
         where: eq(integrations.workspaceId, workspaceId),
     });

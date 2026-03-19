@@ -49,6 +49,8 @@ export async function trackReferralClick(code: string) {
 /** Increment signup count for a referral code and award research credits to the referrer */
 export async function trackReferralSignup(code: string) {
     if (!code || typeof code !== "string" || code.length > 20) return;
+    const user = await currentUser();
+    if (!user) throw new Error("Unauthorized");
     try {
         const [referral] = await db
             .update(referrals)

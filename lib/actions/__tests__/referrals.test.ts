@@ -140,6 +140,7 @@ describe("trackReferralSignup", () => {
 
     it("updates signups for a valid code (no referrer found)", async () => {
         setupDbChains({ referralReturn: null });
+        (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         await trackReferralSignup("REF_ABCD");
         // Only the referrals update is called — no subscription update when no referrer returned
         expect(db.update).toHaveBeenCalledTimes(1);
@@ -147,6 +148,7 @@ describe("trackReferralSignup", () => {
 
     it("awards credits to referrer when referral resolves to a workspace", async () => {
         setupDbChains({ referralReturn: { referrerWorkspaceId: "ws_referrer" } });
+        (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         await trackReferralSignup("REF_ABCD");
         // Both referrals update AND subscriptions update called
         expect(db.update).toHaveBeenCalledTimes(2);
@@ -154,6 +156,7 @@ describe("trackReferralSignup", () => {
 
     it("silently ignores db errors", async () => {
         // Make the first update throw
+        (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         const returning = vi.fn().mockRejectedValue(new Error("DB error"));
         const where = vi.fn().mockReturnValue({ returning });
         const set = vi.fn().mockReturnValue({ where });
