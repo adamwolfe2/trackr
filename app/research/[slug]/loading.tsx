@@ -12,12 +12,12 @@ export default function ResearchSlugLoading() {
                     {/* Tool header */}
                     <div className="border border-black p-6 space-y-4">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-neutral-200 border border-neutral-300" />
+                            <div className="w-12 h-12 bg-neutral-200 border border-black" />
                             <div className="space-y-2">
                                 <div className="h-8 w-48 bg-neutral-200" />
                                 <div className="h-4 w-32 bg-neutral-200" />
                             </div>
-                            <div className="ml-auto h-16 w-16 bg-neutral-200 border border-neutral-300" />
+                            <div className="ml-auto h-16 w-16 bg-neutral-200 border border-black" />
                         </div>
                         <div className="h-4 w-full bg-neutral-200" />
                         <div className="h-4 w-3/4 bg-neutral-200" />

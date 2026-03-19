@@ -17,7 +17,7 @@ export default function AskLoading() {
                         </div>
                     ))}
                 </div>
-                <div className="flex gap-2 pt-4 border-t border-neutral-200">
+                <div className="flex gap-2 pt-4 border-t border-black">
                     <Skeleton className="h-10 flex-1" />
                     <Skeleton className="h-10 w-24" />
                 </div>

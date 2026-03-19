@@ -13,7 +13,7 @@ export default function DashboardLoading() {
             {/* Stats row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i} className="border border-neutral-200 p-5 space-y-2">
+                    <div key={i} className="border border-black p-5 space-y-2">
                         <Skeleton className="h-3 w-20" />
                         <Skeleton className="h-8 w-16" />
                     </div>
@@ -21,7 +21,7 @@ export default function DashboardLoading() {
             </div>
 
             {/* AI Nativeness Score skeleton */}
-            <div className="border border-neutral-200 p-5 space-y-3">
+            <div className="border border-black p-5 space-y-3">
                 <Skeleton className="h-3 w-36" />
                 <Skeleton className="h-10 w-24" />
                 <Skeleton className="h-3 w-64" />
@@ -30,8 +30,8 @@ export default function DashboardLoading() {
             {/* Two-column layout */}
             <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
                 {/* Recent Tools */}
-                <div className="lg:col-span-4 border border-neutral-200">
-                    <div className="border-b border-neutral-200 px-5 py-3">
+                <div className="lg:col-span-4 border border-black">
+                    <div className="border-b border-black px-5 py-3">
                         <Skeleton className="h-3 w-24" />
                     </div>
                     <div className="p-4 space-y-4">
@@ -51,8 +51,8 @@ export default function DashboardLoading() {
                 </div>
 
                 {/* Recent Activity */}
-                <div className="lg:col-span-3 border border-neutral-200">
-                    <div className="border-b border-neutral-200 px-5 py-3">
+                <div className="lg:col-span-3 border border-black">
+                    <div className="border-b border-black px-5 py-3">
                         <Skeleton className="h-3 w-28" />
                     </div>
                     <div className="p-4 space-y-4">

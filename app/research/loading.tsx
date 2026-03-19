@@ -16,7 +16,7 @@ export default function ResearchLoading() {
                     {/* Category pills */}
                     <div className="flex gap-2">
                         {[80, 100, 72, 90, 64].map((w, i) => (
-                            <div key={i} className="h-7 bg-neutral-200 border border-neutral-300" style={{ width: w }} />
+                            <div key={i} className="h-7 bg-neutral-200 border border-black" style={{ width: w }} />
                         ))}
                     </div>
 

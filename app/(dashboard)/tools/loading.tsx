@@ -47,7 +47,7 @@ export default function ToolsLoading() {
                                     <Skeleton className="h-16 w-full" />
                                 </>
                             ) : (
-                                <div className="border border-dashed border-neutral-200 min-h-[160px]" />
+                                <div className="border border-dashed border-black min-h-[160px]" />
                             )}
                         </div>
                     </div>
