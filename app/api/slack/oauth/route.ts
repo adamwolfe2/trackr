@@ -42,15 +42,20 @@ export async function GET() {
         return NextResponse.json({ error: "Slack OAuth not configured" }, { status: 500 });
     }
 
-    const state = generateState(workspaceId);
-    const redirectUri = `${appUrl}/api/slack/callback`;
-    const scopes = "channels:read,chat:write,commands";
+    try {
+        const state = generateState(workspaceId);
+        const redirectUri = `${appUrl}/api/slack/callback`;
+        const scopes = "channels:read,chat:write,commands";
 
-    const authorizeUrl = new URL("https://slack.com/oauth/v2/authorize");
-    authorizeUrl.searchParams.set("client_id", clientId);
-    authorizeUrl.searchParams.set("scope", scopes);
-    authorizeUrl.searchParams.set("redirect_uri", redirectUri);
-    authorizeUrl.searchParams.set("state", state);
+        const authorizeUrl = new URL("https://slack.com/oauth/v2/authorize");
+        authorizeUrl.searchParams.set("client_id", clientId);
+        authorizeUrl.searchParams.set("scope", scopes);
+        authorizeUrl.searchParams.set("redirect_uri", redirectUri);
+        authorizeUrl.searchParams.set("state", state);
 
-    return NextResponse.redirect(authorizeUrl.toString());
+        return NextResponse.redirect(authorizeUrl.toString());
+    } catch (err) {
+        console.error("[api/slack/oauth]", err);
+        return NextResponse.json({ error: "Failed to initiate Slack OAuth" }, { status: 500 });
+    }
 }

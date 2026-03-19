@@ -115,6 +115,7 @@ export async function GET(req: Request) {
         });
     } catch (err) {
         Sentry.captureException(err);
+        console.error("[api/cron/research]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

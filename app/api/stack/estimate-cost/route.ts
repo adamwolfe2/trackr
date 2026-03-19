@@ -11,7 +11,12 @@ export async function POST(req: NextRequest) {
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 403 });
 
-    const body = await req.json();
+    let body: Record<string, unknown>;
+    try {
+        body = await req.json();
+    } catch {
+        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
     const toolName = typeof body.toolName === "string" ? body.toolName.trim() : "";
     const seats = typeof body.seats === "number" && body.seats > 0 ? body.seats : 1;
 

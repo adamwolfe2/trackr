@@ -65,21 +65,27 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true }, { status: 200 });
     }
 
-    const [application] = await db
-        .insert(architectApplications)
-        .values({
-            firstName: data.firstName,
-            lastName: data.lastName,
-            email: data.email,
-            phone: data.phone || null,
-            linkedinUrl: data.linkedinUrl || null,
-            roleSlug: data.roleSlug,
-            experience: data.experience || null,
-            portfolioUrl: data.portfolioUrl || null,
-            referralSource: data.referralSource || null,
-            status: "pending",
-        })
-        .returning();
+    let application;
+    try {
+        [application] = await db
+            .insert(architectApplications)
+            .values({
+                firstName: data.firstName,
+                lastName: data.lastName,
+                email: data.email,
+                phone: data.phone || null,
+                linkedinUrl: data.linkedinUrl || null,
+                roleSlug: data.roleSlug,
+                experience: data.experience || null,
+                portfolioUrl: data.portfolioUrl || null,
+                referralSource: data.referralSource || null,
+                status: "pending",
+            })
+            .returning();
+    } catch (err) {
+        console.error("[architect/apply] Failed to save application:", err);
+        return NextResponse.json({ error: "Failed to submit application" }, { status: 500 });
+    }
 
     // Send confirmation + admin notification in background
     after(async () => {
@@ -91,12 +97,16 @@ export async function POST(req: NextRequest) {
     });
 
     after(async () => {
-        const roleTitle = ARCHITECT_ROLES.find(r => r.slug === data.roleSlug)?.title ?? data.roleSlug;
-        await sendArchitectApplicationNotification(
-            application.id,
-            `${data.firstName} ${data.lastName}`,
-            roleTitle
-        );
+        try {
+            const roleTitle = ARCHITECT_ROLES.find(r => r.slug === data.roleSlug)?.title ?? data.roleSlug;
+            await sendArchitectApplicationNotification(
+                application.id,
+                `${data.firstName} ${data.lastName}`,
+                roleTitle
+            );
+        } catch (err) {
+            console.error("[architect/apply] Failed to send admin notification:", err);
+        }
     });
 
     return NextResponse.json({ success: true });

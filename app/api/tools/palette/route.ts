@@ -10,20 +10,25 @@ export async function GET() {
     const user = await currentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
-    });
-    if (!member) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
+    try {
+        const member = await db.query.workspaceMembers.findFirst({
+            where: eq(workspaceMembers.userId, user.id),
+        });
+        if (!member) return NextResponse.json({ error: "No workspace found" }, { status: 403 });
 
-    const workspaceTools = await db.query.tools.findMany({
-        where: and(
-            eq(tools.workspaceId, member.workspaceId),
-            ne(tools.status, "archived")
-        ),
-        columns: { id: true, name: true, overallScore: true, status: true, websiteUrl: true },
-        orderBy: [sql`${tools.overallScore} desc nulls last`],
-        limit: 30,
-    });
+        const workspaceTools = await db.query.tools.findMany({
+            where: and(
+                eq(tools.workspaceId, member.workspaceId),
+                ne(tools.status, "archived")
+            ),
+            columns: { id: true, name: true, overallScore: true, status: true, websiteUrl: true },
+            orderBy: [sql`${tools.overallScore} desc nulls last`],
+            limit: 30,
+        });
 
-    return NextResponse.json({ tools: workspaceTools }, { headers: { "Cache-Control": "private, s-maxage=30, stale-while-revalidate=120" } });
+        return NextResponse.json({ tools: workspaceTools }, { headers: { "Cache-Control": "private, s-maxage=30, stale-while-revalidate=120" } });
+    } catch (err) {
+        console.error("[api/tools/palette]", err);
+        return NextResponse.json({ error: "Failed to load tools" }, { status: 500 });
+    }
 }

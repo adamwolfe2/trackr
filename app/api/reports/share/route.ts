@@ -35,61 +35,66 @@ export async function POST(req: NextRequest) {
     }
     const { reportId } = parsed.data;
 
-    // Verify workspace membership FIRST (before any report lookup)
-    const member = await db.query.workspaceMembers.findFirst({
-        where: eq(workspaceMembers.userId, user.id),
-        columns: { workspaceId: true },
-    });
-    if (!member) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
-    }
-
-    // Fetch report only if it belongs to this workspace (prevents cross-workspace info disclosure)
-    const report = await db.query.reports.findFirst({
-        where: eq(reports.id, reportId),
-    });
-
-    if (!report) {
-        return NextResponse.json({ error: "Report not found" }, { status: 404 });
-    }
-
-    // Verify the report's tool belongs to the caller's workspace
-    const tool = await db.query.tools.findFirst({
-        where: and(eq(tools.id, report.toolId), eq(tools.workspaceId, member.workspaceId)),
-        columns: { id: true },
-    });
-
-    if (!tool) {
-        // Return 404 (not 403) to avoid leaking whether the reportId exists in another workspace
-        return NextResponse.json({ error: "Report not found" }, { status: 404 });
-    }
-
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
-
-    // If already has a share token, return existing URL
-    if (report.shareToken) {
-        return NextResponse.json({
-            url: `${appUrl}/share/${report.shareToken}`,
-            token: report.shareToken,
+    try {
+        // Verify workspace membership FIRST (before any report lookup)
+        const member = await db.query.workspaceMembers.findFirst({
+            where: eq(workspaceMembers.userId, user.id),
+            columns: { workspaceId: true },
         });
+        if (!member) {
+            return NextResponse.json({ error: "Access denied" }, { status: 403 });
+        }
+
+        // Fetch report only if it belongs to this workspace (prevents cross-workspace info disclosure)
+        const report = await db.query.reports.findFirst({
+            where: eq(reports.id, reportId),
+        });
+
+        if (!report) {
+            return NextResponse.json({ error: "Report not found" }, { status: 404 });
+        }
+
+        // Verify the report's tool belongs to the caller's workspace
+        const tool = await db.query.tools.findFirst({
+            where: and(eq(tools.id, report.toolId), eq(tools.workspaceId, member.workspaceId)),
+            columns: { id: true },
+        });
+
+        if (!tool) {
+            // Return 404 (not 403) to avoid leaking whether the reportId exists in another workspace
+            return NextResponse.json({ error: "Report not found" }, { status: 404 });
+        }
+
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
+
+        // If already has a share token, return existing URL
+        if (report.shareToken) {
+            return NextResponse.json({
+                url: `${appUrl}/share/${report.shareToken}`,
+                token: report.shareToken,
+            });
+        }
+
+        // Generate and write new share token — only if shareToken is still null.
+        // The isNull() condition in the WHERE clause means concurrent requests that
+        // race here only one will write; we re-fetch to return whatever was stored.
+        // Use randomBytes for uniform 256-bit entropy (better than UUID v4 stripped of hyphens)
+        const token = randomBytes(32).toString("hex");
+
+        await db.update(reports)
+            .set({ shareToken: token })
+            .where(and(eq(reports.id, reportId), isNull(reports.shareToken)));
+
+        // Re-fetch the stored token (handles the race: another request may have won)
+        const saved = await db.query.reports.findFirst({
+            where: eq(reports.id, reportId),
+            columns: { shareToken: true },
+        });
+        const finalToken = saved?.shareToken ?? token;
+
+        return NextResponse.json({ url: `${appUrl}/share/${finalToken}`, token: finalToken });
+    } catch (err) {
+        console.error("[api/reports/share]", err);
+        return NextResponse.json({ error: "Failed to generate share link" }, { status: 500 });
     }
-
-    // Generate and write new share token — only if shareToken is still null.
-    // The isNull() condition in the WHERE clause means concurrent requests that
-    // race here only one will write; we re-fetch to return whatever was stored.
-    // Use randomBytes for uniform 256-bit entropy (better than UUID v4 stripped of hyphens)
-    const token = randomBytes(32).toString("hex");
-
-    await db.update(reports)
-        .set({ shareToken: token })
-        .where(and(eq(reports.id, reportId), isNull(reports.shareToken)));
-
-    // Re-fetch the stored token (handles the race: another request may have won)
-    const saved = await db.query.reports.findFirst({
-        where: eq(reports.id, reportId),
-        columns: { shareToken: true },
-    });
-    const finalToken = saved?.shareToken ?? token;
-
-    return NextResponse.json({ url: `${appUrl}/share/${finalToken}`, token: finalToken });
 }

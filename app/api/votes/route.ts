@@ -14,23 +14,28 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: "Invalid slug" }, { status: 400 });
     }
 
-    if (slug) {
-        const row = await db.query.communityVotes?.findFirst({
-            where: eq(communityVotes.toolSlug, slug),
-        });
-        return NextResponse.json({
-            up: row?.upVotes ?? 0,
-            down: row?.downVotes ?? 0,
-        }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
-    }
+    try {
+        if (slug) {
+            const row = await db.query.communityVotes?.findFirst({
+                where: eq(communityVotes.toolSlug, slug),
+            });
+            return NextResponse.json({
+                up: row?.upVotes ?? 0,
+                down: row?.downVotes ?? 0,
+            }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
+        }
 
-    // Return all votes as a map (capped at 500 for safety)
-    const rows = await db.select().from(communityVotes).limit(500);
-    const map: Record<string, { up: number; down: number }> = {};
-    for (const row of rows) {
-        map[row.toolSlug] = { up: row.upVotes, down: row.downVotes };
+        // Return all votes as a map (capped at 500 for safety)
+        const rows = await db.select().from(communityVotes).limit(500);
+        const map: Record<string, { up: number; down: number }> = {};
+        for (const row of rows) {
+            map[row.toolSlug] = { up: row.upVotes, down: row.downVotes };
+        }
+        return NextResponse.json({ votes: map }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
+    } catch (err) {
+        console.error("[api/votes/get]", err);
+        return NextResponse.json({ error: "Failed to load votes" }, { status: 500 });
     }
-    return NextResponse.json({ votes: map }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
 }
 
 // POST /api/votes — cast or change a vote (no auth required)
@@ -70,24 +75,29 @@ export async function POST(req: NextRequest) {
     const upDelta = (type === "up" ? 1 : 0) - (prevType === "up" ? 1 : 0);
     const downDelta = (type === "down" ? 1 : 0) - (prevType === "down" ? 1 : 0);
 
-    // UPSERT: initialize row (with 0 seed so it doesn't conflict with migration seeds)
-    // then increment the deltas atomically
-    const [updated] = await db
-        .insert(communityVotes)
-        .values({
-            toolSlug: slug,
-            upVotes: Math.max(0, upDelta),
-            downVotes: Math.max(0, downDelta),
-        })
-        .onConflictDoUpdate({
-            target: communityVotes.toolSlug,
-            set: {
-                upVotes: sql`GREATEST(0, ${communityVotes.upVotes} + ${upDelta})`,
-                downVotes: sql`GREATEST(0, ${communityVotes.downVotes} + ${downDelta})`,
-                updatedAt: new Date(),
-            },
-        })
-        .returning({ up: communityVotes.upVotes, down: communityVotes.downVotes });
+    try {
+        // UPSERT: initialize row (with 0 seed so it doesn't conflict with migration seeds)
+        // then increment the deltas atomically
+        const [updated] = await db
+            .insert(communityVotes)
+            .values({
+                toolSlug: slug,
+                upVotes: Math.max(0, upDelta),
+                downVotes: Math.max(0, downDelta),
+            })
+            .onConflictDoUpdate({
+                target: communityVotes.toolSlug,
+                set: {
+                    upVotes: sql`GREATEST(0, ${communityVotes.upVotes} + ${upDelta})`,
+                    downVotes: sql`GREATEST(0, ${communityVotes.downVotes} + ${downDelta})`,
+                    updatedAt: new Date(),
+                },
+            })
+            .returning({ up: communityVotes.upVotes, down: communityVotes.downVotes });
 
-    return NextResponse.json({ up: updated.up, down: updated.down });
+        return NextResponse.json({ up: updated.up, down: updated.down });
+    } catch (err) {
+        console.error("[api/votes]", err);
+        return NextResponse.json({ error: "Failed to record vote" }, { status: 500 });
+    }
 }

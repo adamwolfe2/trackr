@@ -16,7 +16,13 @@ export async function GET(
     const { slug } = await params;
     const format = request.nextUrl.searchParams.get("format");
 
-    const data = await getPublicProfile(slug);
+    let data;
+    try {
+        data = await getPublicProfile(slug);
+    } catch (err) {
+        console.error("[api/embed]", err);
+        return new NextResponse("Internal Server Error", { status: 500 });
+    }
 
     if (!data) {
         return new NextResponse("Profile not found", { status: 404 });

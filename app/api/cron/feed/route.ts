@@ -49,8 +49,8 @@ export async function GET(req: Request) {
                     const suggestions = await generateSuggestions(wsId);
                     totalSuggestions += suggestions;
                 }
-            } catch {
-                // Skip failing workspace and continue
+            } catch (err) {
+                console.error(`[api/cron/feed] Failed to process workspace ${wsId}:`, err);
             }
         }
 

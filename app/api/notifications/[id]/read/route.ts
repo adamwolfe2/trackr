@@ -25,6 +25,11 @@ export async function PATCH(
         return NextResponse.json({ error: "Invalid notification ID" }, { status: 400 });
     }
 
-    await markNotificationsRead([id]);
-    return NextResponse.json({ success: true }, { headers: getRateLimitHeaders(rl) });
+    try {
+        await markNotificationsRead([id]);
+        return NextResponse.json({ success: true }, { headers: getRateLimitHeaders(rl) });
+    } catch (err) {
+        console.error("[api/notifications/read]", err);
+        return NextResponse.json({ error: "Failed to mark notification as read" }, { status: 500 });
+    }
 }

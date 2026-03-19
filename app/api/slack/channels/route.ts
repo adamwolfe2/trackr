@@ -34,7 +34,8 @@ export async function GET() {
         // Use workspace-specific token if available, otherwise falls back to global env var
         const channels = await listChannels(workspace?.slackBotToken ?? undefined);
         return NextResponse.json({ channels });
-    } catch {
+    } catch (err) {
+        console.error("[api/slack/channels]", err);
         return NextResponse.json({ channels: [], error: "Failed to connect to Slack" });
     }
 }

@@ -147,7 +147,8 @@ export async function GET(req: Request) {
             .where(eq(workspaces.id, workspaceId));
 
         return NextResponse.redirect(`${appUrl}/workspace?slack=connected`);
-    } catch {
+    } catch (err) {
+        console.error("[api/slack/callback] OAuth token exchange failed:", err);
         return NextResponse.redirect(`${appUrl}/workspace?slack=error`);
     }
 }
