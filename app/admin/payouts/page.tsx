@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { architectPayouts, architects, architectCommissions } from "@/lib/db/schema";
 import { desc, eq, count, sum, sql } from "drizzle-orm";
 import { markPayoutPaid, retryPayout } from "@/lib/actions/payouts";
+import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
     title: "Admin Payouts — Trackr",
@@ -23,6 +25,9 @@ function statusColor(status: string): string {
 }
 
 export default async function AdminPayoutsPage() {
+    if (!(await isAdminAuthenticated())) {
+        redirect("/admin/analytics");
+    }
     // Fetch summary stats in parallel
     const [[totalPayouts], [pendingPayouts], [paidPayouts], [pendingCommissions]] = await Promise.all([
         db.select({ count: count(), total: sum(architectPayouts.amount) }).from(architectPayouts),
