@@ -173,8 +173,8 @@ async function handleUserDeleted(evt: WebhookEvent) {
                 try {
                     const { stripe } = await import('@/lib/services/stripe');
                     await stripe.subscriptions.cancel(sub.stripeSubscriptionId);
-                } catch {
-                    // Non-critical — Stripe cancel failure shouldn't block cleanup
+                } catch (cancelErr) {
+                    console.error("[clerk-webhook] Stripe cancel failed:", cancelErr);
                 }
                 await db.update(subscriptions)
                     .set({ status: 'canceled', updatedAt: new Date() })

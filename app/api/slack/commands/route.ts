@@ -17,7 +17,8 @@ function verifySlackSignature(body: string, timestamp: string, signature: string
 
     // Reject requests older than 5 minutes
     const now = Math.floor(Date.now() / 1000);
-    if (Math.abs(now - parseInt(timestamp, 10)) > 300) return false;
+    const ts = parseInt(timestamp, 10);
+    if (Number.isNaN(ts) || Math.abs(now - ts) > 300) return false;
 
     const baseString = `v0:${timestamp}:${body}`;
     const computed = "v0=" + createHmac("sha256", secret).update(baseString).digest("hex");

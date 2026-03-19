@@ -441,6 +441,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
         } catch (commErr) {
             // Non-critical: log but don't fail the webhook
             console.error("[webhook] Architect commission processing failed", commErr);
+            Sentry.captureException(commErr);
         }
     }
 }
@@ -506,7 +507,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     // Only claw back if within 60-day window (per affiliate agreement)
     const daysSinceCommission = (Date.now() - new Date(commission.createdAt).getTime()) / (1000 * 60 * 60 * 24);
     if (daysSinceCommission > 60) {
-        console.log(`[webhook] Skipping clawback for commission ${commission.id} — outside 60-day window (${Math.floor(daysSinceCommission)} days)`);
+        console.info(`[webhook] Skipping clawback for commission ${commission.id} — outside 60-day window (${Math.floor(daysSinceCommission)} days)`);
         return;
     }
 
@@ -553,7 +554,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
         })
         .where(eq(architects.id, commission.architectId));
 
-    console.log(`[webhook] Commission clawback: ${clawbackAmount} cents from architect ${commission.architectId} (invoice ${invoiceId}, ${Math.floor(refundRatio * 100)}% refund)`);
+    console.info(`[webhook] Commission clawback: ${clawbackAmount} cents from architect ${commission.architectId} (invoice ${invoiceId}, ${Math.floor(refundRatio * 100)}% refund)`);
 }
 
 async function handleAccountUpdated(account: Stripe.Account) {

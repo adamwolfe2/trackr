@@ -781,11 +781,10 @@ function S3() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border border-black">
                 {REASONS.map((r, i) => (
                     <div key={r.n}
-                        className={`p-8 ${i < 2 ? "border-b sm:border-b-0 sm:border-r border-black" : ""}`}
-                        style={r.highlight ? { background: "#1a1a1a", color: "#F3F3EF" } : {}}>
-                        <div className={`font-mono text-[9px] uppercase tracking-[0.15em] mb-4 ${r.highlight ? "text-white/30" : "text-black/30"}`}>{r.n}</div>
-                        <h3 className={`font-serif text-xl font-normal mb-4 leading-snug ${r.highlight ? "text-white" : ""}`}>{r.title}</h3>
-                        <p className={`font-mono text-xs leading-relaxed ${r.highlight ? "text-white/60" : "text-black/55"}`}>{r.body}</p>
+                        className={`p-8 ${i < 2 ? "border-b sm:border-b-0 sm:border-r border-black" : ""} ${r.highlight ? "bg-black text-[#F3F3EF]" : ""}`}>
+                        <div className={`font-mono text-[9px] uppercase tracking-[0.15em] mb-4 ${r.highlight ? "text-[#F3F3EF]/30" : "text-black/30"}`}>{r.n}</div>
+                        <h3 className={`font-serif text-xl font-normal mb-4 leading-snug ${r.highlight ? "text-[#F3F3EF]" : ""}`}>{r.title}</h3>
+                        <p className={`font-mono text-xs leading-relaxed ${r.highlight ? "text-[#F3F3EF]/60" : "text-black/55"}`}>{r.body}</p>
                     </div>
                 ))}
             </div>
@@ -800,25 +799,21 @@ function S4() {
             n: "01",
             title: "Stack Intake",
             body: "We map every tool your org pays for, who owns it, and what it's actually being used for.",
-            dark: false,
         },
         {
             n: "02",
             title: "Expert Audit",
             body: "Every tool goes through our research agents — scored across 7 dimensions, benchmarked against best-in-class alternatives.",
-            dark: false,
         },
         {
             n: "03",
             title: "Action Plan",
             body: "A prioritized list: what to cut, swap, and add — in order. Every recommendation backed by data, not opinion.",
-            dark: false,
         },
         {
             n: "04",
             title: "Handoff",
             body: "Your Trackr workspace is fully populated. Stack intelligence stays live after we leave.",
-            dark: true,
         },
     ];
     return (
@@ -834,11 +829,10 @@ function S4() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-black">
                 {PHASES.map((p, i) => (
                     <div key={p.n}
-                        className={`p-6 sm:p-8 ${i % 2 === 0 && i < 3 ? "border-r border-black" : ""} ${i % 2 !== 0 && i < 3 ? "sm:border-r border-black" : ""} ${i < 2 ? "border-b sm:border-b-0 border-black" : ""}`}
-                        style={p.dark ? { background: "#1a1a1a", color: "#F3F3EF" } : {}}>
-                        <div className={`font-mono text-[9px] uppercase tracking-[0.15em] mb-3 ${p.dark ? "text-white/30" : "text-black/30"}`}>{p.n}</div>
-                        <h3 className={`font-serif text-xl font-normal mb-4 ${p.dark ? "text-white" : ""}`}>{p.title}</h3>
-                        <p className={`font-mono text-xs leading-relaxed ${p.dark ? "text-white/60" : "text-black/55"}`}>{p.body}</p>
+                        className={`p-6 sm:p-8 ${i % 2 === 0 && i < 3 ? "border-r border-black" : ""} ${i % 2 !== 0 && i < 3 ? "sm:border-r border-black" : ""} ${i < 2 ? "border-b sm:border-b-0 border-black" : ""}`}>
+                        <div className="font-mono text-[9px] uppercase tracking-[0.15em] mb-3 text-black/30">{p.n}</div>
+                        <h3 className="font-serif text-xl font-normal mb-4">{p.title}</h3>
+                        <p className="font-mono text-xs leading-relaxed text-black/55">{p.body}</p>
                     </div>
                 ))}
             </div>
@@ -895,8 +889,7 @@ function S6() {
                         style={{ fontSize: "clamp(28px,3.5vw,48px)" }}>
                         Most companies are paying<br />for the same capability<br />three times.
                     </h2>
-                    <div className="hidden sm:block flex-shrink-0 sm:ml-8 max-w-[320px]"
-                        style={{ borderLeft: "3px solid #1a1a1a", paddingLeft: "20px" }}>
+                    <div className="hidden sm:block flex-shrink-0 sm:ml-8 max-w-[320px] border-l-[3px] border-black pl-5">
                         <p className="font-mono text-xs text-black/60 leading-relaxed">
                             In every audit, redundancy surfaces fast. Tools bought by one team, duplicated by another, paid for by a third. We make the overlap visible and build your action plan around eliminating it.
                         </p>
@@ -956,9 +949,9 @@ function S7() {
 
                 {/* Right: Ask Trackr AI chat UI */}
                 <div className="border border-black bg-white shadow-[4px_4px_0_0_rgba(0,0,0,1)] overflow-hidden">
-                    <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: "#1a1a1a" }}>
+                    <div className="px-4 py-2.5 flex items-center gap-2 bg-black">
                         <TrackrLogo size={12} />
-                        <span className="font-mono text-[10px] uppercase tracking-widest" style={{ color: "rgba(243,243,239,0.7)" }}>Ask Trackr AI</span>
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-[#F3F3EF]/70">Ask Trackr AI</span>
                     </div>
                     <div className="p-4 space-y-4">
                         {CHAT_EXAMPLES.map((ex, i) => (
@@ -1060,9 +1053,8 @@ function S9() {
                     No pitch deck. No generic demo. Just your tools, scored.
                 </p>
                 <div className="mb-4">
-                    <a href="https://trytrackr.com"
-                        className="inline-block font-mono text-sm uppercase tracking-widest px-8 py-4 transition-colors"
-                        style={{ background: "#1a1a1a", color: "#F3F3EF" }}>
+                    <a href="/audit"
+                        className="inline-block font-mono text-sm uppercase tracking-widest px-8 py-4 transition-colors bg-black text-[#F3F3EF]">
                         Book a Free Stack Assessment →
                     </a>
                 </div>

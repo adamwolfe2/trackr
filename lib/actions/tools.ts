@@ -95,7 +95,7 @@ export async function submitTool(formData: FormData) {
                 ne(researchJobs.status, "failed"),
             ));
 
-        if (jobCount >= limits.limits.research && (subscription?.creditBalance ?? 0) <= 0) {
+        if (jobCount >= limits.limits.research && Number(subscription?.creditBalance ?? 0) <= 0) {
             return { error: "insufficient_credits" as const };
         }
     }
