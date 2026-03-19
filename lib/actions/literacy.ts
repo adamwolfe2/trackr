@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { literacySurveys, literacyResponses } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
+import { requireWorkspaceMember } from "@/lib/middleware/require-workspace-member";
 import { DEFAULT_SURVEYS } from "@/lib/config/default-surveys";
 import type { SurveyQuestion } from "@/lib/config/default-surveys";
 
@@ -25,6 +26,7 @@ type SubmitResponseInput = {
 // ── Create Survey ────────────────────────────────────────────────
 
 export async function createSurvey(workspaceId: string, data: CreateSurveyInput) {
+    await requireWorkspaceMember(workspaceId);
     const [survey] = await db
         .insert(literacySurveys)
         .values({
@@ -48,6 +50,7 @@ export async function createSurveyFromTemplate(
     templateIndex: number,
     createdBy: string
 ) {
+    await requireWorkspaceMember(workspaceId);
     const template = DEFAULT_SURVEYS[templateIndex];
     if (!template) {
         throw new Error("Invalid template index");
@@ -64,6 +67,7 @@ export async function createSurveyFromTemplate(
 // ── Activate Survey ──────────────────────────────────────────────
 
 export async function activateSurvey(surveyId: string, workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     const [updated] = await db
         .update(literacySurveys)
         .set({ status: "active" })
@@ -82,6 +86,7 @@ export async function activateSurvey(surveyId: string, workspaceId: string) {
 // ── Close Survey ─────────────────────────────────────────────────
 
 export async function closeSurvey(surveyId: string, workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     const [updated] = await db
         .update(literacySurveys)
         .set({
@@ -144,6 +149,7 @@ export async function submitResponse(surveyId: string, data: SubmitResponseInput
 // ── Get Survey Results ───────────────────────────────────────────
 
 export async function getSurveyResults(surveyId: string, workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     const survey = await db.query.literacySurveys.findFirst({
         where: and(
             eq(literacySurveys.id, surveyId),
@@ -207,6 +213,7 @@ export async function getSurveyResults(surveyId: string, workspaceId: string) {
 // ── List Surveys ─────────────────────────────────────────────────
 
 export async function listSurveys(workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     return db.query.literacySurveys.findMany({
         where: eq(literacySurveys.workspaceId, workspaceId),
         with: {
@@ -221,6 +228,7 @@ export async function listSurveys(workspaceId: string) {
 // ── Get Team Literacy Trend ──────────────────────────────────────
 
 export async function getTeamLiteracyTrend(workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     const surveys = await db.query.literacySurveys.findMany({
         where: and(
             eq(literacySurveys.workspaceId, workspaceId),

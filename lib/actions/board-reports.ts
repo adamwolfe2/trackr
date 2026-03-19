@@ -12,6 +12,7 @@ import {
 } from "@/lib/db/schema";
 import { eq, desc, and, sql, gte, inArray } from "drizzle-orm";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
+import { requireWorkspaceMember } from "@/lib/middleware/require-workspace-member";
 import crypto from "crypto";
 
 // ── Types ────────────────────────────────────────────────────────────
@@ -98,6 +99,7 @@ export async function generateBoardReport(
     period: BoardReportPeriod,
     createdBy: string
 ) {
+    await requireWorkspaceMember(workspaceId);
     const periodStart = getPeriodStart(period);
     const periodEnd = new Date();
     const periodLabel = getPeriodLabel(period);
@@ -289,6 +291,7 @@ export async function generateBoardReport(
 }
 
 export async function listBoardReports(workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     return db.query.boardReports.findMany({
         where: eq(boardReports.workspaceId, workspaceId),
         orderBy: [desc(boardReports.createdAt)],
@@ -296,6 +299,7 @@ export async function listBoardReports(workspaceId: string) {
 }
 
 export async function getBoardReport(reportId: string, workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     return db.query.boardReports.findFirst({
         where: and(
             eq(boardReports.id, reportId),

@@ -10,6 +10,7 @@ import {
     decisionLog,
 } from "@/lib/db/schema";
 import { eq, desc, gte, and, inArray } from "drizzle-orm";
+import { requireWorkspaceMember } from "@/lib/middleware/require-workspace-member";
 import {
     buildBreakdown,
     computeHealthScore,
@@ -20,6 +21,7 @@ import {
 // ─── Compute & Save ────────────────────────────────────────────────────────
 
 export async function computeAndSaveHealthScore(workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
     // First, get workspace tools so we can scope notes by tool IDs
@@ -125,6 +127,7 @@ export async function getHealthHistory(
     workspaceId: string,
     days: number = 90
 ) {
+    await requireWorkspaceMember(workspaceId);
     const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
     const rows = await db.query.stackHealthScores.findMany({
@@ -145,6 +148,7 @@ export async function getHealthHistory(
 // ─── Get Latest ────────────────────────────────────────────────────────────
 
 export async function getLatestHealthScore(workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     const row = await db.query.stackHealthScores.findFirst({
         where: eq(stackHealthScores.workspaceId, workspaceId),
         orderBy: [desc(stackHealthScores.computedAt)],

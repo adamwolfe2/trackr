@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { calendarEvents, softwareSpend } from "@/lib/db/schema";
 import { eq, and, gte, lte, asc } from "drizzle-orm";
+import { requireWorkspaceMember } from "@/lib/middleware/require-workspace-member";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -25,6 +26,7 @@ export async function createCalendarEvent(
         createdBy?: string;
     }
 ) {
+    await requireWorkspaceMember(workspaceId);
     const title = data.title?.trim();
     if (!title) throw new Error("Event title is required");
     if (title.length > 200) throw new Error("Title too long");
@@ -77,6 +79,7 @@ export async function updateCalendarEvent(
 ) {
     if (!UUID_RE.test(eventId)) throw new Error("Invalid event ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    await requireWorkspaceMember(workspaceId);
 
     const updates: Record<string, unknown> = {};
 
@@ -143,6 +146,7 @@ export async function updateCalendarEvent(
 export async function deleteCalendarEvent(eventId: string, workspaceId: string) {
     if (!UUID_RE.test(eventId)) throw new Error("Invalid event ID");
     if (!UUID_RE.test(workspaceId)) throw new Error("Invalid workspace ID");
+    await requireWorkspaceMember(workspaceId);
 
     await db
         .delete(calendarEvents)
@@ -159,6 +163,7 @@ export async function getMonthEvents(
     year: number,
     month: number
 ) {
+    await requireWorkspaceMember(workspaceId);
     const start = new Date(year, month - 1, 1);
     const end = new Date(year, month, 0, 23, 59, 59, 999);
 
@@ -194,6 +199,7 @@ export async function getUpcomingEvents(
     workspaceId: string,
     days: number = 30
 ) {
+    await requireWorkspaceMember(workspaceId);
     const now = new Date();
     const end = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -226,6 +232,7 @@ export async function getUpcomingEvents(
 // ─── Generate Renewal Events ───────────────────────────────────────────────
 
 export async function generateRenewalEvents(workspaceId: string) {
+    await requireWorkspaceMember(workspaceId);
     // Get all active spend items with a renewal date
     const spendEntries = await db.query.softwareSpend.findMany({
         where: eq(softwareSpend.workspaceId, workspaceId),
