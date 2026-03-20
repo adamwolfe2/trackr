@@ -10,7 +10,7 @@ import { listBoardReports } from "@/lib/actions/board-reports";
 import { ReportsClient } from "@/components/reports/reports-client";
 
 export const metadata: Metadata = {
-    title: "Board Reports -- Trackr",
+    title: "Board Reports \u2014 Trackr",
     description: "Generate executive-ready board reports for your AI tool stack.",
 };
 

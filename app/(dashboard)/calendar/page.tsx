@@ -67,7 +67,7 @@ export default async function CalendarPage() {
                     <p className="font-mono text-xs text-neutral-500 mb-6 max-w-sm mx-auto">
                         Track renewal dates, review deadlines, and custom events for your software stack. Add spend entries with renewal dates to auto-generate events.
                     </p>
-                    <Link href="/spend" className="inline-flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
+                    <Link href="/stack" className="inline-flex items-center gap-2 border border-black px-4 py-2 font-mono text-xs bg-black text-white hover:bg-neutral-800">
                         <PlusCircle className="w-3.5 h-3.5" /> Add Spend Entry
                     </Link>
                 </div>

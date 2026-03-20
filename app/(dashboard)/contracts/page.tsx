@@ -10,7 +10,7 @@ import { listContracts, getSpendEntries } from "@/lib/actions/contracts";
 import { ContractsClient } from "@/components/contracts/contracts-client";
 
 export const metadata: Metadata = {
-    title: "Contracts -- Trackr",
+    title: "Contracts \u2014 Trackr",
     description: "Manage software contracts, track renewal dates, and extract key terms.",
 };
 

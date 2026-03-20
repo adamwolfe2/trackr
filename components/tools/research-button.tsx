@@ -43,7 +43,7 @@ export function ResearchButton({ toolId, isResearching, hasReport, isFailed }: R
         }
     };
 
-    const label = isFailed ? "Retry Research" : hasReport ? "Re-Analyze" : "Run Research";
+    const label = isFailed ? "Re-run Research" : hasReport ? "Re-run Research" : "Run Research";
     const Icon = isFailed || hasReport ? RefreshCw : Sparkles;
 
     return (

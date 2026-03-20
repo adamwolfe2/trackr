@@ -120,14 +120,14 @@ export default async function HealthPage() {
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) redirect("/onboarding");
 
-    // Feature gate
+    // Feature gate — stackHealth is available on all plans ("limited" on Free/Team, full on Startup+)
     const plan = await checkFeatureAccess(workspaceId, "stackHealth");
     if (!plan) {
         return (
             <PlanGate
                 featureName="Stack Health Score"
                 description="Get a composite health score for your software stack with actionable recommendations to improve efficiency and reduce risk."
-                requiredPlan="Free"
+                requiredPlan="Startup"
             />
         );
     }

@@ -285,7 +285,7 @@ export function ResearchStream({ toolId, initialStatus }: { toolId: string; init
                                 <li>Verify the tool&apos;s website URL is correct and publicly accessible</li>
                                 <li>Some sites block automated scraping — try a different URL or the tool&apos;s documentation page</li>
                                 <li>If this is a timeout, the tool&apos;s site may be slow — retrying usually works</li>
-                                <li>Click <strong className="text-black">Retry Research</strong> above to try again</li>
+                                <li>Click <strong className="text-black">Re-run Research</strong> above to try again</li>
                             </ul>
                         </div>
                     </div>

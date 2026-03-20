@@ -41,7 +41,7 @@ export function MobileNav() {
                 )}
             >
                 {/* Drawer Header */}
-                <div className="p-5 border-b border-black/10 flex items-center justify-between">
+                <div className="p-5 border-b border-black flex items-center justify-between">
                     <Link
                         href="/tools"
                         onClick={() => setOpen(false)}
@@ -93,7 +93,7 @@ export function MobileNav() {
                 </div>
 
                 {/* Search */}
-                <div className="px-3 py-3 border-t border-black/10">
+                <div className="px-3 py-3 border-t border-black">
                     <button
                         onClick={() => {
                             setOpen(false);
@@ -108,7 +108,7 @@ export function MobileNav() {
                 </div>
 
                 {/* Bottom Nav */}
-                <div className="px-3 py-3 border-t border-black/10 space-y-0.5">
+                <div className="px-3 py-3 border-t border-black space-y-0.5">
                     {BOTTOM_NAV_ITEMS.map((item: typeof BOTTOM_NAV_ITEMS[number]) => {
                         const active = isActive(item.href);
                         return (

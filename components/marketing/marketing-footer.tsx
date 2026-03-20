@@ -102,7 +102,7 @@ export function MarketingFooter() {
                 </div>
 
                 <div className="pt-8 border-t border-black/10 flex flex-col md:flex-row justify-between items-center gap-4 font-mono text-xs text-neutral-500 uppercase tracking-wide">
-                    <span>&copy; 2026 Trackr. All rights reserved.</span>
+                    <span>&copy; {new Date().getFullYear()} Trackr. All rights reserved.</span>
                     <div className="flex gap-8">
                         <Link href="/privacy" className="hover:text-black hover:underline">Privacy Policy</Link>
                         <Link href="/terms" className="hover:text-black hover:underline">Terms of Service</Link>

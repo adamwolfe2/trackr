@@ -10,7 +10,7 @@ import { listCompetitors } from "@/lib/actions/competitor-intel";
 import { CompetitorsClient } from "@/components/competitors/competitors-client";
 
 export const metadata: Metadata = {
-    title: "Competitor Intel -- Trackr",
+    title: "Competitor Intel \u2014 Trackr",
     description: "Track competitor tool stacks and discover intelligence.",
 };
 

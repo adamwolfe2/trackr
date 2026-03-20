@@ -357,6 +357,51 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
         )
         : tools;
 
+    const backlogEmptyState = (
+        <div className="border border-dashed border-neutral-300 p-5 space-y-4">
+            <div>
+                <p className="font-serif text-xl">Submit your first tool.</p>
+                <p className="font-mono text-xs text-neutral-500 mt-1 leading-relaxed">
+                    Paste any tool URL. Research agents analyze it in under 2 minutes.
+                </p>
+            </div>
+            <div className="border border-black bg-white p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Sample Report</span>
+                    <span className="bg-black text-white font-mono text-xs px-2 py-0.5">8.4 / 10</span>
+                </div>
+                <div className="font-sans text-sm font-semibold">Notion</div>
+                <div className="space-y-2">
+                    {[
+                        { label: "Value", score: 81 },
+                        { label: "Support", score: 74 },
+                        { label: "Integration", score: 88 },
+                        { label: "Security", score: 80 },
+                    ].map(({ label, score }) => (
+                        <div key={label} className="space-y-0.5">
+                            <div className="flex items-center justify-between">
+                                <span className="font-mono text-[10px] text-neutral-500">{label}</span>
+                                <span className="font-mono text-[10px] text-neutral-500">{(score / 10).toFixed(1)}</span>
+                            </div>
+                            <div className="bg-neutral-200 h-1.5 w-full">
+                                <div className="bg-black h-1.5" style={{ width: `${score}%` }} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            <Link href="/submit" className="inline-block border border-black px-5 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
+                Submit Tool →
+            </Link>
+        </div>
+    );
+
+    const columnEmptyText = (colId: string) =>
+        colId === "researching" ? "No tools being analyzed right now" :
+        colId === "active" ? "No completed reports yet" :
+        colId === "archived" ? "No archived tools" :
+        "Empty";
+
     return (
         <DndContext
             sensors={sensors}
@@ -398,7 +443,7 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Filter tools by name or category..."
-                            className="w-full sm:w-80 border border-black pl-9 pr-8 py-2 font-mono text-xs bg-white focus:outline-none"
+                            className="w-full sm:w-80 border border-black pl-9 pr-8 py-2 font-mono text-xs bg-white focus:outline-none focus:ring-1 focus:ring-black"
                         />
                         {searchQuery && (
                             <button
@@ -453,48 +498,10 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                                         <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} isNew={newlyActiveIds.has(tool.id)} />
                                     ))}
                                     {colTools.length === 0 && col.id === "backlog" && isEmpty ? (
-                                        <div className="border border-dashed border-neutral-300 p-5 space-y-4">
-                                            <div>
-                                                <p className="font-serif text-xl">Submit your first tool.</p>
-                                                <p className="font-mono text-xs text-neutral-500 mt-1 leading-relaxed">
-                                                    Paste any tool URL. Research agents analyze it in under 2 minutes.
-                                                </p>
-                                            </div>
-                                            <div className="border border-black bg-white p-4 space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Sample Report</span>
-                                                    <span className="bg-black text-white font-mono text-xs px-2 py-0.5">8.4 / 10</span>
-                                                </div>
-                                                <div className="font-sans text-sm font-semibold">Notion</div>
-                                                <div className="space-y-2">
-                                                    {[
-                                                        { label: "Value", score: 81 },
-                                                        { label: "Support", score: 74 },
-                                                        { label: "Integration", score: 88 },
-                                                        { label: "Security", score: 80 },
-                                                    ].map(({ label, score }) => (
-                                                        <div key={label} className="space-y-0.5">
-                                                            <div className="flex items-center justify-between">
-                                                                <span className="font-mono text-[10px] text-neutral-500">{label}</span>
-                                                                <span className="font-mono text-[10px] text-neutral-500">{(score / 10).toFixed(1)}</span>
-                                                            </div>
-                                                            <div className="bg-neutral-200 h-1.5 w-full">
-                                                                <div className="bg-black h-1.5" style={{ width: `${score}%` }} />
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <Link href="/submit" className="inline-block border border-black px-5 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
-                                                Submit Tool →
-                                            </Link>
-                                        </div>
+                                        backlogEmptyState
                                     ) : colTools.length === 0 ? (
                                         <div className="border border-dashed border-neutral-300 p-4 text-center text-[10px] font-mono text-neutral-400">
-                                            {col.id === "researching" ? "No tools being analyzed right now" :
-                                             col.id === "active" ? "No completed reports yet" :
-                                             col.id === "archived" ? "No archived tools" :
-                                             "Empty"}
+                                            {columnEmptyText(col.id)}
                                         </div>
                                     ) : null}
                                 </DroppableColumn>
@@ -523,48 +530,10 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                                         <DraggableCard key={tool.id} tool={tool} onDelete={handleDelete} isNew={newlyActiveIds.has(tool.id)} />
                                     ))}
                                     {colTools.length === 0 && col.id === "backlog" && isEmpty ? (
-                                        <div className="border border-dashed border-neutral-300 p-5 space-y-4">
-                                            <div>
-                                                <p className="font-serif text-xl">Submit your first tool.</p>
-                                                <p className="font-mono text-xs text-neutral-500 mt-1 leading-relaxed">
-                                                    Paste any tool URL. Research agents analyze it in under 2 minutes.
-                                                </p>
-                                            </div>
-                                            <div className="border border-black bg-white p-4 space-y-3">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Sample Report</span>
-                                                    <span className="bg-black text-white font-mono text-xs px-2 py-0.5">8.4 / 10</span>
-                                                </div>
-                                                <div className="font-sans text-sm font-semibold">Notion</div>
-                                                <div className="space-y-2">
-                                                    {[
-                                                        { label: "Value", score: 81 },
-                                                        { label: "Support", score: 74 },
-                                                        { label: "Integration", score: 88 },
-                                                        { label: "Security", score: 80 },
-                                                    ].map(({ label, score }) => (
-                                                        <div key={label} className="space-y-0.5">
-                                                            <div className="flex items-center justify-between">
-                                                                <span className="font-mono text-[10px] text-neutral-500">{label}</span>
-                                                                <span className="font-mono text-[10px] text-neutral-500">{(score / 10).toFixed(1)}</span>
-                                                            </div>
-                                                            <div className="bg-neutral-200 h-1.5 w-full">
-                                                                <div className="bg-black h-1.5" style={{ width: `${score}%` }} />
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                            <Link href="/submit" className="inline-block border border-black px-5 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] transition-all">
-                                                Submit Tool →
-                                            </Link>
-                                        </div>
+                                        backlogEmptyState
                                     ) : colTools.length === 0 ? (
                                         <div className="border border-dashed border-neutral-300 p-4 text-center text-[10px] font-mono text-neutral-400">
-                                            {col.id === "researching" ? "No tools being analyzed right now" :
-                                             col.id === "active" ? "No completed reports yet" :
-                                             col.id === "archived" ? "No archived tools" :
-                                             "Empty"}
+                                            {columnEmptyText(col.id)}
                                         </div>
                                     ) : null}
                                 </DroppableColumn>

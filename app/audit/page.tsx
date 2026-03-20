@@ -149,7 +149,7 @@ export default async function AuditPage({
     const cookieStore = await cookies();
     const arcCode = arcCodeParam ?? cookieStore.get("trackr_arc")?.value ?? undefined;
 
-    const auditCount = Math.max(auditStats?.total ?? 0, 47); // floor at 47 for social proof
+    const auditCount = auditStats?.total ?? 0;
 
     return (
         <>

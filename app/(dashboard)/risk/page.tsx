@@ -10,7 +10,7 @@ import { getRiskDashboard, getRiskAlerts } from "@/lib/actions/risk-monitoring";
 import { RiskClient } from "@/components/risk/risk-client";
 
 export const metadata: Metadata = {
-    title: "Risk Monitor -- Trackr",
+    title: "Risk Monitor \u2014 Trackr",
     description: "Monitor vendor risk, security posture, and compliance across your tool stack.",
 };
 

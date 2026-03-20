@@ -49,7 +49,7 @@ export default async function ManagedServicePage() {
                         ))}
                     </div>
                     <Link
-                        href="/contact"
+                        href="/apply"
                         className="inline-flex items-center gap-2 bg-black text-white px-6 py-3 font-mono text-xs uppercase tracking-widest hover:bg-neutral-800 transition-colors"
                     >
                         Request an Architect <ArrowRight className="w-3 h-3" />

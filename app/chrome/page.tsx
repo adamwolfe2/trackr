@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Chrome, Search, Zap, FolderSync, CheckCircle } from "lucide-react";
+import { currentUser } from "@clerk/nextjs/server";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 
@@ -135,7 +136,9 @@ const chromeJsonLd = {
     ],
 };
 
-export default function ChromePage() {
+export default async function ChromePage() {
+    const user = await currentUser();
+
     return (
         <>
             <script
@@ -143,7 +146,7 @@ export default function ChromePage() {
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(chromeJsonLd) }}
             />
             <main className="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6">
-                <MarketingNavigation isLoggedIn={false} />
+                <MarketingNavigation isLoggedIn={!!user} />
 
                 {/* Hero */}
                 <section className="pt-16 pb-12 border-b border-black">

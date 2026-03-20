@@ -83,7 +83,7 @@ export function UpgradeModal({ open, onClose, trigger, workspaceId }: UpgradeMod
             aria-modal="true"
             aria-labelledby="upgrade-modal-title"
         >
-            <div className="bg-[#F3F3EF] border border-black w-full max-w-xl shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-h-[85vh] overflow-y-auto">
+            <div className="bg-[#F3F3EF] border border-black w-full max-w-xl shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] max-h-[85vh] overflow-y-auto">
                 {/* Header */}
                 <div className="border-b border-black px-4 sm:px-6 py-3 sm:py-4 flex items-start justify-between gap-4">
                     <div>
@@ -99,7 +99,7 @@ export function UpgradeModal({ open, onClose, trigger, workspaceId }: UpgradeMod
                     </div>
                     <button
                         onClick={onClose}
-                        className="flex-shrink-0 border border-neutral-300 hover:border-black p-1.5 transition-colors"
+                        className="flex-shrink-0 border border-black p-1.5 transition-colors"
                         aria-label="Close"
                     >
                         <X className="h-3.5 w-3.5" />
@@ -140,7 +140,7 @@ export function UpgradeModal({ open, onClose, trigger, workspaceId }: UpgradeMod
                 </div>
 
                 {/* Footer */}
-                <div className="border-t border-neutral-200 px-4 sm:px-6 py-3 text-center">
+                <div className="border-t border-black px-4 sm:px-6 py-3 text-center">
                     <Link
                         href="/settings/billing"
                         onClick={onClose}

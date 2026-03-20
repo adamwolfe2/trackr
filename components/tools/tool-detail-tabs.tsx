@@ -155,7 +155,7 @@ function EmptyTabState({ toolStatus, tabName }: { toolStatus: string; tabName: s
             <div className="py-10 text-center space-y-2">
                 <p className="font-mono text-sm text-neutral-500">Research failed</p>
                 <p className="font-mono text-xs text-neutral-400">
-                    Click &ldquo;Retry Research&rdquo; above to try again. {tabName} data will appear after a successful run.
+                    Click &ldquo;Re-run Research&rdquo; above to try again. {tabName} data will appear after a successful run.
                 </p>
             </div>
         );

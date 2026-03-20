@@ -191,7 +191,7 @@ export function AddToolWizard({ creditBalance = 0, workspaceId }: AddToolWizardP
                                 onKeyDown={(e) => e.key === "Enter" && handlePreview()}
                                 autoFocus
                                 disabled={isPreviewing}
-                                className="flex-1 border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none disabled:opacity-50"
+                                className="flex-1 border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black disabled:opacity-50"
                             />
                             <button
                                 onClick={handlePreview}
@@ -233,7 +233,7 @@ export function AddToolWizard({ creditBalance = 0, workspaceId }: AddToolWizardP
                                     minLength={1}
                                     maxLength={200}
                                     onChange={() => errors.name && setErrors((prev) => { const { name: _, ...rest } = prev; return rest; })}
-                                    className={`w-full border px-4 py-3 font-mono text-sm bg-white focus:outline-none ${errors.name ? "border-red-500" : "border-black"}`}
+                                    className={`w-full border px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black ${errors.name ? "border-red-500" : "border-black"}`}
                                 />
                                 {errors.name && <p className="text-red-500 font-mono text-xs mt-1">{errors.name}</p>}
                             </div>
@@ -251,7 +251,7 @@ export function AddToolWizard({ creditBalance = 0, workspaceId }: AddToolWizardP
                                     placeholder="Describe what this tool does..."
                                     rows={5}
                                     maxLength={2000}
-                                    className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none resize-none"
+                                    className="w-full border border-black px-4 py-3 font-mono text-sm bg-white focus:outline-none focus:ring-1 focus:ring-black resize-none"
                                 />
                             </div>
                         </div>

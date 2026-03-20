@@ -174,9 +174,9 @@ export async function sendResearchFailedEmail(
             <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">${escapeHtml(toolName)}</h1>
             <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 8px;">Something went wrong during research:</p>
             <p style="font-size: 12px; color: #C0392B; background: #fff; padding: 8px 12px; margin: 0 0 24px; border: 1px solid #C0392B;">${escapeHtml(errorMessage)}</p>
-            ${emailButton(`${appUrl}/tools/${toolId}`, "Retry Research →")}
+            ${emailButton(`${appUrl}/tools/${toolId}`, "Re-run Research →")}
         `),
-        text: `Research Failed\n\n${toolName}\n\nSomething went wrong during research:\n${errorMessage}\n\nRetry Research: ${appUrl}/tools/${toolId}\n\n—\nTrackr — AI-powered software intelligence`,
+        text: `Research Failed\n\n${toolName}\n\nSomething went wrong during research:\n${errorMessage}\n\nRe-run Research: ${appUrl}/tools/${toolId}\n\n—\nTrackr — AI-powered software intelligence`,
     }));
 }
 

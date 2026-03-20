@@ -386,7 +386,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                     <AlertTriangle className="h-4 w-4 text-neutral-500 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                         <p className="font-mono text-sm font-medium">Research did not complete</p>
-                        <p className="font-mono text-xs text-neutral-500 mt-0.5">This can happen if the site was unreachable or an API timed out. Click &quot;Retry Research&quot; in the top-right to try again.</p>
+                        <p className="font-mono text-xs text-neutral-500 mt-0.5">This can happen if the site was unreachable or an API timed out. Click &quot;Re-run Research&quot; in the top-right to try again.</p>
                     </div>
                 </div>
             )}
@@ -397,7 +397,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
                     <Info className="h-4 w-4 text-neutral-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                         <p className="font-mono text-sm font-medium">Limited report — AI synthesis incomplete</p>
-                        <p className="font-mono text-xs text-neutral-500 mt-0.5">Raw data was collected but the AI analysis step encountered an error. Click &quot;Re-Analyze&quot; in the top-right to generate the full report.</p>
+                        <p className="font-mono text-xs text-neutral-500 mt-0.5">Raw data was collected but the AI analysis step encountered an error. Click &quot;Re-run Research&quot; in the top-right to generate the full report.</p>
                     </div>
                 </div>
             )}

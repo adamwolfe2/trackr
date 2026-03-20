@@ -267,7 +267,7 @@ export default function UseCasesPage() {
                         {[
                             { label: "By role", description: "Landing pages tailored to RevOps, Finance, Founders, and IT.", href: "/for", cta: "Browse roles" },
                             { label: "Tool comparisons", description: "Side-by-side comparisons against specific competitors.", href: "/vs", cta: "See comparisons" },
-                            { label: "Scorecard template", description: "The 7-dimension framework you can use manually or automate.", href: "/scorecard", cta: "Get the template" },
+                            { label: "Scorecard template", description: "The 7-dimension framework you can use manually or automate.", href: "/audit", cta: "Get the template" },
                             { label: "Stack audit", description: "Start with a free audit of your current SaaS stack.", href: "/audit", cta: "Start audit" },
                         ].map((item) => (
                             <div key={item.label} className="bg-[#F3F3EF] p-6 flex flex-col">

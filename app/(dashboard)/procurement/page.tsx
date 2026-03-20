@@ -11,7 +11,7 @@ import { ProcurementClient } from "@/components/procurement/procurement-client";
 import { ClipboardList } from "lucide-react";
 
 export const metadata: Metadata = {
-    title: "Procurement -- Trackr",
+    title: "Procurement \u2014 Trackr",
     description: "AI procurement workflow for requesting, researching, and approving new tools.",
 };
 
