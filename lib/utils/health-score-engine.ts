@@ -6,12 +6,12 @@
  */
 
 export type HealthBreakdown = {
-    toolQuality: number;       // 0-100  — Average of active tools' overallScore (0-10 → 0-100)
-    spendEfficiency: number;   // 0-100  — % of spend on researched/active tools
-    coverageGaps: number;      // 0-100  — How many critical categories are covered
-    riskExposure: number;      // 0-100  — Inverse: % of tools WITHOUT risk issues = score
-    renewalHealth: number;     // 0-100  — % of renewals with >30 days notice
-    teamUtilization: number;   // 0-100  — % of tools with notes/decisions in last 90 days
+    toolQuality: number;              // 0-100  — Average of active tools' overallScore (0-10 → 0-100)
+    spendEfficiency: number | null;   // 0-100 | null — null = no spend data configured
+    coverageGaps: number;             // 0-100  — How many critical categories are covered
+    riskExposure: number | null;      // 0-100 | null — null = no tools to assess
+    renewalHealth: number | null;     // 0-100 | null — null = no renewal dates set
+    teamUtilization: number | null;   // 0-100 | null — null = no tools to assess
 };
 
 const WEIGHTS = {
@@ -23,15 +23,24 @@ const WEIGHTS = {
     teamUtilization: 0.10,
 } as const;
 
-/** Weighted average of the six dimensions → 0-100. */
+/** Weighted average of non-null dimensions → 0-100. Weights are renormalized. */
 export function computeHealthScore(breakdown: HealthBreakdown): number {
-    const weighted =
-        breakdown.toolQuality * WEIGHTS.toolQuality +
-        breakdown.spendEfficiency * WEIGHTS.spendEfficiency +
-        breakdown.coverageGaps * WEIGHTS.coverageGaps +
-        breakdown.riskExposure * WEIGHTS.riskExposure +
-        breakdown.renewalHealth * WEIGHTS.renewalHealth +
-        breakdown.teamUtilization * WEIGHTS.teamUtilization;
+    const entries: { value: number; weight: number }[] = [];
+
+    for (const key of Object.keys(WEIGHTS) as (keyof typeof WEIGHTS)[]) {
+        const val = breakdown[key];
+        if (val !== null) {
+            entries.push({ value: val, weight: WEIGHTS[key] });
+        }
+    }
+
+    if (entries.length === 0) return 0;
+
+    const totalWeight = entries.reduce((s, e) => s + e.weight, 0);
+    const weighted = entries.reduce(
+        (s, e) => s + e.value * (e.weight / totalWeight),
+        0
+    );
 
     return Math.round(Math.min(100, Math.max(0, weighted)));
 }
@@ -90,9 +99,9 @@ export function computeToolQuality(tools: ToolInput[]): number {
 export function computeSpendEfficiency(
     spendItems: SpendInput[],
     researchedToolNames: Set<string>
-): number {
+): number | null {
     const activeSpend = spendItems.filter((s) => s.status === "active");
-    if (activeSpend.length === 0) return 100; // no spend = no waste
+    if (activeSpend.length === 0) return null; // no spend data configured
 
     const totalSpend = activeSpend.reduce(
         (s, e) => s + (parseFloat(e.monthlyCost ?? "0") || 0),
@@ -153,9 +162,9 @@ export function computeCoverageGaps(
 export function computeRiskExposure(
     tools: ToolInput[],
     risks: RiskInput[]
-): number {
+): number | null {
     const activeTools = tools.filter((t) => t.status === "active");
-    if (activeTools.length === 0) return 100;
+    if (activeTools.length === 0) return null;
 
     const riskyToolIds = new Set(
         risks
@@ -175,11 +184,11 @@ export function computeRiskExposure(
  * Compute renewalHealth: % of upcoming renewals where renewalDate > 30 days from now.
  * Tools with no renewal date are excluded from the calculation.
  */
-export function computeRenewalHealth(spendItems: SpendInput[]): number {
+export function computeRenewalHealth(spendItems: SpendInput[]): number | null {
     const withRenewal = spendItems.filter(
         (s) => s.status === "active" && s.renewalDate !== null
     );
-    if (withRenewal.length === 0) return 100; // no renewals = healthy
+    if (withRenewal.length === 0) return null; // no renewal dates set
 
     const now = new Date();
     const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
@@ -200,9 +209,9 @@ export function computeTeamUtilization(
     tools: ToolInput[],
     recentNotes: NoteInput[],
     recentDecisions: DecisionInput[]
-): number {
+): number | null {
     const activeTools = tools.filter((t) => t.status === "active");
-    if (activeTools.length === 0) return 100;
+    if (activeTools.length === 0) return null;
 
     const touchedToolIds = new Set<string>();
     for (const n of recentNotes) touchedToolIds.add(n.toolId);
@@ -260,7 +269,7 @@ export function generateRecommendations(
             "Several active tools score below average. Consider researching alternatives or re-evaluating low-scoring tools."
         );
     }
-    if (breakdown.spendEfficiency < 60) {
+    if (breakdown.spendEfficiency !== null && breakdown.spendEfficiency < 60) {
         recs.push(
             "A significant portion of your spend goes to unresearched tools. Run research on your highest-cost tools to identify savings."
         );
@@ -270,17 +279,17 @@ export function generateRecommendations(
             "Your stack has coverage gaps across critical categories. Review your needs in project management, security, and analytics."
         );
     }
-    if (breakdown.riskExposure < 70) {
+    if (breakdown.riskExposure !== null && breakdown.riskExposure < 70) {
         recs.push(
             "Multiple tools have elevated risk alerts. Prioritize reviewing tools flagged as high or critical risk."
         );
     }
-    if (breakdown.renewalHealth < 60) {
+    if (breakdown.renewalHealth !== null && breakdown.renewalHealth < 60) {
         recs.push(
             "Some renewals are approaching within 30 days. Set calendar reminders and review contract terms before auto-renewal."
         );
     }
-    if (breakdown.teamUtilization < 40) {
+    if (breakdown.teamUtilization !== null && breakdown.teamUtilization < 40) {
         recs.push(
             "Most active tools have not been reviewed in the last 90 days. Encourage team members to log notes and decisions."
         );

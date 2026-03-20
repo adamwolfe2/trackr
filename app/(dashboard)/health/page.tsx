@@ -80,11 +80,11 @@ function BreakdownBar({
     value,
 }: {
     dimensionKey: keyof HealthBreakdown;
-    value: number;
+    value: number | null;
 }) {
     const { label, description } = DIMENSION_LABELS[dimensionKey];
-    const barColor = value >= 70 ? "bg-black" : value >= 40 ? "bg-neutral-500" : "bg-neutral-300";
-    const hasData = value > 0;
+    const barColor = value !== null && value >= 70 ? "bg-black" : value !== null && value >= 40 ? "bg-neutral-500" : "bg-neutral-300";
+    const hasData = value !== null;
 
     return (
         <div className="space-y-1">
@@ -93,13 +93,13 @@ function BreakdownBar({
                     <span className="font-mono text-xs font-medium">{label}</span>
                     <span className="font-mono text-[10px] text-neutral-400 ml-2">{description}</span>
                 </div>
-                <span className="font-mono text-xs font-bold">{value}</span>
+                <span className="font-mono text-xs font-bold">{value !== null ? value : "—"}</span>
             </div>
             {hasData ? (
                 <div className="h-2 bg-neutral-100 border border-neutral-200 w-full">
                     <div
                         className={`h-full ${barColor}`}
-                        style={{ width: `${Math.min(100, Math.max(0, value))}%`, transition: "width 0.3s ease" }}
+                        style={{ width: `${Math.min(100, Math.max(0, value ?? 0))}%`, transition: "width 0.3s ease" }}
                     />
                 </div>
             ) : (

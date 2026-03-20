@@ -53,14 +53,14 @@ export function MarketingEnterprise() {
                 transition={{ duration: 0.5 }}
             >
                 <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-4 block">
-                    White-Glove Enterprise Service
+                    Enterprise
                 </span>
 
                 {/* Split headline section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 mb-16">
                     <div>
                         <h2 className="text-3xl md:text-5xl font-serif font-normal mb-6 leading-tight">
-                            Not just a tool.<br /> Your team&apos;s AI architects.
+                            For teams that need<br /> hands-on help
                         </h2>
                         <p className="font-mono text-sm text-neutral-500 leading-relaxed mb-8">
                             The difference between organizations winning with AI and those falling behind isn&apos;t budget — it&apos;s implementation. We partner with your ops, sales, and marketing teams to identify exactly which tools will move the needle, cut what&apos;s wasting spend, and get you running in days.
@@ -102,7 +102,7 @@ export function MarketingEnterprise() {
                                 &ldquo;Even our Fortune 500 CRO admitted he couldn&apos;t keep up with the pace of AI launches. Nobody has a single source of truth for what&apos;s worth using — until now.&rdquo;
                             </p>
                             <div className="font-mono text-xs uppercase tracking-widest text-neutral-500">
-                                — VP of Revenue Operations, Series C SaaS
+                                — Revenue Operations Leader
                             </div>
                         </div>
 

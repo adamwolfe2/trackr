@@ -59,7 +59,7 @@ describe("computeHealthScore", () => {
         expect(score).toBe(100);
     });
 
-    it("returns 0 when all dimensions are 0", () => {
+    it("returns 0 when all non-null dimensions are 0", () => {
         const score = computeHealthScore(makeBreakdown({
             toolQuality: 0, spendEfficiency: 0, coverageGaps: 0,
             riskExposure: 0, renewalHealth: 0, teamUtilization: 0,
@@ -138,8 +138,8 @@ describe("computeToolQuality", () => {
 // ─── computeSpendEfficiency ───────────────────────────────────────────────────
 
 describe("computeSpendEfficiency", () => {
-    it("returns 100 when there are no active spend items", () => {
-        expect(computeSpendEfficiency([], new Set())).toBe(100);
+    it("returns null when there are no active spend items", () => {
+        expect(computeSpendEfficiency([], new Set())).toBeNull();
     });
 
     it("returns 100 when total spend is 0", () => {
@@ -223,8 +223,8 @@ describe("computeCoverageGaps", () => {
 // ─── computeRiskExposure ──────────────────────────────────────────────────────
 
 describe("computeRiskExposure", () => {
-    it("returns 100 when there are no active tools", () => {
-        expect(computeRiskExposure([], [])).toBe(100);
+    it("returns null when there are no active tools", () => {
+        expect(computeRiskExposure([], [])).toBeNull();
     });
 
     it("returns 100 when no tools have risk alerts", () => {
@@ -267,8 +267,8 @@ describe("computeRiskExposure", () => {
 // ─── computeRenewalHealth ────────────────────────────────────────────────────
 
 describe("computeRenewalHealth", () => {
-    it("returns 100 when there are no active spend items with renewals", () => {
-        expect(computeRenewalHealth([])).toBe(100);
+    it("returns null when there are no active spend items with renewals", () => {
+        expect(computeRenewalHealth([])).toBeNull();
     });
 
     it("returns 100 when all renewals are more than 30 days away", () => {
@@ -306,16 +306,16 @@ describe("computeRenewalHealth", () => {
         const items: SpendInput[] = [
             makeSpend({ status: "canceled", renewalDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000) }), // canceled — excluded
         ];
-        // No active spend with renewals → 100
-        expect(computeRenewalHealth(items)).toBe(100);
+        // No active spend with renewals → null
+        expect(computeRenewalHealth(items)).toBeNull();
     });
 });
 
 // ─── computeTeamUtilization ──────────────────────────────────────────────────
 
 describe("computeTeamUtilization", () => {
-    it("returns 100 when there are no active tools", () => {
-        expect(computeTeamUtilization([], [], [])).toBe(100);
+    it("returns null when there are no active tools", () => {
+        expect(computeTeamUtilization([], [], [])).toBeNull();
     });
 
     it("returns 0 when no tools have recent notes or decisions", () => {
@@ -384,7 +384,7 @@ describe("buildBreakdown", () => {
         expect(breakdown).toHaveProperty("teamUtilization");
     });
 
-    it("all dimensions are numbers between 0 and 100", () => {
+    it("all dimensions are numbers between 0 and 100, or null for unconfigured", () => {
         const breakdown = buildBreakdown({
             tools: [makeTool()],
             spendItems: [makeSpend()],
@@ -397,6 +397,7 @@ describe("buildBreakdown", () => {
         });
 
         for (const value of Object.values(breakdown)) {
+            if (value === null) continue;
             expect(typeof value).toBe("number");
             expect(value).toBeGreaterThanOrEqual(0);
             expect(value).toBeLessThanOrEqual(100);

@@ -41,23 +41,50 @@ export default async function StackPage() {
         );
     }
 
-    const [entries, scoredTools] = await Promise.all([
-        db.query.softwareSpend.findMany({
-            where: eq(softwareSpend.workspaceId, member.workspaceId),
-            orderBy: [desc(softwareSpend.createdAt)],
-        }),
-        db.query.tools.findMany({
-            where: and(
-                eq(tools.workspaceId, member.workspaceId),
-                isNotNull(tools.overallScore),
-                sql`${tools.overallScore}::numeric < 6`
-            ),
-            columns: { name: true },
-        }),
-    ]);
+    let entries: Awaited<ReturnType<typeof db.query.softwareSpend.findMany>> = [];
+    let lowScoredNames: string[] = [];
+    let insights: ReturnType<typeof computeStackInsights> | undefined;
+    let fetchError: string | null = null;
 
-    const lowScoredNames = scoredTools.map(t => t.name.toLowerCase());
-    const insights = computeStackInsights(entries);
+    try {
+        const [fetchedEntries, scoredTools] = await Promise.all([
+            db.query.softwareSpend.findMany({
+                where: eq(softwareSpend.workspaceId, member.workspaceId),
+                orderBy: [desc(softwareSpend.createdAt)],
+            }),
+            db.query.tools.findMany({
+                where: and(
+                    eq(tools.workspaceId, member.workspaceId),
+                    isNotNull(tools.overallScore),
+                    sql`${tools.overallScore}::numeric < 6`
+                ),
+                columns: { name: true },
+            }),
+        ]);
 
-    return <StackClient initialData={entries} lowScoredNames={lowScoredNames} insights={insights} />;
+        entries = fetchedEntries;
+        lowScoredNames = scoredTools.map(t => t.name.toLowerCase());
+        insights = computeStackInsights(entries);
+    } catch (err) {
+        console.error("[stack] Failed to load stack data:", err);
+        fetchError = err instanceof Error ? err.message : "Failed to load stack data";
+    }
+
+    return (
+        <>
+            {fetchError && (
+                <div className="mb-4 border border-black bg-white px-5 py-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <span className="font-mono text-sm text-neutral-600">
+                            Some data failed to load. You can still manage your stack below.
+                        </span>
+                    </div>
+                    <a href="/stack" className="font-mono text-xs border border-black px-3 py-1 hover:bg-black hover:text-white transition-colors">
+                        Retry
+                    </a>
+                </div>
+            )}
+            <StackClient initialData={entries} lowScoredNames={lowScoredNames} insights={insights} />
+        </>
+    );
 }

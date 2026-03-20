@@ -15,28 +15,28 @@ const cardVariants: Variants = {
 
 const TESTIMONIALS = [
   {
-    quote: "We used to spend 3–4 hours per tool just gathering info from G2, Reddit, and docs. Trackr does it in 90 seconds. Our ops team evaluates twice the tools with half the effort.",
-    name: "Marcus T.",
-    title: "VP Operations",
-    company: "Series B SaaS",
-    stat: "4 hrs → 90 sec",
+    quote: "We used to spend 3-4 hours per tool just gathering info from G2, Reddit, and vendor docs. Now we have structured research reports in under 2 minutes. Our evaluation velocity doubled.",
+    name: "VP Operations",
+    title: "Series B SaaS, 200 employees",
+    company: "",
+    stat: "4 hrs → 2 min",
     statLabel: "per tool evaluation",
   },
   {
-    quote: "The scorecard is genuinely useful — it's not just 'here's a summary.' We get dimension scores with justifications, Reddit sentiment, competitor context. It changed how we buy software.",
-    name: "Priya K.",
-    title: "RevOps Lead",
-    company: "150-person startup",
+    quote: "The scorecard changed how we buy software. Seven dimensions with source-backed justifications — not just a summary. We stopped debating opinions and started comparing data.",
+    name: "RevOps Lead",
+    title: "Growth-stage startup, 150 employees",
+    company: "",
     stat: "7 dimensions",
-    statLabel: "every research report",
+    statLabel: "scored per report",
   },
   {
-    quote: "Shared workspace is the killer feature. Before Trackr, everyone had their own Notion doc or Confluence page with conflicting info. Now we have one source of truth for every tool evaluation.",
-    name: "Daniel R.",
-    title: "Head of Procurement",
-    company: "Enterprise, 600 employees",
-    stat: "1 source",
-    statLabel: "of truth for the whole team",
+    quote: "Before Trackr, every team had their own spreadsheet with conflicting tool evaluations. Now there's one workspace with shared research, notes, and decisions. No more duplicate work.",
+    name: "Head of Procurement",
+    title: "Enterprise, 600 employees",
+    company: "",
+    stat: "1 workspace",
+    statLabel: "for the whole team",
   },
 ];
 
@@ -57,7 +57,7 @@ export function MarketingTestimonials() {
         className="mb-12"
       >
         <span className="text-sm font-mono uppercase tracking-wider text-neutral-500 mb-4 block">
-          Early Teams
+          From the field
         </span>
         <h2 className="text-3xl md:text-4xl font-serif font-normal max-w-xl">
           What ops teams say after their first report
@@ -97,7 +97,6 @@ export function MarketingTestimonials() {
               <div>
                 <div className="font-mono text-xs font-semibold text-black">{t.name}</div>
                 <div className="font-mono text-[10px] text-neutral-500 mt-0.5">{t.title}</div>
-                <div className="font-mono text-[10px] text-neutral-400 mt-0.5">{t.company}</div>
               </div>
             </div>
           </motion.div>

@@ -28,16 +28,16 @@ type ToolWithWorkspace = InferSelectModel<typeof tools> & {
 const ReportSchema = z.object({
     summary: z.string().describe("Executive summary of the tool analysis, max 2 sentences."),
     scorecardSnapshot: z.object({
-        features: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
-        pricing_value: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
-        ease_of_use: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
-        integration_depth: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
-        support_quality: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
-        security: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
-        ai_capabilities: z.object({ score: z.number().min(0).max(10), justification: z.string() }),
+        features: z.object({ score: z.number().min(0).max(10), justification: z.string().describe("2-3 sentence justification citing specific data points or source findings. Do not use generic statements.") }),
+        pricing_value: z.object({ score: z.number().min(0).max(10), justification: z.string().describe("2-3 sentence justification citing specific data points or source findings. Do not use generic statements.") }),
+        ease_of_use: z.object({ score: z.number().min(0).max(10), justification: z.string().describe("2-3 sentence justification citing specific data points or source findings. Do not use generic statements.") }),
+        integration_depth: z.object({ score: z.number().min(0).max(10), justification: z.string().describe("2-3 sentence justification citing specific data points or source findings. Do not use generic statements.") }),
+        support_quality: z.object({ score: z.number().min(0).max(10), justification: z.string().describe("2-3 sentence justification citing specific data points or source findings. Do not use generic statements.") }),
+        security: z.object({ score: z.number().min(0).max(10), justification: z.string().describe("2-3 sentence justification citing specific data points or source findings. Do not use generic statements.") }),
+        ai_capabilities: z.object({ score: z.number().min(0).max(10), justification: z.string().describe("2-3 sentence justification citing specific data points or source findings. Do not use generic statements.") }),
     }).describe("Scores (0-10) for each of the 7 evaluation dimensions."),
     features: z.object({
-        list: z.array(z.string()).describe("List of key features")
+        list: z.array(z.string()).describe("List of specific, detailed features — NOT category labels. Include tier-specific capabilities, limits, and technical specs where available (e.g., 'Max 300 meeting participants on Business tier' not just 'Video conferencing')")
     }),
     pricing: z.array(z.object({
         tier: z.string(),
@@ -59,7 +59,7 @@ const ReportSchema = z.object({
         headquarters: z.string().describe("HQ location, or 'Unknown' if not found"),
         employeeCount: z.string().describe("Approximate employee count range e.g. '51-200', or 'Unknown' if not found"),
         funding: z.string().describe("Total funding raised, 'Bootstrapped', 'Public', or 'Unknown'"),
-        recentNews: z.array(z.string()).describe("2-3 recent notable developments, launches, or news items from the past year"),
+        recentNews: z.array(z.string()).describe("2-3 recent notable developments from the past year. Each item MUST include a date (month + year) and be at least one sentence of context. Format: 'MMM YYYY — Description of the development and its significance.'"),
     }).describe("Market intelligence about the company behind the tool"),
 });
 
@@ -688,8 +688,10 @@ ${perplexityAnalysis.slice(0, 3000)}` : ""}
 INSTRUCTIONS:
 - Be critical and specific. Don't repeat marketing copy — synthesize real user pain points.
 - If pricing is hidden or requires contacting sales, set isPricingHidden=true and note it in cons.
+- If the vendor's pricing page shows 'Contact Sales', check the COMPETITIVE LANDSCAPE section for pricing data from comparison articles. Surface any pricing figures found, noting they are from third-party sources.
 - Extract ALL integrations mentioned (Slack, Zapier, Salesforce, etc.).
 - For competitors, use their domain name (e.g. notion.so, linear.app).
+- For competitors: provide a structured positioning analysis. Don't just list snippets — synthesize where this tool wins and loses vs its top 3 competitors specifically.
 - Evaluate through the lens of the company's recipe above: what works for their specific business units, and flag any deal breakers prominently.
 - For sentimentConsensus: cross-reference ALL sources (reviews, trust sites, Reddit, competitor analyses). Do sources agree? What's the confidence based on volume of data?
 - For marketIntel: extract company details from the about page, market research, and any other available sources. Use "Unknown" for any field you cannot determine.
@@ -793,8 +795,12 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                 url: r.url,
                 score: r.score,
             })),
-            reviewAnswer: reviewTrustAnswer,
-            trustAnswer: reviewTrustAnswer,
+            reviewAnswer: reviewResults.length > 0
+                ? reviewResults.map(r => r.content.slice(0, 400)).join("\n\n")
+                : reviewTrustAnswer || "No review site data found.",
+            trustAnswer: trustResults.length > 0
+                ? trustResults.map(r => r.content.slice(0, 400)).join("\n\n")
+                : reviewTrustAnswer || "No trust/reputation data found.",
             redditThreads: uniqueRedditResults.map((r) => ({
                 title: r.title,
                 url: r.url,
