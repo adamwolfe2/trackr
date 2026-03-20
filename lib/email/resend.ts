@@ -881,7 +881,7 @@ function getTeaserCopy(score: number): { subject: string; hook: string; angle: s
 export async function sendProspectTeaserEmail({ submission, score }: ProspectTeaserPayload) {
     if (!process.env.RESEND_API_KEY) return;
 
-    const calLink = "https://cal.com/adamwolfe/trackr";
+    const calLink = "https://cal.com/thara-rao/schedule-an-audit";
     const { subject, hook, angle } = getTeaserCopy(score);
     const firstName = escapeHtml(submission.contactName?.split(" ")[0] || "there");
     const companyName = escapeHtml(submission.companyName);

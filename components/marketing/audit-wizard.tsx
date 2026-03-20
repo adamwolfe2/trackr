@@ -473,13 +473,13 @@ function CalEmbed() {
         }
 
         const Cal = window.Cal!;
-        Cal("init", "trackr", { origin: "https://app.cal.com" });
-        Cal.ns.trackr("inline", {
+        Cal("init", "schedule-an-audit", { origin: "https://app.cal.com" });
+        Cal.ns["schedule-an-audit"]("inline", {
             elementOrSelector: "#my-cal-inline-trackr",
             config: { layout: "month_view", useSlotsViewOnSmallScreen: "true", theme: "light" },
-            calLink: "adamwolfe/trackr",
+            calLink: "thara-rao/schedule-an-audit",
         });
-        Cal.ns.trackr("ui", { theme: "light", hideEventTypeDetails: true, layout: "month_view" });
+        Cal.ns["schedule-an-audit"]("ui", { theme: "light", hideEventTypeDetails: true, layout: "month_view" });
     }, []);
 
     return (
