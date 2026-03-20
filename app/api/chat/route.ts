@@ -1,36 +1,30 @@
 import * as Sentry from "@sentry/nextjs";
+import Anthropic from "@anthropic-ai/sdk";
 import { db } from "@/lib/db";
-import { tools, workspaceMembers, reports, softwareSpend, painPoints } from "@/lib/db/schema";
-import { and, cosineDistance, desc, eq, gt, inArray, isNotNull, sql } from "drizzle-orm";
-import { generateEmbedding } from "@/lib/ai/embedding";
-import { openai } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import { workspaceMembers } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { computeStackInsights } from "@/lib/utils/stack-insights";
 import { checkFeatureAccess } from "@/lib/middleware/require-subscription";
+import { buildSystemPrompt } from "@/lib/ai/trackr-knowledge";
+import { chatTools, toolExecutors, toolLabels } from "@/lib/ai/chat-tools";
 
 export const maxDuration = 30;
 
-// AI SDK v6 sends UIMessage[] where content may be "" with text in parts[].text
-const UIMessageSchema = z.object({
-    role: z.string(),
-    content: z.string().optional().default(""),
-    parts: z.array(z.object({
-        type: z.string(),
-        text: z.string().optional(),
-    }).passthrough()).optional(),
-}).passthrough();
+const MessageSchema = z.object({
+    role: z.enum(["user", "assistant"]),
+    content: z.string().min(1).max(4000),
+});
 
 const ChatSchema = z.object({
-    messages: z.array(UIMessageSchema).min(1).max(50),
+    messages: z.array(MessageSchema).min(1).max(50),
 });
 
 export async function POST(req: NextRequest) {
-    if (!process.env.OPENAI_API_KEY) {
-        console.error("[api/chat] OPENAI_API_KEY is not configured");
+    if (!process.env.ANTHROPIC_API_KEY) {
+        console.error("[api/chat] ANTHROPIC_API_KEY is not configured");
         return NextResponse.json({ error: "AI service is not configured" }, { status: 503 });
     }
 
@@ -78,177 +72,146 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
 
-    const MAX_MESSAGE_LENGTH = 4000;
-
-    // Normalize UIMessage[] → CoreMessage[] (extract text from parts when content is empty)
-    const messages = parsed.data.messages
-        .filter(m => ["user", "assistant", "system"].includes(m.role))
-        .map(m => {
-            const text = m.content ||
-                m.parts?.filter((p: { type: string; text?: string }) => p.type === "text" && p.text)
-                    .map((p: { type: string; text?: string }) => p.text ?? "")
-                    .join("") ||
-                "";
-            return { role: m.role as "user" | "assistant" | "system", content: text };
-        });
-
-    if (messages.length === 0) {
-        return NextResponse.json({ error: "No valid messages" }, { status: 400 });
-    }
-
-    // Reject oversized messages to prevent token exhaustion DoS
-    const oversized = messages.find(m => m.content.length > MAX_MESSAGE_LENGTH);
-    if (oversized) {
-        return NextResponse.json({ error: "Message too long (max 4000 characters)" }, { status: 400 });
-    }
-
-    const lastMessage = messages[messages.length - 1];
-    const query = lastMessage?.content ?? "";
+    const messages = parsed.data.messages;
     const wsId = member.workspaceId;
     const workspace = (member as { workspace?: { name: string; companyContext: string | null } }).workspace ?? { name: "", companyContext: null };
 
-    try {
-        // Fetch all context in parallel
-        const [queryEmbedding, spendEntries, activePainPoints] = await Promise.all([
-            generateEmbedding(query).catch(() => null),
-            db.select()
-                .from(softwareSpend)
-                .where(and(eq(softwareSpend.workspaceId, wsId), eq(softwareSpend.status, "active")))
-                .orderBy(desc(softwareSpend.monthlyCost))
-                .limit(15),
-            db.query.painPoints.findMany({
-                where: and(eq(painPoints.workspaceId, wsId), eq(painPoints.active, true)),
-            }),
-        ]);
+    const anthropic = new Anthropic();
 
-        // pgvector similarity search for tools relevant to the question (skip if embedding failed)
-        let relevantTools: { id: string; name: string; overallScore: string | null; status: string; websiteUrl: string | null; category: string[] | null; similarity: number }[] = [];
-        if (queryEmbedding) {
-            const similarity = sql<number>`1 - (${cosineDistance(tools.embedding, queryEmbedding)})`;
-            relevantTools = await db
-                .select({
-                    id: tools.id,
-                    name: tools.name,
-                    overallScore: tools.overallScore,
-                    status: tools.status,
-                    websiteUrl: tools.websiteUrl,
-                    category: tools.category,
-                    similarity,
-                })
-                .from(tools)
-                .where(and(eq(tools.workspaceId, wsId), isNotNull(tools.embedding), gt(similarity, 0.35)))
-                .orderBy(desc(similarity))
-                .limit(5);
-        }
+    const systemPrompt = buildSystemPrompt({
+        workspaceName: workspace.name,
+        companyContext: workspace.companyContext,
+        toolDescriptions: chatTools,
+    });
 
-        // Fetch full reports for relevant tools
-        let toolContext = "";
-        if (relevantTools.length > 0) {
-            const toolIds = relevantTools.map(t => t.id);
-            const latestReports = await db
-                .selectDistinctOn([reports.toolId], {
-                    toolId: reports.toolId,
-                    summary: reports.summary,
-                    pros: reports.pros,
-                    cons: reports.cons,
-                    scorecardSnapshot: reports.scorecardSnapshot,
-                    pricing: reports.pricing,
-                    competitors: reports.competitors,
-                    integrations: reports.integrations,
-                })
-                .from(reports)
-                .where(inArray(reports.toolId, toolIds))
-                .orderBy(reports.toolId, desc(reports.createdAt));
+    // Convert to Anthropic message format
+    const anthropicMessages: Anthropic.MessageParam[] = messages.map((m) => ({
+        role: m.role,
+        content: m.content,
+    }));
 
-            const reportMap = new Map(latestReports.map(r => [r.toolId, r]));
+    const stream = new ReadableStream({
+        async start(controller) {
+            const encoder = new TextEncoder();
 
-            toolContext = relevantTools
-                .map(t => {
-                    const r = reportMap.get(t.id);
-                    const lines = [
-                        `### ${t.name}`,
-                        `Score: ${t.overallScore ?? "N/A"}/10 | Status: ${t.status} | URL: ${t.websiteUrl ?? "N/A"}`,
-                    ];
-                    if (t.category?.length) lines.push(`Categories: ${t.category.join(", ")}`);
-                    if (r?.summary) lines.push(`Summary: ${r.summary}`);
-                    if (r?.scorecardSnapshot) {
-                        const sc = r.scorecardSnapshot as Record<string, { score?: number; justification?: string }>;
-                        const dims = Object.entries(sc)
-                            .filter(([, v]) => v?.score != null)
-                            .map(([k, v]) => `${k}: ${v.score}/10`)
-                            .join(", ");
-                        if (dims) lines.push(`Scorecard: ${dims}`);
+            function emit(event: string, data: Record<string, unknown>) {
+                controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`));
+            }
+
+            try {
+                // Tool-use loop (max 5 rounds)
+                const loopMessages: Anthropic.MessageParam[] = [...anthropicMessages];
+
+                for (let round = 0; round < 5; round++) {
+                    const response = await anthropic.messages.create({
+                        model: "claude-sonnet-4-20250514",
+                        system: systemPrompt,
+                        messages: loopMessages,
+                        tools: chatTools,
+                        max_tokens: 4096,
+                    });
+
+                    // Collect text and tool_use blocks
+                    const textParts: string[] = [];
+                    const toolUseBlocks: Anthropic.ContentBlock[] = [];
+
+                    for (const block of response.content) {
+                        if (block.type === "text") {
+                            textParts.push(block.text);
+                        } else if (block.type === "tool_use") {
+                            toolUseBlocks.push(block);
+                        }
                     }
-                    if (r?.pricing) {
-                        const p = r.pricing;
-                        lines.push(`Pricing: ${typeof p === "string" ? p : JSON.stringify(p).slice(0, 300)}`);
+
+                    // If there are tool calls, execute them
+                    if (toolUseBlocks.length > 0) {
+                        // Emit tool_start for each
+                        for (const block of toolUseBlocks) {
+                            if (block.type === "tool_use") {
+                                emit("tool_start", {
+                                    name: block.name,
+                                    label: toolLabels[block.name] ?? `Running ${block.name}...`,
+                                });
+                            }
+                        }
+
+                        // Execute all tools in parallel
+                        const toolResults = await Promise.all(
+                            toolUseBlocks.map(async (block) => {
+                                if (block.type !== "tool_use") return null;
+                                try {
+                                    const executor = toolExecutors[block.name];
+                                    if (!executor) {
+                                        return {
+                                            type: "tool_result" as const,
+                                            tool_use_id: block.id,
+                                            content: JSON.stringify({ error: `Unknown tool: ${block.name}` }),
+                                        };
+                                    }
+                                    const result = await executor(
+                                        block.input as Record<string, unknown>,
+                                        wsId
+                                    );
+                                    emit("tool_done", { name: block.name });
+                                    return {
+                                        type: "tool_result" as const,
+                                        tool_use_id: block.id,
+                                        content: result,
+                                    };
+                                } catch (err) {
+                                    emit("tool_done", { name: block.name });
+                                    return {
+                                        type: "tool_result" as const,
+                                        tool_use_id: block.id,
+                                        content: JSON.stringify({ error: "Tool execution failed" }),
+                                        is_error: true,
+                                    };
+                                }
+                            })
+                        );
+
+                        // Push assistant message + tool results for next loop
+                        loopMessages.push({ role: "assistant", content: response.content });
+                        loopMessages.push({
+                            role: "user",
+                            content: toolResults.filter(Boolean) as Anthropic.ToolResultBlockParam[],
+                        });
+
+                        // If stop_reason is end_turn, emit any text and break
+                        if (response.stop_reason === "end_turn") {
+                            if (textParts.length > 0) {
+                                emit("text", { text: textParts.join("") });
+                            }
+                            break;
+                        }
+
+                        // Otherwise continue the tool loop
+                        continue;
                     }
-                    if (r?.pros?.length) lines.push(`Pros: ${r.pros.join("; ")}`);
-                    if (r?.cons?.length) lines.push(`Cons: ${r.cons.join("; ")}`);
-                    if (r?.competitors?.length) lines.push(`Competitors: ${r.competitors.join(", ")}`);
-                    if (r?.integrations?.length) lines.push(`Integrations: ${r.integrations.slice(0, 10).join(", ")}`);
-                    return lines.join("\n");
-                })
-                .join("\n\n---\n\n");
-        }
 
-        // Compute stack insights
-        const insights = computeStackInsights(spendEntries);
+                    // No tool calls — emit text and break
+                    if (textParts.length > 0) {
+                        emit("text", { text: textParts.join("") });
+                    }
+                    break;
+                }
 
-        // Build spend summary (top tools by cost)
-        const activeSpend = spendEntries
-            .filter(e => e.status === "active")
-            .sort((a, b) => (parseFloat(b.monthlyCost ?? "0") || 0) - (parseFloat(a.monthlyCost ?? "0") || 0));
-        const spendLines = activeSpend.map(e => {
-            const cost = parseFloat(e.monthlyCost ?? "0") || 0;
-            const seats = e.seatCount ?? 0;
-            const cls = insights.enrichedTools.find(t => t.id === e.id);
-            return `- ${e.toolName}: $${cost}/mo, ${seats} seats${e.category ? `, ${e.category}` : ""}${cls ? ` [${cls.classification}]` : ""}`;
-        });
+                emit("done", {});
+            } catch (err) {
+                Sentry.captureException(err);
+                console.error("[api/chat]", err);
+                emit("error", { message: "Something went wrong. Please try again." });
+            } finally {
+                controller.close();
+            }
+        },
+    });
 
-        // Build pain points summary
-        const painPointLines = activePainPoints.slice(0, 8).map(pp =>
-            `- ${pp.title}${pp.description ? `: ${pp.description.slice(0, 120)}` : ""}${pp.category ? ` (${pp.category})` : ""}`
-        );
-
-        // Build opportunities summary
-        const oppLines = insights.opportunities.map(o => `- [${o.priority}] ${o.title}${o.description ? `: ${o.description}` : ""}`);
-
-        // Assemble system prompt
-        const systemPrompt = `You are Trackr AI, an expert AI procurement and software stack advisor for ${workspace.name || "this workspace"}.
-
-${workspace.companyContext ? `## Company Context\n${workspace.companyContext}\n` : ""}
-## Software Stack Overview
-- AI Nativeness Score: ${insights.score}/100 (${insights.label} — ${insights.benchmarkText})
-- Total monthly spend: $${Math.round(insights.totalActiveSpend)}/mo ($${Math.round(insights.totalActiveSpend * 12)}/yr)
-- Stack composition: ${insights.aiNativeCount} AI-native, ${insights.aiEnabledCount} AI-enabled, ${insights.traditionalCount} traditional, ${insights.unknownCount} unclassified
-- Estimated time saved by AI tools: ~${Math.round(insights.timeSavedPerMonth)} hrs/mo (~$${Math.round(insights.dollarValueSaved)}/yr value)
-- Active tools: ${activeSpend.length}
-
-${spendLines.length > 0 ? `### Top Tools by Spend\n${spendLines.join("\n")}\n` : ""}
-${oppLines.length > 0 ? `### AI Stack Opportunities\n${oppLines.join("\n")}\n` : ""}
-${painPointLines.length > 0 ? `### Team Pain Points\n${painPointLines.join("\n")}\n` : ""}
-${toolContext ? `## Researched Tool Reports\n${toolContext}\n` : ""}
-## Instructions
-- When asked about spend, reference actual dollar amounts from the stack data above.
-- When asked about pain points, connect them to specific tools or opportunities.
-- When comparing tools, use scorecard dimensions (features, pricing_value, ease_of_use, integration_depth, support_quality, security, ai_capabilities).
-- Be specific with numbers. Never fabricate data — if it's not in the context above, say so.
-- Keep responses concise. Use tables for comparisons. Use bullet points for lists.
-- If asked about a tool not in the workspace, say so and suggest they research it via Trackr's research pipeline.`;
-
-        const result = await streamText({
-            model: openai("gpt-4o-mini"),
-            messages: [
-                { role: "system", content: systemPrompt },
-                ...messages,
-            ],
-        });
-
-        return result.toUIMessageStreamResponse();
-    } catch (err) {
-        Sentry.captureException(err);
-        console.error("[api/chat]", err);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-    }
+    return new Response(stream, {
+        headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            Connection: "keep-alive",
+        },
+    });
 }

@@ -27,10 +27,6 @@ vi.mock("@/lib/db", () => {
     };
 });
 
-vi.mock("@/lib/ai/embedding", () => ({
-    generateEmbedding: vi.fn().mockResolvedValue(null),
-}));
-
 vi.mock("@/lib/middleware/rate-limit", () => ({
     rateLimit: vi.fn().mockReturnValue({ success: true, remaining: 19, reset: Date.now() + 60000 }),
     getRateLimitHeaders: vi.fn().mockReturnValue({}),
@@ -40,41 +36,27 @@ vi.mock("@/lib/middleware/require-subscription", () => ({
     checkFeatureAccess: vi.fn().mockResolvedValue({ slug: "startup" }),
 }));
 
-vi.mock("@/lib/utils/stack-insights", () => ({
-    computeStackInsights: vi.fn().mockReturnValue({
-        score: 50,
-        label: "Mixed",
-        benchmarkText: "average",
-        totalActiveSpend: 500,
-        aiNativeCount: 2,
-        aiEnabledCount: 2,
-        traditionalCount: 3,
-        unknownCount: 0,
-        timeSavedPerMonth: 10,
-        dollarValueSaved: 800,
-        opportunities: [],
-        enrichedTools: [],
-    }),
-}));
-
-vi.mock("ai", () => ({
-    streamText: vi.fn().mockResolvedValue({
-        toUIMessageStreamResponse: vi.fn().mockReturnValue(new Response("streamed", { status: 200 })),
-    }),
-}));
-
-vi.mock("@ai-sdk/openai", () => ({
-    openai: vi.fn().mockReturnValue("gpt-4o-model"),
-}));
-
-vi.mock("drizzle-orm", async (importOriginal) => {
-    const actual = await importOriginal<typeof import("drizzle-orm")>();
-    return {
-        ...actual,
-        cosineDistance: vi.fn().mockReturnValue("cosine_expr"),
-        sql: vi.fn().mockReturnValue("similarity_expr"),
-    };
+vi.mock("@anthropic-ai/sdk", () => {
+    class MockAnthropic {
+        messages = {
+            create: vi.fn().mockResolvedValue({
+                content: [{ type: "text", text: "Here is your answer." }],
+                stop_reason: "end_turn",
+            }),
+        };
+    }
+    return { default: MockAnthropic };
 });
+
+vi.mock("@/lib/ai/trackr-knowledge", () => ({
+    buildSystemPrompt: vi.fn().mockReturnValue("You are Trackr AI."),
+}));
+
+vi.mock("@/lib/ai/chat-tools", () => ({
+    chatTools: [],
+    toolExecutors: {},
+    toolLabels: {},
+}));
 
 import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
@@ -102,11 +84,9 @@ const VALID_MESSAGES = [{ role: "user" as const, content: "What tools do we use 
 describe("POST /api/chat", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        process.env.OPENAI_API_KEY = "sk-test-key";
+        process.env.ANTHROPIC_API_KEY = "sk-ant-test-key";
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "usr_1" });
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_MEMBER);
-        (db.query.softwareSpend.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
-        (db.query.painPoints.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
         (rateLimit as ReturnType<typeof vi.fn>).mockReturnValue({ success: true, remaining: 19, reset: Date.now() + 60000 });
         (checkFeatureAccess as ReturnType<typeof vi.fn>).mockResolvedValue({ slug: "startup" });
     });
@@ -156,8 +136,9 @@ describe("POST /api/chat", () => {
         expect(res.status).toBe(400);
     });
 
-    it("returns 200 streaming response for valid request", async () => {
+    it("returns 200 SSE streaming response for valid request", async () => {
         const res = await POST(makeRequest({ messages: VALID_MESSAGES }));
         expect(res.status).toBe(200);
+        expect(res.headers.get("Content-Type")).toBe("text/event-stream");
     });
 });
