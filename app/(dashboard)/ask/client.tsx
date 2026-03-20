@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Send, User, Trash2, Check, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { CHAT_STORAGE_KEY as STORAGE_KEY } from "@/lib/constants/app";
 
 function TrackrIcon({ className }: { className?: string }) {
@@ -296,6 +297,7 @@ export default function AskTrackrPage() {
                                     m.content
                                 ) : (
                                     <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
                                         components={{
                                             p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
                                             ul: ({ children }) => <ul className="list-disc list-inside space-y-1 mb-2">{children}</ul>,
