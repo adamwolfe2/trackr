@@ -3,7 +3,11 @@ import { neon } from "@neondatabase/serverless";
 const sql = neon(process.env.DATABASE_URL!);
 
 async function main() {
-    const userId = "user_39rJDGLcZNp5LAy2nJKaGfOnhXD"; // actual adam@modern-amenities.com
+    const userId = process.argv[2];
+    if (!userId) {
+        console.error("Usage: npx tsx scripts/fix-real-user.ts <clerk-user-id>");
+        process.exit(1);
+    }
 
     const members = await sql`
         SELECT wm.*, w.name, w.slug

@@ -80,14 +80,6 @@ export async function rejectApplication(applicationId: string, notes?: string) {
     await sendArchitectRejected(application.email, application.firstName);
 }
 
-export async function updateArchitectCalendarUrl(architectId: string, calendarUrl: string) {
-    await requireAdmin();
-    await db
-        .update(architects)
-        .set({ calendarUrl: calendarUrl || null })
-        .where(eq(architects.id, architectId));
-}
-
 export async function pauseArchitect(architectId: string) {
     await requireAdmin();
     await db
