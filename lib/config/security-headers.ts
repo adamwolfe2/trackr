@@ -15,12 +15,12 @@
  */
 const CSP = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://clerk.trytrackr.com https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+    "script-src 'self' 'unsafe-inline' https://js.stripe.com https://clerk.trytrackr.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://app.cal.com",
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
     "connect-src 'self' https: wss:",
-    "frame-src 'self' https://js.stripe.com https://*.stripe.com https://*.clerk.accounts.dev https://clerk.trytrackr.com https://challenges.cloudflare.com",
+    "frame-src 'self' https://js.stripe.com https://*.stripe.com https://*.clerk.accounts.dev https://clerk.trytrackr.com https://challenges.cloudflare.com https://app.cal.com",
     "frame-ancestors 'self'",
     "object-src 'none'",
     "base-uri 'self'",

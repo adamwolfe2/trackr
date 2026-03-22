@@ -34,7 +34,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
     });
 
     const plan = getPlanLimits(subscription ?? undefined);
-    if (plan.features.compareTools !== true) {
+    if (!plan.features.compareTools) {
         return (
             <PlanGate
                 featureName="Unlimited Tool Comparison"
