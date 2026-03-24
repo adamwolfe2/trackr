@@ -11,6 +11,7 @@ import { processAuditSubmission } from "@/lib/actions/audit";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { ExternalLink } from "lucide-react";
 import { LogoImage } from "@/components/common/logo-image";
+import { RecommendedToolsEditor } from "./recommended-tools-editor";
 
 export const metadata: Metadata = {
     title: "Lead Detail — Trackr Admin",
@@ -313,7 +314,7 @@ export default async function LeadDetailPage({
             </div>
 
             {/* ── Current Stack + Recommended Tools ─────────────────────────── */}
-            {scorecard && (scorecard.currentStack.length > 0 || recommendedTools.length > 0) && (
+            {scorecard && (
                 <div className="grid lg:grid-cols-2 gap-6">
 
                     {/* Current Stack */}
@@ -379,74 +380,11 @@ export default async function LeadDetailPage({
                         </div>
                     )}
 
-                    {/* Recommended Tools */}
-                    {recommendedTools.length > 0 && (
-                        <div className="border border-black">
-                            <div className="border-b border-black px-5 py-3 flex items-center justify-between">
-                                <h2 className="font-mono text-xs uppercase tracking-widest">Recommended Tools</h2>
-                                <span className="font-mono text-[10px] text-neutral-400">Propose on call</span>
-                            </div>
-
-                            {/* Logo strip */}
-                            <div className="px-5 py-4 border-b border-neutral-100 flex flex-wrap gap-2.5">
-                                {recommendedTools.map((t, i) => {
-                                    const logos = toolLogos(t.name, t.websiteDomain);
-                                    return (
-                                        <div
-                                            key={i}
-                                            title={t.name}
-                                            className="w-10 h-10 border border-neutral-200 p-1 flex items-center justify-center overflow-hidden"
-                                        >
-                                            <LogoImage
-                                                src={logos.src}
-                                                fallbackSrc={logos.fallbackSrc}
-                                                alt={t.name}
-                                                fallbackChar={t.name}
-                                                className="w-7 h-7"
-                                                fallbackClassName="w-10 h-10 text-[10px]"
-                                            />
-                                        </div>
-                                    );
-                                })}
-                            </div>
-
-                            {/* Detailed list */}
-                            <div className="divide-y divide-neutral-100">
-                                {recommendedTools.map((t, i) => {
-                                    const logos = toolLogos(t.name, t.websiteDomain);
-                                    return (
-                                        <div key={i} className="px-4 py-3 flex items-start gap-3">
-                                            <div className="w-9 h-9 border border-neutral-200 p-1 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                                <LogoImage
-                                                    src={logos.src}
-                                                    fallbackSrc={logos.fallbackSrc}
-                                                    alt={t.name}
-                                                    fallbackChar={t.name}
-                                                    className="w-6 h-6"
-                                                    fallbackClassName="w-9 h-9 text-[10px]"
-                                                />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                    <span className="font-mono text-xs font-bold">{t.name}</span>
-                                                    <span className="font-mono text-[9px] uppercase tracking-widest border border-neutral-200 px-1.5 py-0.5 text-neutral-500">
-                                                        {t.category}
-                                                    </span>
-                                                    <span className={`font-mono text-[9px] border px-1.5 py-0.5 ${impactBadge(t.impact)}`}>
-                                                        {t.impact} Impact
-                                                    </span>
-                                                </div>
-                                                <p className="font-mono text-[10px] text-neutral-600 leading-relaxed">{t.reason}</p>
-                                                {t.estimatedCostPerUser && (
-                                                    <p className="font-mono text-[9px] text-neutral-400 mt-1">{t.estimatedCostPerUser}</p>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    )}
+                    {/* Recommended Tools — editable */}
+                    <RecommendedToolsEditor
+                        submissionId={id}
+                        initialTools={recommendedTools}
+                    />
                 </div>
             )}
 
