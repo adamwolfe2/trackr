@@ -26,8 +26,7 @@ export async function POST() {
         }
 
         return NextResponse.json({ success: true, marked: ids.length });
-    } catch (err) {
-        console.error("[api/notifications/mark-all-read]", err);
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

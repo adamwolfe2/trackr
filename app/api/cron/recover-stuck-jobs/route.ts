@@ -103,8 +103,8 @@ export async function GET(req: Request) {
             after(async () => {
                 try {
                     await performDeepResearch(toolId);
-                } catch (err) {
-                    console.error(`[api/cron/recover-stuck-jobs] auto-retry failed for tool ${toolId}:`, err);
+                } catch {
+                    // Research failure is handled by job status update
                 }
             });
         }
@@ -115,8 +115,7 @@ export async function GET(req: Request) {
             autoRetried: toolsToRetry.length,
             toolIds: stuckToolIds,
         });
-    } catch (err) {
-        console.error("[api/cron/recover-stuck-jobs]", err);
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

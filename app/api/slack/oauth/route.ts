@@ -54,8 +54,7 @@ export async function GET() {
         authorizeUrl.searchParams.set("state", state);
 
         return NextResponse.redirect(authorizeUrl.toString());
-    } catch (err) {
-        console.error("[api/slack/oauth]", err);
+    } catch {
         return NextResponse.json({ error: "Failed to initiate Slack OAuth" }, { status: 500 });
     }
 }

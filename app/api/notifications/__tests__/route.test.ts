@@ -201,15 +201,16 @@ describe("PATCH /api/notifications/[id]/read", () => {
     });
 
     it("marks notification read and returns success", async () => {
+        const validId = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
         (currentUser as ReturnType<typeof vi.fn>).mockResolvedValue(MOCK_USER);
         (markNotificationsRead as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
         const { PATCH } = await import("../[id]/read/route");
         const res = await PATCH(new Request("http://localhost"), {
-            params: Promise.resolve({ id: "job_1" }),
+            params: Promise.resolve({ id: validId }),
         });
         expect(res.status).toBe(200);
         const body = await res.json();
         expect(body.success).toBe(true);
-        expect(markNotificationsRead).toHaveBeenCalledWith(["job_1"]);
+        expect(markNotificationsRead).toHaveBeenCalledWith([validId]);
     });
 });

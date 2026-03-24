@@ -80,8 +80,7 @@ export async function POST(req: Request) {
         }
 
         return NextResponse.json({ text: "Unknown command" });
-    } catch (err) {
-        console.error("[api/slack/commands] Unhandled error:", err);
+    } catch {
         return NextResponse.json({
             response_type: "ephemeral",
             text: "Something went wrong. Please try again.",

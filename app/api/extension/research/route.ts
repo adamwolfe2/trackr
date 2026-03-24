@@ -123,8 +123,8 @@ export async function POST(req: NextRequest) {
         after(async () => {
             try {
                 await performDeepResearch(newTool.id);
-            } catch (err) {
-                console.error("[extension/research] background research failed:", err);
+            } catch {
+                // Background research failure is handled by job status update
             }
         });
 
@@ -132,8 +132,7 @@ export async function POST(req: NextRequest) {
             { success: true, toolId: newTool.id },
             { status: 200, headers }
         );
-    } catch (err) {
-        console.error("[extension/research] Failed to create tool or trigger research:", err);
+    } catch {
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500, headers }

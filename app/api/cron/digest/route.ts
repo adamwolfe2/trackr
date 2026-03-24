@@ -279,7 +279,6 @@ export async function GET(req: Request) {
         return NextResponse.json({ success: true, digestsSent, renewalsSent, stackDigestsSent });
     } catch (err) {
         Sentry.captureException(err);
-        console.error("[api/cron/digest]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

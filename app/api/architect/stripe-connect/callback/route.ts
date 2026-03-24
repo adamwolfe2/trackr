@@ -40,8 +40,7 @@ export async function GET() {
         }
 
         return NextResponse.redirect(new URL("/architect/dashboard", appUrl));
-    } catch (err) {
-        console.error("[stripe-connect/callback] Failed to retrieve Stripe account:", err instanceof Error ? err.message : err);
+    } catch {
         const errUrl = new URL("/architect/settings", appUrl);
         errUrl.searchParams.set("stripe_error", "Unable to verify account status. Please try again.");
         return NextResponse.redirect(errUrl);

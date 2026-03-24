@@ -24,7 +24,6 @@ const ChatSchema = z.object({
 
 export async function POST(req: NextRequest) {
     if (!process.env.ANTHROPIC_API_KEY) {
-        console.error("[api/chat] ANTHROPIC_API_KEY is not configured");
         return NextResponse.json({ error: "AI service is not configured" }, { status: 503 });
     }
 
@@ -199,7 +198,6 @@ export async function POST(req: NextRequest) {
                 emit("done", {});
             } catch (err) {
                 Sentry.captureException(err);
-                console.error("[api/chat]", err);
                 emit("error", { message: "Something went wrong. Please try again." });
             } finally {
                 controller.close();

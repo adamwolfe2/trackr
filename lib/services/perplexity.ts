@@ -73,8 +73,7 @@ export class PerplexityService {
                     });
                     return response.choices[0].message.content || "";
                 });
-            } catch (error) {
-                console.error("Perplexity search failed after retries:", error);
+            } catch {
                 return "";
             }
         });
@@ -115,8 +114,7 @@ export class PerplexityService {
                     });
                     return response.choices[0].message.content || "";
                 });
-            } catch (error) {
-                console.error("Perplexity sentiment analysis failed:", error);
+            } catch {
                 return "";
             }
         });
@@ -141,8 +139,7 @@ export class PerplexityService {
                     });
                     return response.choices[0].message.content || "";
                 });
-            } catch (error) {
-                console.error("Perplexity discovery failed:", error);
+            } catch {
                 return this.getMockSuggestions(painPoint);
             }
         });

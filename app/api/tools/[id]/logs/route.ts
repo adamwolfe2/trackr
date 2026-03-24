@@ -53,8 +53,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         }
 
         return NextResponse.json({ logs, status: tool.status, errorMessage, score: tool.overallScore ?? null, toolName: tool.name ?? null });
-    } catch (err) {
-        console.error("[api/tools/logs]", err);
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

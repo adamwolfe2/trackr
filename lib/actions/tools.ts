@@ -114,8 +114,8 @@ export async function submitTool(formData: FormData) {
     after(async () => {
         try {
             await performDeepResearch(newTool.id);
-        } catch (err) {
-            console.error(`[tools] Background research failed for tool ${newTool.id}:`, err);
+        } catch {
+            // Research failure is handled by job status update
         }
     });
 
@@ -233,7 +233,7 @@ export async function triggerResearch(toolId: string) {
         try {
             await performDeepResearch(toolId);
         } catch (err) {
-            console.error(`[tools] triggerResearch failed for tool ${toolId}:`, err);
+            // Research failure is handled by job status update
         }
     });
 
@@ -286,7 +286,7 @@ export async function triggerResearchBatch(toolIds: string[]) {
             try {
                 await performDeepResearch(tool.id);
             } catch (err) {
-                console.error(`[tools] triggerResearchBatch failed for tool ${tool.id}:`, err);
+                // Research failure is handled by job status update;
             }
         });
     }

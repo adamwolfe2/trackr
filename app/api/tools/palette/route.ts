@@ -27,8 +27,7 @@ export async function GET() {
         });
 
         return NextResponse.json({ tools: workspaceTools }, { headers: { "Cache-Control": "private, s-maxage=30, stale-while-revalidate=120" } });
-    } catch (err) {
-        console.error("[api/tools/palette]", err);
+    } catch {
         return NextResponse.json({ error: "Failed to load tools" }, { status: 500 });
     }
 }

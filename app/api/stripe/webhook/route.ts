@@ -89,8 +89,6 @@ export async function POST(req: NextRequest) {
     } catch (err) {
         Sentry.captureException(err);
         const fullError = err instanceof Error ? err.message : String(err);
-        // Log full detail to console/Sentry for debugging
-        console.error(`Stripe webhook error [${event.type}]:`, fullError);
         // Sanitize before persisting — strip email addresses and truncate
         const safeError = fullError
             .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[EMAIL]")
@@ -115,11 +113,11 @@ export async function POST(req: NextRequest) {
  * In Stripe v20, current_period_end moved from Subscription to SubscriptionItem.
  */
 function getSubscriptionPeriodEnd(sub: Stripe.Subscription): Date | null {
-    const item = sub.items?.data?.[0];
-    if (item?.current_period_end) {
-        return new Date(item.current_period_end * 1000);
-    }
-    return null;
+    const items = sub.items?.data;
+    if (!items || items.length === 0) return null;
+    const periodEnd = items[0]?.current_period_end;
+    if (typeof periodEnd !== "number" || !isFinite(periodEnd)) return null;
+    return new Date(periodEnd * 1000);
 }
 
 function getCustomerId(customer: string | Stripe.Customer | Stripe.DeletedCustomer): string {
@@ -150,16 +148,18 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
     const workspaceId = session.metadata?.workspaceId;
     if (!workspaceId) {
-        console.error('[stripe-webhook] CRITICAL: workspaceId missing from checkout metadata', {
-            sessionId: session.id, customerId: session.customer, metadata: session.metadata,
+        Sentry.captureMessage('workspaceId missing from checkout metadata', {
+            level: 'error',
+            extra: { sessionId: session.id, customerId: session.customer, metadata: session.metadata },
         });
         return;
     }
 
     const subscriptionId = session.subscription as string;
     if (!subscriptionId) {
-        console.error('[stripe-webhook] CRITICAL: subscriptionId missing from completed checkout', {
-            sessionId: session.id, workspaceId,
+        Sentry.captureMessage('subscriptionId missing from completed checkout', {
+            level: 'error',
+            extra: { sessionId: session.id, workspaceId },
         });
         return;
     }
@@ -431,7 +431,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
                                     architect.totalEarnings + commissionAmount,
                                 );
                             } catch (transferErr) {
-                                console.error("[webhook] Stripe transfer failed for architect", architect.id, transferErr);
+                                Sentry.captureException(transferErr);
                                 // Commission stays as "pending" — can be retried
                             }
                         }
@@ -440,7 +440,6 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
             }
         } catch (commErr) {
             // Non-critical: log but don't fail the webhook
-            console.error("[webhook] Architect commission processing failed", commErr);
             Sentry.captureException(commErr);
         }
     }
@@ -507,7 +506,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
     // Only claw back if within 60-day window (per affiliate agreement)
     const daysSinceCommission = (Date.now() - new Date(commission.createdAt).getTime()) / (1000 * 60 * 60 * 24);
     if (daysSinceCommission > 60) {
-        console.info(`[webhook] Skipping clawback for commission ${commission.id} — outside 60-day window (${Math.floor(daysSinceCommission)} days)`);
+        // Outside 60-day clawback window — skip
         return;
     }
 
@@ -527,7 +526,7 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
                 description: `Clawback: refund on invoice ${invoiceId}`,
             });
         } catch (reversalErr) {
-            console.error("[webhook] Transfer reversal failed for commission", commission.id, reversalErr);
+            Sentry.captureException(reversalErr);
             // Mark as failed so admin can handle manually
             await db.update(architectCommissions)
                 .set({ status: "failed" })
@@ -554,7 +553,6 @@ async function handleChargeRefunded(charge: Stripe.Charge) {
         })
         .where(eq(architects.id, commission.architectId));
 
-    console.info(`[webhook] Commission clawback: ${clawbackAmount} cents from architect ${commission.architectId} (invoice ${invoiceId}, ${Math.floor(refundRatio * 100)}% refund)`);
 }
 
 async function handleAccountUpdated(account: Stripe.Account) {

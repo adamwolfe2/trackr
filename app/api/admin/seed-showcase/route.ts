@@ -149,8 +149,7 @@ export async function POST(req: NextRequest) {
             workspace: { id: workspace.id, name: workspace.name, slug: workspace.slug },
             results,
         });
-    } catch (error) {
-        console.error("[seed-showcase] error:", error);
+    } catch {
         return NextResponse.json({ error: "Seed failed" }, { status: 500 });
     }
 }

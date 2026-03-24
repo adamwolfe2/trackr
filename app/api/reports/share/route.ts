@@ -93,8 +93,7 @@ export async function POST(req: NextRequest) {
         const finalToken = saved?.shareToken ?? token;
 
         return NextResponse.json({ url: `${appUrl}/share/${finalToken}`, token: finalToken });
-    } catch (err) {
-        console.error("[api/reports/share]", err);
+    } catch {
         return NextResponse.json({ error: "Failed to generate share link" }, { status: 500 });
     }
 }

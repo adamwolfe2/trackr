@@ -57,7 +57,6 @@ export class FirecrawlService {
      */
     async scrapeUrl(url: string): Promise<ScrapeResult> {
         if (!this.apiKey) {
-            console.error("FIRECRAWL_API_KEY is not configured — cannot scrape URL");
             return { success: false, error: "FIRECRAWL_API_KEY is not configured" };
         }
 
@@ -111,10 +110,8 @@ export class FirecrawlService {
         } catch (error: unknown) {
             const message = error instanceof Error ? error.message : "Unknown error";
             if (message.includes("aborted") || message.includes("abort")) {
-                console.error(`Firecrawl scrape timed out after 30s for: ${url}`);
                 return { success: false, error: "Firecrawl scrape timed out" } as ScrapeResult;
             }
-            console.error("Firecrawl scrape failed:", error);
             return { success: false, error: message } as ScrapeResult;
         } finally {
             clearTimeout(timeout);
@@ -164,10 +161,8 @@ export class FirecrawlService {
             } catch (error: unknown) {
                 const message = error instanceof Error ? error.message : "Unknown error";
                 if (message.includes("aborted") || message.includes("abort")) {
-                    console.error(`Firecrawl map timed out after 30s for: ${url}`);
                     return { success: false, error: "Firecrawl map timed out" } as MapResult;
                 }
-                console.error("Firecrawl map failed:", error);
                 return { success: false, error: message } as MapResult;
             } finally {
                 clearTimeout(timeout);

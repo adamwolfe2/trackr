@@ -89,14 +89,18 @@ Return results grouped by articleIndex (1-based). Include an entry for every art
                 extractedTools: [{ name: "__processed", url: "", description: "", confidence: 0 }],
             }).where(inArray(feedItems.id, processedIds));
         }
-        // Items with tools still need individual updates (different payloads)
-        for (const { id, tools: itemTools } of toolfulUpdates) {
-            await db.update(feedItems).set({ extractedTools: itemTools }).where(eq(feedItems.id, id));
+        // Items with tools — different payloads per item, run in parallel
+        if (toolfulUpdates.length > 0) {
+            await Promise.all(
+                toolfulUpdates.map(({ id, tools: itemTools }) =>
+                    db.update(feedItems).set({ extractedTools: itemTools }).where(eq(feedItems.id, id))
+                )
+            );
         }
 
         return totalExtracted;
-    } catch (extractErr) {
-        console.error(`[suggestions-pipeline] extractToolsFromFeedItems failed for workspace ${workspaceId}:`, extractErr);
+    } catch {
+        // Extraction failed — mark items as errored so they aren't retried indefinitely
         if (items.length > 0) {
             await db.update(feedItems).set({
                 extractedTools: [{ name: "__error", url: "", description: "", confidence: 0 }],
@@ -221,9 +225,8 @@ export async function generateSuggestions(workspaceId: string): Promise<number> 
                 .onConflictDoNothing()
                 .returning({ id: toolSuggestions.id });
             created = inserted.length;
-        } catch (err) {
-            console.error(`[suggestions-pipeline] Batch insert failed, falling back to individual:`, err);
-            // Fallback: insert individually so partial success is preserved
+        } catch {
+            // Batch insert failed — fall back to individual inserts for partial success
             for (const row of toInsert) {
                 try {
                     await db.insert(toolSuggestions).values(row).onConflictDoNothing();

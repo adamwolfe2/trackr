@@ -19,8 +19,7 @@ export async function GET(
     let data;
     try {
         data = await getPublicProfile(slug);
-    } catch (err) {
-        console.error("[api/embed]", err);
+    } catch {
         return new NextResponse("Internal Server Error", { status: 500 });
     }
 

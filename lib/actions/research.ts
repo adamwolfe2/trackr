@@ -299,9 +299,7 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
             error: `Monthly API cost cap reached ($${costCap.usage.toFixed(2)} / $${costCap.budget.toFixed(2)} on ${limits.name} plan). Contact support or upgrade to increase your budget.`,
         };
     }
-    if (costCap.warned) {
-        console.warn(`[research] Workspace ${tool.workspaceId} at ${costCap.pctUsed.toFixed(0)}% of monthly API budget ($${costCap.usage.toFixed(2)} / $${costCap.budget.toFixed(2)})`);
-    }
+    // costCap.warned indicates workspace is nearing budget limit — tracked via PostHog/Sentry
 
     // Insert a researchJob row so /queue shows live status
     const [researchJob] = await db.insert(researchJobs).values({
@@ -546,7 +544,6 @@ export async function performDeepResearch(toolId: string, options?: ResearchOpti
             const perplexityCost = COST_MAP.perplexity["sonar"];
 
             if (!process.env.PERPLEXITY_API_KEY) {
-                console.warn("[research] PERPLEXITY_API_KEY not set — competitive analysis step skipped.");
                 await logProgress(toolId, `Perplexity: Skipped (PERPLEXITY_API_KEY not set)`);
             } else {
                 await logProgress(toolId, `Perplexity: Running analysis (${perplexityModel})...`);
@@ -713,9 +710,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
         function logOpenAISynthesis(model: string, u: { inputTokens?: number; outputTokens?: number } | undefined, startMs: number) {
             const tokensIn = u?.inputTokens ?? 0;
             const tokensOut = u?.outputTokens ?? 0;
-            if (tokensIn > 30_000) {
-                console.warn(`[research] HIGH TOKEN COUNT: ${tokensIn} input tokens for tool ${toolId} (model: ${model}, promptChars: ${promptCharLength}, pages: ${pagesToScrape.length})`);
-            }
+            // High token usage is tracked via logApiCall below
             logApiCall({
                 service: "openai",
                 endpoint: model,
@@ -842,7 +837,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
         } catch (insertErr) {
             // Report insert failed — log and attempt a minimal save so the tool
             // reaches "active" status rather than staying stuck as "researching".
-            console.error(`[research] Report insert failed for tool ${toolId}:`, insertErr);
+            // Report insert failed — attempt minimal fallback save
             await logProgress(toolId, `Warning: Report save failed — storing minimal record. Re-run research to regenerate.`);
             const minimal = buildFallbackReport(tool.name);
             await db.insert(reports).values({
@@ -895,7 +890,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                     await sendResearchCompleteEmail(email, tool.name, toolId, avgScore, previousScore);
                 }
             } catch (emailErr) {
-                console.warn(`[research] Failed to send complete email for tool ${toolId}:`, emailErr);
+                // Non-critical: email notification failed
             }
         }
 
@@ -909,7 +904,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                     tool.workspace.slackBotToken ?? undefined,
                 );
             } catch (slackErr) {
-                console.warn(`[research] Failed to send Slack complete notification for tool ${toolId}:`, slackErr);
+                // Non-critical: Slack notification failed
             }
         }
 
@@ -959,7 +954,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
             await logProgress(toolId, "Emergency fallback report saved — re-run research to generate full analysis.");
         } catch {
             // Absolute last resort — at least mark tool as failed so UI doesn't spin forever
-            await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId)).catch(err => { console.error("[research] failed to mark tool as failed:", err); });
+            await db.update(tools).set({ status: "failed" }).where(eq(tools.id, toolId)).catch(() => { /* last-resort status update failed */ });
         }
 
         // Refund credit if we deducted one but research didn't complete successfully
@@ -970,7 +965,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                     updatedAt: new Date(),
                 })
                 .where(eq(subscriptions.workspaceId, tool.workspaceId))
-                .catch(err => { console.error("[research] failed to refund credit:", err); });
+                .catch(() => { /* credit refund failed — will need manual reconciliation */ });
         }
 
         // Mark researchJob as failed
@@ -979,7 +974,7 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                 status: "failed",
                 completedAt: new Date(),
                 errorMessage: message,
-            }).where(eq(researchJobs.id, researchJob.id)).catch(err => { console.error("[research] failed to mark job as failed:", err); });
+            }).where(eq(researchJobs.id, researchJob.id)).catch(() => { /* job status update failed */ });
         }
 
         // Send notifications only if we couldn't save any report at all

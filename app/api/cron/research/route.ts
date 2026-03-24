@@ -102,7 +102,6 @@ export async function GET(req: Request) {
                     await performDeepResearch(tool.id);
                 } catch (err) {
                     Sentry.captureException(err);
-                    console.error(`[cron/research] Background research failed for tool ${tool.id}:`, err);
                 }
             });
         }
@@ -115,7 +114,6 @@ export async function GET(req: Request) {
         });
     } catch (err) {
         Sentry.captureException(err);
-        console.error("[api/cron/research]", err);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

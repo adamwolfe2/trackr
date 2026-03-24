@@ -82,8 +82,7 @@ export async function POST(req: NextRequest) {
                 status: "pending",
             })
             .returning();
-    } catch (err) {
-        console.error("[architect/apply] Failed to save application:", err);
+    } catch {
         return NextResponse.json({ error: "Failed to submit application" }, { status: 500 });
     }
 
@@ -91,8 +90,8 @@ export async function POST(req: NextRequest) {
     after(async () => {
         try {
             await sendArchitectApplicationReceived(data.email, data.firstName);
-        } catch (err) {
-            console.error("[architect/apply] Failed to send application received email:", err);
+        } catch {
+            // Non-critical: email delivery failure
         }
     });
 
@@ -104,8 +103,8 @@ export async function POST(req: NextRequest) {
                 `${data.firstName} ${data.lastName}`,
                 roleTitle
             );
-        } catch (err) {
-            console.error("[architect/apply] Failed to send admin notification:", err);
+        } catch {
+            // Non-critical: admin notification failure
         }
     });
 

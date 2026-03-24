@@ -129,8 +129,7 @@ export async function POST(req: NextRequest) {
                 ? `Demo workspace seeded and attached to user ${userId}. Visit /dashboard to see it.`
                 : `Demo workspace seeded (no user attached). Workspace ID: ${workspace.id}`,
         });
-    } catch (error) {
-        console.error("[seed-demo] error:", error);
+    } catch {
         return NextResponse.json({ error: "Seed failed" }, { status: 500 });
     }
 }

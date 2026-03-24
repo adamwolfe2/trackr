@@ -49,8 +49,8 @@ export async function GET(req: Request) {
                     const suggestions = await generateSuggestions(wsId);
                     totalSuggestions += suggestions;
                 }
-            } catch (err) {
-                console.error(`[api/cron/feed] Failed to process workspace ${wsId}:`, err);
+            } catch {
+                // Per-workspace failure — continue processing remaining workspaces
             }
         }
 
@@ -62,8 +62,7 @@ export async function GET(req: Request) {
             toolsExtracted: totalExtracted,
             suggestions: totalSuggestions,
         });
-    } catch (err) {
-        console.error("[api/cron/feed]", err);
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

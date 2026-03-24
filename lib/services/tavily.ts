@@ -43,7 +43,6 @@ export class TavilyService {
         } = {}
     ): Promise<TavilySearchResponse> {
         if (!this.apiKey) {
-            console.warn("TAVILY_API_KEY not set. Returning empty results.");
             return EMPTY_RESPONSE;
         }
 
@@ -98,7 +97,7 @@ export class TavilyService {
             }
         }
 
-        console.error("Tavily search failed after retries:", lastError);
+        // All retry attempts exhausted — return empty results
         return EMPTY_RESPONSE;
     }
 

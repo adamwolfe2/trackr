@@ -88,8 +88,7 @@ Return ONLY valid JSON with this exact shape — no markdown, no explanation:
             .slice(0, 50);
 
         return { tools: valid };
-    } catch (err) {
-        console.error("[bulk-research] parseBulkInput error:", err);
+    } catch {
         return { tools: [], error: "Failed to extract tools. Please try again." };
     }
 }
@@ -170,8 +169,7 @@ export async function bulkSubmitAndResearch(parsedTools: ParsedTool[]): Promise<
 
             results.push({ name: pt.name, url: pt.url, toolId: newTool.id, status: "queued" });
             toolIdsToResearch.push(newTool.id);
-        } catch (err) {
-            console.error(`[bulk-research] Failed to insert ${pt.name}:`, err);
+        } catch {
             results.push({ name: pt.name, url: pt.url, status: "error", error: "Failed to add tool" });
         }
     }
@@ -182,8 +180,8 @@ export async function bulkSubmitAndResearch(parsedTools: ParsedTool[]): Promise<
             for (const toolId of toolIdsToResearch) {
                 try {
                     await performDeepResearch(toolId);
-                } catch (err) {
-                    console.error(`[bulk-research] Research failed for tool ${toolId}:`, err);
+                } catch {
+                    // Research failure is handled by job status update
                 }
             }
         });

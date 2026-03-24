@@ -25,8 +25,7 @@ export async function GET() {
     try {
         const notifications = await getNotifications();
         return NextResponse.json({ notifications }, { headers: getRateLimitHeaders(rl) });
-    } catch (err) {
-        console.error("[api/notifications] Failed to fetch notifications:", err);
+    } catch {
         return NextResponse.json({ notifications: [] }, { status: 200, headers: getRateLimitHeaders(rl) });
     }
 }

@@ -35,16 +35,16 @@ export async function cachedFetch<T>(
     try {
         const cached = await redis.get<T>(key);
         if (cached !== null && cached !== undefined) return cached;
-    } catch (err) {
-        console.warn("[research-cache] Redis GET failed, calling fetcher:", err);
+    } catch {
+        // Redis GET failed — fall through to fetcher
     }
 
     const result = await fetcher();
 
     // Store in background — don't block the caller
     if (redis) {
-        redis.set(key, result, { ex: ttlSec }).catch((err) => {
-            console.warn("[research-cache] Redis SET failed:", err);
+        redis.set(key, result, { ex: ttlSec }).catch(() => {
+            // Redis SET failed — non-critical, result already returned to caller
         });
     }
 

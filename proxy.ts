@@ -134,7 +134,7 @@ function applyArcCodeCookie(req: NextRequest, res: NextResponse): void {
     // First-touch: never overwrite an existing attribution — first architect wins
     if (existing) return;
     res.cookies.set("trackr_arc", arcCode.toUpperCase(), {
-        httpOnly: false,
+        httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         maxAge: 60 * 60 * 24 * 30,

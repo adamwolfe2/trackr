@@ -72,8 +72,7 @@ export async function GET(_req: NextRequest) {
                 ...getRateLimitHeaders(rl),
             },
         });
-    } catch (err) {
-        console.error("[export-spend] Error:", err);
+    } catch {
         return NextResponse.json({ error: "Export failed" }, { status: 500 });
     }
 }

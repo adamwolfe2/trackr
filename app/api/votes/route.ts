@@ -32,8 +32,7 @@ export async function GET(req: NextRequest) {
             map[row.toolSlug] = { up: row.upVotes, down: row.downVotes };
         }
         return NextResponse.json({ votes: map }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" } });
-    } catch (err) {
-        console.error("[api/votes/get]", err);
+    } catch {
         return NextResponse.json({ error: "Failed to load votes" }, { status: 500 });
     }
 }
@@ -96,8 +95,7 @@ export async function POST(req: NextRequest) {
             .returning({ up: communityVotes.upVotes, down: communityVotes.downVotes });
 
         return NextResponse.json({ up: updated.up, down: updated.down });
-    } catch (err) {
-        console.error("[api/votes]", err);
+    } catch {
         return NextResponse.json({ error: "Failed to record vote" }, { status: 500 });
     }
 }

@@ -122,7 +122,6 @@ export async function POST(req: NextRequest) {
             await processAuditSubmission(submission.id);
         } catch (err) {
             Sentry.captureException(err);
-            console.error(`[audit/submit] Background processing failed for submission ${submission.id}:`, err);
         }
     });
 

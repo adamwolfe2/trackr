@@ -29,8 +29,8 @@ export function logApiCall(entry: LogEntry) {
         workspaceId: entry.workspaceId,
         toolId: entry.toolId,
         metadata: entry.metadata,
-    }).catch((err) => {
-        console.error("[API Logger] Failed to log:", err);
+    }).catch(() => {
+        // API log insert failed — non-critical, fire-and-forget
     });
 }
 

@@ -103,7 +103,7 @@ For each article, generate a concise 2-3 sentence summary, a relevance score (0-
 
             enrichedCount += batch.length;
         } catch (batchErr) {
-            console.error(`[feed-enrichment] Batch enrichment failed for workspace ${workspaceId}:`, batchErr);
+            // Batch enrichment failed — leave relevanceScore as NULL for retry on next cycle
             // Leave relevanceScore as NULL so items are retried on next cron cycle.
             // Items older than 48 hours naturally age out of the query window (line 30).
             // Don't mark them "enriched" with a fallback score — that's permanent.

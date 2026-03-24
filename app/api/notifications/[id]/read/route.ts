@@ -21,15 +21,15 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    if (!id || typeof id !== "string" || id.length > 200) {
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!id || typeof id !== "string" || !UUID_RE.test(id)) {
         return NextResponse.json({ error: "Invalid notification ID" }, { status: 400 });
     }
 
     try {
         await markNotificationsRead([id]);
         return NextResponse.json({ success: true }, { headers: getRateLimitHeaders(rl) });
-    } catch (err) {
-        console.error("[api/notifications/read]", err);
+    } catch {
         return NextResponse.json({ error: "Failed to mark notification as read" }, { status: 500 });
     }
 }

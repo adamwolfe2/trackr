@@ -65,8 +65,6 @@ export async function POST(req: Request) {
         }
     } catch (err) {
         const fullError = err instanceof Error ? err.message : String(err);
-        // Log full detail to console/Sentry for debugging
-        console.error(`Clerk webhook error [${eventType}]:`, fullError);
         // Sanitize before persisting — strip email addresses and truncate
         const safeError = fullError
             .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[EMAIL]")
@@ -173,8 +171,8 @@ async function handleUserDeleted(evt: WebhookEvent) {
                 try {
                     const { stripe } = await import('@/lib/services/stripe');
                     await stripe.subscriptions.cancel(sub.stripeSubscriptionId);
-                } catch (cancelErr) {
-                    console.error("[clerk-webhook] Stripe cancel failed:", cancelErr);
+                } catch {
+                    // Stripe cancel failure — subscription will be marked canceled below regardless
                 }
                 await db.update(subscriptions)
                     .set({ status: 'canceled', updatedAt: new Date() })

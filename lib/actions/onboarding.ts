@@ -63,7 +63,7 @@ export async function generateCompanyContext(websiteUrl: string): Promise<{ cont
 
         const scrape = await firecrawl.scrapeUrl(websiteUrl);
         if (!scrape.success) {
-            console.error("[onboarding] Firecrawl scrape failed:", (scrape as unknown as Record<string, unknown>).error ?? "unknown error");
+            // Firecrawl scrape failed — return user-friendly error
             return { context: "", error: "Could not scrape website" };
         }
         const content = scrape.data?.markdown?.slice(0, 4000) ?? "";
@@ -91,9 +91,9 @@ Write only the description, no preamble or label.`,
         } catch (aiErr) {
             const aiMsg = aiErr instanceof Error ? aiErr.message : "Unknown";
             if (aiMsg.includes("aborted") || aiMsg.includes("abort")) {
-                console.error("[onboarding] generateText timed out after 20s");
+                // AI text generation timed out after 20s
             } else {
-                console.error("[onboarding] generateText failed:", aiErr);
+                // AI text generation failed
             }
             return { context: "", error: "Failed to generate context" };
         } finally {
@@ -165,14 +165,14 @@ export async function completeOnboarding(input: {
             email: user.primaryEmailAddress?.emailAddress,
         });
     } catch (err) {
-        console.error("[completeOnboarding] ensureWorkspace failed:", err);
+        // ensureWorkspace failed — propagate to caller
         throw err;
     }
     const { workspaceId, workspace: existingWorkspace, created } = workspaceResult;
 
     // Track referral signup if this is a new workspace creation
     if (created && refCode) {
-        trackReferralSignup(refCode).catch((err) => console.warn("[onboarding] trackReferralSignup failed:", err));
+        trackReferralSignup(refCode).catch(() => { /* non-critical */ });
     }
 
     // If already completed, still allow re-run (idempotent)
@@ -194,7 +194,7 @@ export async function completeOnboarding(input: {
             onboardingCompleted: true,
         }).where(eq(workspaces.id, workspaceId));
     } catch (err) {
-        console.error("[completeOnboarding] workspace update failed:", err);
+        // workspace update failed — propagate to caller
         throw err;
     }
 
@@ -272,7 +272,7 @@ export async function completeOnboarding(input: {
             try {
                 await performDeepResearch(toolId, { triggeredBy: user.id });
             } catch (err) {
-                console.error(`[onboarding] auto-research failed for tool ${toolId}:`, err);
+                // Auto-research failure is handled by job status update
             }
         });
     }

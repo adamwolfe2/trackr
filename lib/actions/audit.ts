@@ -596,7 +596,6 @@ export async function processAuditSubmission(id: string): Promise<void> {
 
     } catch (err) {
         Sentry.captureException(err);
-        console.error("[audit] Pipeline failed for submission", id, err);
         await db.update(auditSubmissions)
             .set({
                 status: "failed",

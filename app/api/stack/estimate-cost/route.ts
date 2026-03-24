@@ -3,10 +3,19 @@ import { currentUser } from "@clerk/nextjs/server";
 import { getWorkspaceId } from "@/lib/db/queries";
 import { OpenAI } from "openai";
 import { cachedFetch, buildCacheKey } from "@/lib/services/research-cache";
+import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
 
 export async function POST(req: NextRequest) {
     const user = await currentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const rl = await rateLimit(`estimate-cost:${user.id}`, { limit: 5, windowSeconds: 60 });
+    if (!rl.success) {
+        return NextResponse.json(
+            { error: "Too many requests. Please try again shortly." },
+            { status: 429, headers: getRateLimitHeaders(rl) }
+        );
+    }
 
     const workspaceId = await getWorkspaceId(user.id);
     if (!workspaceId) return NextResponse.json({ error: "No workspace" }, { status: 403 });
@@ -77,8 +86,7 @@ Rules:
         });
 
         return NextResponse.json(result);
-    } catch (error) {
-        console.error("Cost estimate failed:", error);
+    } catch {
         return NextResponse.json({ error: "Failed to estimate cost" }, { status: 500 });
     }
 }

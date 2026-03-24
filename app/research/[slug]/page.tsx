@@ -3,6 +3,7 @@ import { tools, reports } from "@/lib/db/schema";
 import { eq, and, desc, isNotNull, ne, arrayOverlaps } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { ExternalLink, ArrowLeft, Star } from "lucide-react";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
@@ -365,8 +366,7 @@ export default async function PublicResearchPage({
                                     <div className="flex flex-wrap gap-2">
                                         {competitors.map((c) => (
                                             <span key={c} className="flex items-center gap-1.5 font-mono text-xs border border-neutral-300 px-2 py-1 text-neutral-600">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={`https://www.google.com/s2/favicons?domain=${c}&sz=16`} alt={c} className="w-3 h-3" loading="lazy" />
+                                                <Image src={`https://www.google.com/s2/favicons?domain=${c}&sz=16`} alt={c} width={12} height={12} className="w-3 h-3" loading="lazy" />
                                                 {c}
                                             </span>
                                         ))}
@@ -551,10 +551,11 @@ function CuratedToolPage({ tool }: { tool: CuratedTool }) {
                     {/* Header */}
                     <div className="flex items-start justify-between gap-6 mb-10 flex-wrap">
                         <div className="flex items-center gap-4">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
+                            <Image
                                 src={`https://www.google.com/s2/favicons?domain=${tool.domain}&sz=64`}
                                 alt={tool.name}
+                                width={48}
+                                height={48}
                                 className="w-12 h-12 object-contain"
                             />
                             <div>
@@ -690,8 +691,7 @@ function CuratedToolPage({ tool }: { tool: CuratedTool }) {
                                     <div className="flex flex-wrap gap-2">
                                         {tool.integrations.map((domain) => (
                                             <span key={domain} className="flex items-center gap-1.5 font-mono text-[10px] border border-neutral-200 px-2 py-1 text-neutral-600">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} className="w-3 h-3" loading="lazy" />
+                                                <Image src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} width={12} height={12} className="w-3 h-3" loading="lazy" />
                                                 {domain.replace("www.", "")}
                                             </span>
                                         ))}
@@ -712,14 +712,12 @@ function CuratedToolPage({ tool }: { tool: CuratedTool }) {
                                                     href={`/research/${related.slug}`}
                                                     className="flex items-center gap-1.5 font-mono text-xs border border-neutral-300 px-2 py-1 text-neutral-600 hover:border-black hover:text-black transition-colors"
                                                 >
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} className="w-3 h-3" loading="lazy" />
+                                                    <Image src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} width={12} height={12} className="w-3 h-3" loading="lazy" />
                                                     {related.name}
                                                 </Link>
                                             ) : (
                                                 <span key={domain} className="flex items-center gap-1.5 font-mono text-xs border border-neutral-300 px-2 py-1 text-neutral-600">
-                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                    <img src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} className="w-3 h-3" loading="lazy" />
+                                                    <Image src={`https://www.google.com/s2/favicons?domain=${domain}&sz=16`} alt={domain} width={12} height={12} className="w-3 h-3" loading="lazy" />
                                                     {domain}
                                                 </span>
                                             );
@@ -791,10 +789,11 @@ function CuratedToolPage({ tool }: { tool: CuratedTool }) {
                                 >
                                     <div className="flex items-center justify-between gap-2">
                                         <div className="flex items-center gap-2 min-w-0">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img
+                                            <Image
                                                 src={`https://www.google.com/s2/favicons?domain=${t.domain}&sz=32`}
                                                 alt={t.name}
+                                                width={24}
+                                                height={24}
                                                 className="w-6 h-6 object-contain flex-shrink-0"
                                             />
                                             <span className="font-serif text-base group-hover:underline underline-offset-2 truncate">{t.name}</span>

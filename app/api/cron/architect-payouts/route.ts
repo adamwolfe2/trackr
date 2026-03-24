@@ -118,14 +118,13 @@ export async function GET(req: Request) {
                     "",
                     total,
                     architect.totalEarnings + total,
-                ).catch((err: unknown) => {
-                    console.warn("[architect-payouts] Failed to send commission email:", err);
+                ).catch(() => {
+                    // Non-critical: commission email delivery failed
                 });
 
                 transferred++;
             } catch (err) {
                 Sentry.captureException(err);
-                console.error(`[architect-payouts] Transfer failed for architect ${architectId}:`, err);
                 // Revert claimed commissions back to pending on failure
                 await db.update(architectCommissions)
                     .set({ status: "pending" })
@@ -148,7 +147,6 @@ export async function GET(req: Request) {
                 batched++;
             } catch (err) {
                 Sentry.captureException(err);
-                console.error(`[architect-payouts] Batch failed for architect ${architectId}:`, err);
                 errors.push(`Batch failed for architect ${architectId.slice(0, 8)}…`);
             }
         }

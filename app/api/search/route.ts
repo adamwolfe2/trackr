@@ -72,8 +72,7 @@ export async function POST(req: NextRequest) {
             { results: similarTools },
             { headers: getRateLimitHeaders(rl) }
         );
-    } catch (err) {
-        console.error("[api/search]", err);
+    } catch {
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

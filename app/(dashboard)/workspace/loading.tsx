@@ -18,7 +18,7 @@ export default function WorkspaceLoading() {
                     {[1, 2, 3].map(i => (
                         <div key={i} className="flex items-center justify-between p-4 border border-black">
                             <div className="flex items-center gap-3">
-                                <Skeleton className="h-10 w-10 rounded-full" />
+                                <Skeleton className="h-10 w-10" />
                                 <div className="space-y-2">
                                     <Skeleton className="h-4 w-32" />
                                     <Skeleton className="h-3 w-48" />

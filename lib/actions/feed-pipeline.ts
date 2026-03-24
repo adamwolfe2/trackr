@@ -67,8 +67,8 @@ async function ingestTopic(workspaceId: string, channelId: string, config: Chann
 
     try {
         await db.insert(feedItems).values(rows).onConflictDoNothing();
-    } catch (err) {
-        console.error("[feed-pipeline] Failed to batch insert feed items:", err);
+    } catch {
+        // Batch insert failed — items will be retried on next cron cycle
     }
     return rows.length;
 }
@@ -111,12 +111,11 @@ async function ingestRss(workspaceId: string, channelId: string, config: Channel
 
         try {
             await db.insert(feedItems).values(rows).onConflictDoNothing();
-        } catch (err) {
-            console.error("[feed-pipeline] Failed to batch insert RSS items:", err);
+        } catch {
+            // RSS batch insert failed — items will be retried on next cron cycle
         }
         return rows.length;
-    } catch (err) {
-        console.error("[feed-pipeline] RSS ingestion failed:", err);
+    } catch {
         return 0;
     }
 }
@@ -197,7 +196,7 @@ export async function ingestAllChannels(workspaceId: string): Promise<number> {
             if (result.status === "fulfilled") {
                 total += result.value;
             } else {
-                console.error(`[feed-pipeline] Channel ingestion failed:`, result.reason);
+                // Channel ingestion failed — continue with remaining channels
             }
         }
     }

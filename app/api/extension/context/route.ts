@@ -57,8 +57,7 @@ export async function GET(req: NextRequest) {
             },
             { status: 200, headers }
         );
-    } catch (err) {
-        console.error("[api/extension/context]", err);
+    } catch {
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500, headers }

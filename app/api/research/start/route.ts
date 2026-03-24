@@ -84,7 +84,6 @@ export async function POST(req: NextRequest) {
             await performDeepResearch(toolId, { depth: depth ?? undefined, triggeredBy: user.id });
         } catch (err) {
             Sentry.captureException(err);
-            console.error("[api/research/start] background research failed:", err);
         }
     });
 

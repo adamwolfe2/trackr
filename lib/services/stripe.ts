@@ -3,12 +3,10 @@ import Stripe from 'stripe';
 const stripeKey = process.env.STRIPE_SECRET_KEY;
 const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
 
-if (!stripeKey && !isBuildPhase) {
-    console.error("CRITICAL: STRIPE_SECRET_KEY is not set — all payment operations will fail");
-}
+// STRIPE_SECRET_KEY is validated at runtime via assertStripeConfigured()
 
-// During build, use a placeholder so the module resolves. At runtime, guard every call.
-export const stripe = new Stripe(stripeKey || "sk_placeholder_build_only", {
+// During build, use an empty string so the module resolves. At runtime, guard every call.
+export const stripe = new Stripe(stripeKey || "", {
     typescript: true,
 });
 

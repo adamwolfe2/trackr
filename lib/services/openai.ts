@@ -54,8 +54,7 @@ export class OpenAIService {
 
             const result = JSON.parse(completion.choices[0].message.content || "{}");
             return result;
-        } catch (error) {
-            console.error("OpenAI analysis failed:", error);
+        } catch {
             throw new Error("Failed to analyze content");
         }
     }

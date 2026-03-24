@@ -54,8 +54,7 @@ export async function GET(req: Request) {
             );
 
         return NextResponse.json(rows);
-    } catch (err) {
-        console.error("[bulk-status]", err);
+    } catch {
         return NextResponse.json({ error: "Internal error" }, { status: 500 });
     }
 }
