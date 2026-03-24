@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Plus, X, Search, Loader2 } from "lucide-react";
+import { Plus, X, Search, Loader2, Sparkles } from "lucide-react";
 import { LogoImage } from "@/components/common/logo-image";
 import {
     searchToolsForRecommendation,
     addRecommendedTool,
     removeRecommendedTool,
+    generateSmartSuggestions,
 } from "./actions";
-import type { ToolSearchResult } from "./actions";
+import type { ToolSearchResult, SmartSuggestion } from "./actions";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -16,6 +17,9 @@ type RecommendedTool = {
     name: string;
     websiteDomain: string | null;
     category: string;
+    whatItDoes?: string;
+    problemItSolves?: string;
+    painPointLink?: string | null;
     reason: string;
     estimatedCostPerUser: string | null;
     impact: "High" | "Medium" | "Low";
@@ -169,7 +173,23 @@ export function RecommendedToolsEditor({
                                             {t.impact} Impact
                                         </span>
                                     </div>
-                                    <p className="font-mono text-[10px] text-neutral-600 leading-relaxed">
+                                    {t.whatItDoes && (
+                                        <p className="font-mono text-[10px] text-neutral-700 leading-relaxed font-medium">
+                                            {t.whatItDoes}
+                                        </p>
+                                    )}
+                                    {t.problemItSolves && (
+                                        <p className="font-mono text-[10px] text-neutral-600 leading-relaxed mt-0.5">
+                                            <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mr-1.5">Solves:</span>
+                                            {t.problemItSolves}
+                                        </p>
+                                    )}
+                                    {t.painPointLink && (
+                                        <span className="inline-block font-mono text-[8px] uppercase tracking-widest border border-neutral-300 text-neutral-500 px-1.5 py-0.5 mt-1">
+                                            {t.painPointLink}
+                                        </span>
+                                    )}
+                                    <p className="font-mono text-[10px] text-neutral-600 leading-relaxed mt-1">
                                         {t.reason}
                                     </p>
                                     {t.estimatedCostPerUser && (
@@ -247,10 +267,17 @@ function AddToolForm({
     const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    // AI smart suggestions
+    const [suggestions, setSuggestions] = useState<SmartSuggestion[]>([]);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(true);
+
     // Form fields for manual entry / selected tool override
     const [name, setName] = useState("");
     const [websiteDomain, setWebsiteDomain] = useState("");
     const [category, setCategory] = useState("");
+    const [whatItDoes, setWhatItDoes] = useState("");
+    const [problemItSolves, setProblemItSolves] = useState("");
+    const [painPointLink, setPainPointLink] = useState("");
     const [reason, setReason] = useState("");
     const [estimatedCost, setEstimatedCost] = useState("");
     const [impact, setImpact] = useState<"High" | "Medium" | "Low">("Medium");
@@ -258,6 +285,20 @@ function AddToolForm({
     useEffect(() => {
         inputRef.current?.focus();
     }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        setLoadingSuggestions(true);
+        generateSmartSuggestions(submissionId).then(result => {
+            if (!cancelled) {
+                setSuggestions(result);
+                setLoadingSuggestions(false);
+            }
+        }).catch(() => {
+            if (!cancelled) setLoadingSuggestions(false);
+        });
+        return () => { cancelled = true; };
+    }, [submissionId]);
 
     const handleSearch = useCallback((value: string) => {
         setQuery(value);
@@ -296,8 +337,8 @@ function AddToolForm({
     );
 
     const handleSubmit = useCallback(async () => {
-        if (!name.trim() || !category.trim() || !reason.trim()) {
-            setError("Name, category, and reason are required");
+        if (!name.trim() || !category.trim() || !reason.trim() || !whatItDoes.trim() || !problemItSolves.trim()) {
+            setError("Name, category, what it does, problem it solves, and reason are required");
             return;
         }
         if (existingNames.includes(name.toLowerCase())) {
@@ -313,6 +354,9 @@ function AddToolForm({
             name: name.trim(),
             websiteDomain: websiteDomain.trim() || null,
             category: category.trim(),
+            whatItDoes: whatItDoes.trim(),
+            problemItSolves: problemItSolves.trim(),
+            painPointLink: painPointLink.trim() || null,
             reason: reason.trim(),
             estimatedCostPerUser: estimatedCost.trim() || null,
             impact,
@@ -324,6 +368,9 @@ function AddToolForm({
                 name: input.name,
                 websiteDomain: input.websiteDomain,
                 category: input.category,
+                whatItDoes: input.whatItDoes,
+                problemItSolves: input.problemItSolves,
+                painPointLink: input.painPointLink,
                 reason: input.reason,
                 estimatedCostPerUser: input.estimatedCostPerUser,
                 impact: input.impact,
@@ -337,6 +384,9 @@ function AddToolForm({
         name,
         websiteDomain,
         category,
+        whatItDoes,
+        problemItSolves,
+        painPointLink,
         reason,
         estimatedCost,
         impact,
@@ -377,6 +427,77 @@ function AddToolForm({
 
             {mode === "search" && (
                 <>
+                    {/* AI Smart Suggestions */}
+                    {(loadingSuggestions || suggestions.length > 0) && (
+                        <div className="mb-4">
+                            <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 mb-2 flex items-center gap-1.5">
+                                <Sparkles className="w-3 h-3" />
+                                Suggested for this company
+                            </p>
+                            {loadingSuggestions ? (
+                                <div className="flex items-center gap-2 py-3">
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin text-neutral-400" />
+                                    <span className="font-mono text-[10px] text-neutral-400">Analyzing pain points and stack...</span>
+                                </div>
+                            ) : (
+                                <div className="border border-neutral-200 bg-white divide-y divide-neutral-100 max-h-64 overflow-y-auto">
+                                    {suggestions.map((s, i) => {
+                                        const alreadyAdded = existingNames.includes(s.name.toLowerCase());
+                                        const logos = toolLogos(s.name, s.websiteDomain);
+                                        return (
+                                            <button
+                                                key={i}
+                                                type="button"
+                                                onClick={() => {
+                                                    if (alreadyAdded) return;
+                                                    setName(s.name);
+                                                    setWebsiteDomain(s.websiteDomain ?? "");
+                                                    setCategory(s.category);
+                                                    setWhatItDoes(s.whatItDoes);
+                                                    setProblemItSolves(s.problemItSolves);
+                                                    setPainPointLink(s.painPointLink ?? "");
+                                                    setReason(s.reason);
+                                                    setEstimatedCost(s.estimatedCostPerUser ?? "");
+                                                    setImpact(s.impact);
+                                                    setMode("manual");
+                                                }}
+                                                disabled={alreadyAdded}
+                                                className={`w-full px-3 py-2.5 text-left transition-colors ${
+                                                    alreadyAdded ? "opacity-40 cursor-not-allowed" : "hover:bg-neutral-50"
+                                                }`}
+                                            >
+                                                <div className="flex items-start gap-2.5">
+                                                    <div className="w-7 h-7 border border-neutral-200 p-0.5 flex-shrink-0 flex items-center justify-center overflow-hidden mt-0.5">
+                                                        <LogoImage
+                                                            src={logos.src}
+                                                            fallbackSrc={logos.fallbackSrc}
+                                                            alt={s.name}
+                                                            fallbackChar={s.name}
+                                                            className="w-5 h-5"
+                                                            fallbackClassName="w-7 h-7 text-[9px]"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                            <span className="font-mono text-xs font-bold">{s.name}</span>
+                                                            <span className="font-mono text-[9px] text-neutral-400">{s.category}</span>
+                                                            <span className={`font-mono text-[8px] border px-1.5 py-0.5 ${impactBadge(s.impact)}`}>
+                                                                {s.impact}
+                                                            </span>
+                                                            {alreadyAdded && <span className="font-mono text-[9px] text-neutral-400">Added</span>}
+                                                        </div>
+                                                        <p className="font-mono text-[10px] text-neutral-600 mt-0.5 leading-relaxed">{s.whatItDoes}</p>
+                                                        <p className="font-mono text-[10px] text-neutral-500 mt-0.5 leading-relaxed">{s.problemItSolves}</p>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <div className="relative mb-3">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-neutral-400" />
                         <input
@@ -547,6 +668,42 @@ function AddToolForm({
                     </div>
                     <div>
                         <label className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block mb-1">
+                            What It Does *
+                        </label>
+                        <input
+                            type="text"
+                            value={whatItDoes}
+                            onChange={(e) => setWhatItDoes(e.target.value)}
+                            placeholder="1 sentence -- what this tool does in plain language"
+                            className="w-full px-3 py-2 font-mono text-xs border border-black bg-white focus:outline-none focus:ring-1 focus:ring-black"
+                        />
+                    </div>
+                    <div>
+                        <label className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block mb-1">
+                            Problem It Solves *
+                        </label>
+                        <input
+                            type="text"
+                            value={problemItSolves}
+                            onChange={(e) => setProblemItSolves(e.target.value)}
+                            placeholder="1 sentence -- what specific problem this solves for this company"
+                            className="w-full px-3 py-2 font-mono text-xs border border-black bg-white focus:outline-none focus:ring-1 focus:ring-black"
+                        />
+                    </div>
+                    <div>
+                        <label className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block mb-1">
+                            Pain Point Link
+                        </label>
+                        <input
+                            type="text"
+                            value={painPointLink}
+                            onChange={(e) => setPainPointLink(e.target.value)}
+                            placeholder="e.g. Sales, Ops"
+                            className="w-full max-w-xs px-3 py-2 font-mono text-xs border border-black bg-white focus:outline-none focus:ring-1 focus:ring-black"
+                        />
+                    </div>
+                    <div>
+                        <label className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block mb-1">
                             Reason / Pitch *
                         </label>
                         <textarea
@@ -573,7 +730,7 @@ function AddToolForm({
                         <button
                             type="button"
                             onClick={handleSubmit}
-                            disabled={submitting || !name.trim() || !category.trim() || !reason.trim()}
+                            disabled={submitting || !name.trim() || !category.trim() || !whatItDoes.trim() || !problemItSolves.trim() || !reason.trim()}
                             className="font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 border border-black bg-black text-white hover:bg-neutral-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
                         >
                             {submitting && (

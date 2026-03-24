@@ -48,7 +48,7 @@ type ExtendedScorecard = AuditScorecard & {
     roiProjection?: RoiProjection;
 };
 
-type RecommendedTool = { name: string; websiteDomain: string | null; category: string; reason: string; impact: "High" | "Medium" | "Low" };
+type RecommendedTool = { name: string; websiteDomain: string | null; category: string; whatItDoes?: string; problemItSolves?: string; painPointLink?: string | null; reason: string; impact: "High" | "Medium" | "Low" };
 type MergedTool = { name: string; category: string | null; aiRole: "AI-native" | "AI-assisted" | "Non-AI core infra"; usageNotes: string | null };
 
 // ── Tool intelligence ─────────────────────────────────────────────────────────
@@ -704,7 +704,19 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                                             <span className={`font-mono text-[8px] border px-1.5 py-0.5 ${impactBadge(t.impact)}`}>{t.impact}</span>
                                                         </div>
                                                         <p className="font-mono text-[9px] text-neutral-400 mb-1">{t.category}</p>
-                                                        <p className="font-mono text-[10px] text-neutral-600 leading-relaxed">{t.reason}</p>
+                                                        {t.whatItDoes && (
+                                                            <p className="font-mono text-[10px] text-neutral-700 leading-relaxed font-medium">{t.whatItDoes}</p>
+                                                        )}
+                                                        {t.problemItSolves && (
+                                                            <p className="font-mono text-[10px] text-neutral-600 leading-relaxed mt-0.5">
+                                                                <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mr-1.5">Solves:</span>
+                                                                {t.problemItSolves}
+                                                            </p>
+                                                        )}
+                                                        {t.painPointLink && (
+                                                            <span className="inline-block font-mono text-[8px] uppercase tracking-widest border border-neutral-300 text-neutral-500 px-1.5 py-0.5 mt-1">{t.painPointLink}</span>
+                                                        )}
+                                                        <p className="font-mono text-[10px] text-neutral-600 leading-relaxed mt-1">{t.reason}</p>
                                                     </div>
                                                 </div>
                                             </div>

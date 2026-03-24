@@ -13,6 +13,9 @@ type RecommendedTool = {
     name: string;
     websiteDomain: string | null;
     category: string;
+    whatItDoes: string;
+    problemItSolves: string;
+    painPointLink: string | null;
     reason: string;
     estimatedCostPerUser: string | null;
     impact: "High" | "Medium" | "Low";
@@ -30,6 +33,9 @@ const AddToolSchema = z.object({
     name: z.string().min(1).max(200),
     websiteDomain: z.string().max(200).nullable(),
     category: z.string().min(1).max(100),
+    whatItDoes: z.string().min(1).max(500),
+    problemItSolves: z.string().min(1).max(500),
+    painPointLink: z.string().max(100).nullable(),
     reason: z.string().min(1).max(500),
     estimatedCostPerUser: z.string().max(100).nullable(),
     impact: z.enum(["High", "Medium", "Low"]),
@@ -43,6 +49,98 @@ const RemoveToolSchema = z.object({
 const SearchToolsSchema = z.object({
     query: z.string().min(1).max(200),
 });
+
+// ── Smart AI Suggestions ─────────────────────────────────────────────────────
+
+export type SmartSuggestion = {
+    name: string;
+    websiteDomain: string | null;
+    category: string;
+    whatItDoes: string;
+    problemItSolves: string;
+    painPointLink: string | null;
+    reason: string;
+    estimatedCostPerUser: string | null;
+    impact: "High" | "Medium" | "Low";
+};
+
+export async function generateSmartSuggestions(
+    submissionId: string,
+): Promise<SmartSuggestion[]> {
+    const authed = await isAdminAuthenticated();
+    if (!authed) return [];
+
+    const submission = await db.query.auditSubmissions.findFirst({
+        where: eq(auditSubmissions.id, submissionId),
+    });
+    if (!submission?.scorecard) return [];
+
+    const scorecard = submission.scorecard as Record<string, unknown>;
+    const painPoints = (scorecard.painPoints ?? []) as Array<{ area: string; description: string }>;
+    const currentStack = (scorecard.currentStack ?? []) as Array<{ name: string; category: string; aiRole: string }>;
+    const existingRecs = (scorecard.recommendedTools ?? []) as Array<{ name: string }>;
+
+    const stackNames = currentStack.map(t => `${t.name} (${t.category}, ${t.aiRole})`).join(", ");
+    const painPointSummary = painPoints.map(p => `- ${p.area}: ${p.description}`).join("\n");
+    const alreadyRecommended = existingRecs.map(t => t.name).join(", ");
+
+    try {
+        const Anthropic = (await import("@anthropic-ai/sdk")).default;
+        const client = new Anthropic();
+
+        const response = await client.messages.create({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 2000,
+            messages: [{
+                role: "user",
+                content: `You are an AI tool intelligence expert. Suggest 4-5 AI tools for this company.
+
+COMPANY: ${submission.companyName}
+INDUSTRY: ${submission.industry ?? "Unknown"}
+SIZE: ${submission.companySize ?? "Unknown"}, ${submission.employeeCount ?? "Unknown"} employees
+MONTHLY AI SPEND: ${submission.monthlySpend ?? "Unknown"}
+
+CURRENT STACK:
+${stackNames}
+
+PAIN POINTS:
+${painPointSummary}
+
+ALREADY RECOMMENDED (do NOT suggest these):
+${alreadyRecommended || "None"}
+
+CRITICAL RULES:
+1. NEVER recommend tools that compete with their existing stack. They won't switch. Recommend tools that LAYER ON TOP.
+2. NEVER recommend obvious enterprise BI tools (Tableau, Looker, Power BI) unless they truly have zero reporting.
+3. FAVOR scrappy, high-impact AI-native tools that plug into existing workflows.
+4. Consider adoption difficulty — enterprise/gov/edu need SSO, compliance, gradual rollout paths.
+5. Consider budget — match pricing to their spend level and company size.
+6. Each tool must connect to a specific pain point or gap in their current stack.
+
+Respond with ONLY a JSON array. Each element:
+{
+  "name": "exact tool name",
+  "websiteDomain": "domain.com or null",
+  "category": "short category label",
+  "whatItDoes": "1 sentence, plain language",
+  "problemItSolves": "1 sentence specific to THIS company",
+  "painPointLink": "pain point area name or null",
+  "reason": "2 sentences tying to their situation",
+  "estimatedCostPerUser": "$X-Y/user/month or null",
+  "impact": "High|Medium|Low"
+}`,
+            }],
+        });
+
+        const text = response.content[0].type === "text" ? response.content[0].text : "";
+        const jsonMatch = text.match(/\[[\s\S]*\]/);
+        if (!jsonMatch) return [];
+        const suggestions = JSON.parse(jsonMatch[0]) as SmartSuggestion[];
+        return suggestions.filter(s => s.name && s.category && s.reason);
+    } catch {
+        return [];
+    }
+}
 
 // ── Search tools across all workspaces ───────────────────────────────────────
 
@@ -122,6 +220,9 @@ export async function addRecommendedTool(
         name: parsed.data.name,
         websiteDomain: parsed.data.websiteDomain,
         category: parsed.data.category,
+        whatItDoes: parsed.data.whatItDoes,
+        problemItSolves: parsed.data.problemItSolves,
+        painPointLink: parsed.data.painPointLink,
         reason: parsed.data.reason,
         estimatedCostPerUser: parsed.data.estimatedCostPerUser,
         impact: parsed.data.impact,

@@ -69,6 +69,9 @@ const AuditScorecardSchema = z.object({
         name: z.string(),
         websiteDomain: z.string().nullable(),
         category: z.string(),
+        whatItDoes: z.string(),
+        problemItSolves: z.string(),
+        painPointLink: z.string().nullable(),
         reason: z.string(),
         estimatedCostPerUser: z.string().nullable(),
         impact: z.enum(["High", "Medium", "Low"]),
@@ -181,13 +184,47 @@ QUALITY BAR — question examples:
 - "When you said [90-day success definition], what would 'done' actually look like — headcount reduction, pipeline increase, or something else?"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RECOMMENDED TOOLS (2–5)
+RECOMMENDED TOOLS (2–5) — THE PITCH TOOLKIT
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Tools to actively pitch on this call. Must directly address their stated pain points or fill a clear gap in their current stack.
+Tools to actively pitch on this call. These must be tools the sales rep can confidently recommend without the prospect dismissing them as impractical.
+
+CRITICAL RULES — READ BEFORE GENERATING:
+
+1. NEVER recommend tools that compete with their existing stack. If they use Microsoft 365, do NOT recommend Google Workspace or Notion as a replacement. If they use Salesforce, do NOT recommend HubSpot CRM. Recommend tools that LAYER ON TOP of what they already have.
+
+2. NEVER recommend enterprise BI tools (Tableau, Looker, Power BI) unless the company has zero reporting capability AND has the budget/team for it. These are expensive, complex, and low-adoption for most companies.
+
+3. FAVOR scrappy, high-impact AI-native tools that add intelligence to existing workflows without requiring migration. Think: tools that plug INTO their current stack, not replace it. Examples of good recommendations:
+   - For Microsoft-heavy orgs: Microsoft Copilot, Otter.ai, Fireflies.ai, Loom AI, Gamma (for presentations)
+   - For sales teams: Clay, Apollo AI, Instantly, Lavender (email AI), Gong
+   - For ops/automation: Bardeen, Tango, Scribe, Magical, Zapier AI
+   - For content/marketing: Jasper, Writer, Descript, ElevenLabs, Canva AI
+   - For customer support: Intercom Fin, Ada, Forethought
+   - For dev teams: Cursor, GitHub Copilot, Codeium, Devin
+   - For document/knowledge: Glean, Guru AI, Notion AI (as an add-on, not a migration)
+
+4. CONSIDER ADOPTION DIFFICULTY. For enterprise, government, and education:
+   - Security compliance matters — avoid tools without SOC 2 / FERPA / HIPAA if relevant
+   - Avoid tools requiring admin-level deployment unless they have an AI manager
+   - Prefer tools with SSO/SAML and admin controls
+   - Prefer tools with gradual adoption paths (individual → team → org)
+   - Prefer tools that integrate with their existing identity provider (Microsoft Entra, Google Workspace, Okta)
+
+5. CONSIDER BUDGET. Match tool pricing to their company size and monthly spend:
+   - If monthly AI spend is <$500, don't recommend $50/seat/mo tools for a 100-person team
+   - Free tiers and low-cost tools are perfectly valid for low-maturity companies
+   - Enterprise pricing should only be recommended for companies with clear budget signals
+
+6. Each tool MUST connect to a specific pain point or gap. Generic "this is a good AI tool" is not a recommendation — it's noise.
+
+Per tool:
 - name: exact tool name as commonly known
-- websiteDomain: root domain only (e.g. "clay.com", "notion.so") for logo display — null if unsure
-- category: short type label (e.g. "Sales Intelligence", "AI Writing", "Workflow Automation")
-- reason: 2 sentences — sentence 1 ties to their specific situation/stack/bottleneck, sentence 2 states the concrete outcome
+- websiteDomain: root domain only (e.g. "clay.com", "otter.ai") for logo display — null if unsure
+- category: short type label (e.g. "Sales Intelligence", "AI Meeting Notes", "Workflow Automation")
+- whatItDoes: 1 sentence in plain language — what this tool does. Write for someone who has never heard of it. Example: "Clay automatically enriches lead lists with company data, tech stack, and contact info from 75+ data sources."
+- problemItSolves: 1 sentence — what specific problem this solves for THIS company. Reference their actual pain points, tools, or bottleneck. Example: "Eliminates the 6-8 hrs/week your sales team spends manually researching leads in Google Sheets before outreach."
+- painPointLink: the area name from painPoints that this tool most directly addresses (e.g. "Sales", "Ops", "Engineering"). Set null if it doesn't map cleanly to a single pain point.
+- reason: 2 sentences — sentence 1 ties to their specific situation/stack/bottleneck, sentence 2 states the concrete outcome. MUST reference at least one tool from their current stack.
 - estimatedCostPerUser: typical monthly per-seat range (e.g. "$15–30/user/month") or null if free/variable
 - impact: High/Medium/Low based on fit with their top pain points
 

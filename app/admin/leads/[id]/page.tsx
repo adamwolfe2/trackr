@@ -12,6 +12,8 @@ import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { ExternalLink } from "lucide-react";
 import { LogoImage } from "@/components/common/logo-image";
 import { RecommendedToolsEditor } from "./recommended-tools-editor";
+import { ScorecardNav } from "./scorecard-nav";
+import { CopyButton } from "./copy-button";
 
 export const metadata: Metadata = {
     title: "Lead Detail — Trackr Admin",
@@ -31,9 +33,24 @@ type RecommendedTool = {
     name: string;
     websiteDomain: string | null;
     category: string;
+    whatItDoes?: string;
+    problemItSolves?: string;
+    painPointLink?: string | null;
     reason: string;
     estimatedCostPerUser: string | null;
     impact: "High" | "Medium" | "Low";
+};
+
+type ExtendedScorecard = AuditScorecard & {
+    executiveSummary?: string | null;
+    painPoints: Array<{ area: string; description: string; annualCostEstimate?: string | null }>;
+    recommendations: Array<{
+        title: string; impact: "High" | "Medium" | "Low"; difficulty: "High" | "Medium" | "Low";
+        description: string; estimatedROI?: string | null;
+    }>;
+    workflowGaps?: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }>;
+    industryBenchmark?: { peerAvgScore: number; peerLabel: string; percentile: number; insight: string };
+    roiProjection?: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] };
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -48,6 +65,14 @@ function scoreBarColor(score: number): string {
     if (score >= 61) return "bg-black";
     if (score >= 41) return "bg-yellow-500";
     return "bg-red-500";
+}
+
+function maturityTier(score: number): string {
+    if (score < 21) return "Not using AI";
+    if (score < 41) return "Ad-hoc";
+    if (score < 61) return "Moderate";
+    if (score < 81) return "Structured";
+    return "AI-native";
 }
 
 function impactBadge(level: string) {
@@ -107,10 +132,11 @@ export default async function LeadDetailPage({
     });
     if (!submission) notFound();
 
-    const scorecard = submission.scorecard as AuditScorecard | null;
+    const scorecard = submission.scorecard as ExtendedScorecard | null;
     const talkingPoints = submission.talkingPoints as TalkingPoint[] | null;
     const score = scorecard?.aiNativeScore?.score ?? null;
-    const recommendedTools = (scorecard as (AuditScorecard & { recommendedTools?: RecommendedTool[] }) | null)?.recommendedTools ?? [];
+    const recommendedTools = scorecard?.recommendedTools ?? [];
+    const executiveSummary = scorecard?.executiveSummary ?? null;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
     const shareUrl = submission.shareToken
@@ -145,6 +171,20 @@ export default async function LeadDetailPage({
             .where(eq(softwareSpend.workspaceId, submission.preBuiltWorkspaceId));
         toolCount = Number(value);
     }
+
+    // ── Section nav data ────────────────────────────────────────────────────
+    const navSections: Array<{ id: string; label: string }> = [
+        ...(score !== null ? [{ id: "score", label: "Score" }] : []),
+        ...(scorecard && (scorecard.currentStack.length > 0 || recommendedTools.length > 0) ? [{ id: "stack", label: "Stack & Recs" }] : []),
+        ...(talkingPoints && talkingPoints.length > 0 ? [{ id: "talking-points", label: "Talking Points" }] : []),
+        ...(scorecard && scorecard.painPoints.length > 0 ? [{ id: "pain-points", label: "Pain Points" }] : []),
+        ...(scorecard && scorecard.recommendations.length > 0 ? [{ id: "recommendations", label: "Recommendations" }] : []),
+        ...(scorecard?.workflowGaps && scorecard.workflowGaps.length > 0 ? [{ id: "workflow-gaps", label: "Gaps" }] : []),
+        ...(scorecard?.industryBenchmark ? [{ id: "industry-benchmark", label: "Benchmark" }] : []),
+        ...(scorecard?.roiProjection ? [{ id: "roi-projection", label: "ROI" }] : []),
+        ...(submission.preBuiltWorkspaceId ? [{ id: "workspace", label: "Workspace" }] : []),
+        { id: "notes", label: "Notes" },
+    ];
 
     // ── Server Actions ────────────────────────────────────────────────────────
 
@@ -204,7 +244,7 @@ export default async function LeadDetailPage({
     // ─────────────────────────────────────────────────────────────────────────
 
     return (
-        <div className="space-y-6 pb-32">
+        <div className="space-y-8 pb-32">
             {/* Back nav */}
             <div className="flex items-center gap-4">
                 <Link href="/admin/leads" className="font-mono text-xs uppercase tracking-widest text-neutral-500 hover:text-black">
@@ -213,9 +253,9 @@ export default async function LeadDetailPage({
             </div>
 
             {/* ── Hero Card ─────────────────────────────────────────────────── */}
-            <div className="border border-black p-6">
+            <div id="score" className="border border-black p-6 scroll-mt-16">
                 <div className="flex items-start gap-5">
-                    {/* Company logo — Clearbit → Google favicon → initial */}
+                    {/* Company logo */}
                     <div className="w-16 h-16 border border-neutral-200 p-1.5 flex-shrink-0 flex items-center justify-center overflow-hidden">
                         {companyLogoUrls ? (
                             <LogoImage
@@ -281,19 +321,27 @@ export default async function LeadDetailPage({
                     </div>
                 </div>
 
+                {/* Executive Summary — serif intro paragraph */}
+                {executiveSummary && (
+                    <div className="mt-5 pt-5 border-t border-neutral-200">
+                        <p className="font-serif text-base text-neutral-800 leading-relaxed">{executiveSummary}</p>
+                    </div>
+                )}
+
                 {/* Score bar */}
                 {score !== null && scorecard && (
-                    <div className="mt-5 pt-5 border-t border-neutral-200">
-                        <div className="flex items-center gap-5">
+                    <div className={`mt-5 pt-5 ${!executiveSummary ? "border-t border-neutral-200" : ""}`}>
+                        <div className="flex items-center gap-6">
                             <div className="flex-shrink-0 text-center">
-                                <span className={`font-mono text-5xl font-black leading-none ${scoreColor(score)}`}>{score}</span>
-                                <span className="font-mono text-lg text-neutral-300">/100</span>
+                                <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-neutral-400 mb-1">AI-Native Score</p>
+                                <span className={`font-mono text-6xl font-black leading-none ${scoreColor(score)}`}>{score}</span>
+                                <span className="font-mono text-xl text-neutral-300">/100</span>
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between mb-1.5">
-                                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">AI-Native Score</span>
-                                    <span className="font-mono text-[10px] text-neutral-400">
-                                        {score < 21 ? "Not using AI" : score < 41 ? "Ad-hoc" : score < 61 ? "Moderate" : score < 81 ? "Structured" : "AI-native"}
+                                    <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">AI Operational Readiness</span>
+                                    <span className="font-mono text-[10px] font-bold text-neutral-700">
+                                        {maturityTier(score)}
                                     </span>
                                 </div>
                                 <div className="h-2.5 w-full bg-neutral-100 border border-neutral-200">
@@ -313,18 +361,24 @@ export default async function LeadDetailPage({
                 )}
             </div>
 
+            {/* ── Section Nav ─────────────────────────────────────────────────── */}
+            {navSections.length > 1 && <ScorecardNav sections={navSections} />}
+
             {/* ── Current Stack + Recommended Tools ─────────────────────────── */}
             {scorecard && (
-                <div className="grid lg:grid-cols-2 gap-6">
+                <div id="stack" className="grid lg:grid-cols-2 gap-8 scroll-mt-16">
 
                     {/* Current Stack */}
                     {scorecard.currentStack.length > 0 && (
                         <div className="border border-black">
                             <div className="border-b border-black px-5 py-3">
-                                <h2 className="font-mono text-xs uppercase tracking-widest">Current Stack</h2>
+                                <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                                    <span className="w-1 h-3 bg-black inline-block" />
+                                    Current Stack
+                                </p>
                             </div>
 
-                            {/* Logo strip — all tool logos at a glance */}
+                            {/* Logo strip */}
                             <div className="px-5 py-4 border-b border-neutral-100 flex flex-wrap gap-2.5">
                                 {scorecard.currentStack.map((t, i) => {
                                     const logos = toolLogos(t.name);
@@ -390,28 +444,34 @@ export default async function LeadDetailPage({
 
             {/* ── Talking Points ─────────────────────────────────────────────── */}
             {talkingPoints && talkingPoints.length > 0 && (
-                <div className="border border-black">
+                <div id="talking-points" className="border border-black scroll-mt-16">
                     <div className="border-b border-black px-5 py-3">
-                        <h2 className="font-mono text-xs uppercase tracking-widest">Call Prep: Talking Points</h2>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-black inline-block" />
+                            Call Prep: Talking Points
+                        </p>
                     </div>
-                    <div className="p-5 space-y-4">
+                    <div className="p-5 space-y-5">
                         {talkingPoints.map((tp, i) => (
-                            <div key={i} className="border border-neutral-200 p-4 bg-white">
-                                <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-3">
-                                    {i + 1}. {tp.topic}
-                                </p>
-                                <div className="space-y-2">
+                            <div key={i} className="border-l-4 border-l-black border border-neutral-200 p-5 bg-white">
+                                <div className="flex items-baseline gap-3 mb-4">
+                                    <span className="font-mono text-lg text-neutral-300 font-bold flex-shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                                    <p className="font-mono text-xs uppercase tracking-widest text-neutral-500 font-bold">
+                                        {tp.topic}
+                                    </p>
+                                </div>
+                                <div className="space-y-4">
                                     <div>
-                                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mr-2">Found:</span>
-                                        <span className="font-mono text-xs text-neutral-700">{tp.observation}</span>
+                                        <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-1">Found</p>
+                                        <p className="font-mono text-xs text-neutral-700 leading-relaxed">{tp.observation}</p>
+                                    </div>
+                                    <div className="bg-neutral-50 border border-neutral-200 p-4">
+                                        <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-2">Ask</p>
+                                        <p className="font-serif text-base text-black font-medium leading-relaxed">&ldquo;{tp.question}&rdquo;</p>
                                     </div>
                                     <div>
-                                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mr-2">Ask:</span>
-                                        <span className="font-mono text-xs text-black font-semibold">&ldquo;{tp.question}&rdquo;</span>
-                                    </div>
-                                    <div>
-                                        <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-700 mr-2">Opportunity:</span>
-                                        <span className="font-mono text-xs text-neutral-700">{tp.opportunity}</span>
+                                        <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-1">Opportunity</p>
+                                        <p className="font-mono text-xs text-neutral-700 leading-relaxed">{tp.opportunity}</p>
                                     </div>
                                 </div>
                             </div>
@@ -422,15 +482,25 @@ export default async function LeadDetailPage({
 
             {/* ── Pain Points ────────────────────────────────────────────────── */}
             {scorecard && scorecard.painPoints.length > 0 && (
-                <div className="border border-black">
+                <div id="pain-points" className="border border-black scroll-mt-16">
                     <div className="border-b border-black px-5 py-3">
-                        <h2 className="font-mono text-xs uppercase tracking-widest">Pain Points</h2>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-red-500 inline-block" />
+                            Critical Business Risk Factors
+                        </p>
                     </div>
-                    <div className="divide-y divide-neutral-100">
+                    <div className="p-5 space-y-3">
                         {scorecard.painPoints.map((p, i) => (
-                            <div key={i} className="px-5 py-3 flex gap-4">
-                                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 w-24 shrink-0 pt-0.5">{p.area}</span>
-                                <span className="font-mono text-xs text-neutral-700">{p.description}</span>
+                            <div key={i} className="border-l-4 border-l-red-500 border border-neutral-200 bg-white p-5">
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                    <span className="font-mono text-[10px] uppercase tracking-widest text-red-600 font-bold">{p.area}</span>
+                                    {p.annualCostEstimate && (
+                                        <span className="font-mono text-[9px] border border-red-200 bg-red-50 text-red-700 px-2.5 py-0.5 flex-shrink-0 whitespace-nowrap">
+                                            {p.annualCostEstimate} / yr
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="font-mono text-xs text-neutral-600 leading-relaxed">{p.description}</p>
                             </div>
                         ))}
                     </div>
@@ -439,27 +509,33 @@ export default async function LeadDetailPage({
 
             {/* ── Recommendations ────────────────────────────────────────────── */}
             {scorecard && scorecard.recommendations.length > 0 && (
-                <div className="border border-black">
+                <div id="recommendations" className="border border-black scroll-mt-16">
                     <div className="border-b border-black px-5 py-3">
-                        <h2 className="font-mono text-xs uppercase tracking-widest">Recommendations</h2>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-black inline-block" />
+                            90-Day Strategic Roadmap
+                        </p>
                     </div>
-                    <div className="p-5 space-y-3">
+                    <div className="p-5 space-y-4">
                         {scorecard.recommendations.map((r, i) => (
-                            <div key={i} className="border-l-4 border-black pl-4 py-2">
-                                <div className="flex items-start justify-between gap-2 mb-1">
-                                    <p className="font-mono text-xs font-bold uppercase tracking-widest">
-                                        {i + 1}. {r.title}
-                                    </p>
-                                    <div className="flex gap-1 shrink-0">
-                                        <span className={`font-mono text-[10px] border px-1.5 py-0.5 ${impactBadge(r.impact)}`}>
-                                            Impact: {r.impact}
-                                        </span>
-                                        <span className={`font-mono text-[10px] border px-1.5 py-0.5 ${impactBadge(r.difficulty)}`}>
-                                            Effort: {r.difficulty}
-                                        </span>
+                            <div key={i} className="border border-neutral-200 bg-white p-5">
+                                <div className="flex items-start justify-between gap-3 mb-3">
+                                    <div className="flex items-baseline gap-3 min-w-0">
+                                        <span className="font-mono text-lg text-neutral-300 font-bold flex-shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                                        <span className="font-mono text-sm font-bold">{r.title}</span>
+                                    </div>
+                                    <div className="flex gap-1.5 flex-shrink-0">
+                                        <span className={`font-mono text-[8px] border px-2 py-0.5 ${impactBadge(r.impact)}`}>{r.impact} Impact</span>
+                                        <span className="font-mono text-[8px] border border-neutral-200 text-neutral-500 bg-neutral-50 px-2 py-0.5">{r.difficulty} Effort</span>
                                     </div>
                                 </div>
-                                <p className="font-mono text-xs text-neutral-600">{r.description}</p>
+                                <p className="font-mono text-xs text-neutral-600 leading-relaxed">{r.description}</p>
+                                {r.estimatedROI && (
+                                    <p className="mt-3 font-mono text-[10px] text-black flex items-center gap-2">
+                                        <span className="w-5 h-px bg-neutral-400 flex-shrink-0" />
+                                        Est. ROI: {r.estimatedROI}
+                                    </p>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -467,17 +543,22 @@ export default async function LeadDetailPage({
             )}
 
             {/* ── Workflow Gap Analysis ──────────────────────────────────────── */}
-            {scorecard && (scorecard as AuditScorecard & { workflowGaps?: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }> }).workflowGaps && (scorecard as AuditScorecard & { workflowGaps?: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }> }).workflowGaps!.length > 0 && (
-                <div className="border border-black">
+            {scorecard?.workflowGaps && scorecard.workflowGaps.length > 0 && (
+                <div id="workflow-gaps" className="border border-black scroll-mt-16">
                     <div className="border-b border-black px-5 py-3">
-                        <h2 className="font-mono text-xs uppercase tracking-widest">Workflow Gap Analysis</h2>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-yellow-500 inline-block" />
+                            Workflow Gap Analysis
+                        </p>
                     </div>
                     <div className="divide-y divide-neutral-100">
-                        {((scorecard as AuditScorecard & { workflowGaps: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }> }).workflowGaps).map((wf, i) => (
+                        {scorecard.workflowGaps.map((wf, i) => (
                             <div key={i} className="p-5">
                                 <div className="flex items-start justify-between gap-3 mb-3">
                                     <p className="font-mono text-xs font-bold">{wf.workflowName}</p>
-                                    <span className="font-mono text-[9px] text-red-600">{wf.stages.filter(s => s.status === "gap").length} gaps</span>
+                                    <span className="font-mono text-[9px] border border-neutral-200 bg-neutral-50 text-neutral-500 px-2.5 py-1 flex-shrink-0">
+                                        {wf.stages.filter(s => s.status === "gap").length} gap{wf.stages.filter(s => s.status === "gap").length !== 1 ? "s" : ""}
+                                    </span>
                                 </div>
                                 <div className="flex flex-wrap gap-1 mb-3">
                                     {wf.stages.map((stage, si) => (
@@ -499,14 +580,17 @@ export default async function LeadDetailPage({
             )}
 
             {/* ── Industry Benchmark ──────────────────────────────────────────── */}
-            {scorecard && (scorecard as AuditScorecard & { industryBenchmark?: { peerAvgScore: number; peerLabel: string; percentile: number; insight: string } }).industryBenchmark && (
-                <div className="border border-black">
+            {scorecard?.industryBenchmark && (
+                <div id="industry-benchmark" className="border border-black scroll-mt-16">
                     <div className="border-b border-black px-5 py-3">
-                        <h2 className="font-mono text-xs uppercase tracking-widest">Deep Industry Benchmark</h2>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-black inline-block" />
+                            Deep Industry Benchmark
+                        </p>
                     </div>
                     <div className="p-5">
                         {(() => {
-                            const bm = (scorecard as AuditScorecard & { industryBenchmark: { peerAvgScore: number; peerLabel: string; percentile: number; insight: string } }).industryBenchmark;
+                            const bm = scorecard.industryBenchmark!;
                             return (
                                 <>
                                     <div className="grid grid-cols-3 gap-3 mb-4">
@@ -519,7 +603,7 @@ export default async function LeadDetailPage({
                                             <p className="font-mono text-[9px] text-neutral-400 uppercase">Peer Avg</p>
                                         </div>
                                         <div className="border border-neutral-200 p-3 text-center">
-                                            <span className="font-mono text-2xl font-black text-blue-700">{bm.percentile}%</span>
+                                            <span className="font-mono text-2xl font-black">{bm.percentile}%</span>
                                             <p className="font-mono text-[9px] text-neutral-400 uppercase">Percentile</p>
                                         </div>
                                     </div>
@@ -533,36 +617,43 @@ export default async function LeadDetailPage({
             )}
 
             {/* ── ROI Projection ──────────────────────────────────────────────── */}
-            {scorecard && (scorecard as AuditScorecard & { roiProjection?: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] } }).roiProjection && (
-                <div className="border-2 border-black">
+            {scorecard?.roiProjection && (
+                <div id="roi-projection" className="border-2 border-black scroll-mt-16">
                     <div className="border-b border-black px-5 py-3">
-                        <h2 className="font-mono text-xs uppercase tracking-widest text-black">ROI Projection</h2>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-black inline-block" />
+                            ROI Projection
+                        </p>
                     </div>
-                    <div className="p-5">
+                    <div className="p-6">
                         {(() => {
-                            const roi = (scorecard as AuditScorecard & { roiProjection: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] } }).roiProjection;
+                            const roi = scorecard.roiProjection!;
                             return (
                                 <>
-                                    <div className="grid grid-cols-3 gap-3 mb-4">
-                                        <div className="border border-red-200 bg-red-50 p-3 text-center">
-                                            <span className="font-mono text-xl font-black text-red-600">${Math.round(roi.currentAnnualWaste / 1000)}K</span>
-                                            <p className="font-mono text-[9px] text-red-400 uppercase">Annual Waste</p>
+                                    <div className="grid grid-cols-3 gap-4 mb-6">
+                                        <div className="border border-red-200 bg-red-50 p-4 text-center">
+                                            <p className="font-mono text-[9px] text-red-400 uppercase mb-1">Annual Waste</p>
+                                            <span className="font-mono text-3xl font-black text-red-600">${Math.round(roi.currentAnnualWaste / 1000)}K</span>
                                         </div>
-                                        <div className="border border-neutral-200 bg-neutral-50 p-3 text-center">
-                                            <span className="font-mono text-xl font-black text-black">${Math.round(roi.projectedSavings / 1000)}K</span>
-                                            <p className="font-mono text-[9px] text-neutral-500 uppercase">Savings</p>
+                                        <div className="border border-neutral-200 bg-neutral-50 p-4 text-center">
+                                            <p className="font-mono text-[9px] text-neutral-500 uppercase mb-1">Projected Savings</p>
+                                            <span className="font-mono text-3xl font-black text-black">${Math.round(roi.projectedSavings / 1000)}K</span>
                                         </div>
-                                        <div className="border border-blue-200 bg-blue-50 p-3 text-center">
-                                            <span className="font-mono text-xl font-black text-blue-700">{roi.paybackMonths}mo</span>
-                                            <p className="font-mono text-[9px] text-blue-400 uppercase">Payback</p>
+                                        <div className="border-2 border-black bg-black p-4 text-center">
+                                            <p className="font-mono text-[9px] text-white/50 uppercase mb-1">Payback Period</p>
+                                            <span className="font-mono text-3xl font-black text-white">{roi.paybackMonths}<span className="text-lg text-white/50">mo</span></span>
                                         </div>
                                     </div>
-                                    <div className="space-y-1">
-                                        {roi.assumptions.map((a, i) => (
-                                            <p key={i} className="font-mono text-[10px] text-neutral-500">
-                                                {i + 1}. {a}
-                                            </p>
-                                        ))}
+                                    <div>
+                                        <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-2">Assumptions</p>
+                                        <ul className="space-y-1.5">
+                                            {roi.assumptions.map((a, i) => (
+                                                <li key={i} className="font-mono text-[10px] text-neutral-500 flex items-start gap-2">
+                                                    <span className="w-1 h-1 bg-neutral-300 mt-1.5 flex-shrink-0" />
+                                                    {a}
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
                                 </>
                             );
@@ -588,13 +679,16 @@ export default async function LeadDetailPage({
             )}
 
             {/* ── Submission Details ─────────────────────────────────────────── */}
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div id="workspace" className="grid sm:grid-cols-2 gap-8 scroll-mt-16">
                 {/* Pre-built Workspace */}
                 <div className="border border-black p-5">
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-3">Pre-built Workspace</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 mb-4 flex items-center gap-2">
+                        <span className="w-1 h-3 bg-black inline-block" />
+                        Pre-built Workspace
+                    </p>
                     {submission.preBuiltWorkspaceId ? (
-                        <div className="space-y-1">
-                            <p className="font-mono text-sm font-bold">{workspaceName ?? submission.companyName}</p>
+                        <div className="space-y-2">
+                            <p className="font-serif text-xl font-normal">{workspaceName ?? submission.companyName}</p>
                             <p className="font-mono text-xs text-neutral-500">
                                 {toolCount} tool{toolCount !== 1 ? "s" : ""} seeded from audit responses
                             </p>
@@ -609,7 +703,10 @@ export default async function LeadDetailPage({
 
                 {/* Form Details */}
                 <div className="border border-black p-5">
-                    <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-3">Form Data</p>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 mb-4 flex items-center gap-2">
+                        <span className="w-1 h-3 bg-black inline-block" />
+                        Form Data
+                    </p>
                     <div className="space-y-1.5">
                         {[
                             { label: "AI Tools", value: submission.aiToolCount },
@@ -629,9 +726,12 @@ export default async function LeadDetailPage({
             </div>
 
             {/* ── Rep Notes ──────────────────────────────────────────────────── */}
-            <div className="border border-black">
+            <div id="notes" className="border border-black scroll-mt-16">
                 <div className="border-b border-black px-5 py-3">
-                    <h2 className="font-mono text-xs uppercase tracking-widest">Rep Notes</h2>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                        <span className="w-1 h-3 bg-black inline-block" />
+                        Rep Notes
+                    </p>
                 </div>
                 <form action={saveNotes} className="p-5">
                     <textarea
@@ -652,26 +752,29 @@ export default async function LeadDetailPage({
             {/* ── Sticky Actions Bar ─────────────────────────────────────────── */}
             <div className="fixed bottom-0 left-0 right-0 bg-[#F3F3EF] border-t-2 border-black px-6 py-4 z-50">
                 <div className="max-w-7xl mx-auto flex items-center gap-3 flex-wrap">
-                    {shareUrl && (
-                        <a
-                            href={shareUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-mono text-xs uppercase tracking-widest border border-black px-4 py-2 hover:bg-neutral-100 transition-colors"
-                        >
-                            Open Scorecard Share Link →
-                        </a>
-                    )}
-
                     {submission.preBuiltWorkspaceId && (
                         <form action={sendInvite}>
                             <button
                                 type="submit"
-                                className="font-mono text-xs uppercase tracking-widest border border-black bg-black text-white px-4 py-2 hover:bg-neutral-800 transition-colors"
+                                className="font-mono text-xs uppercase tracking-widest border-2 border-black bg-black text-white px-6 py-2.5 hover:bg-neutral-800 transition-colors"
                             >
                                 Send Workspace Invite
                             </button>
                         </form>
+                    )}
+
+                    {shareUrl && (
+                        <div className="flex items-center gap-2">
+                            <a
+                                href={shareUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="font-mono text-xs uppercase tracking-widest border border-black px-4 py-2 hover:bg-neutral-100 transition-colors"
+                            >
+                                Open Scorecard
+                            </a>
+                            <CopyButton text={shareUrl} />
+                        </div>
                     )}
 
                     <form action={markCalled}>
