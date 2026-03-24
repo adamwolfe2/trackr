@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ExternalLink, ArrowRight } from "lucide-react";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { LogoImage } from "@/components/common/logo-image";
+import { getToolDomain as getToolDomainShared } from "@/lib/utils/tool-logos";
 import { ScoreArc } from "@/components/audit/score-arc";
 import type { Metadata } from "next";
 import type { AuditScorecard } from "@/lib/actions/audit";
@@ -159,10 +160,7 @@ const HIGH_CRIT_TOOLS = [
 ];
 
 function getToolDomain(name: string, hint?: string | null): string {
-    if (hint) return hint;
-    const key = name.toLowerCase().trim();
-    if (TOOL_DOMAINS[key]) return TOOL_DOMAINS[key];
-    return `${key.replace(/\s+/g, "").replace(/[^a-z0-9.]/g, "")}.com`;
+    return getToolDomainShared(name, hint);
 }
 
 /** Use Google Favicon for small icons (reliable, always square), Clearbit for larger logos */

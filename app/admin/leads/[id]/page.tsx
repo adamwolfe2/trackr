@@ -11,6 +11,7 @@ import { processAuditSubmission } from "@/lib/actions/audit";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { ExternalLink } from "lucide-react";
 import { LogoImage } from "@/components/common/logo-image";
+import { getToolLogoUrls } from "@/lib/utils/tool-logos";
 import { RecommendedToolsEditor } from "./recommended-tools-editor";
 import { ScorecardNav } from "./scorecard-nav";
 import { CopyButton } from "./copy-button";
@@ -93,14 +94,8 @@ function aiRoleBadge(role: string) {
     return colors[role] ?? colors["Non-AI core infra"];
 }
 
-/** Returns Clearbit as primary, Google favicon as fallback */
-function toolLogos(name: string, domain?: string | null) {
-    const d = domain ?? `${name.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "")}.com`;
-    return {
-        src: `https://logo.clearbit.com/${d}`,
-        fallbackSrc: `https://www.google.com/s2/favicons?sz=64&domain=${d}`,
-    };
-}
+/** Returns Clearbit as primary, Google favicon as fallback (uses shared domain lookup) */
+const toolLogos = getToolLogoUrls;
 
 /** Returns Clearbit as primary, Google favicon sz=128 as fallback */
 function companyLogos(website: string): { src: string; fallbackSrc: string } | null {

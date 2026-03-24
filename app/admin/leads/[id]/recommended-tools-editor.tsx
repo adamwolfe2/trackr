@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Plus, X, Search, Loader2, Sparkles } from "lucide-react";
 import { LogoImage } from "@/components/common/logo-image";
+import { getToolLogoUrls as toolLogos } from "@/lib/utils/tool-logos";
 import {
     searchToolsForRecommendation,
     addRecommendedTool,
@@ -28,18 +29,6 @@ type RecommendedTool = {
 interface RecommendedToolsEditorProps {
     submissionId: string;
     initialTools: RecommendedTool[];
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function toolLogos(name: string, domain?: string | null) {
-    const d =
-        domain ??
-        `${name.toLowerCase().replace(/\s+/g, "").replace(/[^a-z0-9]/g, "")}.com`;
-    return {
-        src: `https://logo.clearbit.com/${d}`,
-        fallbackSrc: `https://www.google.com/s2/favicons?sz=64&domain=${d}`,
-    };
 }
 
 function impactBadge(level: string) {
