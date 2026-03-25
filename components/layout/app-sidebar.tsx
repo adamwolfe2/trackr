@@ -48,7 +48,7 @@ export function AppSidebar({ planFeatures }: { planFeatures?: PlanFeatures }) {
                                 const active = isActive(item.href);
                                 const featureKey = item.featureGate as keyof PlanFeatures | undefined;
                                 const isLocked = featureKey && planFeatures
-                                    ? planFeatures[featureKey] === false
+                                    ? !planFeatures[featureKey]
                                     : false;
 
                                 if (isLocked) {
@@ -92,7 +92,7 @@ export function AppSidebar({ planFeatures }: { planFeatures?: PlanFeatures }) {
                     const active = isActive(item.href);
                     const featureKey = item.featureGate as keyof PlanFeatures | undefined;
                     const isLocked = featureKey && planFeatures
-                        ? planFeatures[featureKey] === false
+                        ? !planFeatures[featureKey]
                         : false;
 
                     if (isLocked) {

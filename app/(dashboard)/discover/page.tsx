@@ -85,7 +85,7 @@ const fetchSuggestionsFromAI = unstable_cache(
         return suggestions;
     },
     ["discover-suggestions"],
-    { revalidate: 21600 } // 6 hours
+    { revalidate: 7200 } // 2 hours
 );
 
 async function getDiscoverySuggestions(workspaceId: string): Promise<{ suggestions: ToolSuggestion[]; painPointTitles: string[] }> {

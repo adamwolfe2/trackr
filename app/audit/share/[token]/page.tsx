@@ -1014,7 +1014,9 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                 looks like for a company at your stage.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-3">
-                                <a href="https://trytrackr.com/audit"
+                                <a href="https://cal.com/thara-rao/schedule-an-audit"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="inline-flex items-center gap-2 bg-white text-black font-mono text-xs uppercase tracking-[0.2em] px-6 py-3 hover:bg-neutral-100 transition-colors">
                                     Schedule Now <ArrowRight className="w-3 h-3" />
                                 </a>
