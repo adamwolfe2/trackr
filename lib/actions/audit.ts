@@ -54,6 +54,7 @@ const AuditScorecardSchema = z.object({
         difficulty: z.enum(["High", "Medium", "Low"]),
         description: z.string(),
         estimatedROI: z.string().nullable(), // e.g. "2–3x return within 6 months"
+        implementationSteps: z.array(z.string()).min(2).max(4), // 2-4 concrete steps
     })).min(3).max(7),
     futureAINativeTarget: z.object({
         targetScore: z.number().int().min(0).max(100),
@@ -75,6 +76,8 @@ const AuditScorecardSchema = z.object({
         reason: z.string(),
         estimatedCostPerUser: z.string().nullable(),
         impact: z.enum(["High", "Medium", "Low"]),
+        implementationSteps: z.array(z.string()).min(2).max(3), // Specific setup steps
+        integrationTarget: z.string().nullable(), // Which existing tool it connects to
     })).min(2).max(5),
     workflowGaps: z.array(z.object({
         workflowName: z.string(), // e.g. "Lead Generation → Qualification → Close"
@@ -91,6 +94,7 @@ const AuditScorecardSchema = z.object({
         peerLabel: z.string(), // e.g. "B2B SaaS companies with 25-50 employees"
         percentile: z.number().int().min(0).max(100), // where this company lands
         insight: z.string(), // 1-2 sentences on what this means
+        competitiveContext: z.string(), // 2-3 sentences about what top competitors are doing with AI
     }),
     roiProjection: z.object({
         currentAnnualWaste: z.number(), // estimated $ wasted annually
@@ -98,6 +102,12 @@ const AuditScorecardSchema = z.object({
         paybackMonths: z.number().int().min(1).max(36),
         assumptions: z.array(z.string()).min(2).max(5), // the math behind the numbers
     }),
+    quickWins: z.array(z.object({
+        action: z.string(), // "Turn on HubSpot AI email scoring"
+        tool: z.string(), // Tool they already have
+        timeToValue: z.string(), // "< 1 hour", "1 day", "1 week"
+        expectedOutcome: z.string(), // "Reduce manual lead qualification by 40%"
+    })).min(2).max(5),
 });
 
 export type AuditScorecard = z.infer<typeof AuditScorecardSchema>;
@@ -164,6 +174,24 @@ Prioritize by ROI for this company specifically. Reference their actual situatio
 BAD: "Implement AI in sales workflows."
 GOOD: "Layer Clay or Apollo AI on top of their existing outreach to auto-enrich leads — their stated bottleneck of manual prospecting + a 25+ tool count with no AI enrichment layer is a $40–80K/yr efficiency gap at their revenue size." estimatedROI: "4–6x ROI within 4 months — recapturing 6 hrs/week per sales rep"
 
+- implementationSteps: 2-4 concrete steps to execute this recommendation. Each step should name a specific action, tool, or configuration. Write as if you're giving instructions to a junior ops manager. Example:
+  - "1. Export lead list from current Google Sheets tracker"
+  - "2. Create Clay workspace and import via CSV"
+  - "3. Configure enrichment columns: company size, tech stack, LinkedIn"
+  - "4. Set up Zapier trigger to push enriched leads to HubSpot"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+QUICK WINS (2-5)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Things this company can do THIS WEEK with tools they ALREADY HAVE. This is the credibility section — it proves you've done homework, not just generated a list of tools to buy. A rep who can say "Did you know your existing HubSpot plan includes AI lead scoring? Turn it on in Settings > Lead Score > AI" wins instant trust.
+
+- action: The exact action. Be specific enough that someone could Google it and do it in 30 minutes. Not "Explore AI features in Slack" — instead "Enable Slack AI search in admin.slack.com > Settings > AI > Turn on Search. Free for Business+ plans."
+- tool: A tool from their CURRENT stack (not a new purchase)
+- timeToValue: How fast they'll see results — "< 1 hour", "1 day", "1 week"
+- expectedOutcome: The specific outcome. "Reduce meeting scheduling overhead by ~2 hrs/week" not "Improve productivity"
+
+These MUST reference their actual tools and their actual bottleneck. Generic quick wins destroy credibility.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TALKING POINTS (3–5) — THE MOST IMPORTANT SECTION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -227,6 +255,9 @@ Per tool:
 - reason: 2 sentences — sentence 1 ties to their specific situation/stack/bottleneck, sentence 2 states the concrete outcome. MUST reference at least one tool from their current stack.
 - estimatedCostPerUser: typical monthly per-seat range (e.g. "$15–30/user/month") or null if free/variable
 - impact: High/Medium/Low based on fit with their top pain points
+- implementationSteps: 2-3 specific setup steps. Name exact integrations, settings pages, or APIs.
+  Example: ["Create account + connect to existing Salesforce via OAuth", "Map lead fields to Clay enrichment columns", "Set up weekly auto-enrichment schedule"]
+- integrationTarget: Which tool in their CURRENT stack this connects to. e.g. "HubSpot", "Salesforce", "Google Sheets". Null only if standalone.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 WORKFLOW GAP ANALYSIS (2–5 workflows)
@@ -249,6 +280,7 @@ Position this company relative to their peers:
 - peerLabel: e.g. "B2B SaaS companies with 25-50 employees" — specific to THEIR context
 - percentile: Where they land. If their score is 35 and average is 40, they're around 40th percentile.
 - insight: 1-2 sentences. What does their position mean strategically? Reference competitive pressure in their industry.
+- competitiveContext: 2-3 sentences about what top-performing companies in their specific industry are doing with AI RIGHT NOW. Name specific tools and outcomes if possible. This is the "your competitors are already doing X" pressure point. Example: "Leading agencies in the $20-50M range are deploying Clay + Apollo for automated outbound — seeing 3x pipeline velocity. Three of the top 10 firms in your space have dedicated AI managers as of Q4 2024."
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ROI PROJECTION — SHOW YOUR MATH

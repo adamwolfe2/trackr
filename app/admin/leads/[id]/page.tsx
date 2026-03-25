@@ -9,12 +9,14 @@ import Link from "next/link";
 import type { AuditScorecard } from "@/lib/actions/audit";
 import { processAuditSubmission } from "@/lib/actions/audit";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Clock, Zap, ArrowRight } from "lucide-react";
 import { LogoImage } from "@/components/common/logo-image";
 import { getToolLogoUrls } from "@/lib/utils/tool-logos";
 import { RecommendedToolsEditor } from "./recommended-tools-editor";
 import { ScorecardNav } from "./scorecard-nav";
 import { CopyButton } from "./copy-button";
+import { PackageSelector } from "./package-selector";
+import type { PackageSlug } from "@/lib/config/architect-packages";
 
 export const metadata: Metadata = {
     title: "Lead Detail — Trackr Admin",
@@ -40,6 +42,15 @@ type RecommendedTool = {
     reason: string;
     estimatedCostPerUser: string | null;
     impact: "High" | "Medium" | "Low";
+    implementationSteps?: string[];
+    integrationTarget?: string | null;
+};
+
+type QuickWin = {
+    action: string;
+    tool: string;
+    timeToValue: string;
+    expectedOutcome: string;
 };
 
 type ExtendedScorecard = AuditScorecard & {
@@ -47,11 +58,12 @@ type ExtendedScorecard = AuditScorecard & {
     painPoints: Array<{ area: string; description: string; annualCostEstimate?: string | null }>;
     recommendations: Array<{
         title: string; impact: "High" | "Medium" | "Low"; difficulty: "High" | "Medium" | "Low";
-        description: string; estimatedROI?: string | null;
+        description: string; estimatedROI?: string | null; implementationSteps?: string[];
     }>;
     workflowGaps?: Array<{ workflowName: string; stages: Array<{ name: string; tool: string | null; status: string }>; bottleneck: string; fixDescription: string }>;
-    industryBenchmark?: { peerAvgScore: number; peerLabel: string; percentile: number; insight: string };
+    industryBenchmark?: { peerAvgScore: number; peerLabel: string; percentile: number; insight: string; competitiveContext?: string };
     roiProjection?: { currentAnnualWaste: number; projectedSavings: number; paybackMonths: number; assumptions: string[] };
+    quickWins?: QuickWin[];
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -132,6 +144,7 @@ export default async function LeadDetailPage({
     const score = scorecard?.aiNativeScore?.score ?? null;
     const recommendedTools = scorecard?.recommendedTools ?? [];
     const executiveSummary = scorecard?.executiveSummary ?? null;
+    const selectedPackage = ((submission.scorecard as Record<string, unknown> | null)?.selectedPackage as PackageSlug | undefined) ?? null;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
     const shareUrl = submission.shareToken
@@ -168,8 +181,11 @@ export default async function LeadDetailPage({
     }
 
     // ── Section nav data ────────────────────────────────────────────────────
+    const quickWins = scorecard?.quickWins ?? [];
+
     const navSections: Array<{ id: string; label: string }> = [
         ...(score !== null ? [{ id: "score", label: "Score" }] : []),
+        ...(quickWins.length > 0 ? [{ id: "quick-wins", label: "Quick Wins" }] : []),
         ...(scorecard && (scorecard.currentStack.length > 0 || recommendedTools.length > 0) ? [{ id: "stack", label: "Stack & Recs" }] : []),
         ...(talkingPoints && talkingPoints.length > 0 ? [{ id: "talking-points", label: "Talking Points" }] : []),
         ...(scorecard && scorecard.painPoints.length > 0 ? [{ id: "pain-points", label: "Pain Points" }] : []),
@@ -178,6 +194,7 @@ export default async function LeadDetailPage({
         ...(scorecard?.industryBenchmark ? [{ id: "industry-benchmark", label: "Benchmark" }] : []),
         ...(scorecard?.roiProjection ? [{ id: "roi-projection", label: "ROI" }] : []),
         ...(submission.preBuiltWorkspaceId ? [{ id: "workspace", label: "Workspace" }] : []),
+        { id: "packages", label: "Packages" },
         { id: "notes", label: "Notes" },
     ];
 
@@ -359,6 +376,35 @@ export default async function LeadDetailPage({
             {/* ── Section Nav ─────────────────────────────────────────────────── */}
             {navSections.length > 1 && <ScorecardNav sections={navSections} />}
 
+            {/* ── Quick Wins ────────────────────────────────────────────────── */}
+            {quickWins.length > 0 && (
+                <div id="quick-wins" className="border border-black scroll-mt-16">
+                    <div className="border-b border-black px-5 py-3">
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                            <Zap className="w-3 h-3" />
+                            Quick Wins -- This Week
+                        </p>
+                    </div>
+                    <div className="p-5 space-y-3">
+                        {quickWins.map((qw, i) => (
+                            <div key={i} className="border border-neutral-200 bg-white p-4">
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                    <p className="font-mono text-xs font-bold leading-relaxed">{qw.action}</p>
+                                    <div className="flex gap-1.5 flex-shrink-0">
+                                        <span className="font-mono text-[8px] border border-neutral-200 bg-neutral-50 text-neutral-700 px-2 py-0.5">{qw.tool}</span>
+                                        <span className="font-mono text-[8px] border border-neutral-200 bg-neutral-50 text-neutral-500 px-2 py-0.5 flex items-center gap-1">
+                                            <Clock className="w-2.5 h-2.5" />
+                                            {qw.timeToValue}
+                                        </span>
+                                    </div>
+                                </div>
+                                <p className="font-mono text-[10px] text-neutral-600 leading-relaxed">{qw.expectedOutcome}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* ── Current Stack + Recommended Tools ─────────────────────────── */}
             {scorecard && (
                 <div id="stack" className="grid lg:grid-cols-2 gap-8 scroll-mt-16">
@@ -525,6 +571,22 @@ export default async function LeadDetailPage({
                                     </div>
                                 </div>
                                 <p className="font-mono text-xs text-neutral-600 leading-relaxed">{r.description}</p>
+                                {r.implementationSteps && r.implementationSteps.length > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-neutral-100">
+                                        <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-2 flex items-center gap-1.5">
+                                            <ArrowRight className="w-2.5 h-2.5" />
+                                            Implementation Steps
+                                        </p>
+                                        <ol className="space-y-1">
+                                            {r.implementationSteps.map((step, si) => (
+                                                <li key={si} className="font-mono text-[10px] text-neutral-600 flex items-start gap-2">
+                                                    <span className="font-mono text-[9px] text-neutral-400 flex-shrink-0 mt-px">{si + 1}.</span>
+                                                    {step}
+                                                </li>
+                                            ))}
+                                        </ol>
+                                    </div>
+                                )}
                                 {r.estimatedROI && (
                                     <p className="mt-3 font-mono text-[10px] text-black flex items-center gap-2">
                                         <span className="w-5 h-px bg-neutral-400 flex-shrink-0" />
@@ -604,6 +666,12 @@ export default async function LeadDetailPage({
                                     </div>
                                     <p className="font-mono text-[10px] text-neutral-400 mb-1">{bm.peerLabel}</p>
                                     <p className="font-mono text-xs text-neutral-600 leading-relaxed">{bm.insight}</p>
+                                    {bm.competitiveContext && (
+                                        <div className="mt-4 pt-3 border-t border-neutral-100">
+                                            <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-1.5">Competitive Context</p>
+                                            <p className="font-mono text-xs text-neutral-600 leading-relaxed">{bm.competitiveContext}</p>
+                                        </div>
+                                    )}
                                 </>
                             );
                         })()}
@@ -717,6 +785,22 @@ export default async function LeadDetailPage({
                             </div>
                         ))}
                     </div>
+                </div>
+            </div>
+
+            {/* ── Engagement Packages ─────────────────────────────────────── */}
+            <div id="packages" className="border border-black scroll-mt-16">
+                <div className="border-b border-black px-5 py-3">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                        <span className="w-1 h-3 bg-black inline-block" />
+                        Engagement Packages
+                    </p>
+                </div>
+                <div className="p-5">
+                    <PackageSelector
+                        submissionId={id}
+                        initialSelectedPackage={selectedPackage}
+                    />
                 </div>
             </div>
 

@@ -3,13 +3,15 @@ import { auditSubmissions } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ExternalLink, ArrowRight } from "lucide-react";
+import { ExternalLink, ArrowRight, Clock, Zap } from "lucide-react";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { LogoImage } from "@/components/common/logo-image";
 import { getToolDomain as getToolDomainShared } from "@/lib/utils/tool-logos";
 import { ScoreArc } from "@/components/audit/score-arc";
 import type { Metadata } from "next";
 import type { AuditScorecard } from "@/lib/actions/audit";
+import { PACKAGE_LIST } from "@/lib/config/architect-packages";
+import type { PackageSlug } from "@/lib/config/architect-packages";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,14 @@ type IndustryBenchmark = {
     peerLabel: string;
     percentile: number;
     insight: string;
+    competitiveContext?: string;
+};
+
+type QuickWin = {
+    action: string;
+    tool: string;
+    timeToValue: string;
+    expectedOutcome: string;
 };
 
 type RoiProjection = {
@@ -41,15 +51,16 @@ type ExtendedScorecard = AuditScorecard & {
     painPoints: Array<{ area: string; description: string; annualCostEstimate?: string | null }>;
     recommendations: Array<{
         title: string; impact: "High" | "Medium" | "Low"; difficulty: "High" | "Medium" | "Low";
-        description: string; estimatedROI?: string | null;
+        description: string; estimatedROI?: string | null; implementationSteps?: string[];
     }>;
     recommendedTools?: RecommendedTool[];
     workflowGaps?: WorkflowGap[];
     industryBenchmark?: IndustryBenchmark;
     roiProjection?: RoiProjection;
+    quickWins?: QuickWin[];
 };
 
-type RecommendedTool = { name: string; websiteDomain: string | null; category: string; whatItDoes?: string; problemItSolves?: string; painPointLink?: string | null; reason: string; impact: "High" | "Medium" | "Low" };
+type RecommendedTool = { name: string; websiteDomain: string | null; category: string; whatItDoes?: string; problemItSolves?: string; painPointLink?: string | null; reason: string; impact: "High" | "Medium" | "Low"; implementationSteps?: string[]; integrationTarget?: string | null };
 type MergedTool = { name: string; category: string | null; aiRole: "AI-native" | "AI-assisted" | "Non-AI core infra"; usageNotes: string | null };
 
 // ── Tool intelligence ─────────────────────────────────────────────────────────
@@ -352,9 +363,12 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
 
     const scorecard = submission.scorecard as ExtendedScorecard;
     const score = scorecard.aiNativeScore.score;
+    const selectedPackageSlug = ((submission.scorecard as Record<string, unknown>).selectedPackage as PackageSlug | undefined) ?? null;
+    const selectedPackage = selectedPackageSlug ? PACKAGE_LIST.find(p => p.slug === selectedPackageSlug) ?? null : null;
     const allToolNames = (submission.currentTools ?? []) as string[];
     const mergedTools = mergeToolData(allToolNames, scorecard.currentStack);
     const recommendedTools = scorecard.recommendedTools ?? [];
+    const scoreQuickWins = scorecard.quickWins ?? [];
     const benchmarks = getIndustryBenchmarks(submission.industry);
     const peerExamples = getPeerExamples(submission.industry);
     const dimensions = computeDimensions(submission, scorecard, mergedTools);
@@ -538,6 +552,36 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                     )}
                 </div>
 
+                {/* ── Quick Wins ────────────────────────────────────────────────── */}
+                {scoreQuickWins.length > 0 && (
+                    <div className="border border-black bg-white">
+                        <div className="px-6 py-4 border-b border-black">
+                            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 flex items-center gap-2">
+                                <Zap className="w-3 h-3" />
+                                Immediate Opportunities (No New Purchases)
+                            </p>
+                            <p className="font-mono text-[9px] text-neutral-400 mt-0.5">
+                                Actions you can take this week with tools you already own
+                            </p>
+                        </div>
+                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-neutral-100">
+                            {scoreQuickWins.map((qw, i) => (
+                                <div key={i} className="bg-white p-5 flex flex-col">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <span className="font-mono text-[8px] border border-neutral-200 bg-neutral-50 text-neutral-700 px-2 py-0.5">{qw.tool}</span>
+                                        <span className="font-mono text-[8px] border border-neutral-200 bg-neutral-50 text-neutral-500 px-2 py-0.5 flex items-center gap-1">
+                                            <Clock className="w-2.5 h-2.5" />
+                                            {qw.timeToValue}
+                                        </span>
+                                    </div>
+                                    <p className="font-mono text-xs font-bold leading-relaxed mb-2">{qw.action}</p>
+                                    <p className="font-mono text-[10px] text-neutral-600 leading-relaxed mt-auto">{qw.expectedOutcome}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* ── Main 3-col grid ───────────────────────────────────────────── */}
                 <div className="grid lg:grid-cols-3 gap-8">
 
@@ -590,6 +634,22 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                                 </div>
                                             </div>
                                             <p className="font-mono text-xs text-neutral-600 leading-relaxed">{r.description}</p>
+                                            {r.implementationSteps && r.implementationSteps.length > 0 && (
+                                                <div className="mt-3 pt-3 border-t border-neutral-100">
+                                                    <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-2 flex items-center gap-1.5">
+                                                        <ArrowRight className="w-2.5 h-2.5" />
+                                                        Implementation Steps
+                                                    </p>
+                                                    <ol className="space-y-1">
+                                                        {r.implementationSteps.map((step, si) => (
+                                                            <li key={si} className="font-mono text-[10px] text-neutral-600 flex items-start gap-2">
+                                                                <span className="font-mono text-[9px] text-neutral-400 flex-shrink-0 mt-px">{si + 1}.</span>
+                                                                {step}
+                                                            </li>
+                                                        ))}
+                                                    </ol>
+                                                </div>
+                                            )}
                                             {r.estimatedROI && (
                                                 <p className="mt-3 font-mono text-[10px] text-black flex items-center gap-2">
                                                     <span className="w-5 h-px bg-neutral-400 flex-shrink-0" />
@@ -806,6 +866,12 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                             ))}
                         </div>
                         <p className="font-mono text-sm text-neutral-700 leading-relaxed">{scorecard.industryBenchmark.insight}</p>
+                        {scorecard.industryBenchmark.competitiveContext && (
+                            <div className="mt-5 pt-4 border-t border-neutral-200">
+                                <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-2">Competitive Context</p>
+                                <p className="font-mono text-sm text-neutral-700 leading-relaxed">{scorecard.industryBenchmark.competitiveContext}</p>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -996,6 +1062,74 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                 </div>
 
             </div>
+
+            {/* ── Recommended Engagement ─────────────────────────────────────── */}
+            {selectedPackage && (
+                <div className="max-w-7xl mx-auto px-6">
+                    <div className="border border-black bg-white p-6 lg:p-8">
+                        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-neutral-400 mb-6 flex items-center gap-2">
+                            <span className="w-1 h-3 bg-black inline-block" />
+                            Recommended Engagement
+                        </p>
+
+                        <div className="grid lg:grid-cols-2 gap-8 items-start">
+                            <div>
+                                <h3 className="font-serif text-2xl mb-2">{selectedPackage.name}</h3>
+                                <p className="font-mono text-sm text-neutral-600 leading-relaxed mb-5">{selectedPackage.tagline}</p>
+
+                                <div className="flex items-center gap-3 mb-5">
+                                    <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 border border-neutral-200 px-2 py-1">
+                                        {selectedPackage.duration}
+                                    </span>
+                                    <span className="font-mono text-[9px] text-neutral-400">
+                                        {selectedPackage.meetings}
+                                    </span>
+                                </div>
+
+                                <div className="mb-5">
+                                    <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-3">What is included</p>
+                                    <ul className="space-y-2">
+                                        {selectedPackage.includes.map((item, i) => (
+                                            <li key={i} className="font-mono text-xs text-neutral-700 flex items-start gap-2.5">
+                                                <span className="w-1 h-1 bg-black mt-2 flex-shrink-0" />
+                                                {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div className="mb-5">
+                                    <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mb-3">Deliverables</p>
+                                    <ul className="space-y-2">
+                                        {selectedPackage.deliverables.map((item, i) => (
+                                            <li key={i} className="font-mono text-xs text-neutral-700 flex items-start gap-2.5">
+                                                <span className="w-1 h-1 bg-neutral-400 mt-2 flex-shrink-0" />
+                                                {item}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+
+                                <div className="border-t border-neutral-200 pt-5 mt-5">
+                                    <p className="font-mono text-xs text-neutral-600 leading-relaxed mb-5">
+                                        {selectedPackage.idealFor}
+                                    </p>
+                                    <a
+                                        href="https://cal.com/thara-rao/schedule-an-audit"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 border border-black bg-black text-white font-mono text-xs uppercase tracking-widest px-6 py-3 hover:bg-neutral-800 transition-colors"
+                                    >
+                                        Discuss on Call <ArrowRight className="w-3 h-3" />
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── CTA Footer ───────────────────────────────────────────────────── */}
             <div className="border-t border-black bg-black">

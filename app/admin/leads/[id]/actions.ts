@@ -6,6 +6,8 @@ import { eq, ilike, and, ne } from "drizzle-orm";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import type { PackageSlug } from "@/lib/config/architect-packages";
+import { PACKAGE_LIST } from "@/lib/config/architect-packages";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -19,6 +21,8 @@ type RecommendedTool = {
     reason: string;
     estimatedCostPerUser: string | null;
     impact: "High" | "Medium" | "Low";
+    implementationSteps?: string[];
+    integrationTarget?: string | null;
 };
 
 type Scorecard = {
@@ -39,6 +43,8 @@ const AddToolSchema = z.object({
     reason: z.string().min(1).max(500),
     estimatedCostPerUser: z.string().max(100).nullable(),
     impact: z.enum(["High", "Medium", "Low"]),
+    implementationSteps: z.array(z.string().max(500)).max(5).optional(),
+    integrationTarget: z.string().max(200).nullable().optional(),
 });
 
 const RemoveToolSchema = z.object({
@@ -226,6 +232,12 @@ export async function addRecommendedTool(
         reason: parsed.data.reason,
         estimatedCostPerUser: parsed.data.estimatedCostPerUser,
         impact: parsed.data.impact,
+        ...(parsed.data.implementationSteps && parsed.data.implementationSteps.length > 0
+            ? { implementationSteps: parsed.data.implementationSteps }
+            : {}),
+        ...(parsed.data.integrationTarget !== undefined
+            ? { integrationTarget: parsed.data.integrationTarget ?? null }
+            : {}),
     };
 
     const updatedScorecard = {
@@ -281,5 +293,77 @@ export async function removeRecommendedTool(
         .where(eq(auditSubmissions.id, parsed.data.submissionId));
 
     revalidatePath(`/admin/leads/${parsed.data.submissionId}`);
+    return { success: true };
+}
+
+// ── Select engagement package for a lead ──────────────────────────────────────
+
+const SelectPackageSchema = z.object({
+    submissionId: z.string().uuid(),
+    packageSlug: z.enum(["assessment", "implementation", "retainer"]),
+});
+
+export async function selectPackage(
+    submissionId: string,
+    packageSlug: PackageSlug,
+): Promise<{ success: boolean; error?: string }> {
+    const authed = await isAdminAuthenticated();
+    if (!authed) return { success: false, error: "Not authenticated" };
+
+    const parsed = SelectPackageSchema.safeParse({ submissionId, packageSlug });
+    if (!parsed.success) return { success: false, error: "Invalid input" };
+
+    // Validate slug exists in package list
+    const validSlugs = PACKAGE_LIST.map(p => p.slug);
+    if (!validSlugs.includes(parsed.data.packageSlug)) {
+        return { success: false, error: "Invalid package" };
+    }
+
+    const submission = await db.query.auditSubmissions.findFirst({
+        where: eq(auditSubmissions.id, parsed.data.submissionId),
+    });
+    if (!submission) return { success: false, error: "Submission not found" };
+
+    const scorecard = (submission.scorecard ?? {}) as Record<string, unknown>;
+    const updatedScorecard = {
+        ...scorecard,
+        selectedPackage: parsed.data.packageSlug,
+    };
+
+    await db
+        .update(auditSubmissions)
+        .set({ scorecard: updatedScorecard })
+        .where(eq(auditSubmissions.id, parsed.data.submissionId));
+
+    revalidatePath(`/admin/leads/${parsed.data.submissionId}`);
+    return { success: true };
+}
+
+// ── Clear selected package ────────────────────────────────────────────────────
+
+export async function clearPackage(
+    submissionId: string,
+): Promise<{ success: boolean; error?: string }> {
+    const authed = await isAdminAuthenticated();
+    if (!authed) return { success: false, error: "Not authenticated" };
+
+    const parsed = z.string().uuid().safeParse(submissionId);
+    if (!parsed.success) return { success: false, error: "Invalid submission ID" };
+
+    const submission = await db.query.auditSubmissions.findFirst({
+        where: eq(auditSubmissions.id, parsed.data),
+    });
+    if (!submission) return { success: false, error: "Submission not found" };
+
+    const scorecard = (submission.scorecard ?? {}) as Record<string, unknown>;
+    const { selectedPackage: _removed, ...rest } = scorecard;
+    const updatedScorecard = { ...rest };
+
+    await db
+        .update(auditSubmissions)
+        .set({ scorecard: updatedScorecard })
+        .where(eq(auditSubmissions.id, parsed.data));
+
+    revalidatePath(`/admin/leads/${parsed.data}`);
     return { success: true };
 }

@@ -24,6 +24,8 @@ type RecommendedTool = {
     reason: string;
     estimatedCostPerUser: string | null;
     impact: "High" | "Medium" | "Low";
+    implementationSteps?: string[];
+    integrationTarget?: string | null;
 };
 
 interface RecommendedToolsEditorProps {
@@ -270,6 +272,8 @@ function AddToolForm({
     const [reason, setReason] = useState("");
     const [estimatedCost, setEstimatedCost] = useState("");
     const [impact, setImpact] = useState<"High" | "Medium" | "Low">("Medium");
+    const [implementationStepsText, setImplementationStepsText] = useState("");
+    const [integrationTarget, setIntegrationTarget] = useState("");
 
     useEffect(() => {
         inputRef.current?.focus();
@@ -338,6 +342,11 @@ function AddToolForm({
         setSubmitting(true);
         setError(null);
 
+        const parsedSteps = implementationStepsText
+            .split("\n")
+            .map(s => s.trim())
+            .filter(Boolean);
+
         const input = {
             submissionId,
             name: name.trim(),
@@ -349,6 +358,8 @@ function AddToolForm({
             reason: reason.trim(),
             estimatedCostPerUser: estimatedCost.trim() || null,
             impact,
+            implementationSteps: parsedSteps.length > 0 ? parsedSteps : undefined,
+            integrationTarget: integrationTarget.trim() || null,
         };
 
         const result = await addRecommendedTool(input);
@@ -363,6 +374,8 @@ function AddToolForm({
                 reason: input.reason,
                 estimatedCostPerUser: input.estimatedCostPerUser,
                 impact: input.impact,
+                implementationSteps: input.implementationSteps,
+                integrationTarget: input.integrationTarget,
             });
         } else {
             setError(result.error ?? "Failed to add tool");
@@ -379,6 +392,8 @@ function AddToolForm({
         reason,
         estimatedCost,
         impact,
+        implementationStepsText,
+        integrationTarget,
         existingNames,
         onAdd,
     ]);
@@ -701,6 +716,30 @@ function AddToolForm({
                             placeholder="Why this tool fits this prospect's needs..."
                             rows={2}
                             className="w-full px-3 py-2 font-mono text-xs border border-black bg-white focus:outline-none focus:ring-1 focus:ring-black resize-none"
+                        />
+                    </div>
+                    <div>
+                        <label className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block mb-1">
+                            Implementation Steps
+                        </label>
+                        <textarea
+                            value={implementationStepsText}
+                            onChange={(e) => setImplementationStepsText(e.target.value)}
+                            placeholder={"One step per line, e.g.:\nCreate account + connect to HubSpot via OAuth\nMap lead fields to enrichment columns\nSet up weekly auto-enrichment schedule"}
+                            rows={3}
+                            className="w-full px-3 py-2 font-mono text-xs border border-black bg-white focus:outline-none focus:ring-1 focus:ring-black resize-none"
+                        />
+                    </div>
+                    <div>
+                        <label className="font-mono text-[9px] uppercase tracking-widest text-neutral-500 block mb-1">
+                            Integration Target
+                        </label>
+                        <input
+                            type="text"
+                            value={integrationTarget}
+                            onChange={(e) => setIntegrationTarget(e.target.value)}
+                            placeholder="e.g. HubSpot, Salesforce, Google Sheets"
+                            className="w-full max-w-xs px-3 py-2 font-mono text-xs border border-black bg-white focus:outline-none focus:ring-1 focus:ring-black"
                         />
                     </div>
 
