@@ -3,11 +3,14 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { auditSubmissions } from "@/lib/db/schema";
-import { desc, eq, or } from "drizzle-orm";
+import { desc, eq, or, count } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { CopyShareUrlButton } from "@/components/admin/copy-share-url-button";
+
+const PAGE_SIZE = 50;
 
 export const metadata: Metadata = {
     title: "Admin Leads — Trackr",
@@ -79,12 +82,36 @@ function scoreColor(score: number | null): string {
     return "text-red-700";
 }
 
+function paginationHref(page: number, status?: string): string {
+    const params = new URLSearchParams();
+    if (status) params.set("status", status);
+    if (page > 1) params.set("page", String(page));
+    const qs = params.toString();
+    return qs ? `/admin/leads?${qs}` : "/admin/leads";
+}
+
+function buildPageNumbers(current: number, total: number): (number | "...")[] {
+    if (total <= 7) {
+        return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const pages: (number | "...")[] = [1];
+    if (current > 3) pages.push("...");
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    for (let i = start; i <= end; i++) {
+        pages.push(i);
+    }
+    if (current < total - 2) pages.push("...");
+    pages.push(total);
+    return pages;
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default async function AdminLeadsPage({
     searchParams,
 }: {
-    searchParams: Promise<{ status?: string }>;
+    searchParams: Promise<{ page?: string; status?: string }>;
 }) {
     const authed = await isAdminAuthenticated();
 
@@ -111,7 +138,9 @@ export default async function AdminLeadsPage({
         );
     }
 
-    const { status: statusFilter } = await searchParams;
+    const { status: statusFilter, page: pageParam } = await searchParams;
+    const currentPage = Math.max(1, parseInt(pageParam ?? "1", 10) || 1);
+    const offset = (currentPage - 1) * PAGE_SIZE;
 
     // Build WHERE clause at DB level instead of filtering in JS
     const statusWhere = statusFilter === "processing"
@@ -120,16 +149,25 @@ export default async function AdminLeadsPage({
             ? eq(auditSubmissions.status, statusFilter)
             : undefined;
 
-    const allSubmissions = await db.select().from(auditSubmissions)
-        .where(statusWhere)
-        .orderBy(desc(auditSubmissions.createdAt))
-        .limit(200);
+    // Fetch paginated results + total count in parallel
+    const [submissions, [{ totalCount }], [{ totalAll }], [{ completeCount }], [{ processingCount }], [{ failedCount }]] = await Promise.all([
+        db.select().from(auditSubmissions)
+            .where(statusWhere)
+            .orderBy(desc(auditSubmissions.createdAt))
+            .limit(PAGE_SIZE)
+            .offset(offset),
+        db.select({ totalCount: count() }).from(auditSubmissions).where(statusWhere),
+        db.select({ totalAll: count() }).from(auditSubmissions),
+        db.select({ completeCount: count() }).from(auditSubmissions).where(eq(auditSubmissions.status, "complete")),
+        db.select({ processingCount: count() }).from(auditSubmissions).where(
+            or(eq(auditSubmissions.status, "processing"), eq(auditSubmissions.status, "pending"))
+        ),
+        db.select({ failedCount: count() }).from(auditSubmissions).where(eq(auditSubmissions.status, "failed")),
+    ]);
 
-    // For summary counts, fetch all statuses (only when showing all)
-    const allForCounts = statusFilter
-        ? await db.select().from(auditSubmissions).orderBy(desc(auditSubmissions.createdAt)).limit(200)
-        : allSubmissions;
-    const submissions = allSubmissions;
+    const totalPages = Math.max(1, Math.ceil(Number(totalCount) / PAGE_SIZE));
+    const rangeStart = offset + 1;
+    const rangeEnd = Math.min(offset + PAGE_SIZE, Number(totalCount));
 
     return (
         <div className="space-y-8">
@@ -152,10 +190,10 @@ export default async function AdminLeadsPage({
             {/* Summary bar */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-px border border-black bg-black">
                 {[
-                    { label: "Total Leads", value: allForCounts.length },
-                    { label: "Complete", value: allForCounts.filter(s => s.status === "complete").length },
-                    { label: "Processing", value: allForCounts.filter(s => s.status === "processing" || s.status === "pending").length },
-                    { label: "Failed", value: allForCounts.filter(s => s.status === "failed").length },
+                    { label: "Total Leads", value: Number(totalAll) },
+                    { label: "Complete", value: Number(completeCount) },
+                    { label: "Processing", value: Number(processingCount) },
+                    { label: "Failed", value: Number(failedCount) },
                 ].map(({ label, value }) => (
                     <div key={label} className="bg-[#F3F3EF] p-5">
                         <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 mb-1">{label}</p>
@@ -189,7 +227,7 @@ export default async function AdminLeadsPage({
                     );
                 })}
                 <span className="font-mono text-xs text-neutral-400 ml-2">
-                    {submissions.length} result{submissions.length !== 1 ? "s" : ""}
+                    {Number(totalCount)} result{Number(totalCount) !== 1 ? "s" : ""}
                 </span>
             </div>
 
@@ -274,6 +312,63 @@ export default async function AdminLeadsPage({
                     </tbody>
                 </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between">
+                    <p className="font-mono text-xs">
+                        Showing {rangeStart}-{rangeEnd} of {Number(totalCount)} leads
+                    </p>
+                    <div className="flex items-center gap-1">
+                        {currentPage <= 1 ? (
+                            <span className="font-mono text-xs border border-black px-3 py-1.5 opacity-40 cursor-not-allowed select-none">
+                                &lt; Prev
+                            </span>
+                        ) : (
+                            <Link
+                                href={paginationHref(currentPage - 1, statusFilter)}
+                                className="font-mono text-xs border border-black px-3 py-1.5 hover:bg-black hover:text-white transition-colors"
+                            >
+                                &lt; Prev
+                            </Link>
+                        )}
+                        {buildPageNumbers(currentPage, totalPages).map((p, i) =>
+                            p === "..." ? (
+                                <span key={`ellipsis-${i}`} className="font-mono text-xs px-2 py-1.5 select-none">
+                                    ...
+                                </span>
+                            ) : p === currentPage ? (
+                                <span
+                                    key={p}
+                                    className="font-mono text-xs border border-black px-3 py-1.5 bg-black text-white"
+                                >
+                                    {p}
+                                </span>
+                            ) : (
+                                <Link
+                                    key={p}
+                                    href={paginationHref(p, statusFilter)}
+                                    className="font-mono text-xs border border-black px-3 py-1.5 hover:bg-black hover:text-white transition-colors"
+                                >
+                                    {p}
+                                </Link>
+                            )
+                        )}
+                        {currentPage >= totalPages ? (
+                            <span className="font-mono text-xs border border-black px-3 py-1.5 opacity-40 cursor-not-allowed select-none">
+                                Next &gt;
+                            </span>
+                        ) : (
+                            <Link
+                                href={paginationHref(currentPage + 1, statusFilter)}
+                                className="font-mono text-xs border border-black px-3 py-1.5 hover:bg-black hover:text-white transition-colors"
+                            >
+                                Next &gt;
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

@@ -425,7 +425,7 @@ function AddEventForm({
                 />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label className="font-mono text-[10px] uppercase tracking-widest text-neutral-500 block mb-1">
                         Date

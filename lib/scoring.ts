@@ -1,12 +1,5 @@
 import type { CuratedTool, Scorecard, ToolSignal } from "./types";
 
-export function slugify(name: string): string {
-    return "lib-" + name
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "");
-}
-
 export function computeOverall(scorecard: Scorecard): number {
     const dims = Object.values(scorecard).map((d) => d.score);
     const avg = dims.reduce((a, b) => a + b, 0) / dims.length;

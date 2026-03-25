@@ -413,7 +413,7 @@ function HeroDemo() {
                                 className="absolute inset-0 bg-[#F3F3EF] overflow-hidden flex flex-col"
                             >
                                 {/* Stream headers */}
-                                <div className="grid grid-cols-3 border-b border-black/10">
+                                <div className="grid grid-cols-1 md:grid-cols-3 border-b border-black/10">
                                     {["Crawler", "Reviews", "Analyst"].map((label, i) => (
                                         <div key={label} className={`px-2.5 py-1.5 ${i < 2 ? "border-r border-black/10" : ""}`}>
                                             <div className="flex items-center gap-1.5">
@@ -429,7 +429,7 @@ function HeroDemo() {
                                 </div>
 
                                 {/* Stream bodies */}
-                                <div className="grid grid-cols-3 py-2 flex-shrink-0">
+                                <div className="grid grid-cols-1 md:grid-cols-3 py-2 flex-shrink-0">
                                     {[0, 1, 2].map(si => (
                                         <div key={si} className={`px-2.5 space-y-1 ${si < 2 ? "border-r border-black/10" : ""}`}>
                                             {STREAM_STEPS[si].slice(0, streamVisible[si]).map((step, stepIdx) => (

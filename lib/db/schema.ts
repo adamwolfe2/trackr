@@ -63,6 +63,7 @@ export const tools = pgTable('tools', {
     index('tools_status_idx').on(table.status),
     index('tools_submitted_at_idx').on(table.submittedAt),
     index('tools_last_researched_at_idx').on(table.lastResearchedAt),
+    index('tools_workspace_status_idx').on(table.workspaceId, table.status),
 ]);
 
 // Reports
@@ -175,6 +176,7 @@ export const ads = pgTable('ads', {
     index('ads_tool_id_idx').on(table.toolId),
     index('ads_workspace_id_idx').on(table.workspaceId),
     index('ads_status_idx').on(table.status),
+    index('ads_workspace_status_idx').on(table.workspaceId, table.status),
 ]);
 
 // Relations
@@ -286,6 +288,7 @@ export const softwareSpend = pgTable('software_spend', {
     index('software_spend_workspace_id_idx').on(table.workspaceId),
     index('software_spend_renewal_date_idx').on(table.renewalDate),
     index('software_spend_status_idx').on(table.status),
+    index('spend_workspace_status_idx').on(table.workspaceId, table.status),
 ]);
 
 export const softwareSpendRelations = relations(softwareSpend, ({ one }) => ({
@@ -332,6 +335,7 @@ export const feedItems = pgTable('feed_items', {
     index('feed_items_relevance_idx').on(table.relevanceScore),
     index('feed_items_created_at_idx').on(table.createdAt),
     uniqueIndex('feed_items_ws_url_idx').on(table.workspaceId, table.url),
+    index('feed_workspace_created_idx').on(table.workspaceId, table.createdAt),
 ]);
 
 // Tool Suggestions (Phase 3 — proactive agent recommendations)

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { BarChart3, PlusCircle } from "lucide-react";
 import Link from "next/link";
 
@@ -103,32 +104,39 @@ export default function AnalyticsClient({
     traditionalSpend,
     researchSuccessRate,
 }: AnalyticsClientProps) {
-    const maxWeeklyCount = Math.max(...weeklyActivity.map((w) => w.count), 1);
-    const totalStatus =
-        statusCounts.submitted +
-        statusCounts.researching +
-        statusCounts.active +
-        statusCounts.archived +
-        statusCounts.failed;
+    const maxWeeklyCount = useMemo(
+        () => Math.max(...weeklyActivity.map((w) => w.count), 1),
+        [weeklyActivity]
+    );
 
-    const statusSegments = [
+    const totalStatus = useMemo(
+        () =>
+            statusCounts.submitted +
+            statusCounts.researching +
+            statusCounts.active +
+            statusCounts.archived +
+            statusCounts.failed,
+        [statusCounts]
+    );
+
+    const statusSegments = useMemo(() => [
         { label: "Submitted", count: statusCounts.submitted, pct: totalStatus > 0 ? (statusCounts.submitted / totalStatus) * 100 : 0 },
         { label: "Researching", count: statusCounts.researching, pct: totalStatus > 0 ? (statusCounts.researching / totalStatus) * 100 : 0 },
         { label: "Active", count: statusCounts.active, pct: totalStatus > 0 ? (statusCounts.active / totalStatus) * 100 : 0 },
         { label: "Archived", count: statusCounts.archived, pct: totalStatus > 0 ? (statusCounts.archived / totalStatus) * 100 : 0 },
         { label: "Failed", count: statusCounts.failed, pct: totalStatus > 0 ? (statusCounts.failed / totalStatus) * 100 : 0 },
-    ];
-
-    // Score distribution buckets: 0-2, 2-4, 4-6, 6-8, 8-10
-    // topResearched has avgScore — use those for a rough distribution
-    // Actually we use overall averages — but we don't have individual tool scores passed here
-    // We'll skip score distribution histogram since we don't have per-tool scores in this component
-    // (the heatmapData has individual dimension scores we can derive from)
+    ], [statusCounts, totalStatus]);
 
     // Sort members by tool count descending
-    const sortedMembers = [...memberActivity].sort((a, b) => b.toolCount - a.toolCount);
+    const sortedMembers = useMemo(
+        () => [...memberActivity].sort((a, b) => b.toolCount - a.toolCount),
+        [memberActivity]
+    );
 
-    const maxSpend = Math.max(...spendByCategory.map(c => c.total), 1);
+    const maxSpend = useMemo(
+        () => Math.max(...spendByCategory.map(c => c.total), 1),
+        [spendByCategory]
+    );
     const hasSpend = totalMonthlySpend > 0;
 
     if (totalTools === 0) {

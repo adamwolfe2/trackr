@@ -587,7 +587,7 @@ function RequestDetailDialog({
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 block mb-1">
                                 Requested By

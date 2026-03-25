@@ -786,9 +786,32 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
 
             {/* Table */}
             {initialData.length === 0 ? (
-                <div className="border border-dashed border-black/30 py-16 text-center">
-                    <p className="font-serif text-lg text-neutral-600 mb-1">No tools in your stack yet.</p>
-                    <p className="font-mono text-xs text-neutral-500">Add the tools your team is already paying for.</p>
+                <div className="border border-black p-12 text-center space-y-4">
+                    <div className="w-12 h-12 border border-black flex items-center justify-center mx-auto">
+                        <DollarSign className="w-6 h-6 text-neutral-400" strokeWidth={1.5} />
+                    </div>
+                    <div>
+                        <h2 className="font-serif text-xl mb-2">No tools in your stack yet</h2>
+                        <p className="font-mono text-xs text-neutral-500 max-w-md mx-auto leading-relaxed">
+                            Track every SaaS tool your team pays for in one place. See total spend, seat counts, renewal dates, and AI nativeness scores across your entire software portfolio.
+                        </p>
+                    </div>
+                    <div className="flex items-center justify-center gap-3 flex-wrap">
+                        <button
+                            onClick={() => { setShowForm(true); setShowPaste(false); }}
+                            className="flex items-center gap-2 border border-black px-6 py-2.5 font-mono text-xs bg-black text-white hover:bg-neutral-800"
+                        >
+                            <PlusCircle className="h-3.5 w-3.5" />
+                            Add First Tool
+                        </button>
+                        <button
+                            onClick={() => { setShowPaste(true); setShowForm(false); }}
+                            className="flex items-center gap-2 border border-black px-6 py-2.5 font-mono text-xs bg-white hover:bg-neutral-100"
+                        >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            Bulk Import via AI
+                        </button>
+                    </div>
                 </div>
             ) : (
                 <div className="border border-black overflow-x-auto">

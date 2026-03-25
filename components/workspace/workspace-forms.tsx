@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import { updateWorkspaceName, inviteMember, removeMember, updateCompanyContext, cancelInvitation, generateInviteLink, revokeInviteLink } from "@/lib/actions/workspace";
-import { Loader2, UserX, X, Copy, Check, Link2, RefreshCw, Trash2 } from "lucide-react";
+import { Loader2, UserX, X, Copy, Check, Link2, RefreshCw, Trash2, AlertTriangle } from "lucide-react";
 
 function SubmitButton({ children, className }: { children: React.ReactNode; className: string }) {
     const { pending } = useFormStatus();
@@ -49,21 +49,49 @@ export function InviteMemberForm() {
 }
 
 export function RemoveMemberButton({ memberId, memberName }: { memberId: string; memberName?: string }) {
+    const [confirming, setConfirming] = useState(false);
+    const name = memberName ?? "this member";
+
+    if (confirming) {
+        return (
+            <div className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1 font-mono text-[10px] text-neutral-500">
+                    <AlertTriangle className="h-2.5 w-2.5" />
+                    Remove {name}?
+                </span>
+                <form action={async () => {
+                    try {
+                        await removeMember(memberId);
+                        toast.success("Member removed");
+                    } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Failed to remove member");
+                    } finally {
+                        setConfirming(false);
+                    }
+                }}>
+                    <SubmitButton className="font-mono text-[10px] uppercase tracking-widest border border-black bg-black text-white px-2 py-0.5 hover:bg-neutral-800">
+                        Confirm
+                    </SubmitButton>
+                </form>
+                <button
+                    type="button"
+                    onClick={() => setConfirming(false)}
+                    className="font-mono text-[10px] uppercase tracking-widest border border-black px-2 py-0.5 hover:bg-neutral-100"
+                >
+                    Cancel
+                </button>
+            </div>
+        );
+    }
+
     return (
-        <form action={async () => {
-            const name = memberName ?? "this member";
-            if (!window.confirm(`Remove ${name} from the workspace? They will lose access immediately.`)) return;
-            try {
-                await removeMember(memberId);
-                toast.success("Member removed");
-            } catch (error) {
-                toast.error(error instanceof Error ? error.message : "Failed to remove member");
-            }
-        }}>
-            <SubmitButton className="font-mono text-[10px] uppercase tracking-widest border border-red-300 text-red-500 px-2 py-0.5 hover:bg-red-50 flex items-center gap-1">
-                <UserX className="h-2.5 w-2.5" /> Remove
-            </SubmitButton>
-        </form>
+        <button
+            type="button"
+            onClick={() => setConfirming(true)}
+            className="font-mono text-[10px] uppercase tracking-widest border border-red-300 text-red-500 px-2 py-0.5 hover:bg-red-50 flex items-center gap-1"
+        >
+            <UserX className="h-2.5 w-2.5" /> Remove
+        </button>
     );
 }
 
@@ -132,6 +160,7 @@ export function InviteLinkPanel({ initialCode }: { initialCode: string | null })
     const [code, setCode] = useState<string | null>(initialCode);
     const [copied, setCopied] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [confirmingRevoke, setConfirmingRevoke] = useState(false);
 
     const inviteUrl = code ? `https://trytrackr.com/invite/link/${code}` : null;
 
@@ -149,8 +178,8 @@ export function InviteLinkPanel({ initialCode }: { initialCode: string | null })
     }
 
     async function handleRevoke() {
-        if (!window.confirm("Revoke this link? Anyone who tries to use it will be denied access.")) return;
         setLoading(true);
+        setConfirmingRevoke(false);
         try {
             await revokeInviteLink();
             setCode(null);
@@ -208,16 +237,39 @@ export function InviteLinkPanel({ initialCode }: { initialCode: string | null })
                     {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
                     {code ? "Regenerate" : "Generate Link"}
                 </button>
-                {code && (
+                {code && !confirmingRevoke && (
                     <button
                         type="button"
-                        onClick={handleRevoke}
+                        onClick={() => setConfirmingRevoke(true)}
                         disabled={loading}
                         className="border border-red-300 text-red-500 px-4 py-2 font-mono text-xs uppercase tracking-widest hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                     >
                         <Trash2 className="h-3 w-3" />
                         Revoke
                     </button>
+                )}
+                {confirmingRevoke && (
+                    <div className="flex items-center gap-2">
+                        <span className="flex items-center gap-1 font-mono text-xs text-neutral-500">
+                            <AlertTriangle className="h-3 w-3" />
+                            Revoke link?
+                        </span>
+                        <button
+                            type="button"
+                            onClick={handleRevoke}
+                            disabled={loading}
+                            className="border border-black bg-black text-white px-4 py-2 font-mono text-xs uppercase tracking-widest hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Confirm
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setConfirmingRevoke(false)}
+                            className="border border-black px-4 py-2 font-mono text-xs uppercase tracking-widest hover:bg-neutral-100"
+                        >
+                            Cancel
+                        </button>
+                    </div>
                 )}
             </div>
             <p className="font-mono text-[10px] text-neutral-400">

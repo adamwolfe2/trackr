@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { url, title } = body;
-    if (!url || typeof url !== "string") {
+    if (!url || typeof url !== "string" || url.length > 2048) {
         return NextResponse.json(
             { error: "url is required" },
             { status: 400, headers }

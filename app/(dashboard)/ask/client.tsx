@@ -2,8 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Send, User, Trash2, Check, Loader2 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
+import dynamic from "next/dynamic";
 import remarkGfm from "remark-gfm";
+
+const ReactMarkdown = dynamic(() => import("react-markdown"), { ssr: false });
 import { CHAT_STORAGE_KEY as STORAGE_KEY } from "@/lib/constants/app";
 
 function TrackrIcon({ className }: { className?: string }) {

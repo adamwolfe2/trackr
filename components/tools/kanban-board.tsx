@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Star, Loader2, X, Search, Clock, AlertCircle } from "lucide-react";
+import { Star, Loader2, X, Search, Clock, AlertCircle, AlertTriangle } from "lucide-react";
 import {
     DndContext,
     DragEndEvent,
@@ -127,6 +127,8 @@ function CardContent({ tool }: { tool: KanbanTool }) {
 
 function DraggableCard({ tool, onDelete, isNew }: { tool: KanbanTool; onDelete: (id: string) => void; isNew?: boolean }) {
     const [deleting, setDeleting] = useState(false);
+    const [confirmingDelete, setConfirmingDelete] = useState(false);
+    const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const isLocked = tool.status === "researching";
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: tool.id,
@@ -135,16 +137,34 @@ function DraggableCard({ tool, onDelete, isNew }: { tool: KanbanTool; onDelete: 
 
     const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined;
 
-    const handleDelete = async (e: React.MouseEvent) => {
+    const handleDeleteClick = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+        setConfirmingDelete(true);
+        if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+        confirmTimerRef.current = setTimeout(() => setConfirmingDelete(false), 3000);
+    };
+
+    const handleConfirmDelete = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+        setConfirmingDelete(false);
         setDeleting(true);
-        onDelete(tool.id); // optimistic
+        onDelete(tool.id);
         try {
             await deleteTool(tool.id);
+            toast.success("Tool deleted");
         } catch (err) {
             toast.error(getUserFriendlyError(err));
         }
+    };
+
+    const handleCancelDelete = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+        setConfirmingDelete(false);
     };
 
     return (
@@ -158,15 +178,39 @@ function DraggableCard({ tool, onDelete, isNew }: { tool: KanbanTool; onDelete: 
             <Link href={`/tools/${tool.id}`} onClick={(e) => isDragging && e.preventDefault()}>
                 <CardContent tool={tool} />
             </Link>
-            <button
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={handleDelete}
-                disabled={deleting}
-                className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-white border border-black hover:bg-black hover:text-white disabled:opacity-40 z-10"
-                aria-label="Delete tool"
-            >
-                <X className="w-2.5 h-2.5" />
-            </button>
+            {confirmingDelete ? (
+                <div
+                    onPointerDown={(e) => e.stopPropagation()}
+                    className="absolute top-1.5 right-1.5 flex items-center gap-1 z-10"
+                >
+                    <span className="flex items-center gap-1 bg-white border border-black px-1.5 py-0.5 font-mono text-[10px]">
+                        <AlertTriangle className="w-2.5 h-2.5" />
+                        Delete?
+                    </span>
+                    <button
+                        onClick={handleConfirmDelete}
+                        className="bg-black text-white border border-black px-1.5 py-0.5 font-mono text-[10px] hover:bg-neutral-800"
+                    >
+                        Confirm
+                    </button>
+                    <button
+                        onClick={handleCancelDelete}
+                        className="bg-white border border-black px-1.5 py-0.5 font-mono text-[10px] hover:bg-neutral-100"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            ) : (
+                <button
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={handleDeleteClick}
+                    disabled={deleting}
+                    className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity bg-white border border-black hover:bg-black hover:text-white disabled:opacity-40 z-10"
+                    aria-label="Delete tool"
+                >
+                    <X className="w-2.5 h-2.5" />
+                </button>
+            )}
         </div>
     );
 }
