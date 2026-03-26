@@ -25,7 +25,7 @@ export const workspaces = pgTable('workspaces', {
 
 export const workspaceMembers = pgTable('workspace_members', {
     id: uuid('id').defaultRandom().primaryKey(),
-    workspaceId: uuid('workspace_id').references(() => workspaces.id).notNull(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
     userId: text('user_id').notNull(), // Clerk User ID
     role: text('role').notNull().default('member'), // owner | admin | member
     invitedBy: uuid('invited_by'),
@@ -40,7 +40,7 @@ export const workspaceMembers = pgTable('workspace_members', {
 // Tools
 export const tools = pgTable('tools', {
     id: uuid('id').defaultRandom().primaryKey(),
-    workspaceId: uuid('workspace_id').references(() => workspaces.id).notNull(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
     name: text('name').notNull(),
     websiteUrl: text('website_url'),
     pricingUrl: text('pricing_url'),
@@ -69,7 +69,7 @@ export const tools = pgTable('tools', {
 // Reports
 export const reports = pgTable('reports', {
     id: uuid('id').defaultRandom().primaryKey(),
-    toolId: uuid('tool_id').references(() => tools.id).notNull(),
+    toolId: uuid('tool_id').references(() => tools.id, { onDelete: 'cascade' }).notNull(),
     version: integer('version').default(1).notNull(),
     scorecardSnapshot: jsonb('scorecard_snapshot'),
     summary: text('summary'),
@@ -94,8 +94,8 @@ export const reports = pgTable('reports', {
 // Notes
 export const notes = pgTable('notes', {
     id: uuid('id').defaultRandom().primaryKey(),
-    toolId: uuid('tool_id').references(() => tools.id).notNull(),
-    workspaceMemberId: uuid('workspace_member_id').references(() => workspaceMembers.id).notNull(),
+    toolId: uuid('tool_id').references(() => tools.id, { onDelete: 'cascade' }).notNull(),
+    workspaceMemberId: uuid('workspace_member_id').references(() => workspaceMembers.id, { onDelete: 'cascade' }).notNull(),
     content: text('content').notNull(),
     noteType: text('note_type').default('general').notNull(), // general | test_result | pricing_update | decision
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -107,7 +107,7 @@ export const notes = pgTable('notes', {
 // Pain Points
 export const painPoints = pgTable('pain_points', {
     id: uuid('id').defaultRandom().primaryKey(),
-    workspaceId: uuid('workspace_id').references(() => workspaces.id).notNull(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
     title: text('title').notNull(),
     description: text('description'),
     category: text('category'),
@@ -121,7 +121,7 @@ export const painPoints = pgTable('pain_points', {
 // Research Jobs
 export const researchJobs = pgTable('research_jobs', {
     id: uuid('id').defaultRandom().primaryKey(),
-    toolId: uuid('tool_id').references(() => tools.id).notNull(),
+    toolId: uuid('tool_id').references(() => tools.id, { onDelete: 'cascade' }).notNull(),
     status: text('status').default('queued').notNull(), // queued | running | complete | failed
     n8nExecutionId: text('n8n_execution_id'),
     triggeredBy: text('triggered_by').notNull(), // Clerk User ID
@@ -161,8 +161,8 @@ export const reportsRelations = relations(reports, ({ one }) => ({
 // Ads (Promoted Tools)
 export const ads = pgTable('ads', {
     id: uuid('id').defaultRandom().primaryKey(),
-    toolId: uuid('tool_id').references(() => tools.id).notNull(),
-    workspaceId: uuid('workspace_id').references(() => workspaces.id).notNull(), // The workspace promoting the tool
+    toolId: uuid('tool_id').references(() => tools.id, { onDelete: 'cascade' }).notNull(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(), // The workspace promoting the tool
     status: text('status').default('draft').notNull(), // draft | active | paused | completed
     budget: integer('budget').default(0).notNull(), // Total budget in cents
     spent: integer('spent').default(0).notNull(), // Total spent in cents
@@ -226,7 +226,7 @@ export const painPointsRelations = relations(painPoints, ({ one }) => ({
 // Subscriptions
 export const subscriptions = pgTable('subscriptions', {
     id: uuid('id').defaultRandom().primaryKey(),
-    workspaceId: uuid('workspace_id').references(() => workspaces.id).notNull(),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
     stripeCustomerId: text('stripe_customer_id').unique(),
     stripeSubscriptionId: text('stripe_subscription_id').unique(),
     status: text('status').notNull(), // active | trialing | past_due | canceled | incomplete
@@ -399,8 +399,8 @@ export const apiLogs = pgTable('api_logs', {
     tokensIn: integer('tokens_in'),
     tokensOut: integer('tokens_out'),
     estimatedCost: numeric('estimated_cost', { precision: 10, scale: 6 }), // in USD
-    workspaceId: uuid('workspace_id').references(() => workspaces.id),
-    toolId: uuid('tool_id').references(() => tools.id),
+    workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'set null' }),
+    toolId: uuid('tool_id').references(() => tools.id, { onDelete: 'set null' }),
     metadata: jsonb('metadata'), // flexible extra data
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
@@ -481,7 +481,7 @@ export const auditSubmissions = pgTable('audit_submissions', {
     // CRM fields
     salesRepNotes: text('sales_rep_notes'), // rep's call prep notes, editable
     assignedRep: text('assigned_rep'), // rep email/name who owns this lead
-    preBuiltWorkspaceId: uuid('pre_built_workspace_id').references(() => workspaces.id),
+    preBuiltWorkspaceId: uuid('pre_built_workspace_id').references(() => workspaces.id, { onDelete: 'set null' }),
     inviteToken: text('invite_token').unique(), // used to track invite state
     arcCode: text('arc_code'), // architect attribution code
     employeeCount: text('employee_count'), // Used for per-seat cost projections

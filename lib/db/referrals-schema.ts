@@ -4,7 +4,7 @@ import { workspaces } from './schema';
 
 export const referrals = pgTable('referrals', {
     id: uuid('id').defaultRandom().primaryKey(),
-    referrerWorkspaceId: uuid('referrer_workspace_id').references(() => workspaces.id).notNull(),
+    referrerWorkspaceId: uuid('referrer_workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }).notNull(),
     code: text('code').unique().notNull(),
     clicks: integer('clicks').default(0).notNull(),
     signups: integer('signups').default(0).notNull(),

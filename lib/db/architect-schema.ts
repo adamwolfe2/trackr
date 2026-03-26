@@ -26,7 +26,7 @@ export const architectApplications = pgTable('architect_applications', {
 // Architects — active profiles created when application is approved
 export const architects = pgTable('architects', {
     id: uuid('id').defaultRandom().primaryKey(),
-    applicationId: uuid('application_id').references(() => architectApplications.id).notNull(),
+    applicationId: uuid('application_id').references(() => architectApplications.id, { onDelete: 'cascade' }).notNull(),
     userId: text('user_id'), // Clerk user ID, linked after sign up/in
     email: text('email').unique().notNull(),
     firstName: text('first_name').notNull(),
