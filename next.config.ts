@@ -11,14 +11,23 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   async headers() {
-    const headers = [
+    const securityHeaders = [
       ...SECURITY_HEADERS,
       ...(process.env.NODE_ENV === "production" ? [HSTS_HEADER] : []),
     ];
-    return [{ source: "/(.*)", headers }];
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      {
+        source: "/:all*(svg|jpg|png|webp|avif|woff2|ico)",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
+    ];
   },
   images: {
     formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 2678400, // 31 days
     remotePatterns: [
       { protocol: 'https', hostname: 'logo.clearbit.com' },
       { protocol: 'https', hostname: 'cdn.brandfetch.io' },
@@ -28,7 +37,20 @@ const nextConfig: NextConfig = {
     ]
   },
   experimental: {
-    optimizePackageImports: ['lucide-react', 'date-fns'],
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      'recharts',
+      'framer-motion',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-select',
+      '@radix-ui/react-tabs',
+      '@radix-ui/react-tooltip',
+      '@dnd-kit/core',
+      '@dnd-kit/utilities',
+    ],
   },
   turbopack: {
     root: __dirname,

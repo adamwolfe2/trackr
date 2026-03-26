@@ -17,6 +17,8 @@ export const metadata: Metadata = {
     },
 };
 
+export const revalidate = 86400;
+
 export default async function TermsPage() {
     const user = await currentUser();
 

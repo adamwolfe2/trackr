@@ -27,6 +27,8 @@ export const metadata: Metadata = {
     },
 };
 
+export const revalidate = 86400;
+
 const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",

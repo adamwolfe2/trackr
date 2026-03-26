@@ -9,6 +9,8 @@ export const metadata: Metadata = {
     robots: { index: true },
 };
 
+export const revalidate = 86400;
+
 export default function PrivacyPolicyPage() {
     return (
         <>

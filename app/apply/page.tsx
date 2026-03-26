@@ -17,6 +17,8 @@ export const metadata: Metadata = {
     alternates: { canonical: "https://trytrackr.com/apply" },
 };
 
+export const revalidate = 3600;
+
 const BENEFITS = [
     {
         icon: Shield,
