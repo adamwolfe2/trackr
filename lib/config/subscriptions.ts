@@ -270,7 +270,7 @@ export function getPlanLimits(subscription?: { status: string; planId?: string |
         }
 
         // Active subscription but planId doesn't match known IDs — safe default to FREE
-        console.error(`[billing] Unknown planId "${subscription.planId}" — defaulting to FREE`);
+        // Unknown planId — defaulting to FREE (may indicate stale Stripe data)
         return PLANS.FREE;
     }
     return PLANS.FREE;

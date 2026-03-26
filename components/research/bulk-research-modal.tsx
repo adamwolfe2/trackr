@@ -197,7 +197,7 @@ export function BulkResearchModal({ onClose }: BulkResearchModalProps) {
                 }, 4000);
             }
         } catch (err) {
-            console.error("[bulk] submit error:", err);
+            // Submit error — show user-facing message
             setSubmitError("Something went wrong. Please try again.");
             setPhase("previewing");
         }

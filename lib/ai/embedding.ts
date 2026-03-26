@@ -2,6 +2,7 @@ import { openai } from "@ai-sdk/openai";
 import { embed } from "ai";
 import { createHash } from "crypto";
 import { cachedFetch, buildCacheKey } from "@/lib/services/research-cache";
+import * as Sentry from "@sentry/nextjs";
 
 /** TTL for embedding cache: 7 days (embeddings are deterministic for the same input) */
 const EMBEDDING_CACHE_TTL = 7 * 24 * 3600;
@@ -24,7 +25,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
             }
             return embedding;
         } catch (error) {
-            console.error("Error generating embedding:", error);
+            Sentry.captureException(error, { tags: { module: "embedding" } });
             throw error;
         }
     });

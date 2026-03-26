@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { workspaces, workspaceMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Ensures a workspace + membership exists for the given user.
@@ -27,8 +28,8 @@ export async function ensureWorkspace(userId: string, hints?: {
 
     if (existing) {
         if (!existing.workspace) {
-            // Orphaned member record — workspace was deleted. Log and try to create fresh.
-            console.error(`[ensureWorkspace] Member ${existing.id} has no workspace (workspaceId: ${existing.workspaceId}). Creating new workspace.`);
+            // Orphaned member record — workspace was deleted. Report and create fresh.
+            Sentry.captureMessage(`[ensureWorkspace] Orphaned member ${existing.id} (workspaceId: ${existing.workspaceId})`, "warning");
         } else {
             return { workspaceId: existing.workspaceId, workspace: existing.workspace, created: false };
         }
@@ -71,7 +72,7 @@ export async function ensureWorkspace(userId: string, hints?: {
 
         return { workspaceId: workspace.id, workspace, created };
     } catch (err) {
-        console.error(`[ensureWorkspace] Failed for userId=${userId} slug=${slug}:`, err);
+        Sentry.captureException(err, { tags: { module: "ensureWorkspace", userId, slug } });
         throw err;
     }
 }

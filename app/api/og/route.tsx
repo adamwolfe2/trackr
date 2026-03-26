@@ -21,7 +21,8 @@ export async function GET(req: NextRequest) {
     const { searchParams } = req.nextUrl;
     const name = searchParams.get("name") ?? "Tool";
     const scoreStr = searchParams.get("score");
-    const score = scoreStr ? parseFloat(scoreStr) : null;
+    const parsedScore = scoreStr ? parseFloat(scoreStr) : NaN;
+    const score = Number.isNaN(parsedScore) ? null : parsedScore;
     const category = searchParams.get("category") ?? "";
     const type = searchParams.get("type") ?? "research"; // "research" | "audit"
 

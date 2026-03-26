@@ -7,7 +7,7 @@ import { rateLimit, getRateLimitHeaders } from "@/lib/middleware/rate-limit";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
     const user = await currentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -24,6 +24,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const { id } = await params;
 
+    // Validate UUID format to prevent DB injection
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(id)) {
+        return NextResponse.json({ error: "Invalid tool ID" }, { status: 400 });
+    }
+
     try {
         const tool = await db.query.tools.findFirst({
             where: and(eq(tools.id, id), eq(tools.workspaceId, member.workspaceId)),
@@ -39,7 +45,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
             return NextResponse.json({ error: "Tool not found" }, { status: 404 });
         }
 
-        const logs = (tool as Record<string, unknown>).researchLogs || [];
+        const logs = Array.isArray(tool.researchLogs) ? tool.researchLogs : [];
 
         // Include error message from the latest failed job
         let errorMessage: string | null = null;

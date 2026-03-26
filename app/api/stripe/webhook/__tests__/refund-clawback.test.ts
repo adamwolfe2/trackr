@@ -194,6 +194,10 @@ describe("charge.refunded — commission clawback", () => {
     });
 
     it("claws back commission at exactly 60-day boundary", async () => {
+        // Freeze time to avoid sub-millisecond drift that pushes past the 60-day boundary
+        const now = Date.now();
+        vi.useFakeTimers({ now });
+
         const event = makeChargeRefundedEvent({ amount: 10000, amount_refunded: 10000 });
         vi.mocked(stripe.webhooks.constructEvent).mockReturnValue(event as never);
         vi.mocked(stripe.transfers.createReversal).mockResolvedValue({} as never);
@@ -203,13 +207,15 @@ describe("charge.refunded — commission clawback", () => {
             commissionAmount: 2000,
             status: "paid",
             stripeTransferId: "tr_1",
-            createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), // exactly 60 days ago
+            createdAt: new Date(now - 60 * 24 * 60 * 60 * 1000), // exactly 60 days ago
         } as never);
 
         const res = await POST(makeRequest("body"));
         expect(res.status).toBe(200);
         // At exactly 60 days, daysSinceCommission === 60, which is NOT > 60, so clawback should proceed
         expect(mockUpdate).toHaveBeenCalled();
+
+        vi.useRealTimers();
     });
 
     it("skips clawback at 61-day boundary", async () => {

@@ -18,6 +18,7 @@ export const env = createEnv({
         CRON_SECRET: z.string().min(1),
 
         // AI services
+        ANTHROPIC_API_KEY: z.string().min(1),
         OPENAI_API_KEY: z.string().optional(),
         PERPLEXITY_API_KEY: z.string().optional(),
         TAVILY_API_KEY: z.string().min(1),
@@ -62,6 +63,7 @@ export const env = createEnv({
         STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
         STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
         CRON_SECRET: process.env.CRON_SECRET,
+        ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
         OPENAI_API_KEY: process.env.OPENAI_API_KEY,
         PERPLEXITY_API_KEY: process.env.PERPLEXITY_API_KEY,
         TAVILY_API_KEY: process.env.TAVILY_API_KEY,

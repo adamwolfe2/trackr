@@ -115,7 +115,7 @@ export async function rateLimit(
                 resetAt: r.reset, // already in milliseconds
             };
         } catch (err) {
-            console.error("[rate-limit] Upstash unavailable, falling back to in-memory:", err);
+            // Upstash unavailable — fall through to in-memory limiter
         }
     }
 

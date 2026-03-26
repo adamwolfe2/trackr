@@ -23,7 +23,7 @@ export async function enrichTool(
     ].filter((p) => p.isConfigured());
 
     if (providers.length === 0) {
-        console.warn("[enrichment] No providers configured. Set PERPLEXITY_API_KEY or XAI_API_KEY.");
+        // No providers configured — PERPLEXITY_API_KEY or XAI_API_KEY not set
         return [];
     }
 

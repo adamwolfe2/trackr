@@ -48,7 +48,7 @@ const getAINews = unstable_cache(
                 source: (() => { try { return new URL(r.url).hostname.replace("www.", ""); } catch { return r.url; } })(),
             }));
         } catch (err) {
-            console.error("[discover] Tavily news fetch failed:", err);
+            // Tavily news fetch failed — return empty array
             return [];
         }
     },
@@ -80,7 +80,7 @@ const fetchSuggestionsFromAI = unstable_cache(
             }
         } catch (err) {
             // API error or JSON parse failure — return empty suggestions
-            console.error("[discover] Perplexity suggestions failed:", err);
+            // Perplexity suggestions failed — return empty array
         }
         return suggestions;
     },

@@ -256,7 +256,10 @@ export async function GET(req: Request) {
                     // Entries added in the last 7 days represent new spend added this period.
                     const previousWeekTotal = allSpend
                         .filter(s => s.status === "active" && s.createdAt < sevenDaysAgo)
-                        .reduce((sum, s) => sum + parseFloat(s.monthlyCost ?? "0"), 0);
+                        .reduce((sum, s) => {
+                            const cost = parseFloat(s.monthlyCost ?? "0");
+                            return sum + (Number.isNaN(cost) ? 0 : cost);
+                        }, 0);
                     const spendDelta = insights.totalActiveSpend - previousWeekTotal;
 
                     await sendStackHealthDigest(email, {

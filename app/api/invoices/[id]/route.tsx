@@ -17,6 +17,12 @@ export async function GET(
 
     const { id } = await params;
 
+    // Validate UUID format
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!UUID_RE.test(id)) {
+        return new NextResponse("Invalid invoice ID", { status: 400 });
+    }
+
     // Verify workspace membership first — this scopes the subsequent ad fetch
     // so an attacker can't enumerate ad IDs across workspaces via timing differences
     const member = await db.query.workspaceMembers.findFirst({
@@ -65,7 +71,7 @@ export async function GET(
             },
         });
     } catch (err) {
-        console.error("[api/invoices]", err);
+        // Invoice generation failed
         return new NextResponse("Failed to generate invoice", { status: 500 });
     }
 }

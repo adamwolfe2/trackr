@@ -14,6 +14,13 @@ export async function GET(
     { params }: { params: Promise<{ slug: string }> }
 ) {
     const { slug } = await params;
+
+    // Validate slug format — alphanumeric, hyphens, underscores only
+    const SLUG_RE = /^[a-z0-9_-]{1,200}$/i;
+    if (!SLUG_RE.test(slug)) {
+        return new NextResponse("Invalid slug", { status: 400 });
+    }
+
     const format = request.nextUrl.searchParams.get("format");
 
     let data;

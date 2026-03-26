@@ -66,7 +66,7 @@ export default async function StackPage() {
         lowScoredNames = scoredTools.map(t => t.name.toLowerCase());
         insights = computeStackInsights(entries);
     } catch (err) {
-        console.error("[stack] Failed to load stack data:", err);
+        // Stack data load failed — show degraded UI with error banner
         fetchError = err instanceof Error ? err.message : "Failed to load stack data";
     }
 

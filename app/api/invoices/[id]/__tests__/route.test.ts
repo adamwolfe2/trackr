@@ -43,8 +43,11 @@ const MOCK_USER = {
     emailAddresses: [{ emailAddress: "adam@acme.com" }],
 };
 
+const VALID_UUID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+const VALID_UUID_2 = "b2c3d4e5-f6a7-8901-bcde-f12345678901";
+
 const MOCK_AD = {
-    id: "ad_abc123",
+    id: VALID_UUID,
     workspaceId: "ws_1",
     budget: "500",
     status: "active",
@@ -54,11 +57,11 @@ const MOCK_AD = {
 
 const MOCK_MEMBER = { id: "mem_1", userId: "user_1", workspaceId: "ws_1" };
 
-function makeRequest(id = "ad_abc123") {
+function makeRequest(id = VALID_UUID) {
     return new Request(`https://trytrackr.com/api/invoices/${id}`);
 }
 
-async function callRoute(id = "ad_abc123") {
+async function callRoute(id = VALID_UUID) {
     const req = makeRequest(id);
     const params = Promise.resolve({ id });
     return GET(req, { params });
@@ -81,6 +84,11 @@ describe("GET /api/invoices/[id]", () => {
         expect(res.status).toBe(401);
     });
 
+    it("returns 400 for invalid (non-UUID) id", async () => {
+        const res = await callRoute("not-a-uuid");
+        expect(res.status).toBe(400);
+    });
+
     it("returns 404 when ad does not exist", async () => {
         (db.query.ads.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
         const res = await callRoute();
@@ -100,10 +108,10 @@ describe("GET /api/invoices/[id]", () => {
     });
 
     it("sets Content-Disposition header with ad id prefix", async () => {
-        const res = await callRoute("ad_abc123");
+        const res = await callRoute(VALID_UUID);
         const disposition = res.headers.get("Content-Disposition");
         expect(disposition).toContain("attachment");
-        expect(disposition).toContain("ad_abc1"); // first 8 chars
+        expect(disposition).toContain(VALID_UUID.slice(0, 8)); // first 8 chars
     });
 
     it("calls renderToStream to generate the PDF", async () => {
@@ -120,11 +128,11 @@ describe("GET /api/invoices/[id]", () => {
     it("uses the ad id from the DB record in the filename", async () => {
         (db.query.ads.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
             ...MOCK_AD,
-            id: "ad_unique99xyz",
+            id: VALID_UUID_2,
         });
-        const res = await callRoute("ad_unique99xyz");
+        const res = await callRoute(VALID_UUID_2);
         const disposition = res.headers.get("Content-Disposition");
-        expect(disposition).toContain("ad_uniqu"); // first 8 chars of "ad_unique99xyz"
+        expect(disposition).toContain(VALID_UUID_2.slice(0, 8)); // first 8 chars
     });
 
     it("returns 404 for draft ads (invoice not yet available)", async () => {
