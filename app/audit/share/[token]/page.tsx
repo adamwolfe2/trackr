@@ -60,7 +60,7 @@ type ExtendedScorecard = AuditScorecard & {
     quickWins?: QuickWin[];
 };
 
-type RecommendedTool = { name: string; websiteDomain: string | null; category: string; whatItDoes?: string; problemItSolves?: string; painPointLink?: string | null; reason: string; impact: "High" | "Medium" | "Low"; implementationSteps?: string[]; integrationTarget?: string | null };
+type RecommendedTool = { name: string; websiteDomain: string | null; category: string; whatItDoes?: string; problemItSolves?: string; painPointLink?: string | null; reason: string; estimatedCostPerUser?: string | null; impact: "High" | "Medium" | "Low"; implementationSteps?: string[]; integrationTarget?: string | null };
 type MergedTool = { name: string; category: string | null; aiRole: "AI-native" | "AI-assisted" | "Non-AI core infra"; usageNotes: string | null };
 
 // ── Tool intelligence ─────────────────────────────────────────────────────────
@@ -775,6 +775,9 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                                             <span className="inline-block font-mono text-[8px] uppercase tracking-widest border border-neutral-300 text-neutral-500 px-1.5 py-0.5 mt-1">{t.painPointLink}</span>
                                                         )}
                                                         <p className="font-mono text-[10px] text-neutral-600 leading-relaxed mt-1">{t.reason}</p>
+                                                        {t.estimatedCostPerUser && (
+                                                            <p className="font-mono text-[9px] text-neutral-400 mt-1">{t.estimatedCostPerUser}</p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
