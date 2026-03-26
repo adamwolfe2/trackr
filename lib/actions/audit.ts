@@ -542,15 +542,19 @@ export async function processAuditSubmission(id: string): Promise<void> {
         const { randomUUID } = await import("crypto");
         const shareToken = randomUUID().replace(/-/g, "");
 
-        // Generate vanity URL slug
-        const publicSlug = slugify(submission.companyName);
-        let finalSlug = publicSlug;
-        const [existingSlug] = await db.select({ id: auditSubmissions.id })
-            .from(auditSubmissions)
-            .where(eq(auditSubmissions.publicSlug, publicSlug))
-            .limit(1);
-        if (existingSlug) {
-            finalSlug = `${publicSlug}-${randomUUID().slice(0, 4)}`;
+        // Generate vanity URL slug with collision retry
+        const baseSlug = slugify(submission.companyName);
+        let finalSlug = baseSlug;
+        for (let attempt = 0; attempt < 3; attempt++) {
+            const candidate = attempt === 0 ? baseSlug : `${baseSlug}-${randomUUID().slice(0, 6)}`;
+            const [existing] = await db.select({ id: auditSubmissions.id })
+                .from(auditSubmissions)
+                .where(eq(auditSubmissions.publicSlug, candidate))
+                .limit(1);
+            if (!existing) {
+                finalSlug = candidate;
+                break;
+            }
         }
 
         // 4. Pre-build workspace

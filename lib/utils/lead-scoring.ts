@@ -41,20 +41,23 @@ function parseRevenue(rev: string | null): number {
 
 function parseEmployees(emp: string | null): number {
     if (!emp) return 0;
-    const n = parseInt(emp.replace(/[^0-9]/g, ""), 10);
-    if (isNaN(n)) {
-        const e = emp.toLowerCase();
-        if (e.includes("1,000") || e.includes("1000")) return 10;
-        if (e.includes("500") || e.includes("201")) return 15;
-        if (e.includes("100") || e.includes("51")) return 13;
-        if (e.includes("25") || e.includes("50")) return 12;
-        if (e.includes("10")) return 8;
+    // Use string matching for range values (e.g. "25-50", "201–1,000 people", "1,000+ people")
+    const e = emp.toLowerCase();
+    if (e.includes("1,000") || e.includes("1000")) return 10; // 1000+ = large enterprise
+    if (e.includes("500") || e.includes("201")) return 15; // 201-1000 = sweet spot
+    if (e.includes("100") || e.includes("51")) return 13;
+    if (e.includes("50") || e.includes("25")) return 12;
+    // Try parsing a clean single number (e.g. "35")
+    const match = emp.match(/^(\d+)$/);
+    if (match) {
+        const n = parseInt(match[1], 10);
+        if (n >= 50 && n <= 500) return 15;
+        if (n > 500) return 10;
+        if (n >= 25) return 12;
+        if (n >= 10) return 8;
         return 5;
     }
-    if (n >= 50 && n <= 500) return 15;
-    if (n >= 500) return 10;
-    if (n >= 25) return 12;
-    if (n >= 10) return 8;
+    if (e.includes("10")) return 8;
     return 5;
 }
 

@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
-import { auditSubmissions, pendingInvitations, workspaces, softwareSpend } from "@/lib/db/schema";
+import { auditSubmissions, workspaces, softwareSpend } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
@@ -219,38 +219,6 @@ export default async function LeadDetailPage({
         await db.update(auditSubmissions)
             .set({ salesRepNotes: notes })
             .where(eq(auditSubmissions.id, id));
-    }
-
-    async function sendInvite() {
-        "use server";
-        if (!submission?.preBuiltWorkspaceId || !submission.contactEmail) {
-            throw new Error("Missing workspace or contact email");
-        }
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-        const [invite] = await db.insert(pendingInvitations).values({
-            workspaceId: submission.preBuiltWorkspaceId,
-            email: submission.contactEmail,
-            invitedByUserId: "admin",
-            expiresAt,
-        }).returning();
-
-        try {
-            const { sendInviteEmail } = await import("@/lib/email/resend");
-            await sendInviteEmail(
-                submission.contactEmail,
-                submission.companyName,
-                "Trackr Team",
-                invite.id,
-            );
-        } catch {
-            // Non-fatal — invite row created even if email fails
-        }
-
-        // Cancel drip emails — prospect is converting
-        const { cancelAuditDrips } = await import("@/lib/email/audit-drips");
-        cancelAuditDrips(id).catch(() => {});
-
-        redirect(`/admin/leads/${id}?invited=1`);
     }
 
     async function markCalled() {
