@@ -675,7 +675,7 @@ export default async function LeadDetailPage({
                             const bm = scorecard.industryBenchmark!;
                             return (
                                 <>
-                                    <div className="grid grid-cols-3 gap-3 mb-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
                                         <div className="border border-neutral-200 p-3 text-center">
                                             <span className="font-mono text-2xl font-black">{score}</span>
                                             <p className="font-mono text-[9px] text-neutral-400 uppercase">Your Score</p>
@@ -718,7 +718,7 @@ export default async function LeadDetailPage({
                             const roi = scorecard.roiProjection!;
                             return (
                                 <>
-                                    <div className="grid grid-cols-3 gap-4 mb-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                                         <div className="border border-red-200 bg-red-50 p-4 text-center">
                                             <p className="font-mono text-[9px] text-red-400 uppercase mb-1">Annual Waste</p>
                                             <span className="font-mono text-3xl font-black text-red-600">${Math.round(roi.currentAnnualWaste / 1000)}K</span>

@@ -16,7 +16,8 @@ export default function CompareLoading() {
                     </div>
 
                     {/* Comparison table skeleton */}
-                    <div className="border border-black">
+                    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className="border border-black min-w-[480px]">
                         {/* Tool headers */}
                         <div className="grid grid-cols-3 border-b border-black">
                             <div className="p-4 border-r border-black" />
@@ -44,6 +45,7 @@ export default function CompareLoading() {
                                 </div>
                             </div>
                         ))}
+                    </div>
                     </div>
                 </div>
             </main>

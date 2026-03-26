@@ -145,7 +145,8 @@ export default async function ComparisonSlugPage({
                     </div>
 
                     {/* Score summary row */}
-                    <div className="grid grid-cols-3 gap-px border border-black bg-black mb-8">
+                    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-8">
+                    <div className="grid grid-cols-3 gap-px border border-black bg-black min-w-[480px]">
                         <div className="bg-white p-5">
                             <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-1">Metric</p>
                         </div>
@@ -188,9 +189,11 @@ export default async function ComparisonSlugPage({
                             )}
                         </div>
                     </div>
+                    </div>
 
                     {/* 7D Scorecard comparison table */}
-                    <div className="border border-black mb-8">
+                    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-8">
+                    <div className="border border-black min-w-[480px]">
                         <div className="p-4 border-b border-neutral-200">
                             <h2 className="font-mono text-xs uppercase tracking-widest">7-Dimension Scorecard</h2>
                         </div>
@@ -241,6 +244,7 @@ export default async function ComparisonSlugPage({
                                 );
                             })}
                         </div>
+                    </div>
                     </div>
 
                     {/* Verdict + When to use */}

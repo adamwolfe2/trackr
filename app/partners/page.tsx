@@ -297,7 +297,8 @@ export default function PartnersPage() {
                 {/* Commission breakdown */}
                 <section className="py-16 border-b border-black">
                     <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-8">Commission by plan</p>
-                    <div className="border border-black">
+                    <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+                    <div className="border border-black min-w-[480px]">
                         <div className="grid grid-cols-3 border-b border-black bg-black">
                             {["Plan", "Client pays / mo", "You earn / mo"].map((col) => (
                                 <div key={col} className="bg-[#F3F3EF] px-5 py-3 border-r border-black last:border-r-0">
@@ -325,6 +326,7 @@ export default function PartnersPage() {
                                 </div>
                             </div>
                         ))}
+                    </div>
                     </div>
                     <p className="font-mono text-[10px] text-neutral-400 mt-3">
                         Commission is 20% of each subscription payment. Annual plan commissions are paid out monthly over 12 months.

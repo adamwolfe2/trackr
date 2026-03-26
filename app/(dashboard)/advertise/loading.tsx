@@ -10,7 +10,7 @@ export default function AdvertiseLoading() {
                 <div className="h-10 w-32 bg-neutral-200" />
             </div>
 
-            <div className="grid grid-cols-3 gap-0 border border-black">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border border-black">
                 {Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className={`p-6 ${i < 2 ? "border-r border-black" : ""}`}>
                         <div className="h-3 w-20 bg-neutral-200 mb-3" />

@@ -20,7 +20,8 @@ export default function StackLoading() {
                 ))}
             </div>
 
-            <div className="border border-black overflow-hidden">
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="border border-black overflow-hidden min-w-[600px]">
                 {/* Table header */}
                 <div className="grid grid-cols-5 border-b border-black bg-neutral-50 px-4 py-3">
                     {Array.from({ length: 5 }).map((_, i) => (
@@ -37,6 +38,7 @@ export default function StackLoading() {
                         <div className="h-4 w-8 bg-neutral-200" />
                     </div>
                 ))}
+            </div>
             </div>
         </div>
     );

@@ -313,7 +313,7 @@ export default function AnalyticsClient({
                     </div>
                     <div className="p-6 space-y-6">
                         {/* 3 stat tiles */}
-                        <div className="grid grid-cols-3 gap-0 border border-black">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border border-black">
                             {[
                                 { label: "Total Monthly", value: formatDollar(totalMonthlySpend) },
                                 { label: "AI-Native Spend", value: formatDollar(aiNativeSpend) },

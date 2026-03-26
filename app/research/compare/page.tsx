@@ -196,7 +196,8 @@ function ComparisonGrid({
     const allDimensions = Object.keys({ ...(leftScorecard ?? {}), ...(rightScorecard ?? {}) });
 
     return (
-        <div className="space-y-px border border-black bg-black">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="space-y-px border border-black bg-black min-w-[480px]">
             {/* Header row */}
             <div className="grid grid-cols-3 bg-black text-white">
                 <div className="p-4 font-mono text-[10px] uppercase tracking-widest text-neutral-400">Comparison</div>
@@ -406,6 +407,7 @@ function ComparisonGrid({
                     </Link>
                 </div>
             </div>
+        </div>
         </div>
     );
 }

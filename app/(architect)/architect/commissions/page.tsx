@@ -49,7 +49,7 @@ export default async function ArchitectCommissionsPage() {
             </div>
 
             {/* Summary */}
-            <div className="grid grid-cols-3 gap-px border border-black bg-black">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-px border border-black bg-black">
                 {[
                     { label: "Total Earned", value: `$${(totalEarned / 100).toFixed(2)}` },
                     { label: "Paid Out", value: `$${(totalPaid / 100).toFixed(2)}` },
