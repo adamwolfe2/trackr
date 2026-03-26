@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { AddToolWizard } from "@/components/tools/add-tool-wizard";
+import { UpgradePrompt } from "@/components/billing/upgrade-prompt";
 import { db } from "@/lib/db";
 import { subscriptions, workspaceMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -37,6 +38,15 @@ export default async function SubmitPage() {
 
     return (
         <div className="max-w-2xl mx-auto animate-fade-in-up py-10">
+            {creditBalance === 0 && (
+                <div className="mb-6">
+                    <UpgradePrompt
+                        feature="Research Credits"
+                        plan="Team"
+                        message="You've used all your research credits this month. Upgrade for more, or buy a credit pack."
+                    />
+                </div>
+            )}
             {creditBalance > 0 && creditBalance <= 2 && (
                 <div className="border border-amber-600 bg-amber-50 px-4 py-3 font-mono text-xs mb-6 flex items-start gap-3">
                     <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-600" />

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Check, X, ArrowRightLeft, Plus, ExternalLink, Search, ChevronDown, Link2 } from "lucide-react";
 import Link from "next/link";
+import { UpgradePrompt } from "@/components/billing/upgrade-prompt";
 
 type PricingEntry = { price?: string; tier?: string; [key: string]: unknown };
 type FeaturesValue = string[] | { list: string[] } | null;
@@ -27,6 +28,7 @@ interface CompareTool {
 interface CompareClientProps {
     tools: CompareTool[];
     preSelectedIds: string[];
+    isLimitedCompare?: boolean;
 }
 
 const MAX_TOOLS = 3;
@@ -147,7 +149,7 @@ function ToolSelector({
     );
 }
 
-export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
+export function CompareClient({ tools, preSelectedIds, isLimitedCompare }: CompareClientProps) {
     const router = useRouter();
     const [copiedUrl, setCopiedUrl] = useState(false);
     const [selectedToolIds, setSelectedToolIds] = useState<(string | null)[]>(() => {
@@ -297,6 +299,18 @@ export function CompareClient({ tools, preSelectedIds }: CompareClientProps) {
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {[0, 1, 2].map((index) => {
+                    if (isLimitedCompare && index === 2) {
+                        return (
+                            <div key={index} className="border border-black p-4 bg-white flex items-center">
+                                <UpgradePrompt
+                                    feature="Compare 3 Tools"
+                                    plan="Team"
+                                    message="Free plan supports comparing 2 tools. Upgrade to compare up to 3 side-by-side."
+                                    compact
+                                />
+                            </div>
+                        );
+                    }
                     const tool = selectedTools[index];
                     return (
                         <div key={index} className="border border-black p-4 bg-white">

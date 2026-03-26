@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { NotificationsPopover } from "@/components/layout/notifications-popover";
 import { MobileNav } from "@/components/layout/mobile-nav";
 
-export function Header({ rightExtra }: { rightExtra?: React.ReactNode }) {
+export function Header({ rightExtra, creditBalance }: { rightExtra?: React.ReactNode; creditBalance?: number }) {
     const [isMac, setIsMac] = useState(true);
 
     useEffect(() => {
@@ -38,6 +39,11 @@ export function Header({ rightExtra }: { rightExtra?: React.ReactNode }) {
 
             <div className="flex items-center gap-1 sm:gap-3">
                 {rightExtra}
+                {creditBalance !== undefined && creditBalance <= 2 && (
+                    <Link href="/settings/billing" className="font-mono text-[9px] border border-red-200 text-red-600 px-2 py-0.5">
+                        {creditBalance} credit{creditBalance === 1 ? "" : "s"} left
+                    </Link>
+                )}
                 <NotificationsPopover />
                 <UserButton afterSignOutUrl="/sign-in" />
             </div>

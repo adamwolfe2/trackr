@@ -80,5 +80,7 @@ export default async function ComparePage({ searchParams }: ComparePageProps) {
         ? params.tools.split(",").filter(Boolean).slice(0, 3)
         : [];
 
-    return <CompareClient tools={toolsWithReports} preSelectedIds={preSelectedIds} />;
+    const isLimitedCompare = plan.features.compareTools === "limited";
+
+    return <CompareClient tools={toolsWithReports} preSelectedIds={preSelectedIds} isLimitedCompare={isLimitedCompare} />;
 }

@@ -1,29 +1,15 @@
 import * as Sentry from "@sentry/nextjs";
 import { db } from "@/lib/db";
-import { tools, workspaceMembers, workspaces, softwareSpend, researchJobs } from "@/lib/db/schema";
+import { tools, workspaceMembers, workspaces, softwareSpend, researchJobs, feedItems, subscriptions } from "@/lib/db/schema";
 import { desc, eq, gte, and, lte, sql, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { Resend } from "resend";
-import { sendRenewalAlertEmail, sendStackHealthDigest } from "@/lib/email/resend";
+import { sendRenewalAlertEmail, sendStackHealthDigest, sendWeeklyDigestEmail } from "@/lib/email/resend";
 import { postMessage, renewalAlertBlocks } from "@/lib/services/slack";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
 import { verifyCronRequest } from "@/lib/middleware/cron-auth";
 
 export const dynamic = 'force-dynamic';
-
-const FROM = "Trackr <noreply@trytrackr.com>";
-function getResend() { return new Resend(process.env.RESEND_API_KEY!); }
-
-/** Escape HTML special characters in user-provided strings before inserting into HTML emails */
-function escapeHtml(str: string): string {
-    return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#x27;");
-}
 
 export async function GET(req: Request) {
     const authError = verifyCronRequest(req);
@@ -133,6 +119,33 @@ export async function GET(req: Request) {
             spendChangesByWorkspace.set(row.workspaceId, Number(row.count));
         }
 
+        // Batch-fetch feed item counts and credit balances for the weekly digest
+        const [feedItemCounts, allSubscriptions] = await Promise.all([
+            db.select({
+                workspaceId: feedItems.workspaceId,
+                count: sql<number>`count(*)`,
+            })
+                .from(feedItems)
+                .where(and(
+                    inArray(feedItems.workspaceId, allWorkspaceIds),
+                    gte(feedItems.createdAt, sevenDaysAgo),
+                ))
+                .groupBy(feedItems.workspaceId),
+            db.query.subscriptions.findMany({
+                where: inArray(subscriptions.workspaceId, allWorkspaceIds),
+                columns: { workspaceId: true, creditBalance: true },
+            }),
+        ]);
+
+        const feedItemsByWorkspace = new Map<string, number>();
+        for (const row of feedItemCounts) {
+            feedItemsByWorkspace.set(row.workspaceId, Number(row.count));
+        }
+        const creditsByWorkspace = new Map<string, number>();
+        for (const sub of allSubscriptions) {
+            creditsByWorkspace.set(sub.workspaceId, sub.creditBalance);
+        }
+
         for (const owner of owners) {
             try {
                 const clerkUser = await clerk.users.getUser(owner.userId);
@@ -141,44 +154,30 @@ export async function GET(req: Request) {
 
                 // --- Weekly Research Digest ---
                 const recentTools = (toolsByWorkspace.get(owner.workspaceId) ?? []).slice(0, 5);
+                const creditsUsed = completedJobsByWorkspace.get(owner.workspaceId) ?? 0;
+                const creditsRemaining = creditsByWorkspace.get(owner.workspaceId) ?? 0;
+                const newFeedItemCount = feedItemsByWorkspace.get(owner.workspaceId) ?? 0;
 
                 if (recentTools.length > 0) {
-                    const toolRows = recentTools.map((t) =>
-                        `<tr><td style="padding:8px;font-size:13px;border-bottom:1px solid #D0D0CC;">${escapeHtml(t.name)}</td><td style="padding:8px;font-size:13px;text-align:right;border-bottom:1px solid #D0D0CC;">${t.overallScore ? `${Number(t.overallScore).toFixed(1)}/10` : "—"}</td></tr>`
-                    ).join("");
+                    // Find the top-scoring tool this week
+                    const sortedByScore = [...recentTools].sort((a, b) => {
+                        const sa = a.overallScore ? Number(a.overallScore) : 0;
+                        const sb = b.overallScore ? Number(b.overallScore) : 0;
+                        return sb - sa;
+                    });
+                    const topTool = sortedByScore[0] ?? null;
 
-                    await getResend().emails.send({
-                        from: FROM,
-                        to: email,
-                        subject: `Your Trackr weekly digest — ${recentTools.length} tool${recentTools.length !== 1 ? "s" : ""} researched`,
-                        html: `
-                            <div style="font-family: 'SF Mono', monospace; max-width: 480px; margin: 0 auto; padding: 32px; border: 2px solid #000; background: #F3F3EF;">
-                                <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Weekly Digest</p>
-                                <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 22px; margin: 0 0 16px;">
-                                    ${escapeHtml(owner.workspace.name)}
-                                </h1>
-                                <p style="font-size: 13px; color: #555; margin: 0 0 16px;">
-                                    Here's what your team researched in the past 7 days:
-                                </p>
-                                <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-                                    <thead>
-                                        <tr>
-                                            <th style="text-align: left; padding: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #000;">Tool</th>
-                                            <th style="text-align: right; padding: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #000;">Score</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>${toolRows}</tbody>
-                                </table>
-                                <a href="${appUrl}/tools" style="display: inline-block; background: #000; color: #F3F3EF; padding: 12px 24px; font-family: monospace; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; text-decoration: none; border: 2px solid #000;">
-                                    View All Tools →
-                                </a>
-                                <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #D0D0CC;">
-                                    <a href="https://trytrackr.com" style="font-size: 11px; color: #999; text-decoration: none; text-transform: uppercase; letter-spacing: 0.1em;">
-                                        Trackr — AI-powered software intelligence
-                                    </a>
-                                </div>
-                            </div>
-                        `,
+                    await sendWeeklyDigestEmail({
+                        email,
+                        workspaceName: owner.workspace.name,
+                        toolsResearched: recentTools.length,
+                        toolNames: recentTools.map(t => t.name),
+                        newFeedItems: newFeedItemCount,
+                        creditsUsed,
+                        creditsRemaining,
+                        topToolName: topTool?.name ?? null,
+                        topToolScore: topTool?.overallScore ?? null,
+                        dashboardUrl: `${appUrl}/tools`,
                     });
                     digestsSent++;
                 }

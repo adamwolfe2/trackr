@@ -8,6 +8,7 @@ import { UserButton } from "@clerk/nextjs";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { NAV_SECTIONS, BOTTOM_NAV_ITEMS } from "@/lib/config/navigation";
 import type { PlanFeatures } from "@/lib/config/subscriptions";
+import { getRequiredPlan } from "@/lib/config/subscriptions";
 
 export function AppSidebar({ planFeatures }: { planFeatures?: PlanFeatures }) {
     const pathname = usePathname();
@@ -52,10 +53,12 @@ export function AppSidebar({ planFeatures }: { planFeatures?: PlanFeatures }) {
                                     : false;
 
                                 if (isLocked) {
+                                    const requiredPlan = featureKey ? getRequiredPlan(featureKey) : "Team";
                                     return (
                                         <Link
                                             key={item.href}
                                             href="/settings/billing"
+                                            title={`Requires ${requiredPlan} plan`}
                                             className="flex items-center gap-3 w-full px-3 py-2 text-sm font-mono transition-all text-neutral-300 hover:text-neutral-400"
                                         >
                                             <item.icon className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
@@ -96,10 +99,12 @@ export function AppSidebar({ planFeatures }: { planFeatures?: PlanFeatures }) {
                         : false;
 
                     if (isLocked) {
+                        const requiredPlan = featureKey ? getRequiredPlan(featureKey) : "Team";
                         return (
                             <Link
                                 key={item.href}
                                 href="/settings/billing"
+                                title={`Requires ${requiredPlan} plan`}
                                 className="flex items-center gap-3 w-full px-3 py-2.5 text-sm font-mono transition-all text-neutral-300 hover:text-neutral-400"
                             >
                                 <item.icon className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />

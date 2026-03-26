@@ -887,7 +887,14 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
                 const clerkUser = await clerk.users.getUser(tool.submittedBy);
                 const email = clerkUser.emailAddresses[0]?.emailAddress;
                 if (email) {
-                    await sendResearchCompleteEmail(email, tool.name, toolId, avgScore, previousScore);
+                    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
+                    await sendResearchCompleteEmail({
+                        email,
+                        toolName: tool.name,
+                        overallScore: avgScore.toFixed(1),
+                        summary: reportData.summary ?? null,
+                        reportUrl: `${appUrl}/tools/${toolId}`,
+                    });
                 }
             } catch (emailErr) {
                 // Non-critical: email notification failed

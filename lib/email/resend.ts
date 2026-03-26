@@ -109,50 +109,42 @@ export async function sendInviteEmail(
     }));
 }
 
-export async function sendResearchCompleteEmail(
-    to: string,
-    toolName: string,
-    toolId: string,
-    score: number,
-    previousScore?: number | null,
-) {
+export async function sendResearchCompleteEmail(params: {
+    email: string;
+    toolName: string;
+    overallScore: string | null;
+    summary: string | null;
+    reportUrl: string;
+}) {
     if (!process.env.RESEND_API_KEY) return;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
     const resend = getResend();
 
-    let scoreDeltaHtml = "";
-    if (previousScore != null) {
-        const delta = score - previousScore;
-        if (Math.abs(delta) >= 0.1) {
-            const sign = delta > 0 ? "+" : "";
-            const color = delta > 0 ? "#111" : "#888";
-            scoreDeltaHtml = `<span style="font-size: 14px; color: ${color}; margin-left: 8px;">${sign}${delta.toFixed(1)} vs last</span>`;
-        }
-    }
+    const scoreDisplay = params.overallScore
+        ? `<div style="font-size: 48px; font-weight: 900; font-family: monospace;">${Number(params.overallScore).toFixed(1)}/10</div><div style="font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #737373;">Overall Score</div>`
+        : "";
 
-    let scoreDeltaText = "";
-    if (previousScore != null) {
-        const delta = score - previousScore;
-        if (Math.abs(delta) >= 0.1) {
-            const sign = delta > 0 ? "+" : "";
-            scoreDeltaText = ` (${sign}${delta.toFixed(1)} vs last)`;
-        }
-    }
+    const scoreText = params.overallScore
+        ? `Score: ${Number(params.overallScore).toFixed(1)}/10`
+        : "";
+
+    const summaryText = params.summary ? params.summary.slice(0, 300) : "";
 
     await sendWithRetry(() => resend.emails.send({
         from: FROM,
-        to,
-        subject: `Research complete: ${escapeHtml(toolName)} (${score.toFixed(1)}/10)`,
+        to: params.email,
+        subject: `Research complete: ${params.toolName}`,
         html: emailWrapper(`
-            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Research Complete</p>
-            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 8px;">${escapeHtml(toolName)}</h1>
-            <div style="font-size: 40px; font-family: Georgia, 'Newsreader', serif; margin: 16px 0; display: flex; align-items: baseline; gap: 8px;">${score.toFixed(1)}<span style="font-size: 18px; color: #999;">/10</span>${scoreDeltaHtml}</div>
-            <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
-                Your research report is ready. Open it to see the full scorecard, pros/cons, competitor analysis, and pricing breakdown.
+            <h1 style="font-family: 'Newsreader', Georgia, serif; font-size: 24px; font-weight: 400; margin: 0 0 8px;">
+                ${escapeHtml(params.toolName)} — Report Ready
+            </h1>
+            <p style="font-family: monospace; font-size: 12px; color: #737373; margin: 0 0 24px;">
+                Your AI-powered research report is ready to review.
             </p>
-            ${emailButton(`${appUrl}/tools/${toolId}`, "View Report →")}
+            ${scoreDisplay}
+            ${params.summary ? `<p style="font-family: monospace; font-size: 12px; color: #525252; margin: 16px 0; line-height: 1.6;">${escapeHtml(params.summary.slice(0, 300))}</p>` : ""}
+            ${emailButton(params.reportUrl, "View Full Report")}
         `),
-        text: `Research Complete\n\n${toolName} — ${score.toFixed(1)}/10${scoreDeltaText}\n\nYour research report is ready. Open it to see the full scorecard, pros/cons, competitor analysis, and pricing breakdown.\n\nView Report: ${appUrl}/tools/${toolId}\n\n—\nTrackr — AI-powered software intelligence`,
+        text: `Research Complete\n\n${params.toolName} — Report Ready\n\nYour AI-powered research report is ready to review.\n\n${scoreText}\n\n${summaryText}\n\nView Full Report: ${params.reportUrl}\n\n---\nTrackr — AI-powered software intelligence`,
     }));
 }
 
@@ -540,6 +532,105 @@ function buildStackHealthDigestText(data: StackHealthDigestData, spendDeltaStr: 
 }
 
 // ── Audit Scorecard Email ─────────────────────────────────────────────────────
+
+// ── Weekly Digest Email ──────────────────────────────────────────────────────
+
+export async function sendWeeklyDigestEmail(params: {
+    email: string;
+    workspaceName: string;
+    toolsResearched: number;
+    toolNames: string[];
+    newFeedItems: number;
+    creditsUsed: number;
+    creditsRemaining: number;
+    topToolName: string | null;
+    topToolScore: string | null;
+    dashboardUrl: string;
+}) {
+    if (!process.env.RESEND_API_KEY) return;
+    const resend = getResend();
+
+    const toolListHtml = params.toolNames.length > 0
+        ? `<ul style="font-family: monospace; font-size: 12px; color: #333; line-height: 2; padding-left: 20px; margin: 0 0 16px;">
+            ${params.toolNames.map(n => `<li>${escapeHtml(n)}</li>`).join("")}
+           </ul>`
+        : "";
+
+    const topToolHtml = params.topToolName && params.topToolScore
+        ? `<div style="background: #fff; border: 1px solid #000; padding: 12px; margin: 0 0 16px;">
+               <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 4px;">Top Tool This Week</p>
+               <p style="font-family: Georgia, 'Newsreader', serif; font-size: 18px; margin: 0;">${escapeHtml(params.topToolName)} — ${Number(params.topToolScore).toFixed(1)}/10</p>
+           </div>`
+        : "";
+
+    const feedLine = params.newFeedItems > 0
+        ? `<p style="font-size: 12px; color: #555; margin: 0 0 8px;">${params.newFeedItems} new feed item${params.newFeedItems !== 1 ? "s" : ""} this week</p>`
+        : "";
+
+    await sendWithRetry(() => resend.emails.send({
+        from: FROM,
+        to: params.email,
+        subject: `Weekly digest: ${params.toolsResearched} tool${params.toolsResearched !== 1 ? "s" : ""} researched`,
+        html: emailWrapper(`
+            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Weekly Digest</p>
+            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 22px; margin: 0 0 16px;">
+                ${escapeHtml(params.workspaceName)}
+            </h1>
+            <div style="display: flex; gap: 12px; margin: 0 0 16px;">
+                <div style="flex: 1; background: #fff; border: 1px solid #000; padding: 12px; text-align: center;">
+                    <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 4px;">Researched</p>
+                    <p style="font-family: Georgia, serif; font-size: 24px; margin: 0;">${params.toolsResearched}</p>
+                </div>
+                <div style="flex: 1; background: #fff; border: 1px solid #000; padding: 12px; text-align: center;">
+                    <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 4px;">Credits Used</p>
+                    <p style="font-family: Georgia, serif; font-size: 24px; margin: 0;">${params.creditsUsed}</p>
+                </div>
+                <div style="flex: 1; background: #fff; border: 1px solid #000; padding: 12px; text-align: center;">
+                    <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 4px;">Remaining</p>
+                    <p style="font-family: Georgia, serif; font-size: 24px; margin: 0;">${params.creditsRemaining}</p>
+                </div>
+            </div>
+            ${topToolHtml}
+            ${toolListHtml}
+            ${feedLine}
+            ${emailButton(params.dashboardUrl, "View Dashboard")}
+        `),
+        text: buildWeeklyDigestText(params),
+    }));
+}
+
+function buildWeeklyDigestText(params: {
+    workspaceName: string;
+    toolsResearched: number;
+    toolNames: string[];
+    newFeedItems: number;
+    creditsUsed: number;
+    creditsRemaining: number;
+    topToolName: string | null;
+    topToolScore: string | null;
+    dashboardUrl: string;
+}): string {
+    const lines: string[] = [
+        `Weekly Digest — ${params.workspaceName}`,
+        "",
+        `Tools Researched: ${params.toolsResearched}`,
+        `Credits Used: ${params.creditsUsed} | Remaining: ${params.creditsRemaining}`,
+    ];
+    if (params.topToolName && params.topToolScore) {
+        lines.push(`Top Tool: ${params.topToolName} (${Number(params.topToolScore).toFixed(1)}/10)`);
+    }
+    if (params.toolNames.length > 0) {
+        lines.push("", "Tools:");
+        for (const n of params.toolNames) {
+            lines.push(`- ${n}`);
+        }
+    }
+    if (params.newFeedItems > 0) {
+        lines.push("", `${params.newFeedItems} new feed item${params.newFeedItems !== 1 ? "s" : ""} this week`);
+    }
+    lines.push("", `View Dashboard: ${params.dashboardUrl}`, "", "---", "Trackr — AI-powered software intelligence");
+    return lines.join("\n");
+}
 
 import type { AuditScorecard } from "@/lib/actions/audit";
 

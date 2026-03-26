@@ -9,6 +9,7 @@ const {
     mockEmailSend,
     mockSendRenewalAlertEmail,
     mockSendStackHealthDigest,
+    mockSendWeeklyDigestEmail,
     mockPostMessage,
     mockRenewalAlertBlocks,
     mockComputeStackInsights,
@@ -30,6 +31,7 @@ const {
         mockSendStackHealthDigest: vi.fn().mockResolvedValue(undefined),
         mockPostMessage: vi.fn().mockResolvedValue(undefined),
         mockRenewalAlertBlocks: vi.fn().mockReturnValue([]),
+        mockSendWeeklyDigestEmail: vi.fn().mockResolvedValue(undefined),
         mockComputeStackInsights: vi.fn().mockReturnValue({
             score: 60,
             label: "Mixed",
@@ -60,6 +62,7 @@ vi.mock("@/lib/db", () => ({
             tools: { findMany: vi.fn() },
             softwareSpend: { findMany: vi.fn() },
             workspaces: { findFirst: vi.fn() },
+            subscriptions: { findMany: vi.fn().mockResolvedValue([]) },
         },
         select: vi.fn().mockReturnValue(mockSelectChain),
         update: vi.fn().mockReturnValue({
@@ -77,6 +80,11 @@ vi.mock("resend", () => ({
 vi.mock("@/lib/email/resend", () => ({
     sendRenewalAlertEmail: mockSendRenewalAlertEmail,
     sendStackHealthDigest: mockSendStackHealthDigest,
+    sendWeeklyDigestEmail: mockSendWeeklyDigestEmail,
+    getResend: vi.fn().mockReturnValue({ emails: { send: mockEmailSend } }),
+    emailWrapper: vi.fn((html: string) => html),
+    emailButton: vi.fn((_url: string, text: string) => text),
+    escapeHtml: vi.fn((s: string) => s),
 }));
 
 vi.mock("@/lib/utils/stack-insights", () => ({
@@ -169,7 +177,7 @@ describe("GET /api/cron/digest", () => {
         expect(res.status).toBe(200);
         const body = await res.json();
         expect(body.digestsSent).toBe(0);
-        expect(mockEmailSend).not.toHaveBeenCalled();
+        expect(mockSendWeeklyDigestEmail).not.toHaveBeenCalled();
     });
 
     it("sends a digest email when owner has recent tools researched", async () => {
@@ -184,10 +192,10 @@ describe("GET /api/cron/digest", () => {
         expect(res.status).toBe(200);
         const body = await res.json();
         expect(body.digestsSent).toBe(1);
-        expect(mockEmailSend).toHaveBeenCalledTimes(1);
-        const emailCall = mockEmailSend.mock.calls[0][0];
-        expect(emailCall.to).toBe("owner@acme.com");
-        expect(emailCall.subject).toContain("2 tools researched");
+        expect(mockSendWeeklyDigestEmail).toHaveBeenCalledTimes(1);
+        const emailCall = mockSendWeeklyDigestEmail.mock.calls[0][0];
+        expect(emailCall.email).toBe("owner@acme.com");
+        expect(emailCall.toolsResearched).toBe(2);
     });
 
     it("sends a renewal alert when upcoming renewals exist", async () => {

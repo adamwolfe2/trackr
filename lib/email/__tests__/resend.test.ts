@@ -194,32 +194,87 @@ describe("sendResearchCompleteEmail", () => {
 
     it("returns without sending when no API key", async () => {
         delete process.env.RESEND_API_KEY;
-        await sendResearchCompleteEmail("user@example.com", "Linear", "tool_1", 8.5);
+        await sendResearchCompleteEmail({
+            email: "user@example.com",
+            toolName: "Linear",
+            overallScore: "8.5",
+            summary: "A solid project management tool.",
+            reportUrl: "https://trytrackr.com/tools/tool_1",
+        });
         expect(mockEmailsSend).not.toHaveBeenCalled();
     });
 
-    it("includes score formatted to 1 decimal in subject", async () => {
-        await sendResearchCompleteEmail("user@example.com", "Linear", "tool_1", 8.5);
+    it("includes score display in html when overallScore provided", async () => {
+        await sendResearchCompleteEmail({
+            email: "user@example.com",
+            toolName: "Linear",
+            overallScore: "8.5",
+            summary: null,
+            reportUrl: "https://trytrackr.com/tools/tool_1",
+        });
         const call = mockEmailsSend.mock.calls[0][0];
-        expect(call.subject).toContain("8.5/10");
+        expect(call.html).toContain("8.5/10");
     });
 
     it("formats whole number score with one decimal", async () => {
-        await sendResearchCompleteEmail("user@example.com", "Notion", "tool_2", 9);
+        await sendResearchCompleteEmail({
+            email: "user@example.com",
+            toolName: "Notion",
+            overallScore: "9",
+            summary: null,
+            reportUrl: "https://trytrackr.com/tools/tool_2",
+        });
         const call = mockEmailsSend.mock.calls[0][0];
-        expect(call.subject).toContain("9.0/10");
+        expect(call.html).toContain("9.0/10");
     });
 
     it("includes tool name in subject", async () => {
-        await sendResearchCompleteEmail("user@example.com", "Figma", "tool_3", 7.2);
+        await sendResearchCompleteEmail({
+            email: "user@example.com",
+            toolName: "Figma",
+            overallScore: "7.2",
+            summary: null,
+            reportUrl: "https://trytrackr.com/tools/tool_3",
+        });
         const call = mockEmailsSend.mock.calls[0][0];
         expect(call.subject).toContain("Figma");
     });
 
-    it("includes toolId in the CTA link", async () => {
-        await sendResearchCompleteEmail("user@example.com", "Linear", "tool_abc123", 7.5);
+    it("includes reportUrl in the CTA link", async () => {
+        await sendResearchCompleteEmail({
+            email: "user@example.com",
+            toolName: "Linear",
+            overallScore: "7.5",
+            summary: null,
+            reportUrl: "https://trytrackr.com/tools/tool_abc123",
+        });
         const call = mockEmailsSend.mock.calls[0][0];
         expect(call.html).toContain("tool_abc123");
+    });
+
+    it("includes summary when provided", async () => {
+        await sendResearchCompleteEmail({
+            email: "user@example.com",
+            toolName: "Linear",
+            overallScore: "8.0",
+            summary: "An excellent project management tool with great integrations.",
+            reportUrl: "https://trytrackr.com/tools/tool_1",
+        });
+        const call = mockEmailsSend.mock.calls[0][0];
+        expect(call.html).toContain("An excellent project management tool");
+    });
+
+    it("handles null overallScore gracefully", async () => {
+        await sendResearchCompleteEmail({
+            email: "user@example.com",
+            toolName: "Linear",
+            overallScore: null,
+            summary: null,
+            reportUrl: "https://trytrackr.com/tools/tool_1",
+        });
+        const call = mockEmailsSend.mock.calls[0][0];
+        expect(call.html).not.toContain("/10");
+        expect(call.subject).toContain("Linear");
     });
 });
 

@@ -281,3 +281,14 @@ export function hasFeature(plan: Plan, feature: keyof PlanFeatures): boolean {
     const value = plan.features[feature];
     return value === true || value === "limited";
 }
+
+/** Return the lowest plan name that unlocks a given feature (true, not "limited") */
+export function getRequiredPlan(featureKey: string): string {
+    const key = featureKey as keyof PlanFeatures;
+    const ordered: Plan[] = [PLANS.TEAM, PLANS.STARTUP, PLANS.ENTERPRISE];
+    for (const plan of ordered) {
+        const val = plan.features[key];
+        if (val === true) return plan.name;
+    }
+    return "Startup";
+}

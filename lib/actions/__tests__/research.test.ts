@@ -445,13 +445,13 @@ describe("performDeepResearch", () => {
         });
         await performDeepResearch("tool_1");
         expect(sendResearchCompleteEmail).toHaveBeenCalledTimes(1);
-        expect(sendResearchCompleteEmail).toHaveBeenCalledWith(
-            "user@example.com",
-            "Linear",
-            "tool_1",
-            expect.any(Number),
-            null, // previousScore — mock tool has no prior score
-        );
+        expect(sendResearchCompleteEmail).toHaveBeenCalledWith({
+            email: "user@example.com",
+            toolName: "Linear",
+            overallScore: expect.any(String),
+            summary: expect.any(String),
+            reportUrl: expect.stringContaining("/tools/tool_1"),
+        });
     });
 
     it("does not send email when submittedBy is null", async () => {
