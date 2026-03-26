@@ -428,13 +428,15 @@ export const webhookEvents = pgTable('webhook_events', {
 export const dripEmails = pgTable('drip_emails', {
     id: uuid('id').defaultRandom().primaryKey(),
     email: text('email').notNull(),
-    emailType: text('email_type').notNull(), // 'd1' | 'd3' | 'd7'
+    emailType: text('email_type').notNull(), // 'd1' | 'd3' | 'd7' | 'audit_d3' | 'audit_d7' | 'audit_d14'
     resendEmailId: text('resend_email_id').notNull(),
     scheduledAt: timestamp('scheduled_at').notNull(),
     canceledAt: timestamp('canceled_at'),
+    auditSubmissionId: uuid('audit_submission_id').references(() => auditSubmissions.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').defaultNow().notNull(),
 }, (table) => [
     index('drip_emails_email_idx').on(table.email),
+    index('drip_emails_audit_submission_id_idx').on(table.auditSubmissionId),
 ]);
 
 // Community Votes — anonymous per-tool like/dislike counts for the curated library
@@ -485,11 +487,15 @@ export const auditSubmissions = pgTable('audit_submissions', {
     inviteToken: text('invite_token').unique(), // used to track invite state
     arcCode: text('arc_code'), // architect attribution code
     employeeCount: text('employee_count'), // Used for per-seat cost projections
+    // Engagement + vanity URL
+    shareViewedAt: timestamp('share_viewed_at'), // First time prospect opened the share link
+    publicSlug: text('public_slug').unique(), // Vanity URL: /scorecard/[slug]
     createdAt: timestamp('created_at').defaultNow().notNull(),
     completedAt: timestamp('completed_at'),
 }, (table) => [
     index('audit_submissions_created_at_idx').on(table.createdAt),
     index('audit_submissions_contact_email_idx').on(table.contactEmail),
+    index('audit_submissions_public_slug_idx').on(table.publicSlug),
 ]);
 
 export * from './referrals-schema';

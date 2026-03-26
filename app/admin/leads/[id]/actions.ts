@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { auditSubmissions, tools } from "@/lib/db/schema";
+import { auditSubmissions, tools, softwareSpend, pendingInvitations } from "@/lib/db/schema";
 import { eq, ilike, and, ne } from "drizzle-orm";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { revalidatePath } from "next/cache";
@@ -365,5 +365,115 @@ export async function clearPackage(
         .where(eq(auditSubmissions.id, parsed.data));
 
     revalidatePath(`/admin/leads/${parsed.data}`);
+    return { success: true };
+}
+
+// ── One-Click Provisioning ────────────────────────────────────────────────────
+
+const ProvisionSchema = z.object({
+    submissionId: z.string().uuid(),
+    packageSlug: z.enum(["assessment", "implementation", "retainer"]),
+    selectedToolNames: z.array(z.string()).max(20),
+});
+
+export async function provisionAndInvite(
+    input: z.infer<typeof ProvisionSchema>,
+): Promise<{ success: boolean; error?: string }> {
+    const authed = await isAdminAuthenticated();
+    if (!authed) return { success: false, error: "Not authenticated" };
+
+    const parsed = ProvisionSchema.safeParse(input);
+    if (!parsed.success) return { success: false, error: "Invalid input" };
+
+    const { submissionId, packageSlug, selectedToolNames } = parsed.data;
+
+    // 1. Fetch submission + verify workspace exists
+    const submission = await db.query.auditSubmissions.findFirst({
+        where: eq(auditSubmissions.id, submissionId),
+    });
+    if (!submission) return { success: false, error: "Submission not found" };
+    if (!submission.preBuiltWorkspaceId) return { success: false, error: "Workspace not ready" };
+
+    const workspaceId = submission.preBuiltWorkspaceId;
+
+    // 2. Seed recommended tools into softwareSpend (ON CONFLICT pattern)
+    if (selectedToolNames.length > 0) {
+        // Get existing tool names in workspace to avoid duplicates
+        const existing = await db.select({ toolName: softwareSpend.toolName })
+            .from(softwareSpend)
+            .where(eq(softwareSpend.workspaceId, workspaceId));
+        const existingNames = new Set(existing.map(e => e.toolName.toLowerCase().trim()));
+
+        const newTools = selectedToolNames.filter(
+            name => !existingNames.has(name.toLowerCase().trim())
+        );
+
+        if (newTools.length > 0) {
+            await db.insert(softwareSpend).values(
+                newTools.map(name => ({
+                    workspaceId,
+                    toolName: name,
+                    status: "active" as const,
+                    category: "Recommended",
+                    monthlyCost: "0",
+                }))
+            );
+        }
+    }
+
+    // 3. Update scorecard with selectedPackage
+    const scorecard = (submission.scorecard ?? {}) as Record<string, unknown>;
+    const updatedScorecard = { ...scorecard, selectedPackage: packageSlug };
+    await db.update(auditSubmissions)
+        .set({ scorecard: updatedScorecard })
+        .where(eq(auditSubmissions.id, submissionId));
+
+    // 4. Create pendingInvitation (skip if one already exists for this email+workspace)
+    const existingInvite = await db.query.pendingInvitations.findFirst({
+        where: and(
+            eq(pendingInvitations.workspaceId, workspaceId),
+            eq(pendingInvitations.email, submission.contactEmail),
+        ),
+    });
+
+    let inviteId: string | null = existingInvite?.id ?? null;
+    if (!existingInvite) {
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        const [invite] = await db.insert(pendingInvitations).values({
+            workspaceId,
+            email: submission.contactEmail,
+            invitedByUserId: "admin",
+            expiresAt,
+        }).returning();
+        inviteId = invite.id;
+    }
+
+    // 5. Send invite email
+    try {
+        const { sendInviteEmail } = await import("@/lib/email/resend");
+        await sendInviteEmail(
+            submission.contactEmail,
+            submission.companyName,
+            "Trackr Team",
+            inviteId ?? undefined,
+        );
+    } catch {
+        // Non-fatal
+    }
+
+    // 6. Cancel audit drip emails
+    try {
+        const { cancelAuditDrips } = await import("@/lib/email/audit-drips");
+        await cancelAuditDrips(submissionId);
+    } catch {
+        // Non-fatal
+    }
+
+    // 7. Mark submission status
+    await db.update(auditSubmissions)
+        .set({ status: "complete", assignedRep: "provisioned" })
+        .where(eq(auditSubmissions.id, submissionId));
+
+    revalidatePath(`/admin/leads/${submissionId}`);
     return { success: true };
 }

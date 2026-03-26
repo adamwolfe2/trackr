@@ -538,9 +538,20 @@ export async function processAuditSubmission(id: string): Promise<void> {
             prompt: buildPrompt(submission, enrichment, benchmark),
         });
 
-        // 3. Generate share token
+        // 3. Generate share token + vanity URL slug
         const { randomUUID } = await import("crypto");
         const shareToken = randomUUID().replace(/-/g, "");
+
+        // Generate vanity URL slug
+        const publicSlug = slugify(submission.companyName);
+        let finalSlug = publicSlug;
+        const [existingSlug] = await db.select({ id: auditSubmissions.id })
+            .from(auditSubmissions)
+            .where(eq(auditSubmissions.publicSlug, publicSlug))
+            .limit(1);
+        if (existingSlug) {
+            finalSlug = `${publicSlug}-${randomUUID().slice(0, 4)}`;
+        }
 
         // 4. Pre-build workspace
         const slug = slugify(submission.companyName) + "-" + randomUUID().slice(0, 4);
@@ -609,10 +620,17 @@ export async function processAuditSubmission(id: string): Promise<void> {
 
         // 5. Send emails — rep gets full scorecard, prospect gets teaser
         const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
-        const shareUrl = `${appUrl}/audit/share/${shareToken}`;
+        const shareUrl = `${appUrl}/scorecard/${finalSlug}`;
         const adminUrl = `${appUrl}/admin/leads/${id}`;
         await sendAuditScorecardEmail({ submission, scorecard, shareUrl, adminUrl });
         await sendProspectTeaserEmail({ submission, score: scorecard.aiNativeScore.score });
+
+        // 5b. Schedule audit drip sequence (non-blocking)
+        import("@/lib/email/audit-drips")
+            .then(({ scheduleAuditDripSequence }) =>
+                scheduleAuditDripSequence(id, submission.contactEmail, submission.companyName, scorecard)
+            )
+            .catch(() => {});
 
         // 6. Persist
         await db.update(auditSubmissions)
@@ -621,6 +639,7 @@ export async function processAuditSubmission(id: string): Promise<void> {
                 scorecard,
                 talkingPoints: scorecard.talkingPoints,
                 shareToken,
+                publicSlug: finalSlug,
                 preBuiltWorkspaceId: workspace.id,
                 completedAt: new Date(),
             })

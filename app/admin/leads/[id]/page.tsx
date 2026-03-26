@@ -16,7 +16,9 @@ import { RecommendedToolsEditor } from "./recommended-tools-editor";
 import { ScorecardNav } from "./scorecard-nav";
 import { CopyButton } from "./copy-button";
 import { PackageSelector } from "./package-selector";
+import { ProvisionDialog } from "./provision-dialog";
 import type { PackageSlug } from "@/lib/config/architect-packages";
+import { computeLeadScore } from "@/lib/utils/lead-scoring";
 
 export const metadata: Metadata = {
     title: "Lead Detail — Trackr Admin",
@@ -147,9 +149,20 @@ export default async function LeadDetailPage({
     const selectedPackage = ((submission.scorecard as Record<string, unknown> | null)?.selectedPackage as PackageSlug | undefined) ?? null;
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://trytrackr.com";
-    const shareUrl = submission.shareToken
-        ? `${appUrl}/audit/share/${submission.shareToken}`
-        : null;
+    const vanityUrl = submission.publicSlug ? `${appUrl}/scorecard/${submission.publicSlug}` : null;
+    const shareUrl = vanityUrl ?? (submission.shareToken ? `${appUrl}/audit/share/${submission.shareToken}` : null);
+
+    // Compute lead score
+    const leadScore = computeLeadScore({
+        revenue: submission.revenue,
+        employeeCount: submission.employeeCount,
+        monthlySpend: submission.monthlySpend,
+        currentTools: submission.currentTools,
+        dailyAdoptionPct: submission.dailyAdoptionPct,
+        hasAIManager: submission.hasAIManager,
+        scorecard: submission.scorecard as Record<string, unknown> | null,
+        shareViewedAt: submission.shareViewedAt,
+    });
 
     const websiteHostname = (() => {
         if (!submission.companyWebsite) return null;
@@ -232,6 +245,11 @@ export default async function LeadDetailPage({
         } catch {
             // Non-fatal — invite row created even if email fails
         }
+
+        // Cancel drip emails — prospect is converting
+        const { cancelAuditDrips } = await import("@/lib/email/audit-drips");
+        cancelAuditDrips(id).catch(() => {});
+
         redirect(`/admin/leads/${id}?invited=1`);
     }
 
@@ -371,6 +389,45 @@ export default async function LeadDetailPage({
                         <p className="font-mono text-xs text-red-700 break-all">{submission.errorMessage}</p>
                     </div>
                 )}
+            </div>
+
+            {/* ── Lead Score ─────────────────────────────────────────────────── */}
+            <div className="border border-black p-6">
+                <div className="flex items-center gap-4 mb-5">
+                    <div className="flex-shrink-0 text-center">
+                        <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-neutral-400 mb-1">Lead Score</p>
+                        <span className="font-mono text-5xl font-black leading-none">{leadScore.score}</span>
+                    </div>
+                    <span className={`font-mono text-[10px] uppercase tracking-widest px-2.5 py-1 ${
+                        leadScore.tier === "hot" ? "bg-black text-white" :
+                        leadScore.tier === "warm" ? "border border-yellow-500 text-yellow-700" :
+                        "border border-neutral-300 text-neutral-500"
+                    }`}>
+                        {leadScore.tier}
+                    </span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {([
+                        { label: "Revenue", value: leadScore.breakdown.revenue, max: 15 },
+                        { label: "Employees", value: leadScore.breakdown.employees, max: 15 },
+                        { label: "Spend", value: leadScore.breakdown.spend, max: 15 },
+                        { label: "Tool Count", value: leadScore.breakdown.toolCount, max: 10 },
+                        { label: "Adoption Gap", value: leadScore.breakdown.adoption, max: 15 },
+                        { label: "Governance Gap", value: leadScore.breakdown.governance, max: 10 },
+                        { label: "AI Readiness", value: leadScore.breakdown.aiScore, max: 10 },
+                        { label: "Engagement", value: leadScore.breakdown.engagement, max: 5 },
+                    ] as const).map(({ label, value, max }) => (
+                        <div key={label}>
+                            <div className="flex items-center justify-between mb-1">
+                                <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400">{label}</span>
+                                <span className="font-mono text-[10px] font-bold">{value}/{max}</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
+                                <div className="h-full bg-black transition-all" style={{ width: `${(value / max) * 100}%` }} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
 
             {/* ── Section Nav ─────────────────────────────────────────────────── */}
@@ -831,16 +888,14 @@ export default async function LeadDetailPage({
             {/* ── Sticky Actions Bar ─────────────────────────────────────────── */}
             <div className="fixed bottom-0 left-0 right-0 bg-[#F3F3EF] border-t-2 border-black px-6 py-4 z-50">
                 <div className="max-w-7xl mx-auto flex items-center gap-3 flex-wrap">
-                    {submission.preBuiltWorkspaceId && (
-                        <form action={sendInvite}>
-                            <button
-                                type="submit"
-                                className="font-mono text-xs uppercase tracking-widest border-2 border-black bg-black text-white px-6 py-2.5 hover:bg-neutral-800 transition-colors"
-                            >
-                                Send Workspace Invite
-                            </button>
-                        </form>
-                    )}
+                    <ProvisionDialog
+                        submissionId={id}
+                        contactEmail={submission.contactEmail}
+                        companyName={submission.companyName}
+                        recommendedTools={recommendedTools}
+                        existingPackage={selectedPackage}
+                        workspaceId={submission.preBuiltWorkspaceId}
+                    />
 
                     {shareUrl && (
                         <div className="flex items-center gap-2">

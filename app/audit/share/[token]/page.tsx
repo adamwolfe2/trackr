@@ -361,6 +361,14 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
     });
     if (!submission || submission.status !== "complete" || !submission.scorecard) notFound();
 
+    // Record first share view for lead scoring
+    if (!submission.shareViewedAt) {
+        db.update(auditSubmissions)
+            .set({ shareViewedAt: new Date() })
+            .where(eq(auditSubmissions.id, submission.id))
+            .catch(() => {});
+    }
+
     const scorecard = submission.scorecard as ExtendedScorecard;
     const score = scorecard.aiNativeScore.score;
     const selectedPackageSlug = ((submission.scorecard as Record<string, unknown>).selectedPackage as PackageSlug | undefined) ?? null;

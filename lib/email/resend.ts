@@ -20,17 +20,17 @@ async function sendWithRetry(
     }
 }
 
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
     return text.replace(/[&<>"']/g, (ch) =>
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch] ?? ch
     );
 }
 
-function getResend() {
+export function getResend() {
     return new Resend(process.env.RESEND_API_KEY!);
 }
 
-function emailWrapper(content: string) {
+export function emailWrapper(content: string) {
     return `
         <div style="font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace; max-width: 480px; margin: 0 auto; padding: 32px; border: 2px solid #000; background: #F3F3EF;">
             ${content}
@@ -43,7 +43,7 @@ function emailWrapper(content: string) {
     `;
 }
 
-function emailButton(href: string, label: string) {
+export function emailButton(href: string, label: string) {
     return `<a href="${href}" style="display: inline-block; background: #000; color: #F3F3EF; padding: 12px 24px; font-family: monospace; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; text-decoration: none; border: 2px solid #000;">${label}</a>`;
 }
 

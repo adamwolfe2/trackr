@@ -9,6 +9,7 @@ import Link from "next/link";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { CopyShareUrlButton } from "@/components/admin/copy-share-url-button";
+import { computeLeadScore } from "@/lib/utils/lead-scoring";
 
 const PAGE_SIZE = 50;
 
@@ -82,6 +83,14 @@ function scoreColor(score: number | null): string {
     return "text-red-700";
 }
 
+function tierBadge(tier: "hot" | "warm" | "cold"): string {
+    switch (tier) {
+        case "hot": return "bg-black text-white";
+        case "warm": return "border border-yellow-500 text-yellow-700";
+        case "cold": return "border border-neutral-300 text-neutral-500";
+    }
+}
+
 function paginationHref(page: number, status?: string): string {
     const params = new URLSearchParams();
     if (status) params.set("status", status);
@@ -150,12 +159,11 @@ export default async function AdminLeadsPage({
             : undefined;
 
     // Fetch paginated results + total count in parallel
-    const [submissions, [{ totalCount }], [{ totalAll }], [{ completeCount }], [{ processingCount }], [{ failedCount }]] = await Promise.all([
+    // Fetch all matching rows for scoring, then sort by lead score DESC, then paginate in JS
+    const [allSubmissions, [{ totalCount }], [{ totalAll }], [{ completeCount }], [{ processingCount }], [{ failedCount }]] = await Promise.all([
         db.select().from(auditSubmissions)
             .where(statusWhere)
-            .orderBy(desc(auditSubmissions.createdAt))
-            .limit(PAGE_SIZE)
-            .offset(offset),
+            .orderBy(desc(auditSubmissions.createdAt)),
         db.select({ totalCount: count() }).from(auditSubmissions).where(statusWhere),
         db.select({ totalAll: count() }).from(auditSubmissions),
         db.select({ completeCount: count() }).from(auditSubmissions).where(eq(auditSubmissions.status, "complete")),
@@ -164,6 +172,25 @@ export default async function AdminLeadsPage({
         ),
         db.select({ failedCount: count() }).from(auditSubmissions).where(eq(auditSubmissions.status, "failed")),
     ]);
+
+    // Compute lead scores and sort by score DESC
+    const scoredSubmissions = allSubmissions.map(sub => ({
+        ...sub,
+        leadScore: computeLeadScore({
+            revenue: sub.revenue,
+            employeeCount: sub.employeeCount,
+            monthlySpend: sub.monthlySpend,
+            currentTools: sub.currentTools,
+            dailyAdoptionPct: sub.dailyAdoptionPct,
+            hasAIManager: sub.hasAIManager,
+            scorecard: sub.scorecard as Record<string, unknown> | null,
+            shareViewedAt: sub.shareViewedAt,
+        }),
+    }));
+    scoredSubmissions.sort((a, b) => b.leadScore.score - a.leadScore.score);
+
+    // Paginate in JS after sorting
+    const submissions = scoredSubmissions.slice(offset, offset + PAGE_SIZE);
 
     const totalPages = Math.max(1, Math.ceil(Number(totalCount) / PAGE_SIZE));
     const rangeStart = offset + 1;
@@ -236,13 +263,14 @@ export default async function AdminLeadsPage({
                 <table className="w-full min-w-[600px]">
                     <thead>
                         <tr className="border-b border-black">
+                            <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Lead</th>
                             <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Company</th>
                             <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Contact</th>
                             <th className="hidden sm:table-cell text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Revenue</th>
                             <th className="hidden sm:table-cell text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Spend/mo</th>
                             <th className="hidden sm:table-cell text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Tools</th>
                             <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Status</th>
-                            <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Score</th>
+                            <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">AI Score</th>
                             <th className="text-left px-4 py-3 font-mono text-[10px] uppercase tracking-widest text-neutral-500">Submitted</th>
                             <th className="px-4 py-3"></th>
                         </tr>
@@ -254,9 +282,18 @@ export default async function AdminLeadsPage({
                             const domain = sub.companyWebsite
                                 ? sub.companyWebsite.replace(/^https?:\/\//, "").replace(/\/$/, "").split("/")[0]
                                 : null;
+                            const ls = sub.leadScore;
 
                             return (
                                 <tr key={sub.id} className="border-b border-neutral-100 hover:bg-neutral-50">
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-mono text-sm font-black">{ls.score}</span>
+                                            <span className={`font-mono text-[8px] uppercase tracking-widest px-1.5 py-0.5 ${tierBadge(ls.tier)}`}>
+                                                {ls.tier}
+                                            </span>
+                                        </div>
+                                    </td>
                                     <td className="px-4 py-3">
                                         <p className="font-mono text-sm font-bold">{sub.companyName}</p>
                                         {domain && <p className="font-mono text-[10px] text-neutral-400">{domain}</p>}
@@ -304,7 +341,7 @@ export default async function AdminLeadsPage({
                         })}
                         {submissions.length === 0 && (
                             <tr>
-                                <td colSpan={9} className="px-4 py-12 text-center font-mono text-xs text-neutral-400">
+                                <td colSpan={10} className="px-4 py-12 text-center font-mono text-xs text-neutral-400">
                                     No audit submissions yet
                                 </td>
                             </tr>

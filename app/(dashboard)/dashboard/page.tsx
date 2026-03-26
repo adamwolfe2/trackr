@@ -12,6 +12,7 @@ import { ToolLogo } from "@/components/tools/tool-logo";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
+import { ROIWidget } from "@/components/dashboard/roi-widget";
 import type { Metadata } from "next";
 
 type MemberWithWorkspace = InferSelectModel<typeof workspaceMembers> & {
@@ -246,6 +247,8 @@ export default async function DashboardPage() {
                 toolsThisWeek={toolsThisWeek}
                 reportsThisWeek={reportsThisWeek}
             />
+
+            <ROIWidget workspaceId={workspaceId} />
 
             {/* Onboarding checklist — shown until workspace has 3+ tools + active research */}
             {showChecklist && (
