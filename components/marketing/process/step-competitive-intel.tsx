@@ -85,7 +85,7 @@ export function StepCompetitiveIntel() {
 
                 {/* Competitor grid */}
                 {visibleCompetitors > 0 && (
-                    <div className="grid grid-cols-5 gap-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                         {COMPETITORS.slice(0, visibleCompetitors).map((comp) => (
                             <motion.div
                                 key={comp.name}
