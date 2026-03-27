@@ -221,8 +221,14 @@ export default async function BillingPage({
                     <div className="w-6 h-6 border border-neutral-400 flex items-center justify-center shrink-0">
                         <X className="w-4 h-4" />
                     </div>
-                    <div>
-                        Checkout was canceled. No charges were made — you can try again below.
+                    <div className="space-y-2">
+                        <p>Checkout was canceled. No charges were made.</p>
+                        <a
+                            href="#plans"
+                            className="inline-block border border-black bg-white hover:bg-black hover:text-white px-4 py-2 font-mono text-xs uppercase tracking-widest transition-colors"
+                        >
+                            Try Again
+                        </a>
                     </div>
                 </div>
             )}
@@ -238,11 +244,13 @@ export default async function BillingPage({
             )}
 
             {/* Plan Cards with monthly/annual toggle */}
-            <BillingPlanCards
-                planCards={planCards}
-                workspaceId={workspaceId}
-                stripeCustomerId={subscription?.stripeCustomerId ?? null}
-            />
+            <div id="plans">
+                <BillingPlanCards
+                    planCards={planCards}
+                    workspaceId={workspaceId}
+                    stripeCustomerId={subscription?.stripeCustomerId ?? null}
+                />
+            </div>
 
             {/* Subscription Details */}
             {hasActiveSubscription && (

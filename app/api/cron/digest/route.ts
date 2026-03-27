@@ -152,13 +152,16 @@ export async function GET(req: Request) {
                 const email = clerkUser.emailAddresses[0]?.emailAddress;
                 if (!email) continue;
 
+                // --- Email preference check ---
+                const emailPrefs = (owner.workspace as { emailPreferences?: Record<string, boolean> }).emailPreferences ?? {};
+
                 // --- Weekly Research Digest ---
                 const recentTools = (toolsByWorkspace.get(owner.workspaceId) ?? []).slice(0, 5);
                 const creditsUsed = completedJobsByWorkspace.get(owner.workspaceId) ?? 0;
                 const creditsRemaining = creditsByWorkspace.get(owner.workspaceId) ?? 0;
                 const newFeedItemCount = feedItemsByWorkspace.get(owner.workspaceId) ?? 0;
 
-                if (recentTools.length > 0) {
+                if (recentTools.length > 0 && emailPrefs.weeklyDigest !== false) {
                     // Find the top-scoring tool this week
                     const sortedByScore = [...recentTools].sort((a, b) => {
                         const sa = a.overallScore ? Number(a.overallScore) : 0;
@@ -185,7 +188,7 @@ export async function GET(req: Request) {
                 // --- Renewal Alerts ---
                 const upcomingRenewals = renewalsByWorkspace.get(owner.workspaceId) ?? [];
 
-                if (upcomingRenewals.length > 0) {
+                if (upcomingRenewals.length > 0 && emailPrefs.renewalAlerts !== false) {
                     const renewalData = upcomingRenewals.map(r => ({
                         name: r.toolName,
                         renewalDate: r.renewalDate!,

@@ -470,11 +470,15 @@ async function handleTrialWillEnd(sub: Stripe.Subscription) {
 
     if (!owner) return;
 
-    // Look up workspace name for personalized email
+    // Look up workspace name and email preferences for personalized email
     const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.id, existing.workspaceId),
-        columns: { name: true },
+        columns: { name: true, emailPreferences: true },
     });
+
+    // Respect workspace email preferences — default to true for backward compatibility
+    const emailPrefs = (workspace?.emailPreferences as Record<string, boolean>) ?? {};
+    if (emailPrefs.trialReminders === false) return;
 
     try {
         const clerk = await clerkClient();

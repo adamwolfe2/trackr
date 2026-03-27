@@ -14,7 +14,7 @@ import {
     riskAssessments,
     decisionLog,
 } from "@/lib/db/enterprise-schema";
-import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { computeStackInsights } from "@/lib/utils/stack-insights";
 
 // ── Tool definitions (Anthropic Tool[] format) ────────────────────────────────
@@ -514,7 +514,10 @@ async function searchFeed(input: Record<string, unknown>, workspaceId: string): 
         .where(
             and(
                 eq(feedItems.workspaceId, workspaceId),
-                sql`(${feedItems.title} ILIKE ${"%" + query + "%"} OR ${feedItems.summary} ILIKE ${"%" + query + "%"})`
+                or(
+                    ilike(feedItems.title, `%${query}%`),
+                    ilike(feedItems.summary, `%${query}%`),
+                )
             )
         )
         .orderBy(desc(feedItems.publishedAt))

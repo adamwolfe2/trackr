@@ -881,7 +881,9 @@ ${hasRecipe ? `- For workspaceFit: Score how well this tool fits the company's s
         }
 
         // Send research complete email to submitter (fire and forget)
-        if (tool.submittedBy) {
+        // Respect workspace email preferences — default to true for backward compatibility
+        const emailPrefs = (tool.workspace as { emailPreferences?: Record<string, boolean> }).emailPreferences ?? {};
+        if (tool.submittedBy && emailPrefs.researchComplete !== false) {
             try {
                 const clerk = await clerkClient();
                 const clerkUser = await clerk.users.getUser(tool.submittedBy);

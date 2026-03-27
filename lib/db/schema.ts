@@ -16,6 +16,12 @@ export const workspaces = pgTable('workspaces', {
     slackTeamId: text('slack_team_id'),         // Slack workspace ID
     slackTeamName: text('slack_team_name'),     // Slack workspace name for display
     inviteCode: text('invite_code').unique(),    // Persistent public invite link token
+    emailPreferences: jsonb('email_preferences').default({
+        weeklyDigest: true,
+        researchComplete: true,
+        renewalAlerts: true,
+        trialReminders: true,
+    }).notNull(),
     currentStreak: integer('current_streak').default(0).notNull(),
     longestStreak: integer('longest_streak').default(0).notNull(),
     createdAt: timestamp('created_at').defaultNow().notNull(),

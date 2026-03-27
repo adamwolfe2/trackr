@@ -16,6 +16,7 @@ import { redirect } from "next/navigation";
 import { getWorkspaceId } from "@/lib/db/queries";
 import Link from "next/link";
 import { QueueAutoRefresh } from "@/components/queue/queue-auto-refresh";
+import { RetryResearchButton } from "@/components/queue/retry-research-button";
 
 export default async function QueuePage() {
     const user = await currentUser();
@@ -108,7 +109,10 @@ export default async function QueuePage() {
                                     )}
                                 </div>
                             </div>
-                            <div>
+                            <div className="flex items-center gap-2">
+                                {job.status === "failed" && (
+                                    <RetryResearchButton toolId={job.toolId} />
+                                )}
                                 <span className={`font-mono text-xs uppercase tracking-widest px-2 py-1 border ${
                                     job.status === "running" ? "border-neutral-400 text-neutral-600 bg-neutral-50" :
                                     job.status === "complete" ? "border-black text-black" :
