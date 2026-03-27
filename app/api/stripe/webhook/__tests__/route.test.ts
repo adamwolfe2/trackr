@@ -20,6 +20,7 @@ vi.mock("@/lib/db", () => ({
             webhookEvents: { findFirst: vi.fn() },
             subscriptions: { findFirst: vi.fn() },
             workspaceMembers: { findFirst: vi.fn() },
+            workspaces: { findFirst: vi.fn().mockResolvedValue({ id: "ws_1", name: "Test Workspace" }) },
         },
         insert: vi.fn().mockReturnValue({
             values: vi.fn().mockReturnValue({
@@ -264,12 +265,17 @@ describe("POST /api/stripe/webhook", () => {
             stripeSubscriptionId: "sub_trial",
             workspaceId: "ws_trial",
             status: "trialing",
+            planId: "price_team_monthly",
         });
         (db.query.workspaceMembers.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
             id: "mem_owner",
             userId: "usr_owner",
             workspaceId: "ws_trial",
             role: "owner",
+        });
+        (db.query.workspaces.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+            id: "ws_trial",
+            name: "Trial Workspace",
         });
 
         mockStripeEvent("customer.subscription.trial_will_end", {

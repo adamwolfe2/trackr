@@ -92,6 +92,62 @@ export async function createCheckoutSession(
     return { url: session.url };
 }
 
+export async function getInvoiceHistory(workspaceId: string): Promise<{
+    invoices: Array<{
+        id: string;
+        date: string;
+        amount: number;
+        status: string;
+        pdfUrl: string | null;
+        description: string | null;
+    }>;
+}> {
+    assertStripeConfigured();
+    const user = await currentUser();
+    if (!user) {
+        throw new Error("Unauthorized");
+    }
+
+    const member = await db.query.workspaceMembers.findFirst({
+        where: and(eq(workspaceMembers.userId, user.id), eq(workspaceMembers.workspaceId, workspaceId)),
+    });
+
+    if (!member || (member.role !== "owner" && member.role !== "admin")) {
+        throw new Error("Unauthorized: Only workspace owners and admins can view invoices.");
+    }
+
+    const subscription = await db.query.subscriptions.findFirst({
+        where: eq(subscriptions.workspaceId, workspaceId),
+        columns: { stripeCustomerId: true },
+    });
+
+    if (!subscription?.stripeCustomerId) {
+        return { invoices: [] };
+    }
+
+    const stripeInvoices = await stripe.invoices.list({
+        customer: subscription.stripeCustomerId,
+        limit: 20,
+    });
+
+    const invoices = stripeInvoices.data
+        .sort((a, b) => (b.created ?? 0) - (a.created ?? 0))
+        .map((inv) => ({
+            id: inv.id,
+            date: new Date((inv.created ?? 0) * 1000).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+            }),
+            amount: inv.amount_paid ?? 0,
+            status: inv.status ?? "unknown",
+            pdfUrl: inv.invoice_pdf ?? null,
+            description: inv.description ?? null,
+        }));
+
+    return { invoices };
+}
+
 export async function createCustomerPortalSession(workspaceId: string) {
     const user = await currentUser();
     if (!user) throw new Error("Unauthorized");

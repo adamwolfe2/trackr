@@ -21,6 +21,7 @@ import { Check, X } from "lucide-react";
 import { BillingPlanCards } from "@/components/billing/billing-plan-cards";
 import { CreditPackSelector } from "@/components/billing/credit-pack-selector";
 import { AutoTopUpToggle } from "@/components/billing/auto-top-up-toggle";
+import { InvoiceHistory } from "@/components/billing/invoice-history";
 
 type BillingPlanCard = {
     key: string;
@@ -329,6 +330,8 @@ export default async function BillingPage({
                     />
                 )}
             </div>
+
+            <InvoiceHistory workspaceId={workspaceId} />
 
             <div className="border border-black/20 p-4 font-mono text-xs text-neutral-500">
                 All plans include a 14-day free trial. Per workspace, not per member. Cancel any time from the billing portal. Upgrades take effect immediately.

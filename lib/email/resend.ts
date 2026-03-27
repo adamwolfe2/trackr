@@ -172,37 +172,44 @@ export async function sendResearchFailedEmail(
     }));
 }
 
-export async function sendTrialEndingEmail(
-    to: string,
-    daysLeft: number,
-    planName: string
-) {
+export async function sendTrialEndingEmail(params: {
+    email: string;
+    userName: string;
+    workspaceName: string;
+    planName: string;
+    daysRemaining: number;
+    billingUrl: string;
+}) {
     if (!process.env.RESEND_API_KEY) return;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
     const resend = getResend();
-    const urgency = daysLeft <= 3
-        ? `<p style="font-size: 13px; color: #C0392B; font-weight: bold; margin: 0 0 16px;">Your trial expires ${daysLeft === 0 ? "today" : `in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`}.</p>`
-        : `<p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 16px;">Your ${escapeHtml(planName)} trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.</p>`;
-    const urgencyText = daysLeft <= 3
-        ? `Your trial expires ${daysLeft === 0 ? "today" : `in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`}.`
-        : `Your ${planName} trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}.`;
-    await sendWithRetry(() => resend.emails.send({
-        from: FROM,
-        to,
-        subject: `Your Trackr trial ends in ${daysLeft} day${daysLeft !== 1 ? "s" : ""}`,
-        html: emailWrapper(`
-            <p style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #999; margin: 0 0 8px;">Trial Ending Soon</p>
-            <h1 style="font-family: Georgia, 'Newsreader', serif; font-weight: normal; font-size: 24px; margin: 0 0 16px;">
-                Don&apos;t lose access
+    const { email, userName, workspaceName, planName, daysRemaining, billingUrl } = params;
+
+    await sendWithRetry(() =>
+        resend.emails.send({
+            from: "Trackr <team@trytrackr.com>",
+            to: email,
+            subject: `Your Trackr trial ends in ${daysRemaining} days`,
+            html: emailWrapper(`
+            <h1 style="font-family: 'Newsreader', Georgia, serif; font-size: 24px; font-weight: 400; margin: 0 0 8px;">
+                Your ${escapeHtml(planName)} trial ends in ${daysRemaining} days
             </h1>
-            ${urgency}
-            <p style="font-size: 13px; color: #555; line-height: 1.6; margin: 0 0 24px;">
-                Add a payment method to keep your ${escapeHtml(planName)} features — research credits, team members, integrations, and all your saved data.
+            <p style="font-family: monospace; font-size: 12px; color: #525252; line-height: 1.6; margin: 0 0 16px;">
+                Hi ${escapeHtml(userName)},
             </p>
-            ${emailButton(`${appUrl}/settings/billing`, "Add Payment Method →")}
+            <p style="font-family: monospace; font-size: 12px; color: #525252; line-height: 1.6; margin: 0 0 24px;">
+                Your ${escapeHtml(planName)} plan trial for ${escapeHtml(workspaceName)} expires soon. After the trial, your workspace will downgrade to the Free plan with limited features and credits.
+            </p>
+            <p style="font-family: monospace; font-size: 12px; color: #171717; line-height: 1.6; margin: 0 0 24px; font-weight: bold;">
+                To keep your current features and avoid interruption, confirm your subscription before the trial ends.
+            </p>
+            ${emailButton(billingUrl, "Manage Subscription")}
+            <p style="font-family: monospace; font-size: 10px; color: #a3a3a3; margin: 24px 0 0;">
+                If you have questions about your plan, reply to this email.
+            </p>
         `),
-        text: `Trial Ending Soon\n\nDon't lose access.\n\n${urgencyText}\n\nAdd a payment method to keep your ${planName} features — research credits, team members, integrations, and all your saved data.\n\nAdd Payment Method: ${appUrl}/settings/billing\n\n—\nTrackr — AI-powered software intelligence`,
-    }));
+            text: `Your ${planName} trial ends in ${daysRemaining} days\n\nHi ${userName},\n\nYour ${planName} plan trial for ${workspaceName} expires soon. After the trial, your workspace will downgrade to the Free plan with limited features and credits.\n\nTo keep your current features and avoid interruption, confirm your subscription before the trial ends.\n\nManage Subscription: ${billingUrl}\n\nIf you have questions about your plan, reply to this email.\n\n—\nTrackr — AI-powered software intelligence`,
+        }),
+    );
 }
 
 // ── Drip Email Sequence ──────────────────────────────────────────────────────

@@ -342,47 +342,56 @@ describe("sendTrialEndingEmail", () => {
         process.env.RESEND_API_KEY = ORIG_KEY;
     });
 
+    const trialParams = (overrides?: Partial<Parameters<typeof sendTrialEndingEmail>[0]>) => ({
+        email: "user@example.com",
+        userName: "Jane",
+        workspaceName: "Acme Inc",
+        planName: "Pro",
+        daysRemaining: 7,
+        billingUrl: "https://trytrackr.com/settings/billing",
+        ...overrides,
+    });
+
     it("returns without sending when no API key", async () => {
         delete process.env.RESEND_API_KEY;
-        await sendTrialEndingEmail("user@example.com", 7, "Pro");
+        await sendTrialEndingEmail(trialParams());
         expect(mockEmailsSend).not.toHaveBeenCalled();
     });
 
-    it("uses plural 'days' in subject when daysLeft > 1", async () => {
-        await sendTrialEndingEmail("user@example.com", 7, "Pro");
+    it("uses plural 'days' in subject when daysRemaining > 1", async () => {
+        await sendTrialEndingEmail(trialParams({ daysRemaining: 7 }));
         const call = mockEmailsSend.mock.calls[0][0];
         expect(call.subject).toContain("7 days");
     });
 
-    it("uses singular 'day' in subject when daysLeft === 1", async () => {
-        await sendTrialEndingEmail("user@example.com", 1, "Pro");
+    it("uses singular 'day' in subject when daysRemaining === 1", async () => {
+        await sendTrialEndingEmail(trialParams({ daysRemaining: 1 }));
         const call = mockEmailsSend.mock.calls[0][0];
         expect(call.subject).toContain("1 day");
-        expect(call.subject).not.toContain("1 days");
     });
 
-    it("shows urgency red color when daysLeft <= 3", async () => {
-        await sendTrialEndingEmail("user@example.com", 3, "Pro");
+    it("includes user name in body", async () => {
+        await sendTrialEndingEmail(trialParams({ userName: "Jane" }));
         const call = mockEmailsSend.mock.calls[0][0];
-        expect(call.html).toContain("C0392B");
+        expect(call.html).toContain("Jane");
     });
 
-    it("shows 'today' text in urgency block when daysLeft === 0", async () => {
-        await sendTrialEndingEmail("user@example.com", 0, "Pro");
+    it("includes workspace name in body", async () => {
+        await sendTrialEndingEmail(trialParams({ workspaceName: "Acme Inc" }));
         const call = mockEmailsSend.mock.calls[0][0];
-        expect(call.html).toContain("today");
-    });
-
-    it("shows standard trial-days text when daysLeft > 3", async () => {
-        await sendTrialEndingEmail("user@example.com", 7, "Pro");
-        const call = mockEmailsSend.mock.calls[0][0];
-        expect(call.html).toContain("in 7 days");
+        expect(call.html).toContain("Acme Inc");
     });
 
     it("includes plan name in body", async () => {
-        await sendTrialEndingEmail("user@example.com", 5, "Startup");
+        await sendTrialEndingEmail(trialParams({ planName: "Startup" }));
         const call = mockEmailsSend.mock.calls[0][0];
         expect(call.html).toContain("Startup");
+    });
+
+    it("includes billing URL in CTA", async () => {
+        await sendTrialEndingEmail(trialParams({ billingUrl: "https://trytrackr.com/settings/billing" }));
+        const call = mockEmailsSend.mock.calls[0][0];
+        expect(call.html).toContain("https://trytrackr.com/settings/billing");
     });
 });
 

@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/services/stripe";
 import { db } from "@/lib/db";
-import { subscriptions, ads, workspaceMembers, webhookEvents, architectReferrals, architects, architectCommissions } from "@/lib/db/schema";
+import { subscriptions, ads, workspaceMembers, workspaces, webhookEvents, architectReferrals, architects, architectCommissions } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
 import type Stripe from "stripe";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -470,14 +470,30 @@ async function handleTrialWillEnd(sub: Stripe.Subscription) {
 
     if (!owner) return;
 
+    // Look up workspace name for personalized email
+    const workspace = await db.query.workspaces.findFirst({
+        where: eq(workspaces.id, existing.workspaceId),
+        columns: { name: true },
+    });
+
     try {
         const clerk = await clerkClient();
         const clerkUser = await clerk.users.getUser(owner.userId);
         const email = clerkUser.emailAddresses[0]?.emailAddress;
+        const userName =
+            [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || "there";
         const plan = getPlanLimits(existing);
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://trytrackr.com";
 
         if (email) {
-            await sendTrialEndingEmail(email, daysLeft, plan.name);
+            await sendTrialEndingEmail({
+                email,
+                userName,
+                workspaceName: workspace?.name || "your workspace",
+                planName: plan.name,
+                daysRemaining: daysLeft,
+                billingUrl: `${appUrl}/settings/billing`,
+            });
         }
     } catch {
         // Non-critical — don't fail webhook if email errors

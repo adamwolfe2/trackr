@@ -239,6 +239,36 @@ export default async function DashboardPage() {
                 </div>
             </div>
 
+            {toolsCount === 0 && member.workspace.onboardingCompleted && (
+                <div className="border-2 border-black p-6 space-y-3">
+                    <h2 className="font-serif text-xl">
+                        Your workspace is ready. Submit your first tool.
+                    </h2>
+                    <p className="font-mono text-xs text-neutral-600 leading-relaxed max-w-lg">
+                        Research any software tool in under 2 minutes. Get AI-powered
+                        scoring, feature analysis, pricing breakdown, and competitive
+                        positioning.
+                    </p>
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <Link
+                            href="/submit"
+                            className="font-mono text-[10px] uppercase tracking-widest border-2 border-black bg-black text-white px-5 py-2.5 hover:bg-neutral-800 transition-colors"
+                        >
+                            Research a Tool
+                        </Link>
+                        <Link
+                            href="/stack"
+                            className="font-mono text-[10px] uppercase tracking-widest border border-neutral-300 px-4 py-2 hover:border-black transition-colors"
+                        >
+                            Import Your Stack
+                        </Link>
+                    </div>
+                    <p className="font-mono text-[9px] text-neutral-400">
+                        Try these popular tools: Notion, Slack, HubSpot, Linear, Figma
+                    </p>
+                </div>
+            )}
+
             <DashboardStats
                 avgScore={avgScore}
                 activeTools={toolsCount}
