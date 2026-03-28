@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import { useRouter } from "next/navigation";
 import {
     createSurveyFromTemplate,
@@ -104,14 +105,7 @@ function ResultsModal({
 
                             {q.type === "rating" && (
                                 <div className="flex items-center gap-3">
-                                    <div className="flex-1 h-2 bg-neutral-100 border border-neutral-200">
-                                        <div
-                                            className="h-full bg-black"
-                                            style={{
-                                                width: `${((results.questionAverages[q.id] ?? 0) / 10) * 100}%`,
-                                            }}
-                                        />
-                                    </div>
+                                    <AnimatedBar value={((results.questionAverages[q.id] ?? 0) / 10) * 100} height="h-2" delay={150} className="flex-1" />
                                     <span className="font-mono text-sm font-bold min-w-[3ch] text-right">
                                         {results.questionAverages[q.id]?.toFixed(1) ?? "0"}
                                     </span>

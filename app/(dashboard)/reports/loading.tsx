@@ -4,7 +4,7 @@ function Skeleton({ className }: { className?: string }) {
 
 export default function ReportsLoading() {
     return (
-        <div className="space-y-6 p-6 font-mono">
+        <div className="space-y-6">
             <div className="space-y-2">
                 <Skeleton className="h-8 w-40" />
                 <Skeleton className="h-4 w-64" />
