@@ -282,7 +282,7 @@ export function LiteracyClient({
     };
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in-up">
             {/* Header */}
             <div className="flex items-start justify-between">
                 <div>
