@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { BarChart3, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import { AnimatedBar } from "@/components/common/animated-bar";
@@ -105,6 +105,9 @@ export default function AnalyticsClient({
     traditionalSpend,
     researchSuccessRate,
 }: AnalyticsClientProps) {
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
+
     const maxWeeklyCount = useMemo(
         () => Math.max(...weeklyActivity.map((w) => w.count), 1),
         [weeklyActivity]
@@ -214,10 +217,10 @@ export default function AnalyticsClient({
                                             {week.count}
                                         </span>
                                         <div
-                                            className="w-full bg-black border border-black"
+                                            className="w-full bg-black border border-black transition-[height] duration-700 ease-out"
                                             style={{
-                                                height: `${Math.max(heightPct, 4)}%`,
-                                                minHeight: "4px",
+                                                height: mounted ? `${Math.max(heightPct, 4)}%` : "0%",
+                                                minHeight: mounted ? "4px" : "0px",
                                             }}
                                         />
                                         <span className="font-mono text-[9px] text-neutral-400 whitespace-nowrap">
@@ -258,8 +261,8 @@ export default function AnalyticsClient({
                                         return (
                                             <div
                                                 key={segment.label}
-                                                className={`${shades[i % shades.length]} h-full`}
-                                                style={{ width: `${segment.pct}%` }}
+                                                className={`${shades[i % shades.length]} h-full transition-[width] duration-700 ease-out`}
+                                                style={{ width: mounted ? `${segment.pct}%` : "0%" }}
                                                 title={`${segment.label}: ${segment.count}`}
                                             />
                                         );

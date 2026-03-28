@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import {
     Share2,
     Check,
@@ -253,17 +254,11 @@ export function BoardReportView({ report, isPublic }: BoardReportViewProps) {
                                                 {typeof value === "number" ? value : 0}
                                             </span>
                                         </div>
-                                        <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
-                                            <div
-                                                className="h-full bg-black"
-                                                style={{
-                                                    width: `${Math.min(
-                                                        typeof value === "number" ? value : 0,
-                                                        100
-                                                    )}%`,
-                                                }}
-                                            />
-                                        </div>
+                                        <AnimatedBar
+                                            value={Math.min(typeof value === "number" ? value : 0, 100)}
+                                            height="h-1.5"
+                                            delay={150}
+                                        />
                                     </div>
                                 ))}
                             </div>
@@ -339,14 +334,11 @@ export function BoardReportView({ report, isPublic }: BoardReportViewProps) {
                                         {formatCurrency(cat.total)}/mo
                                     </span>
                                 </div>
-                                <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
-                                    <div
-                                        className="h-full bg-black"
-                                        style={{
-                                            width: `${(cat.total / maxCategorySpend) * 100}%`,
-                                        }}
-                                    />
-                                </div>
+                                <AnimatedBar
+                                    value={(cat.total / maxCategorySpend) * 100}
+                                    height="h-1.5"
+                                    delay={150}
+                                />
                             </div>
                         ))}
                     </div>
