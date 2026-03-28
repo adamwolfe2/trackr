@@ -28,45 +28,6 @@ const DIMENSION_LABELS: Record<keyof HealthBreakdown, { label: string; descripti
     teamUtilization: { label: "Team Utilization", description: "% of tools reviewed in last 90 days" },
 };
 
-function ScoreRing({ score }: { score: number }) {
-    const radius = 70;
-    const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (score / 100) * circumference;
-    const color = score >= 70 ? "black" : score >= 40 ? "#737373" : "#a3a3a3";
-
-    return (
-        <div className="relative w-48 h-48 mx-auto">
-            <svg className="w-48 h-48 -rotate-90" viewBox="0 0 160 160">
-                <circle
-                    cx="80"
-                    cy="80"
-                    r={radius}
-                    fill="none"
-                    stroke="#e5e5e5"
-                    strokeWidth="6"
-                />
-                <circle
-                    cx="80"
-                    cy="80"
-                    r={radius}
-                    fill="none"
-                    stroke={color}
-                    strokeWidth="6"
-                    strokeLinecap="square"
-                    strokeDasharray={circumference}
-                    strokeDashoffset={strokeDashoffset}
-                    style={{ transition: "stroke-dashoffset 0.5s ease" }}
-                />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-serif text-5xl font-normal">{score}</span>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mt-1">
-                    / 100
-                </span>
-            </div>
-        </div>
-    );
-}
 
 const DIMENSION_GUIDANCE: Record<keyof HealthBreakdown, string> = {
     toolQuality: "Research tools to build quality scores",
