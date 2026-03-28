@@ -167,7 +167,7 @@ export default function AnalyticsClient({
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in-up">
             {/* Header */}
             <div>
                 <h1 className="text-2xl font-serif font-normal">Analytics</h1>

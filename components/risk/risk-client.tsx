@@ -99,7 +99,7 @@ export function RiskClient({
         .sort((a, b) => sortDesc ? b.overallRisk - a.overallRisk : a.overallRisk - b.overallRisk);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             {/* Alert Banner */}
             {alerts.length > 0 && (
                 <div className="border border-black bg-neutral-100 px-5 py-4 flex items-start gap-3">

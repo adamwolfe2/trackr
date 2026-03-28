@@ -118,7 +118,7 @@ export function CalendarClient({
     const selectedEvents = selectedDay ? eventsForDay(selectedDay) : [];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             {/* Month Header */}
             <div className="border border-black bg-white">
                 <div className="border-b border-black px-5 py-3 flex items-center justify-between">

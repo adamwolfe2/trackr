@@ -121,7 +121,7 @@ export function CompetitorsClient({
     const limitDisplay = planLimit === Infinity ? null : planLimit;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             {/* Header */}
             <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>

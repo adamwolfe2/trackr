@@ -127,7 +127,7 @@ export default async function DiscoverPage() {
     ]);
 
     return (
-        <div className="space-y-10">
+        <div className="space-y-10 animate-fade-in-up">
 
             {/* ── AI News Feed ───────────────────────────────── */}
             <section className="space-y-5">

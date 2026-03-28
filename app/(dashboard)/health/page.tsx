@@ -119,7 +119,7 @@ export default async function HealthPage() {
     const recommendations = latest.recommendations;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             <div className="flex items-center justify-between">
                 <h1 className="font-serif text-3xl font-normal">Stack Health</h1>
                 <span className="font-mono text-[10px] text-neutral-400 uppercase tracking-widest">

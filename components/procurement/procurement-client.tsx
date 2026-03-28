@@ -79,7 +79,7 @@ export function ProcurementClient({
     }, [requests]);
 
     return (
-        <div className="max-w-full mx-auto">
+        <div className="max-w-full mx-auto animate-fade-in-up">
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
                 <div>

@@ -98,7 +98,7 @@ export default async function ToolsPage() {
     const showToolLimitWarning = typeof toolLimit === "number" && isFinite(toolLimit) && toolLimit > 0 && toolCount >= Math.floor(toolLimit * 0.8);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             {showToolLimitWarning && (
                 <div className="border border-amber-600 bg-amber-50 px-4 py-3 font-mono text-xs flex items-start gap-3">
                     <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-amber-600" />
