@@ -4,13 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Menu, X, PlusCircle, Search } from "lucide-react";
+import { Menu, X, PlusCircle, Search, Lock } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { TrackrLogo } from "@/components/common/trackr-logo";
-import { NAV_ITEMS, BOTTOM_NAV_ITEMS } from "@/lib/config/navigation";
+import { NAV_SECTIONS, BOTTOM_NAV_ITEMS } from "@/lib/config/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import type { PlanFeatures } from "@/lib/config/subscriptions";
+import { getRequiredPlan } from "@/lib/config/subscriptions";
 
-export function MobileNav() {
+export function MobileNav({ planFeatures }: { planFeatures?: PlanFeatures }) {
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
 
@@ -82,24 +84,38 @@ export function MobileNav() {
                 </div>
 
                 {/* Main Nav */}
-                <div className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
-                    {NAV_ITEMS.map((item) => {
-                        const active = isActive(item.href);
-                        return (
-                            <Link
-                                key={item.href}
-                                href={item.href}
-                                onClick={() => setOpen(false)}
-                                className={cn(
-                                    "flex items-center gap-3 w-full px-3 py-2.5 text-sm font-mono transition-all",
-                                    active ? "bg-black text-white" : "text-neutral-600 hover:text-black hover:bg-neutral-100"
-                                )}
-                            >
-                                <item.icon className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
-                                <span>{item.title}</span>
-                            </Link>
-                        );
-                    })}
+                <div className="flex-1 px-3 py-2 overflow-y-auto">
+                    {NAV_SECTIONS.map((section) => (
+                        <div key={section.label} className="mb-1">
+                            <div className="px-3 pt-3 pb-1">
+                                <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400">
+                                    {section.label}
+                                </span>
+                            </div>
+                            {section.items.map((item) => {
+                                const active = isActive(item.href);
+                                const requiredPlan = item.featureGate ? getRequiredPlan(item.featureGate) : null;
+                                const isLocked = requiredPlan !== null && planFeatures && !(item.featureGate! in planFeatures);
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        onClick={() => setOpen(false)}
+                                        className={cn(
+                                            "flex items-center gap-3 w-full px-3 py-2 text-sm font-mono transition-all",
+                                            active ? "bg-black text-white" : "text-neutral-600 hover:text-black hover:bg-neutral-100"
+                                        )}
+                                    >
+                                        <item.icon className="h-4 w-4 flex-shrink-0" strokeWidth={1.5} />
+                                        <span className="flex-1">{item.title}</span>
+                                        {isLocked && (
+                                            <Lock className="h-3 w-3 text-neutral-400 flex-shrink-0" />
+                                        )}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    ))}
                 </div>
 
                 {/* Search */}
