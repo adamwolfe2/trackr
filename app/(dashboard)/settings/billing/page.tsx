@@ -177,7 +177,7 @@ export default async function BillingPage({
         : null;
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in-up">
             <div>
                 <h1 className="text-2xl font-serif font-normal">Billing & Plans</h1>
                 <p className="font-mono text-sm text-neutral-500 mt-1">

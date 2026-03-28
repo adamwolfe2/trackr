@@ -213,7 +213,7 @@ export default function AskTrackrPage() {
     };
 
     return (
-        <div className="flex flex-col h-[calc(100vh-8rem)]">
+        <div className="flex flex-col h-[calc(100vh-8rem)] animate-fade-in-up">
             {/* Header */}
             <div className="mb-4">
                 <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">AI Assistant</p>

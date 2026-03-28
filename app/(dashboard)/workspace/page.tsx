@@ -97,7 +97,7 @@ export default async function WorkspacePage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             <div>
                 <h1 className="font-serif text-3xl font-normal">Workspace Settings</h1>
                 <p className="font-mono text-sm text-neutral-500 mt-1">Manage your team and preferences.</p>

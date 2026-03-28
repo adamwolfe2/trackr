@@ -285,7 +285,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ id:
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             {/* Back link */}
             <Link href="/tools" className="print:hidden font-mono text-sm flex items-center gap-1 text-neutral-500 hover:text-black">
                 <ChevronLeft className="h-3 w-3" /> Back to Tools

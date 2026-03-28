@@ -23,7 +23,7 @@ export function ReportsClient({ reports, workspaceId, userId }: ReportsClientPro
     const [showDialog, setShowDialog] = useState(false);
 
     return (
-        <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto px-6 py-8 animate-fade-in-up">
             {/* Header */}
             <div className="flex items-center justify-between mb-8">
                 <div>
