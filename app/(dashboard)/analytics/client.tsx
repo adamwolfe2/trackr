@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { BarChart3, PlusCircle } from "lucide-react";
 import Link from "next/link";
+import { AnimatedBar } from "@/components/common/animated-bar";
 
 interface WeeklyActivity {
     week: string;
@@ -329,13 +330,14 @@ export default function AnalyticsClient({
                         {spendByCategory.length > 0 && (
                             <div className="space-y-2">
                                 <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Spend by Category</p>
-                                {spendByCategory.map(cat => (
+                                {spendByCategory.map((cat, idx) => (
                                     <div key={cat.category} className="flex items-center gap-3">
                                         <span className="font-mono text-xs w-28 truncate text-neutral-600" title={cat.category}>{cat.category}</span>
-                                        <div className="flex-1 h-4 bg-neutral-100 border border-neutral-200">
-                                            <div
-                                                className="h-full bg-black"
-                                                style={{ width: `${(cat.total / maxSpend) * 100}%` }}
+                                        <div className="flex-1">
+                                            <AnimatedBar
+                                                value={(cat.total / maxSpend) * 100}
+                                                height="h-4"
+                                                delay={150 + idx * 50}
                                             />
                                         </div>
                                         <span className="font-mono text-xs text-neutral-500 w-16 text-right">{formatDollar(cat.total)}/mo</span>

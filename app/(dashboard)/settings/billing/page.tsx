@@ -22,6 +22,7 @@ import { BillingPlanCards } from "@/components/billing/billing-plan-cards";
 import { CreditPackSelector } from "@/components/billing/credit-pack-selector";
 import { AutoTopUpToggle } from "@/components/billing/auto-top-up-toggle";
 import { InvoiceHistory } from "@/components/billing/invoice-history";
+import { AnimatedBar } from "@/components/common/animated-bar";
 
 type BillingPlanCard = {
     key: string;
@@ -385,12 +386,13 @@ function UsageBar({ label, current, limit }: { label: string; current: number; l
                     {current} <span className="text-neutral-400">/</span> {displayLimit}
                 </span>
             </div>
-            <div className="h-2 bg-neutral-200 w-full">
-                <div
-                    className={`h-full transition-all ${isMaxed ? "bg-red-600" : isWarning ? "bg-amber-500" : "bg-black"}`}
-                    style={{ width: isUnlimited ? "0%" : `${percentage}%` }}
-                />
-            </div>
+            <AnimatedBar
+                value={isUnlimited ? 0 : percentage}
+                color={isMaxed ? "#dc2626" : isWarning ? "#f59e0b" : "#171717"}
+                height="h-2"
+                className="border-0"
+                delay={200}
+            />
             {isMaxed && (
                 <p className="font-mono text-[10px] text-red-600 mt-1">
                     Limit reached. Upgrade your plan or buy extra credits to continue.

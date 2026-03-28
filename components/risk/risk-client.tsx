@@ -12,6 +12,7 @@ import {
     PlusCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { AnimatedBar } from "@/components/common/animated-bar";
 
 type AlertLevel = "low" | "medium" | "high" | "critical";
 
@@ -266,15 +267,18 @@ export function RiskClient({
                                             <div>
                                                 <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-3">Risk Breakdown</p>
                                                 <div className="space-y-2">
-                                                    {(Object.entries(BREAKDOWN_LABELS) as [keyof RiskBreakdown, string][]).map(([key, label]) => {
+                                                    {(Object.entries(BREAKDOWN_LABELS) as [keyof RiskBreakdown, string][]).map(([key, label], idx) => {
                                                         const score = tool.breakdown[key] ?? 0;
+                                                        const barColor = score >= 80 ? "#171717" : score >= 60 ? "#404040" : score >= 30 ? "#a3a3a3" : "#e5e5e5";
                                                         return (
                                                             <div key={key} className="flex items-center gap-3">
                                                                 <span className="font-mono text-[10px] text-neutral-500 w-32 shrink-0 text-right">{label}</span>
-                                                                <div className="flex-1 h-2.5 bg-neutral-100 border border-black relative">
-                                                                    <div
-                                                                        className={`absolute inset-y-0 left-0 ${riskBarColor(score)}`}
-                                                                        style={{ width: `${score}%` }}
+                                                                <div className="flex-1">
+                                                                    <AnimatedBar
+                                                                        value={score}
+                                                                        color={barColor}
+                                                                        height="h-2.5"
+                                                                        delay={100 + idx * 60}
                                                                     />
                                                                 </div>
                                                                 <span className="font-mono text-[10px] w-8 text-right">{score}</span>
