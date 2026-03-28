@@ -49,7 +49,7 @@ export default async function NotificationsSettingsPage() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             <div>
                 <h1 className="text-2xl font-serif font-normal">
                     Email Notifications

@@ -100,7 +100,7 @@ export function PublicProfileClient({
     const profileUrl = slug ? `https://trytrackr.com/stack/${slug}` : null;
 
     return (
-        <div className="space-y-8 max-w-2xl">
+        <div className="space-y-8 max-w-2xl animate-fade-in-up">
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-serif font-normal">Public Stack Profile</h1>

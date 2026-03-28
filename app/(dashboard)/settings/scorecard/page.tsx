@@ -54,7 +54,7 @@ export default async function ScorecardPage() {
     const canEditWeights = hasFeature(plan, "customWeights");
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-fade-in-up">
             {/* Weight Editor — always visible, editable only for Startup+ */}
             <WeightEditor savedWeights={savedWeights} canEditWeights={canEditWeights} />
 
