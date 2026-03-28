@@ -29,7 +29,7 @@ export default async function CreateAdPage() {
     });
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-2xl mx-auto space-y-6 animate-fade-in-up">
             <div>
                 <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Advertise</p>
                 <h1 className="font-serif text-3xl font-normal">New Ad Campaign</h1>
