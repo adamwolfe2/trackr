@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { NotesSection } from "@/components/tools/notes-section";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import {
     RadarChart,
     Radar,
@@ -244,15 +245,17 @@ export function ToolDetailTabs({ toolId, toolStatus, report, historyItems, notes
                                 )}
 
                                 <div className="space-y-4">
-                                    {report.scorecardSnapshot && Object.entries(report.scorecardSnapshot).map(([key, value]) => (
+                                    {report.scorecardSnapshot && Object.entries(report.scorecardSnapshot).map(([key, value], idx) => (
                                         <div key={key}>
                                             <div className="flex items-center justify-between mb-1">
                                                 <span className="font-mono text-xs capitalize">{key.replace(/_/g, " ")}</span>
                                                 <span className="font-mono text-xs font-bold">{value.score}/10</span>
                                             </div>
-                                            <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
-                                                <div className="h-full bg-black" style={{ width: `${(value.score / 10) * 100}%` }} />
-                                            </div>
+                                            <AnimatedBar
+                                                value={(value.score / 10) * 100}
+                                                height="h-1.5"
+                                                delay={100 + idx * 60}
+                                            />
                                             <p className="font-mono text-[10px] text-neutral-500 mt-1">{value.justification}</p>
                                         </div>
                                     ))}
@@ -370,9 +373,11 @@ export function ToolDetailTabs({ toolId, toolStatus, report, historyItems, notes
                                                 <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Confidence</span>
                                                 <span className="font-mono text-xs font-bold">{report.sentimentData.sentimentConsensus.confidence}%</span>
                                             </div>
-                                            <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
-                                                <div className="h-full bg-black" style={{ width: `${report.sentimentData.sentimentConsensus.confidence}%` }} />
-                                            </div>
+                                            <AnimatedBar
+                                                value={report.sentimentData.sentimentConsensus.confidence}
+                                                height="h-1.5"
+                                                delay={200}
+                                            />
                                         </div>
                                     </div>
                                     <p className="font-mono text-xs text-neutral-600 leading-relaxed">{report.sentimentData.sentimentConsensus.sourceAgreement}</p>
