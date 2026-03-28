@@ -261,8 +261,8 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                 setEditFocusField(null);
                 toast.success("Updated");
                 router.refresh();
-            } catch {
-                toast.error("Failed to save");
+            } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Failed to save changes");
             }
         });
     };
@@ -479,7 +479,7 @@ export function StackClient({ initialData = [], lowScoredNames = [], insights }:
                         toast.promise(addSoftwareSpend(fd), {
                             loading: "Adding tool...",
                             success: () => { router.refresh(); return "Tool added to stack"; },
-                            error: "Failed to add tool",
+                            error: (err: unknown) => err instanceof Error ? err.message : "Failed to add tool",
                         });
                     }}
                     className="border border-black bg-white"
