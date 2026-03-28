@@ -19,7 +19,7 @@ export function IntegrationsClient() {
     const categories = [...new Set(PROVIDERS.map((p) => p.category))];
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             <div>
                 <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Settings</p>
                 <h1 className="font-serif text-2xl font-normal">Integrations</h1>
