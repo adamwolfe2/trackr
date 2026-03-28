@@ -30,7 +30,7 @@ export default async function ReferralsPage() {
     });
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             <div>
                 <h1 className="font-serif text-3xl font-normal">Refer a Friend</h1>
                 <p className="font-mono text-sm text-neutral-500 mt-1">Invite others to Trackr and earn 5 research credits per signup.</p>

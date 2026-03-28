@@ -46,7 +46,7 @@ export default async function QueuePage() {
     const failedCount = jobs.filter((j) => j.status === "failed").length;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             <div className="flex flex-col sm:flex-row items-start sm:justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-3">

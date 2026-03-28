@@ -25,7 +25,7 @@ export default async function ManagedServicePage() {
 
     if (!architect) {
         return (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-fade-in-up">
                 <div>
                     <p className="font-mono text-xs uppercase tracking-widest text-neutral-400 mb-1">Managed Service</p>
                     <h1 className="font-serif text-2xl font-normal">Your AI Architect</h1>

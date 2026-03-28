@@ -49,7 +49,7 @@ export default async function AdvertisePage() {
     const totalSpend = myAds.reduce((acc, ad) => acc + ad.spent, 0);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                     <h1 className="font-serif text-3xl font-normal">Ad Manager</h1>
