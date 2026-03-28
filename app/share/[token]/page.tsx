@@ -4,6 +4,7 @@ import { eq, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { ExternalLink } from "lucide-react";
 import { ShareActions } from "./share-actions";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { ShareRadarChartLoader as ShareRadarChart } from "@/components/share/share-radar-chart-loader";
 import { MarkdownText, CompetitorAnalysisBlock } from "@/components/share/markdown-text";
@@ -256,9 +257,7 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                                         <span className="font-mono text-xs capitalize">{key.replace(/_/g, " ")}</span>
                                         <span className="font-mono text-xs font-bold">{value.score}/10</span>
                                     </div>
-                                    <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
-                                        <div className="h-full bg-black" style={{ width: `${(value.score / 10) * 100}%` }} />
-                                    </div>
+                                    <AnimatedBar value={(value.score / 10) * 100} height="h-1.5" delay={150} />
                                     <p className="font-mono text-[10px] text-neutral-500 mt-1">{value.justification}</p>
                                 </div>
                             ))}
@@ -416,9 +415,7 @@ export default async function SharedReportPage({ params }: { params: Promise<{ t
                                             <span className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Confidence</span>
                                             <span className="font-mono text-xs font-bold">{sentimentData.sentimentConsensus.confidence}%</span>
                                         </div>
-                                        <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
-                                            <div className="h-full bg-black" style={{ width: `${sentimentData.sentimentConsensus.confidence}%` }} />
-                                        </div>
+                                        <AnimatedBar value={sentimentData.sentimentConsensus.confidence} height="h-1.5" delay={200} />
                                     </div>
                                 </div>
                                 <p className="font-mono text-xs text-neutral-600 leading-relaxed">{sentimentData.sentimentConsensus.sourceAgreement}</p>

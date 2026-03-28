@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { COMPARISONS, COMPARISON_SLUGS } from "@/data/comparisons.seed";
 import { CURATED_TOOLS } from "@/data/tools.seed";
 import { SCORECARD_DIMENSION_LABELS } from "@/lib/types";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import type { Scorecard } from "@/lib/types";
 
 // Fully static — no DB calls
@@ -217,9 +218,7 @@ export default async function ComparisonSlugPage({
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="h-1 bg-neutral-100 border border-neutral-200 mb-1.5">
-                                                <div className="h-full bg-black" style={{ width: `${(aScore / 10) * 100}%` }} />
-                                            </div>
+                                            <AnimatedBar value={(aScore / 10) * 100} height="h-1" delay={150} className="mb-1.5" />
                                             <p className="font-mono text-[10px] text-neutral-400 leading-relaxed">
                                                 {toolA.scorecard[dim].justification}
                                             </p>
@@ -233,9 +232,7 @@ export default async function ComparisonSlugPage({
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="h-1 bg-neutral-100 border border-neutral-200 mb-1.5">
-                                                <div className="h-full bg-black" style={{ width: `${(bScore / 10) * 100}%` }} />
-                                            </div>
+                                            <AnimatedBar value={(bScore / 10) * 100} height="h-1" delay={200} className="mb-1.5" />
                                             <p className="font-mono text-[10px] text-neutral-400 leading-relaxed">
                                                 {toolB.scorecard[dim].justification}
                                             </p>

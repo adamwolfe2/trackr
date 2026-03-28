@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { ExternalLink, ArrowLeft, Star } from "lucide-react";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import type { Metadata } from "next";
@@ -290,12 +291,7 @@ export default async function PublicResearchPage({
                                                     <span className="font-mono text-xs text-neutral-600">{DB_SCORECARD_LABELS[key] ?? key.replace(/_/g, " ")}</span>
                                                     <span className="font-mono text-xs font-bold">{val.score.toFixed(1)}</span>
                                                 </div>
-                                                <div className="h-1.5 bg-neutral-100 border border-neutral-200">
-                                                    <div
-                                                        className="h-full bg-black transition-all"
-                                                        style={{ width: `${(val.score / 10) * 100}%` }}
-                                                    />
-                                                </div>
+                                                <AnimatedBar value={(val.score / 10) * 100} height="h-1.5" delay={150} />
                                                 <p className="font-mono text-[10px] text-neutral-400 mt-1 leading-relaxed">{val.justification}</p>
                                             </div>
                                         ))}
@@ -616,12 +612,7 @@ function CuratedToolPage({ tool }: { tool: CuratedTool }) {
                                                 </span>
                                                 <span className="font-mono text-xs font-bold">{val.score.toFixed(1)}</span>
                                             </div>
-                                            <div className="h-1.5 bg-neutral-100 border border-neutral-200">
-                                                <div
-                                                    className="h-full bg-black"
-                                                    style={{ width: `${(val.score / 10) * 100}%` }}
-                                                />
-                                            </div>
+                                            <AnimatedBar value={(val.score / 10) * 100} height="h-1.5" delay={150} />
                                             <p className="font-mono text-[10px] text-neutral-400 mt-1 leading-relaxed">{val.justification}</p>
                                         </div>
                                     ))}

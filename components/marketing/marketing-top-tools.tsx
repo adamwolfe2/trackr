@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { motion, useInView, type Variants } from "framer-motion";
 import { ArrowUpRight, BarChart3 } from "lucide-react";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -47,9 +48,7 @@ function ScoreBar({ score }: { score: number }) {
   const pct = (score / 10) * 100;
   return (
     <div className="flex items-center gap-3">
-      <div className="flex-1 h-2 bg-neutral-200">
-        <div className="h-full bg-black" style={{ width: `${pct}%` }} />
-      </div>
+      <AnimatedBar value={pct} height="h-2" className="flex-1 border-0 bg-neutral-200" delay={200} />
       <span className="font-mono text-sm font-bold tabular-nums text-black">
         {score.toFixed(1)}
       </span>

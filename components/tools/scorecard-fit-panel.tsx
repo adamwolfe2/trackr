@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, Target, Building2, Settings } from "lucide-react";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import Link from "next/link";
 
 type DealBreakerFlag = {
@@ -95,9 +96,7 @@ export function ScorecardFitPanel({ fitData, hasRecipe, hasReport }: ScorecardFi
                     <div className="font-mono text-[10px] uppercase tracking-widest text-neutral-400">Fit</div>
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200 mb-2">
-                        <div className="h-full bg-black" style={{ width: `${(fitData.fitScore / 10) * 100}%` }} />
-                    </div>
+                    <AnimatedBar value={(fitData.fitScore / 10) * 100} height="h-1.5" delay={150} className="mb-2" />
                     <p className="font-mono text-xs text-neutral-600 leading-relaxed">{fitData.fitJustification}</p>
                 </div>
             </div>
@@ -182,9 +181,7 @@ export function ScorecardFitPanel({ fitData, hasRecipe, hasReport }: ScorecardFi
                                     <span className="font-mono text-xs">{bu.unitName}</span>
                                     <span className="font-mono text-xs font-bold">{bu.relevanceScore}/10</span>
                                 </div>
-                                <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
-                                    <div className="h-full bg-black" style={{ width: `${(bu.relevanceScore / 10) * 100}%` }} />
-                                </div>
+                                <AnimatedBar value={(bu.relevanceScore / 10) * 100} height="h-1.5" delay={100} />
                                 <p className="font-mono text-[10px] text-neutral-500 mt-1">{bu.reason}</p>
                             </div>
                         ))}

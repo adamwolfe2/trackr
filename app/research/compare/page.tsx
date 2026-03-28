@@ -3,6 +3,7 @@ import { tools, reports } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, Star } from "lucide-react";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import { MarketingNavigation } from "@/components/marketing/marketing-navigation";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import type { Metadata } from "next";
@@ -264,9 +265,7 @@ function ComparisonGrid({
                                         <div className="font-mono text-sm font-bold">{lVal.score.toFixed(1)}</div>
                                         {lWins && <span className="font-mono text-[9px] uppercase tracking-widest border border-black px-1">Better</span>}
                                     </div>
-                                    <div className="h-1 bg-neutral-100 border border-neutral-200 mb-1">
-                                        <div className="h-full bg-black" style={{ width: `${(lVal.score / 10) * 100}%` }} />
-                                    </div>
+                                    <AnimatedBar value={(lVal.score / 10) * 100} height="h-1" delay={150} className="mb-1" />
                                     <p className="font-mono text-[10px] text-neutral-400 leading-relaxed">{lVal.justification}</p>
                                 </>
                             ) : <span className="font-mono text-xs text-neutral-300">—</span>}
@@ -278,9 +277,7 @@ function ComparisonGrid({
                                         <div className="font-mono text-sm font-bold">{rVal.score.toFixed(1)}</div>
                                         {rWins && <span className="font-mono text-[9px] uppercase tracking-widest border border-black px-1">Better</span>}
                                     </div>
-                                    <div className="h-1 bg-neutral-100 border border-neutral-200 mb-1">
-                                        <div className="h-full bg-black" style={{ width: `${(rVal.score / 10) * 100}%` }} />
-                                    </div>
+                                    <AnimatedBar value={(rVal.score / 10) * 100} height="h-1" delay={200} className="mb-1" />
                                     <p className="font-mono text-[10px] text-neutral-400 leading-relaxed">{rVal.justification}</p>
                                 </>
                             ) : <span className="font-mono text-xs text-neutral-300">—</span>}

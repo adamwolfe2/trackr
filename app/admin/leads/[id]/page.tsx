@@ -19,6 +19,7 @@ import { PackageSelector } from "./package-selector";
 import { ProvisionDialog } from "./provision-dialog";
 import type { PackageSlug } from "@/lib/config/architect-packages";
 import { computeLeadScore } from "@/lib/utils/lead-scoring";
+import { AnimatedBar } from "@/components/common/animated-bar";
 
 export const metadata: Metadata = {
     title: "Lead Detail — Trackr Admin",
@@ -390,9 +391,7 @@ export default async function LeadDetailPage({
                                 <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400">{label}</span>
                                 <span className="font-mono text-[10px] font-bold">{value}/{max}</span>
                             </div>
-                            <div className="h-1.5 w-full bg-neutral-100 border border-neutral-200">
-                                <div className="h-full bg-black transition-all" style={{ width: `${(value / max) * 100}%` }} />
-                            </div>
+                            <AnimatedBar value={(value / max) * 100} height="h-1.5" delay={100} />
                         </div>
                     ))}
                 </div>

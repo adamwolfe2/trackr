@@ -17,6 +17,7 @@ import { PLANS, getPlanLimits } from "@/lib/config/subscriptions";
 import { rateLimit } from "@/lib/middleware/rate-limit";
 import { AdminTrendChartLoader as AdminTrendChart } from "@/components/admin/admin-trend-chart-loader";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
+import { AnimatedBar } from "@/components/common/animated-bar";
 
 export const metadata: Metadata = {
     title: "Admin Analytics -- Trackr",
@@ -442,9 +443,7 @@ export default async function AdminAnalyticsPage({
                         <p className="font-mono text-xs text-neutral-500 mb-4">
                             {data.paidCount} paid / {Object.values(data.tierCounts).reduce((a, b) => a + b, 0)} total workspaces
                         </p>
-                        <div className="h-2 bg-neutral-100 border border-neutral-200">
-                            <div className="h-full bg-black transition-all" style={{ width: `${data.conversionRate}%` }} />
-                        </div>
+                        <AnimatedBar value={data.conversionRate} height="h-2" delay={200} />
                         <div className="flex justify-between mt-1">
                             <span className="font-mono text-[9px] text-neutral-400">0%</span>
                             <span className="font-mono text-[9px] text-neutral-400">Target: 8%</span>
@@ -491,9 +490,7 @@ export default async function AdminAnalyticsPage({
                                             {n} ({pct}%)
                                         </span>
                                     </div>
-                                    <div className="h-1.5 bg-neutral-100 border border-neutral-200">
-                                        <div className="h-full bg-black" style={{ width: `${pct}%` }} />
-                                    </div>
+                                    <AnimatedBar value={pct} height="h-1.5" delay={150} />
                                 </div>
                             );
                         })}
