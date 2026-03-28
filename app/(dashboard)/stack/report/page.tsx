@@ -85,7 +85,7 @@ export default async function StackReportPage() {
     return (
         <>
             <style dangerouslySetInnerHTML={{ __html: `@media print { nav, aside, .no-print { display: none !important } }` }} />
-            <div className="space-y-8 max-w-4xl mx-auto">
+            <div className="space-y-8 max-w-4xl mx-auto animate-fade-in-up">
 
                 {/* Report Header */}
                 <div className="flex items-start justify-between gap-4 flex-wrap">

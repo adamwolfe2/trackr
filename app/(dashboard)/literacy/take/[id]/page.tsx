@@ -63,7 +63,7 @@ export default async function TakeSurveyPage({
     const questions = survey.questions as SurveyQuestion[];
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-2xl mx-auto animate-fade-in-up">
             <div className="mb-8">
                 <h1 className="text-3xl font-serif font-normal">{survey.title}</h1>
                 {survey.description && (
