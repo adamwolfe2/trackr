@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Star, Loader2, X, Search, Clock, AlertCircle, AlertTriangle } from "lucide-react";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import {
     DndContext,
     DragEndEvent,
@@ -427,9 +428,7 @@ export function KanbanBoard({ tools: initialTools, stats, isEmpty = false }: { t
                                 <span className="font-mono text-[10px] text-neutral-500">{label}</span>
                                 <span className="font-mono text-[10px] text-neutral-500">{(score / 10).toFixed(1)}</span>
                             </div>
-                            <div className="bg-neutral-200 h-1.5 w-full">
-                                <div className="bg-black h-1.5" style={{ width: `${score}%` }} />
-                            </div>
+                            <AnimatedBar value={score} height="h-1.5" className="bg-neutral-200 border-0" delay={80} />
                         </div>
                     ))}
                 </div>
