@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Star, Loader2, Clock } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface GridTool {
     id: string;
@@ -57,54 +58,60 @@ export function ToolGrid({ tools, scoreDeltaMap = {} }: { tools: GridTool[]; sco
 
     return (
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-px border border-black bg-black">
-            {tools.map((tool) => (
-                <Link
+            {tools.map((tool, i) => (
+                <motion.div
                     key={tool.id}
-                    href={`/tools/${tool.id}`}
-                    className="group bg-white hover:bg-[#F3F3EF] transition-colors flex flex-col items-center gap-1.5 p-3 relative"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.2, delay: Math.min(i * 0.025, 0.5), ease: "easeOut" }}
                 >
-                    {/* Status dot */}
-                    <span className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 ${STATUS_DOT[tool.status] ?? "bg-neutral-300"}`} />
+                    <Link
+                        href={`/tools/${tool.id}`}
+                        className="group bg-white hover:bg-[#F3F3EF] transition-colors flex flex-col items-center gap-1.5 p-3 relative h-full"
+                    >
+                        {/* Status dot */}
+                        <span className={`absolute top-1.5 right-1.5 w-1.5 h-1.5 ${STATUS_DOT[tool.status] ?? "bg-neutral-300"}`} />
 
-                    {/* Logo */}
-                    <div className="w-10 h-10 flex-shrink-0">
-                        <ToolIcon name={tool.name} logoUrl={tool.logoUrl} websiteUrl={tool.websiteUrl} />
-                    </div>
-
-                    {/* Name */}
-                    <span className="font-mono text-[10px] text-neutral-700 text-center leading-tight line-clamp-2 w-full">
-                        {tool.name}
-                    </span>
-
-                    {/* Status indicator for in-progress tools */}
-                    {tool.status === "researching" ? (
-                        <span className="flex items-center gap-1 font-mono text-[9px] text-neutral-500">
-                            <Loader2 className="w-2.5 h-2.5 animate-spin" />
-                            Researching
-                        </span>
-                    ) : tool.status === "queued" ? (
-                        <span className="flex items-center gap-1 font-mono text-[9px] text-neutral-400">
-                            <Clock className="w-2.5 h-2.5" />
-                            Queued
-                        </span>
-                    ) : tool.status === "failed" ? (
-                        <span className="font-mono text-[9px] text-red-400">
-                            Failed
-                        </span>
-                    ) : tool.overallScore ? (
-                        <div className="flex items-center gap-1">
-                            <span className="flex items-center gap-0.5 font-mono text-[9px] text-neutral-500">
-                                <Star className="w-2 h-2 fill-neutral-400 text-neutral-400" />
-                                {Number(tool.overallScore).toFixed(1)}
-                            </span>
-                            {scoreDeltaMap[tool.id] !== undefined && (
-                                <span className={`font-mono text-[8px] ${scoreDeltaMap[tool.id] > 0 ? "text-black" : "text-neutral-400"}`}>
-                                    {scoreDeltaMap[tool.id] > 0 ? "↑" : "↓"}{Math.abs(scoreDeltaMap[tool.id]).toFixed(1)}
-                                </span>
-                            )}
+                        {/* Logo */}
+                        <div className="w-10 h-10 flex-shrink-0 group-hover:scale-105 transition-transform duration-200">
+                            <ToolIcon name={tool.name} logoUrl={tool.logoUrl} websiteUrl={tool.websiteUrl} />
                         </div>
-                    ) : null}
-                </Link>
+
+                        {/* Name */}
+                        <span className="font-mono text-[10px] text-neutral-700 text-center leading-tight line-clamp-2 w-full">
+                            {tool.name}
+                        </span>
+
+                        {/* Status indicator for in-progress tools */}
+                        {tool.status === "researching" ? (
+                            <span className="flex items-center gap-1 font-mono text-[9px] text-neutral-500">
+                                <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                Researching
+                            </span>
+                        ) : tool.status === "queued" ? (
+                            <span className="flex items-center gap-1 font-mono text-[9px] text-neutral-400">
+                                <Clock className="w-2.5 h-2.5" />
+                                Queued
+                            </span>
+                        ) : tool.status === "failed" ? (
+                            <span className="font-mono text-[9px] text-red-400">
+                                Failed
+                            </span>
+                        ) : tool.overallScore ? (
+                            <div className="flex items-center gap-1">
+                                <span className="flex items-center gap-0.5 font-mono text-[9px] text-neutral-500">
+                                    <Star className="w-2 h-2 fill-neutral-400 text-neutral-400" />
+                                    {Number(tool.overallScore).toFixed(1)}
+                                </span>
+                                {scoreDeltaMap[tool.id] !== undefined && (
+                                    <span className={`font-mono text-[8px] ${scoreDeltaMap[tool.id] > 0 ? "text-black" : "text-neutral-400"}`}>
+                                        {scoreDeltaMap[tool.id] > 0 ? "↑" : "↓"}{Math.abs(scoreDeltaMap[tool.id]).toFixed(1)}
+                                    </span>
+                                )}
+                            </div>
+                        ) : null}
+                    </Link>
+                </motion.div>
             ))}
         </div>
     );

@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
 import { Check, Loader2, Sparkles, ArrowRight, Search, X, PlusCircle } from "lucide-react";
 import { generateCompanyContext, completeOnboarding } from "@/lib/actions/onboarding";
+import { motion, AnimatePresence } from "framer-motion";
 import { INTEGRATIONS, INTEGRATION_CATEGORIES, DEFAULT_SCORECARD_DIMENSIONS, getLogoUrl } from "@/lib/constants/integrations";
 import { classifyTool } from "@/lib/config/ai-tools";
 import { TrackrLogo } from "@/components/common/trackr-logo";
@@ -263,12 +264,18 @@ export default function OnboardingPage() {
                 </div>
             )}
 
-            { }
             <div className="flex-1 flex flex-col items-center justify-start py-12 px-6" onKeyDown={handleStepKeyDown}>
-
+                <AnimatePresence mode="wait">
                 {/* ── STEP 1: Company Context ── */}
                 {step === 1 && (
-                    <div className="w-full max-w-lg">
+                    <motion.div
+                        key="step-1"
+                        className="w-full max-w-lg"
+                        initial={{ opacity: 0, x: 24 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -24 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                    >
                         <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">Step 1 of 3</span>
                         <h1 className="text-3xl font-serif font-normal mb-2 leading-tight">Set up your workspace.</h1>
                         <p className="font-mono text-sm text-neutral-600 mb-8 leading-relaxed">
@@ -377,12 +384,19 @@ export default function OnboardingPage() {
                                 Skip for now
                             </button>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* ── STEP 2: Current Stack ── */}
                 {step === 2 && (
-                    <div className="w-full max-w-lg md:max-w-4xl">
+                    <motion.div
+                        key="step-2"
+                        className="w-full max-w-lg md:max-w-4xl"
+                        initial={{ opacity: 0, x: 24 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -24 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                    >
                         <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">Step 2 of 3</span>
                         <h1 className="text-3xl font-serif font-normal mb-2 leading-tight">What tools do you already use?</h1>
                         <p className="font-mono text-sm text-neutral-600 mb-6 leading-relaxed">
@@ -589,12 +603,19 @@ export default function OnboardingPage() {
                                 <span className="font-mono text-[10px] text-neutral-400">press Enter ↵</span>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
                 {/* ── STEP 3: Scorecard Setup ── */}
                 {step === 3 && (
-                    <div className="w-full max-w-lg">
+                    <motion.div
+                        key="step-3"
+                        className="w-full max-w-lg"
+                        initial={{ opacity: 0, x: 24 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -24 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                    >
                         <span className="text-xs font-mono uppercase tracking-widest text-neutral-500 mb-4 block">Step 3 of 3</span>
                         <h1 className="text-3xl font-serif font-normal mb-2 leading-tight">Set up your scorecard.</h1>
                         <p className="font-mono text-sm text-neutral-600 mb-2 leading-relaxed">
@@ -672,8 +693,9 @@ export default function OnboardingPage() {
                                 )}
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
+                </AnimatePresence>
             </div>
         </div>
     );

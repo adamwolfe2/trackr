@@ -25,6 +25,7 @@ import {
     CreditCard,
     Settings,
     Globe,
+    Bell,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -104,6 +105,7 @@ export const NAV_SECTIONS: NavSection[] = [
 export const BOTTOM_NAV_ITEMS: NavItem[] = [
     { title: "Public Profile", href: "/settings/public-profile", icon: Globe, featureGate: "publicProfile" },
     { title: "Integrations", href: "/settings/integrations", icon: Link2, featureGate: "integrations" },
+    { title: "Notifications", href: "/settings/notifications", icon: Bell },
     { title: "Billing", href: "/settings/billing", icon: CreditCard },
     { title: "Workspace", href: "/workspace", icon: Settings },
 ];

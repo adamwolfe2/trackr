@@ -1,5 +1,6 @@
 import { getROIForWorkspace } from "@/lib/utils/roi-tracking";
 import { CheckCircle2, Circle } from "lucide-react";
+import { ROIProgressBar } from "./roi-progress-bar";
 
 export async function ROIWidget({ workspaceId }: { workspaceId: string }) {
     const roi = await getROIForWorkspace(workspaceId);
@@ -36,12 +37,7 @@ export async function ROIWidget({ workspaceId }: { workspaceId: string }) {
                             {roi.recommendedTools.filter(t => t.adopted).length} / {roi.recommendedTools.length}
                         </span>
                     </div>
-                    <div className="h-2 bg-neutral-100 border border-neutral-200">
-                        <div
-                            className="h-full bg-black transition-all"
-                            style={{ width: `${roi.adoptionRate}%` }}
-                        />
-                    </div>
+                    <ROIProgressBar adoptionRate={roi.adoptionRate} />
                 </div>
 
                 {/* Tool checklist */}

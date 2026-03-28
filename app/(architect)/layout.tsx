@@ -4,19 +4,12 @@ import { db } from "@/lib/db";
 import { architects } from "@/lib/db/schema";
 import { eq, isNull, and } from "drizzle-orm";
 import Link from "next/link";
-import { LayoutDashboard, Users, DollarSign, Settings } from "lucide-react";
+import { ArchitectSidebarNav } from "@/components/architect/architect-sidebar-nav";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
     robots: { index: false, follow: false },
 };
-
-const NAV_ITEMS = [
-    { href: "/architect/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/architect/clients", label: "Clients", icon: Users },
-    { href: "/architect/commissions", label: "Commissions", icon: DollarSign },
-    { href: "/architect/settings", label: "Settings", icon: Settings },
-];
 
 export default async function ArchitectLayout({
     children,
@@ -92,21 +85,7 @@ export default async function ArchitectLayout({
                         <Link href="/architect/dashboard" className="font-serif text-lg">Trackr</Link>
                         <p className="font-mono text-[9px] uppercase tracking-widest text-neutral-400 mt-0.5">Architect Portal</p>
                     </div>
-                    <nav className="flex-1 py-4">
-                        {NAV_ITEMS.map((item) => {
-                            const Icon = item.icon;
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="flex items-center gap-3 px-5 py-2.5 font-mono text-xs uppercase tracking-widest text-neutral-600 hover:text-black hover:bg-[#F3F3EF] transition-colors"
-                                >
-                                    <Icon className="w-4 h-4" />
-                                    {item.label}
-                                </Link>
-                            );
-                        })}
-                    </nav>
+                    <ArchitectSidebarNav />
                     <div className="p-5 border-t border-black">
                         <p className="font-mono text-[10px] text-neutral-400 truncate">{architect.firstName} {architect.lastName}</p>
                         <p className="font-mono text-[9px] text-neutral-400 truncate">{architect.email}</p>
@@ -119,21 +98,7 @@ export default async function ArchitectLayout({
                         <Link href="/architect/dashboard" className="font-serif text-lg">Trackr</Link>
                         <span className="font-mono text-[9px] uppercase tracking-widest text-neutral-400">Architect</span>
                     </div>
-                    <div className="flex border-t border-black">
-                        {NAV_ITEMS.map((item) => {
-                            const Icon = item.icon;
-                            return (
-                                <Link
-                                    key={item.href}
-                                    href={item.href}
-                                    className="flex-1 flex flex-col items-center gap-1 py-2 font-mono text-[8px] uppercase tracking-widest text-neutral-500 hover:text-black transition-colors"
-                                >
-                                    <Icon className="w-3.5 h-3.5" />
-                                    {item.label}
-                                </Link>
-                            );
-                        })}
-                    </div>
+                    <ArchitectSidebarNav />
                 </div>
 
                 {/* Main content */}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Bell, CheckCircle2, XCircle, CalendarClock, Sparkles, Gift, CreditCard, CheckCheck, AlertCircle } from "lucide-react";
 import { getNotifications, markNotificationsRead, type Notification } from "@/lib/actions/notifications";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -73,8 +74,15 @@ export function NotificationsPopover() {
                 <span className="sr-only">Notifications</span>
             </button>
 
+            <AnimatePresence>
             {isOpen && (
-                <div className="absolute right-0 top-full mt-1 w-[min(320px,calc(100vw-2rem))] border border-black bg-white z-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                <motion.div
+                    initial={{ opacity: 0, y: -6, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.98 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute right-0 top-full mt-1 w-[min(320px,calc(100vw-2rem))] border border-black bg-white z-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
+                >
                     <div className="border-b border-black px-4 py-3 flex items-center justify-between">
                         <span className="font-mono text-xs uppercase tracking-widest">Notifications</span>
                         {unreadCount > 0 && (
@@ -133,8 +141,9 @@ export function NotificationsPopover() {
                             ))
                         )}
                     </div>
-                </div>
+                </motion.div>
             )}
+            </AnimatePresence>
         </div>
     );
 }

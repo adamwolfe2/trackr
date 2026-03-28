@@ -4,6 +4,7 @@ import { CommandPaletteLoader } from "@/components/command-palette-loader"
 import { CreditUsageBanner } from "@/components/layout/credit-usage-banner"
 import { CreditStatusBadge } from "@/components/layout/credit-status-badge"
 import { TrialExpiryBanner } from "@/components/layout/trial-expiry-banner"
+import { PageTransition } from "@/components/common/page-transition"
 import { currentUser } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
@@ -130,7 +131,9 @@ export default async function DashboardLayout({
                 </div>
                 <main className="w-full h-full overflow-y-auto overflow-x-hidden bg-[#F3F3EF]">
                     <div className="container mx-auto p-4 md:p-6 lg:p-8 max-w-7xl">
-                        {children}
+                        <PageTransition>
+                            {children}
+                        </PageTransition>
                     </div>
                 </main>
             </div>

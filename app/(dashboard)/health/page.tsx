@@ -8,6 +8,8 @@ import { checkFeatureAccess } from "@/lib/middleware/require-subscription";
 import { PlanGate } from "@/components/billing/plan-gate";
 import { getLatestHealthScore, computeAndSaveHealthScore, getHealthHistory } from "@/lib/actions/health-score";
 import { HealthScoreCard } from "@/components/dashboard/health-score-card";
+import { AnimatedScoreRing } from "@/components/dashboard/animated-score-ring";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import type { HealthBreakdown } from "@/lib/utils/health-score-engine";
 import Link from "next/link";
 import { ArrowRight, Lock, TrendingDown, TrendingUp, Minus } from "lucide-react";
@@ -83,7 +85,6 @@ function BreakdownBar({
     value: number | null;
 }) {
     const { label, description } = DIMENSION_LABELS[dimensionKey];
-    const barColor = value !== null && value >= 70 ? "bg-black" : value !== null && value >= 40 ? "bg-neutral-500" : "bg-neutral-300";
     const hasData = value !== null;
 
     return (
@@ -96,12 +97,12 @@ function BreakdownBar({
                 <span className="font-mono text-xs font-bold">{value !== null ? value : "—"}</span>
             </div>
             {hasData ? (
-                <div className="h-2 bg-neutral-100 border border-neutral-200 w-full">
-                    <div
-                        className={`h-full ${barColor}`}
-                        style={{ width: `${Math.min(100, Math.max(0, value ?? 0))}%`, transition: "width 0.3s ease" }}
-                    />
-                </div>
+                <AnimatedBar
+                    value={Math.min(100, Math.max(0, value ?? 0))}
+                    color={value !== null && value >= 70 ? "#171717" : value !== null && value >= 40 ? "#737373" : "#d4d4d4"}
+                    height="h-2"
+                    delay={200}
+                />
             ) : (
                 <div className="h-8 border border-dashed border-neutral-300 bg-neutral-50 flex items-center px-3">
                     <span className="font-mono text-[10px] text-neutral-400">
@@ -167,7 +168,7 @@ export default async function HealthPage() {
 
             {/* Score Ring */}
             <div className="border border-black bg-white p-8">
-                <ScoreRing score={latest.score} />
+                <AnimatedScoreRing score={latest.score} />
                 <div className="text-center mt-4">
                     <span className="font-mono text-xs uppercase tracking-widest text-neutral-500">
                         Stack Health Score

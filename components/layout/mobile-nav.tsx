@@ -8,6 +8,7 @@ import { Menu, X, PlusCircle, Search } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { NAV_ITEMS, BOTTOM_NAV_ITEMS } from "@/lib/config/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function MobileNav() {
     const [open, setOpen] = useState(false);
@@ -25,20 +26,29 @@ export function MobileNav() {
                 <Menu className="w-5 h-5" />
             </button>
 
+            <AnimatePresence>
             {/* Overlay */}
             {open && (
-                <div
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
                     className="fixed inset-0 bg-black/40 z-50 md:hidden"
                     onClick={() => setOpen(false)}
                 />
             )}
+            </AnimatePresence>
 
+            <AnimatePresence>
             {/* Drawer */}
-            <div
-                className={cn(
-                    "fixed inset-y-0 left-0 w-[min(288px,85vw)] bg-white border-r border-black z-50 flex flex-col transition-transform duration-200 ease-out md:hidden",
-                    open ? "translate-x-0" : "-translate-x-full"
-                )}
+            {open && (
+            <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+                className="fixed inset-y-0 left-0 w-[min(288px,85vw)] bg-white border-r border-black z-50 flex flex-col md:hidden"
             >
                 {/* Drawer Header */}
                 <div className="p-5 border-b border-black flex items-center justify-between">
@@ -131,7 +141,9 @@ export function MobileNav() {
                         <span className="text-xs font-mono text-neutral-400">Account</span>
                     </div>
                 </div>
-            </div>
+            </motion.div>
+            )}
+            </AnimatePresence>
         </>
     );
 }

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ExternalLink, ArrowRight, Clock, Zap } from "lucide-react";
 import { TrackrLogo } from "@/components/common/trackr-logo";
 import { LogoImage } from "@/components/common/logo-image";
+import { AnimatedBar } from "@/components/common/animated-bar";
 import { getToolDomain as getToolDomainShared } from "@/lib/utils/tool-logos";
 import { ScoreArc } from "@/components/audit/score-arc";
 import type { Metadata } from "next";
@@ -480,9 +481,13 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                         {score < 21 ? "Minimal" : score < 41 ? "Ad-hoc" : score < 61 ? "Developing" : score < 81 ? "Advancing" : "AI-Native"}
                                     </span>
                                 </div>
-                                <div className="h-2 bg-neutral-200 mb-2">
-                                    <div className="h-full" style={{ width: `${score}%`, background: score <= 40 ? "#DC2626" : score <= 65 ? "#D97706" : score <= 85 ? "#525252" : "#171717" }} />
-                                </div>
+                                <AnimatedBar
+                                    value={score}
+                                    color={score <= 40 ? "#DC2626" : score <= 65 ? "#D97706" : score <= 85 ? "#525252" : "#171717"}
+                                    height="h-2"
+                                    className="mb-2 border-0"
+                                    delay={300}
+                                />
                                 <p className="font-mono text-xs text-neutral-600 leading-relaxed">{scorecard.aiNativeScore.summary}</p>
                             </div>
 
@@ -494,9 +499,13 @@ export default async function SharePage({ params }: { params: Promise<{ token: s
                                             <span className="font-mono text-[9px] uppercase tracking-wider text-neutral-500">{d.label}</span>
                                             <span className="font-mono text-[10px] font-bold tabular-nums" style={{ color: dimColor(d.score) }}>{d.score}</span>
                                         </div>
-                                        <div className="h-1 bg-neutral-200">
-                                            <div className="h-full" style={{ width: `${d.score}%`, background: dimColor(d.score) }} />
-                                        </div>
+                                        <AnimatedBar
+                                            value={d.score}
+                                            color={dimColor(d.score)}
+                                            height="h-1"
+                                            className="border-0"
+                                            delay={400 + dimensions.indexOf(d) * 80}
+                                        />
                                         <p className="font-mono text-[8px] text-neutral-400 mt-0.5 truncate">{d.detail}</p>
                                     </div>
                                 ))}
