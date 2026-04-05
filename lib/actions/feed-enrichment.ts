@@ -85,14 +85,14 @@ For each article, generate a concise 2-3 sentence summary, a relevance score (0-
                 }
             }
 
-            // Apply enriched updates individually (different values per row)
-            for (const update of enrichedUpdates) {
-                await db.update(feedItems).set({
+            // Apply enriched updates concurrently (different values per row)
+            await Promise.all(enrichedUpdates.map((update) =>
+                db.update(feedItems).set({
                     summary: update.summary,
                     relevanceScore: update.relevanceScore,
                     categories: update.categories,
-                }).where(eq(feedItems.id, update.id));
-            }
+                }).where(eq(feedItems.id, update.id))
+            ));
 
             // Batch-update all fallback items in one query
             if (fallbackIds.length > 0) {

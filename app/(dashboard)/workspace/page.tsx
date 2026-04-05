@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -228,13 +229,15 @@ export default async function WorkspacePage() {
 
                 {/* Slack Integration */}
                 {canUseSlack ? (
-                    <SlackSection
-                        currentChannelId={workspace?.slackChannelId ?? null}
-                        currentEnabled={workspace?.slackEnabled ?? false}
-                        isOwnerOrAdmin={isOwnerOrAdmin}
-                        slackTeamName={workspace?.slackTeamName ?? null}
-                        isConnected={!!workspace?.slackBotToken}
-                    />
+                    <Suspense>
+                        <SlackSection
+                            currentChannelId={workspace?.slackChannelId ?? null}
+                            currentEnabled={workspace?.slackEnabled ?? false}
+                            isOwnerOrAdmin={isOwnerOrAdmin}
+                            slackTeamName={workspace?.slackTeamName ?? null}
+                            isConnected={!!workspace?.slackBotToken}
+                        />
+                    </Suspense>
                 ) : (
                     <FeatureLockedSection
                         title="Slack Integration"

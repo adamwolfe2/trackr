@@ -1,18 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { NotesSection } from "@/components/tools/notes-section";
 import { AnimatedBar } from "@/components/common/animated-bar";
-import {
-    RadarChart,
-    Radar,
-    PolarGrid,
-    PolarAngleAxis,
-    ResponsiveContainer,
-    Tooltip,
-} from "recharts";
+
+const ScoreRadar = dynamic(() => import("@/components/tools/score-radar"), { ssr: false });
 
 type ScorecardEntry = { score: number; justification: string };
 type ReviewSource = { title: string; url: string; score: number };
@@ -207,40 +202,7 @@ export function ToolDetailTabs({ toolId, toolStatus, report, historyItems, notes
                                 {report.scorecardSnapshot && Object.keys(report.scorecardSnapshot).length >= 3 && (
                                     <div className="mb-6 border border-black p-4">
                                         <p className="font-mono text-[10px] uppercase tracking-widest text-neutral-400 mb-3">7-Dimension Radar</p>
-                                        <ResponsiveContainer width="100%" height={260}>
-                                            <RadarChart
-                                                data={Object.entries(report.scorecardSnapshot).map(([key, value]) => ({
-                                                    dimension: key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
-                                                    score: value.score,
-                                                    fullMark: 10,
-                                                }))}
-                                                margin={{ top: 10, right: 30, bottom: 10, left: 30 }}
-                                            >
-                                                <PolarGrid stroke="#e5e5e5" />
-                                                <PolarAngleAxis
-                                                    dataKey="dimension"
-                                                    tick={{ fontFamily: "var(--font-geist-mono, monospace)", fontSize: 9, fill: "#737373" }}
-                                                />
-                                                <Radar
-                                                    name="Score"
-                                                    dataKey="score"
-                                                    stroke="#000000"
-                                                    fill="#000000"
-                                                    fillOpacity={0.12}
-                                                    strokeWidth={1.5}
-                                                />
-                                                <Tooltip
-                                                    contentStyle={{
-                                                        fontFamily: "var(--font-geist-mono, monospace)",
-                                                        fontSize: "10px",
-                                                        border: "1px solid #000",
-                                                        borderRadius: 0,
-                                                        background: "#fff",
-                                                    }}
-                                                    formatter={(value: number | undefined) => [`${value ?? 0}/10`, "Score"]}
-                                                />
-                                            </RadarChart>
-                                        </ResponsiveContainer>
+                                        <ScoreRadar scorecardSnapshot={report.scorecardSnapshot} />
                                     </div>
                                 )}
 

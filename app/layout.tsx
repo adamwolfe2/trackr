@@ -66,6 +66,8 @@ export default function RootLayout({
         <head>
           <link rel="preconnect" href="https://fonts.googleapis.com" />
           <link rel="preconnect" href="https://clerk.com" crossOrigin="anonymous" />
+          <link rel="dns-prefetch" href="https://logo.clearbit.com" />
+          <link rel="dns-prefetch" href="https://cdn.brandfetch.io" />
           <link rel="manifest" href="/manifest.json" />
           <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
           <meta name="theme-color" content="#000000" />

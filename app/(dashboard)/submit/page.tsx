@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
@@ -58,7 +59,9 @@ export default async function SubmitPage() {
                     </p>
                 </div>
             )}
-            <AddToolWizard creditBalance={creditBalance} workspaceId={workspaceId} />
+            <Suspense>
+                <AddToolWizard creditBalance={creditBalance} workspaceId={workspaceId} />
+            </Suspense>
         </div>
     );
 }

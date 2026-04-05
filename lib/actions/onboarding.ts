@@ -199,12 +199,30 @@ export async function completeOnboarding(input: {
     }
 
     // 2. Add selected tools to software_spend (skip duplicates)
+    // 3. Auto-research first 3 selected tools
+    const MAX_AUTO_RESEARCH = 3;
+    const toolsToResearch = selectedTools
+        .filter((t) => t.name.trim().length > 0)
+        .slice(0, MAX_AUTO_RESEARCH);
+
+    // Fetch both existing-name sets in parallel (independent queries, same workspaceId)
+    const [existingSpend, existingToolRows] = selectedTools.length > 0
+        ? await Promise.all([
+            db.query.softwareSpend.findMany({
+                where: eq(softwareSpend.workspaceId, workspaceId),
+                columns: { toolName: true },
+            }),
+            toolsToResearch.length > 0
+                ? db.query.tools.findMany({
+                    where: eq(tools.workspaceId, workspaceId),
+                    columns: { name: true },
+                })
+                : Promise.resolve([]),
+        ])
+        : [[], []];
+
     if (selectedTools.length > 0) {
-        const existing = await db.query.softwareSpend.findMany({
-            where: eq(softwareSpend.workspaceId, workspaceId),
-            columns: { toolName: true },
-        });
-        const existingNames = new Set(existing.map((e) => e.toolName.toLowerCase()));
+        const existingNames = new Set(existingSpend.map((e) => e.toolName.toLowerCase()));
 
         const toInsert = selectedTools
             .filter((t) => t.name.trim().length > 0)
@@ -223,21 +241,9 @@ export async function completeOnboarding(input: {
         }
     }
 
-    // 3. Auto-research first 3 selected tools — creates entries in `tools` table
-    //    and kicks off performDeepResearch via after() to stay within free plan credits.
-    const MAX_AUTO_RESEARCH = 3;
-    const toolsToResearch = selectedTools
-        .filter((t) => t.name.trim().length > 0)
-        .slice(0, MAX_AUTO_RESEARCH);
-
     const insertedToolIds: string[] = [];
     if (toolsToResearch.length > 0) {
-        // Check which tools already exist in the tools table for this workspace
-        const existingTools = await db.query.tools.findMany({
-            where: eq(tools.workspaceId, workspaceId),
-            columns: { name: true },
-        });
-        const existingToolNames = new Set(existingTools.map((t) => t.name.toLowerCase()));
+        const existingToolNames = new Set(existingToolRows.map((t) => t.name.toLowerCase()));
 
         const newTools = toolsToResearch.filter(
             (t) => !existingToolNames.has(t.name.trim().toLowerCase())
