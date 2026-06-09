@@ -6,7 +6,6 @@ import { Newsreader, Geist_Mono } from "next/font/google";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { PostHogProvider } from "@/components/posthog-provider";
 import { Toaster } from "sonner";
-import Script from "next/script";
 
 const newsreader = Newsreader({
   subsets: ["latin"],
@@ -73,7 +72,6 @@ export default function RootLayout({
           <meta name="theme-color" content="#000000" />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-          <Script src="https://cdn.idpixel.app/v1/idp-analytics-699619edfcc4a49a660c15bb.min.js" strategy="lazyOnload" />
         </head>
         <body className={cn(newsreader.variable, geistMono.variable, "font-serif antialiased min-h-screen bg-background text-foreground selection:bg-black selection:text-white")}>
           <PostHogProvider>
